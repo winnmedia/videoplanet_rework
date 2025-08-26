@@ -1,4 +1,12 @@
-import json, logging, my_settings, os
+import json, logging, os
+
+# Safe import for my_settings (fallback to environment variables in production)
+try:
+    import my_settings
+    DEBUG = my_settings.DEBUG
+except ImportError:
+    # Use environment variables in production (Railway)
+    DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.views import View
@@ -27,7 +35,7 @@ class FeedbackDetail(View):
 
             # print(feedback.files.name) path , url
             if feedback.files:
-                if my_settings.DEBUG:
+                if DEBUG:
                     file_url = "http://127.0.0.1:8000" + feedback.files.url
                 else:
                     file_url = feedback.files.url

@@ -1,4 +1,18 @@
-import jwt, my_settings, threading
+import jwt, threading, os
+
+# Safe import for my_settings (fallback to environment variables in production)
+try:
+    import my_settings
+    SECRET_KEY = my_settings.SECRET_KEY
+    EMAIL_HOST_PASSWORD = my_settings.EMAIL_HOST_PASSWORD
+    FROM_EMAIL = my_settings.FROM_EMAIL
+    ALGORITHM = getattr(my_settings, 'ALGORITHM', 'HS256')
+except ImportError:
+    # Use environment variables in production (Railway)
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'fallback-secret-key')
+    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+    FROM_EMAIL = os.environ.get('FROM_EMAIL', 'service@vlanet.net')
+    ALGORITHM = 'HS256'
 from django.http import JsonResponse
 from . import models
 from projects import models as project_model
@@ -17,7 +31,7 @@ def user_validator(function):
                 return JsonResponse({"message": "NEED_ACCESS_TOKEN"}, status=401)
 
             payload = jwt.decode(
-                vridge_session, my_settings.SECRET_KEY, my_settings.ALGORITHM
+                vridge_session, SECRET_KEY, ALGORITHM
             )
             try:
                 request.user = models.User.objects.get(id=payload["user_id"])
@@ -60,7 +74,12 @@ def auth_send_email(request, email, secret):
 
 
 def invite_send_email(request, email, uid, token, name):
-    if my_settings.DEBUG:
+    try:
+        DEBUG = my_settings.DEBUG
+    except NameError:
+        DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
+    
+    if DEBUG:
         url = "http://localhost:3000/EmailCheck"
     else:
         url = "https://vlanet.net/EmailCheck"
@@ -109,7 +128,7 @@ def project_token_generator(project):
     token = salted_hmac(
         "django.winnmedia.virege.project.inviteToken",
         value,
-        secret=my_settings.SECRET_KEY,
+        secret=SECRET_KEY,
     ).hexdigest()[::2]
     return token
 

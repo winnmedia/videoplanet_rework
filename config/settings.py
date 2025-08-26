@@ -217,6 +217,8 @@ MAX_UPLOAD_SIZE = 429916160
 
 # AWS S3 설정 제거됨 - 로컬 스토리지 사용
 
+# Sentry 설정 (optional)
+if SENTRY_AVAILABLE and my_settings.sentry_url:
     sentry_sdk.init(
         dsn=my_settings.sentry_url,
         integrations=[
