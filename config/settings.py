@@ -327,15 +327,29 @@ AUTH_USER_MODEL = "users.User"
 
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = False
-CORS_ALLOWED_ORIGINS = (
+CORS_ALLOWED_ORIGINS = [
     "https://vridge.kr",
     "http://localhost:3000",
     "http://localhost:3003",
     "http://localhost:3004", 
     "https://api.vridge.kr",
     "https://vlanet.net",
+    "https://api.vlanet.net",
     "http://127.0.0.1",
-)
+    # Railway 도메인들
+    "https://videoplanet-backend.up.railway.app",
+    "https://videoplanet-rework-production.up.railway.app",
+]
+
+# Railway 환경에서 동적으로 추가되는 도메인들이 스키마를 포함하도록 보장
+if os.environ.get('RAILWAY_STATIC_URL'):
+    railway_url = os.environ.get('RAILWAY_STATIC_URL')
+    if not railway_url.startswith(('http://', 'https://')):
+        railway_url = f'https://{railway_url}'
+    if railway_url not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(railway_url)
+    if railway_url not in CORS_ALLOWED_ORIGINS:
+        CORS_ALLOWED_ORIGINS.append(railway_url)
 
 CORS_ALLOW_METHODS = (
     "DELETE",
@@ -381,7 +395,11 @@ DEFAULT_FROM_EMAIL = my_settings.FROM_EMAIL
 # SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 CSRF_TRUSTED_ORIGINS = [
     "https://api.vridge.kr",
-    "https://vridge.kr",
+    "https://vridge.kr", 
     "https://vlanet.net",
+    "https://api.vlanet.net",
     "http://localhost:3000",
+    # Railway 도메인들
+    "https://videoplanet-backend.up.railway.app",
+    "https://videoplanet-rework-production.up.railway.app",
 ]
