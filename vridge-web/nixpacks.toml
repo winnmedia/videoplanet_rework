@@ -1,0 +1,37 @@
+# Nixpacks configuration for Railway deployment
+# This file provides more granular control over the build process
+
+[phases.setup]
+nixPkgs = ["nodejs_20", "npm", "git"]
+
+[phases.install]
+dependsOn = ["setup"]
+cmds = ["npm ci --prefer-offline --no-audit"]
+
+[phases.build]
+dependsOn = ["install"]
+cmds = [
+    "npm run build",
+    "npm prune --production"
+]
+
+[start]
+cmd = "npm run start"
+
+[variables]
+NODE_ENV = "production"
+NPM_CONFIG_PRODUCTION = "false"
+
+[staticAssets]
+"public" = "public"
+".next/static" = "_next/static"
+
+[healthcheck]
+path = "/api/health"
+interval = 30
+timeout = 10
+retries = 3
+
+[resources]
+memory = "512MB"
+cpu = "0.5"

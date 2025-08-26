@@ -1,0 +1,207 @@
+@import "tailwindcss";
+
+/* Font faces - suit 폰트 패밀리 - 시스템 폰트로 대체 */
+/* 추후 실제 폰트 파일 추가 시 아래 주석 해제 */
+/*
+@font-face {
+  font-family: 'suit';
+  src: url('/fonts/suit-regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'suit-pl';
+  src: url('/fonts/suit-light.woff2') format('woff2');
+  font-weight: 300;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'suit-pr';
+  src: url('/fonts/suit-regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'suit-psb';
+  src: url('/fonts/suit-semibold.woff2') format('woff2');
+  font-weight: 600;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'suit-pb';
+  src: url('/fonts/suit-bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+}
+*/
+
+:root {
+  /* Legacy Design System Variables */
+  --primary: #0031ff;
+  --primary-dark: #0059db;
+  --primary-light: #006ae8;
+  --error: #d93a3a;
+  --success: #28a745;
+  --warning: #ffc107;
+  --info: #17a2b8;
+  --dark: #25282f;
+  --gray: #919191;
+  --gray-light: #e4e4e4;
+  --gray-lighter: #eeeeee;
+  --background: #ffffff;
+  --foreground: #25282f;
+  --border: #eeeeee;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --font-suit: 'suit', sans-serif;
+}
+
+/* Global Reset - Legacy 스타일 복원 */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  margin: 0;
+  padding: 0;
+}
+
+/* Legacy Utility Classes */
+.mt10 { margin-top: 10px; }
+.mt20 { margin-top: 20px; }
+.mt30 { margin-top: 30px; }
+.mt40 { margin-top: 40px; }
+.mt50 { margin-top: 50px; }
+.mt60 { margin-top: 60px; }
+.mt70 { margin-top: 70px; }
+.mt80 { margin-top: 80px; }
+.mt90 { margin-top: 90px; }
+.mt100 { margin-top: 100px; }
+
+/* Legacy Float utilities */
+.float:after {
+  content: '';
+  display: block;
+  float: none;
+  clear: both;
+}
+.fl { float: left; }
+.fr { float: right; }
+.pr { position: relative; }
+
+/* Legacy Text align */
+.tr { text-align: right; }
+.tl { text-align: left; }
+.tc { text-align: center; }
+
+/* Legacy Form Elements */
+input,
+select,
+button,
+textarea {
+  border: none;
+  outline: none;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+}
+
+input {
+  appearance: none;
+  -webkit-appearance: none;
+  -webkit-border-radius: 0;
+}
+
+/* Legacy Input Styles */
+input[type='text'].ty01,
+input[type='password'].ty01,
+input[type='email'].ty01 {
+  border: 1px solid #eeeeee;
+  border-radius: 15px;
+  padding: 0 15px;
+  height: 54px;
+  font-size: 16px;
+  width: 100%;
+  background: white;
+  transition: all 0.3s ease-in-out;
+}
+
+input.ty01:focus,
+input.ty01:hover {
+  background: #fff;
+  box-shadow: 5px 5px 10px #e8e8e8;
+  border-color: var(--primary);
+}
+
+input::placeholder {
+  font-size: 16px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  color: #919191;
+}
+
+/* Legacy Button Styles */
+button.ty01 {
+  background: var(--primary);
+  color: white;
+  border-radius: 15px;
+  height: 54px;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  padding: 0 30px;
+}
+
+button.ty01:hover {
+  background: var(--primary-dark);
+  box-shadow: 0 5px 15px rgba(0, 49, 255, 0.3);
+}
+
+button.ty02 {
+  background: white;
+  color: var(--dark);
+  border: 1px solid #e4e4e4;
+  border-radius: 15px;
+  height: 54px;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  padding: 0 30px;
+}
+
+button.ty02:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* 접근성 유틸리티 클래스 */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* 랜딩 페이지 특별 처리 */
+body.landing-page {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}

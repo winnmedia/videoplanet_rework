@@ -1,0 +1,208 @@
+name: Backend Deployment
+
+on:
+  push:
+    branches: [main, staging]
+    paths:
+      - 'vridge_back/**'
+      - '.github/workflows/backend-deploy.yml'
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  # 1. 백엔드 테스트
+  test-backend:
+    name: Backend Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: vridge
+          POSTGRES_PASSWORD: vridge_test
+          POSTGRES_DB: vridge_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+      redis:
+        image: redis:7.4
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: latest
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          
+      - name: Cache Poetry dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pypoetry
+          key: ${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-poetry-
+            
+      - name: Install dependencies
+        working-directory: ../vridge_back
+        run: poetry install --no-interaction --no-ansi
+        
+      - name: Run migrations
+        working-directory: ../vridge_back
+        env:
+          DATABASE_URL: postgresql://vridge:vridge_test@localhost:5432/vridge_test
+          REDIS_URL: redis://localhost:6379
+          SECRET_KEY: test-secret-key
+        run: |
+          poetry run python manage.py migrate
+          
+      - name: Run tests with coverage
+        working-directory: ../vridge_back
+        env:
+          DATABASE_URL: postgresql://vridge:vridge_test@localhost:5432/vridge_test
+          REDIS_URL: redis://localhost:6379
+          SECRET_KEY: test-secret-key
+        run: |
+          poetry run pytest --cov=. --cov-report=xml --cov-report=html
+          
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ../vridge_back/coverage.xml
+          flags: backend
+          name: backend-coverage
+
+  # 2. Railway 배포 (Staging)
+  deploy-staging:
+    name: Deploy Backend to Staging
+    runs-on: ubuntu-latest
+    needs: test-backend
+    if: github.ref == 'refs/heads/staging'
+    environment:
+      name: staging
+      url: https://vridge-api-staging.railway.app
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Install Railway CLI
+        run: |
+          curl -fsSL https://railway.app/install.sh | sh
+          
+      - name: Deploy to Railway Staging
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_STAGING }}
+        run: |
+          cd ../vridge_back
+          railway up --service vridge-api-staging --environment staging
+          
+      - name: Run database migrations
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN_STAGING }}
+        run: |
+          railway run --service vridge-api-staging python manage.py migrate
+          
+      - name: Health check
+        run: |
+          sleep 30
+          curl -f https://vridge-api-staging.railway.app/api/health || exit 1
+
+  # 3. Railway 배포 (Production)
+  deploy-production:
+    name: Deploy Backend to Production
+    runs-on: ubuntu-latest
+    needs: test-backend
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: production
+      url: https://api.vridge.app
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Install Railway CLI
+        run: |
+          curl -fsSL https://railway.app/install.sh | sh
+          
+      - name: Create database backup
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          railway run --service vridge-postgres pg_dump $DATABASE_URL > backup-$(date +%Y%m%d-%H%M%S).sql
+          
+      - name: Deploy to Railway Production
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          cd ../vridge_back
+          railway up --service vridge-api --environment production
+          
+      - name: Run database migrations
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          railway run --service vridge-api python manage.py migrate --no-input
+          
+      - name: Collect static files
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          railway run --service vridge-api python manage.py collectstatic --no-input
+          
+      - name: Health check
+        run: |
+          sleep 30
+          curl -f https://api.vridge.app/api/health || exit 1
+          
+      - name: Notify deployment
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: 'Backend production deployment completed!'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        if: always()
+
+  # 4. 롤백 준비
+  rollback-preparation:
+    name: Prepare Rollback
+    runs-on: ubuntu-latest
+    needs: deploy-production
+    if: failure()
+    steps:
+      - name: Trigger rollback workflow
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'rollback.yml',
+              ref: 'main',
+              inputs: {
+                environment: 'production',
+                service: 'backend'
+              }
+            })

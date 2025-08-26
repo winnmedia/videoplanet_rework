@@ -1,0 +1,354 @@
+{
+  "timestamp": "2025-08-26T01:38:39.201Z",
+  "summary": {
+    "total": 12,
+    "passed": 12,
+    "failed": 0,
+    "successRate": "100%",
+    "standardErrorFormat": 9
+  },
+  "results": [
+    {
+      "name": "Validation Error",
+      "description": "유효성 검사 에러 테스트",
+      "method": "GET",
+      "path": "/api/test?scenario=validation",
+      "expectedStatus": 422,
+      "actualStatus": 422,
+      "success": true,
+      "headers": {
+        "x-dns-prefetch-control": "on",
+        "strict-transport-security": "max-age=63072000; includeSubDomains; preload",
+        "x-content-type-options": "nosniff",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "content-type": "application/json",
+        "date": "Tue, 26 Aug 2025 01:38:35 GMT",
+        "connection": "keep-alive",
+        "keep-alive": "timeout=5",
+        "transfer-encoding": "chunked"
+      },
+      "response": {
+        "error": "UNPROCESSABLE_ENTITY",
+        "message": "입력 데이터가 유효하지 않습니다",
+        "statusCode": 422,
+        "timestamp": "2025-08-26T01:38:35.176Z",
+        "details": {
+          "email": [
+            "이메일 형식이 올바르지 않습니다"
+          ],
+          "password": [
+            "비밀번호는 8자 이상이어야 합니다"
+          ]
+        }
+      },
+      "hasStandardErrorFormat": true
+    },
+    {
+      "name": "Authentication Error",
+      "description": "인증 에러 테스트",
+      "method": "GET",
+      "path": "/api/test?scenario=unauthorized",
+      "expectedStatus": 401,
+      "actualStatus": 401,
+      "success": true,
+      "headers": {
+        "x-dns-prefetch-control": "on",
+        "strict-transport-security": "max-age=63072000; includeSubDomains; preload",
+        "x-content-type-options": "nosniff",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "content-type": "application/json",
+        "date": "Tue, 26 Aug 2025 01:38:35 GMT",
+        "connection": "keep-alive",
+        "keep-alive": "timeout=5",
+        "transfer-encoding": "chunked"
+      },
+      "response": {
+        "error": "UNAUTHORIZED",
+        "message": "로그인이 필요한 서비스입니다",
+        "statusCode": 401,
+        "timestamp": "2025-08-26T01:38:35.566Z"
+      },
+      "hasStandardErrorFormat": true
+    },
+    {
+      "name": "Authorization Error",
+      "description": "권한 에러 테스트",
+      "method": "GET",
+      "path": "/api/test?scenario=forbidden",
+      "expectedStatus": 403,
+      "actualStatus": 403,
+      "success": true,
+      "headers": {
+        "x-dns-prefetch-control": "on",
+        "strict-transport-security": "max-age=63072000; includeSubDomains; preload",
+        "x-content-type-options": "nosniff",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "content-type": "application/json",
+        "date": "Tue, 26 Aug 2025 01:38:35 GMT",
+        "connection": "keep-alive",
+        "keep-alive": "timeout=5",
+        "transfer-encoding": "chunked"
+      },
+      "response": {
+        "error": "FORBIDDEN",
+        "message": "이 리소스에 접근할 권한이 없습니다",
+        "statusCode": 403,
+        "timestamp": "2025-08-26T01:38:35.969Z"
+      },
+      "hasStandardErrorFormat": true
+    },
+    {
+      "name": "Not Found Error",
+      "description": "리소스 없음 에러 테스트",
+      "method": "GET",
+      "path": "/api/test?scenario=not-found",
+      "expectedStatus": 404,
+      "actualStatus": 404,
+      "success": true,
+      "headers": {
+        "x-dns-prefetch-control": "on",
+        "strict-transport-security": "max-age=63072000; includeSubDomains; preload",
+        "x-content-type-options": "nosniff",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "content-type": "application/json",
+        "date": "Tue, 26 Aug 2025 01:38:36 GMT",
+        "connection": "keep-alive",
+        "keep-alive": "timeout=5",
+        "transfer-encoding": "chunked"
+      },
+      "response": {
+        "error": "NOT_FOUND",
+        "message": "요청한 데이터를 찾을 수 없습니다",
+        "statusCode": 404,
+        "timestamp": "2025-08-26T01:38:36.342Z"
+      },
+      "hasStandardErrorFormat": true
+    },
+    {
+      "name": "Server Error",
+      "description": "서버 에러 테스트",
+      "method": "GET",
+      "path": "/api/test?scenario=server-error",
+      "expectedStatus": 500,
+      "actualStatus": 500,
+      "success": true,
+      "headers": {
+        "x-dns-prefetch-control": "on",
+        "strict-transport-security": "max-age=63072000; includeSubDomains; preload",
+        "x-content-type-options": "nosniff",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "content-type": "application/json",
+        "date": "Tue, 26 Aug 2025 01:38:36 GMT",
+        "connection": "keep-alive",
+        "keep-alive": "timeout=5",
+        "transfer-encoding": "chunked"
+      },
+      "response": {
+        "error": "INTERNAL_SERVER_ERROR",
+        "message": "서버 내부 오류가 발생했습니다",
+        "statusCode": 500,
+        "timestamp": "2025-08-26T01:38:36.725Z"
+      },
+      "hasStandardErrorFormat": true
+    },
+    {
+      "name": "Success Response",
+      "description": "정상 응답 테스트",
+      "method": "GET",
+      "path": "/api/test?scenario=success",
+      "expectedStatus": 200,
+      "actualStatus": 200,
+      "success": true,
+      "headers": {
+        "x-dns-prefetch-control": "on",
+        "strict-transport-security": "max-age=63072000; includeSubDomains; preload",
+        "x-content-type-options": "nosniff",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "content-type": "application/json",
+        "date": "Tue, 26 Aug 2025 01:38:37 GMT",
+        "connection": "keep-alive",
+        "keep-alive": "timeout=5",
+        "transfer-encoding": "chunked"
+      },
+      "response": {
+        "success": true,
+        "message": "정상적으로 처리되었습니다",
+        "data": {
+          "timestamp": "2025-08-26T01:38:37.010Z",
+          "scenario": "success"
+        }
+      },
+      "hasStandardErrorFormat": false
+    },
+    {
+      "name": "POST Validation - Missing Fields",
+      "description": "POST 요청 필드 누락 테스트",
+      "method": "POST",
+      "path": "/api/test",
+      "expectedStatus": 422,
+      "actualStatus": 422,
+      "success": true,
+      "headers": {
+        "x-dns-prefetch-control": "on",
+        "strict-transport-security": "max-age=63072000; includeSubDomains; preload",
+        "x-content-type-options": "nosniff",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "content-type": "application/json",
+        "date": "Tue, 26 Aug 2025 01:38:37 GMT",
+        "connection": "keep-alive",
+        "keep-alive": "timeout=5",
+        "transfer-encoding": "chunked"
+      },
+      "response": {
+        "error": "UNPROCESSABLE_ENTITY",
+        "message": "입력 데이터 검증 실패",
+        "statusCode": 422,
+        "timestamp": "2025-08-26T01:38:37.439Z",
+        "details": {
+          "email": [
+            "이메일은 필수 항목입니다"
+          ],
+          "password": [
+            "비밀번호는 필수 항목입니다"
+          ]
+        }
+      },
+      "hasStandardErrorFormat": true
+    },
+    {
+      "name": "POST Validation - Invalid Email",
+      "description": "POST 요청 이메일 형식 오류 테스트",
+      "method": "POST",
+      "path": "/api/test",
+      "expectedStatus": 422,
+      "actualStatus": 422,
+      "success": true,
+      "headers": {
+        "x-dns-prefetch-control": "on",
+        "strict-transport-security": "max-age=63072000; includeSubDomains; preload",
+        "x-content-type-options": "nosniff",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "content-type": "application/json",
+        "date": "Tue, 26 Aug 2025 01:38:37 GMT",
+        "connection": "keep-alive",
+        "keep-alive": "timeout=5",
+        "transfer-encoding": "chunked"
+      },
+      "response": {
+        "error": "UNPROCESSABLE_ENTITY",
+        "message": "입력 데이터 검증 실패",
+        "statusCode": 422,
+        "timestamp": "2025-08-26T01:38:37.876Z",
+        "details": {
+          "email": [
+            "올바른 이메일 형식이 아닙니다"
+          ]
+        }
+      },
+      "hasStandardErrorFormat": true
+    },
+    {
+      "name": "POST Success",
+      "description": "POST 요청 성공 테스트",
+      "method": "POST",
+      "path": "/api/test",
+      "expectedStatus": 201,
+      "actualStatus": 201,
+      "success": true,
+      "headers": {
+        "x-dns-prefetch-control": "on",
+        "strict-transport-security": "max-age=63072000; includeSubDomains; preload",
+        "x-content-type-options": "nosniff",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "content-type": "application/json",
+        "date": "Tue, 26 Aug 2025 01:38:38 GMT",
+        "connection": "keep-alive",
+        "keep-alive": "timeout=5",
+        "transfer-encoding": "chunked"
+      },
+      "response": {
+        "success": true,
+        "message": "데이터가 성공적으로 처리되었습니다",
+        "data": {
+          "email": "test@example.com",
+          "createdAt": "2025-08-26T01:38:38.172Z"
+        }
+      },
+      "hasStandardErrorFormat": false
+    },
+    {
+      "name": "DELETE Without Auth",
+      "description": "DELETE 요청 인증 없음 테스트",
+      "method": "DELETE",
+      "path": "/api/test",
+      "expectedStatus": 401,
+      "actualStatus": 401,
+      "success": true,
+      "headers": {
+        "x-dns-prefetch-control": "on",
+        "strict-transport-security": "max-age=63072000; includeSubDomains; preload",
+        "x-content-type-options": "nosniff",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "content-type": "application/json",
+        "date": "Tue, 26 Aug 2025 01:38:38 GMT",
+        "connection": "keep-alive",
+        "keep-alive": "timeout=5",
+        "transfer-encoding": "chunked"
+      },
+      "response": {
+        "error": "UNAUTHORIZED",
+        "message": "인증 토큰이 필요합니다",
+        "statusCode": 401,
+        "timestamp": "2025-08-26T01:38:38.559Z"
+      },
+      "hasStandardErrorFormat": true
+    },
+    {
+      "name": "DELETE With Invalid Token",
+      "description": "DELETE 요청 잘못된 토큰 테스트",
+      "method": "DELETE",
+      "path": "/api/test",
+      "expectedStatus": 403,
+      "actualStatus": 403,
+      "success": true,
+      "headers": {
+        "x-dns-prefetch-control": "on",
+        "strict-transport-security": "max-age=63072000; includeSubDomains; preload",
+        "x-content-type-options": "nosniff",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "content-type": "application/json",
+        "date": "Tue, 26 Aug 2025 01:38:38 GMT",
+        "connection": "keep-alive",
+        "keep-alive": "timeout=5",
+        "transfer-encoding": "chunked"
+      },
+      "response": {
+        "error": "FORBIDDEN",
+        "message": "삭제 권한이 없습니다",
+        "statusCode": 403,
+        "timestamp": "2025-08-26T01:38:38.915Z"
+      },
+      "hasStandardErrorFormat": true
+    },
+    {
+      "name": "DELETE With Valid Token",
+      "description": "DELETE 요청 성공 테스트",
+      "method": "DELETE",
+      "path": "/api/test",
+      "expectedStatus": 204,
+      "actualStatus": 204,
+      "success": true,
+      "headers": {
+        "x-dns-prefetch-control": "on",
+        "strict-transport-security": "max-age=63072000; includeSubDomains; preload",
+        "x-content-type-options": "nosniff",
+        "vary": "rsc, next-router-state-tree, next-router-prefetch, next-router-segment-prefetch",
+        "date": "Tue, 26 Aug 2025 01:38:39 GMT",
+        "connection": "keep-alive",
+        "keep-alive": "timeout=5"
+      },
+      "response": null,
+      "hasStandardErrorFormat": false
+    }
+  ]
+}

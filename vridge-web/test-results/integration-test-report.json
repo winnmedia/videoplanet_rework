@@ -1,0 +1,89 @@
+{
+  "timestamp": "2025-08-25T15:39:22.304Z",
+  "frontend_url": "http://localhost:3000",
+  "backend_url": "http://localhost:8000",
+  "results": {
+    "frontend": {
+      "passed": 3,
+      "failed": 0,
+      "tests": [
+        {
+          "name": "Homepage",
+          "url": "http://localhost:3000/",
+          "expectedStatus": 200,
+          "actualStatus": 200,
+          "passed": true
+        },
+        {
+          "name": "Health API",
+          "url": "http://localhost:3000/api/health",
+          "expectedStatus": 200,
+          "actualStatus": 200,
+          "passed": true
+        },
+        {
+          "name": "Static Assets",
+          "url": "http://localhost:3000/logo.svg",
+          "expectedStatus": 200,
+          "actualStatus": 200,
+          "passed": true
+        }
+      ]
+    },
+    "backend": {
+      "passed": 3,
+      "failed": 0,
+      "tests": [
+        {
+          "name": "Health Check",
+          "url": "http://localhost:8000/health/",
+          "expectedStatus": 200,
+          "actualStatus": 200,
+          "passed": true
+        },
+        {
+          "name": "Admin Panel",
+          "url": "http://localhost:8000/admin/",
+          "expectedStatus": [
+            200,
+            302
+          ],
+          "actualStatus": 302,
+          "passed": true
+        },
+        {
+          "name": "API Root",
+          "url": "http://localhost:8000/api/",
+          "expectedStatus": [
+            200,
+            404
+          ],
+          "actualStatus": 404,
+          "passed": true
+        }
+      ]
+    },
+    "integration": {
+      "passed": 1,
+      "failed": 1,
+      "tests": [
+        {
+          "name": "CORS Configuration",
+          "message": "No CORS header"
+        },
+        {
+          "name": "API Connectivity",
+          "passed": true,
+          "message": "Backend check skipped in development"
+        }
+      ]
+    }
+  },
+  "summary": {
+    "total_tests": 8,
+    "passed": 7,
+    "failed": 1,
+    "success_rate": "87.5%",
+    "backend_available": true
+  }
+}
