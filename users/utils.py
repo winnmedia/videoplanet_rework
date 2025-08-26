@@ -70,7 +70,7 @@ class EmailThread(threading.Thread):
 def auth_send_email(request, email, secret):
     html_message = render_to_string("verify_email.html", {"secret": secret})
     to = [email]
-    EmailThread("Vlanet", strip_tags(html_message), to, html_message).start()
+    EmailThread("영상 협업툴의 신세계, 비디오플래닛에 오신 걸 환영합니다!", strip_tags(html_message), to, html_message).start()
 
 
 def invite_send_email(request, email, uid, token, name):
