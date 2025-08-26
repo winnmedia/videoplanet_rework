@@ -183,15 +183,22 @@ CORS_ALLOWED_ORIGINS = [
     "https://vridge.kr",
     "https://api.vridge.kr", 
     "https://vlanet.net",
+    "https://api.vlanet.net",
     "http://localhost:3000",
     "http://localhost:3003",
     "http://localhost:3004",
+    # Railway 도메인들
+    "https://videoplanet-backend.up.railway.app",
+    "https://videoplanet-rework-production.up.railway.app",
 ]
 
-# Railway 환경에서는 프론트엔드 도메인 추가
+# Railway 환경에서는 프론트엔드 도메인 추가 (스키마 보장)
 RAILWAY_FRONTEND_URL = os.environ.get('RAILWAY_FRONTEND_URL')
 if RAILWAY_FRONTEND_URL:
-    CORS_ALLOWED_ORIGINS.append(RAILWAY_FRONTEND_URL)
+    if not RAILWAY_FRONTEND_URL.startswith(('http://', 'https://')):
+        RAILWAY_FRONTEND_URL = f'https://{RAILWAY_FRONTEND_URL}'
+    if RAILWAY_FRONTEND_URL not in CORS_ALLOWED_ORIGINS:
+        CORS_ALLOWED_ORIGINS.append(RAILWAY_FRONTEND_URL)
 
 CORS_ALLOW_METHODS = [
     "DELETE", "GET", "OPTIONS", "PATCH", "POST", "PUT"
@@ -205,14 +212,22 @@ CSRF_TRUSTED_ORIGINS = [
     "https://api.vridge.kr",
     "https://vridge.kr",
     "https://vlanet.net",
+    "https://api.vlanet.net",
     "http://localhost:3000",
     "http://localhost:3003",
     "http://localhost:3004",
+    # Railway 도메인들
+    "https://videoplanet-backend.up.railway.app",
+    "https://videoplanet-rework-production.up.railway.app",
 ]
 
-# Railway 도메인 추가
+# Railway 도메인 동적 추가 (스키마 보장)
 if os.environ.get('RAILWAY_STATIC_URL'):
-    CSRF_TRUSTED_ORIGINS.append(os.environ.get('RAILWAY_STATIC_URL'))
+    railway_url = os.environ.get('RAILWAY_STATIC_URL')
+    if not railway_url.startswith(('http://', 'https://')):
+        railway_url = f'https://{railway_url}'
+    if railway_url not in CSRF_TRUSTED_ORIGINS:
+        CSRF_TRUSTED_ORIGINS.append(railway_url)
 
 # Email 설정 - SendGrid
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
