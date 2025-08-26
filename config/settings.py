@@ -12,10 +12,26 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
-import my_settings
 from corsheaders.defaults import default_headers
-
 import os
+
+# Safe import for my_settings (fallback to environment variables in production)
+try:
+    import my_settings
+    MY_SETTINGS_AVAILABLE = True
+except ImportError:
+    MY_SETTINGS_AVAILABLE = False
+    # Create fallback my_settings-like object
+    class FallbackSettings:
+        SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-fallback-key')
+        DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
+        EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'apikey')
+        EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+        FROM_EMAIL = os.environ.get('FROM_EMAIL', 'service@vlanet.net')
+        ALGORITHM = "HS256"
+        sentry_url = os.environ.get('SENTRY_URL', '')
+    
+    my_settings = FallbackSettings()
 try:
     import sentry_sdk
     from sentry_sdk.integrations.django import DjangoIntegration

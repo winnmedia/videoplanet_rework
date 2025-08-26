@@ -1,5 +1,17 @@
 # -*- coding: utf-8 -*-
-import logging, json, jwt, my_settings, random, requests
+import logging, json, jwt, random, requests, os
+
+# Safe import for my_settings (fallback to environment variables in production)
+try:
+    import my_settings
+    SECRET_KEY = my_settings.SECRET_KEY
+    EMAIL_HOST_PASSWORD = my_settings.EMAIL_HOST_PASSWORD
+    FROM_EMAIL = my_settings.FROM_EMAIL
+except ImportError:
+    # Use environment variables in production (Railway)
+    SECRET_KEY = os.environ.get('SECRET_KEY', 'fallback-secret-key')
+    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+    FROM_EMAIL = os.environ.get('FROM_EMAIL', 'service@vlanet.net')
 from datetime import datetime, timedelta
 from django.shortcuts import render
 from django.contrib.auth import authenticate
