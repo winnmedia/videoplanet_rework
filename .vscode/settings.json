@@ -1,0 +1,18 @@
+{
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter"
+  },
+  "python.linting.enabled": true,
+  "python.linting.flake8Enabled": true,
+  "python.linting.flake8Args": [
+    "--max-line-length=120",
+    "--ignore=E266,E401,E402,F841,F401,W503,E302,E305"
+  ],
+  "python.formatting.provider": "black",
+  "python.formatting.blackArgs": ["--line-length", "110"],
+  "[html , css ,javascript, django-template]": {
+    "editor.formatOnSave": false
+  },
+  "html.format.templating": false,
+  "emmet.includeLanguages": { "django-html": "html" }
+}

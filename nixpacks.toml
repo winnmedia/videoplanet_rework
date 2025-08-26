@@ -1,0 +1,63 @@
+# Nixpacks 빌드 설정
+# https://nixpacks.com/docs/configuration/file
+
+# 프로바이더 설정
+[phases.setup]
+nixPkgs = [
+    "python39",
+    "postgresql",
+    "gcc",
+    "libjpeg",
+    "zlib",
+    "libffi",
+    "openssl"
+]
+
+# apt 패키지 설치 (필요한 시스템 라이브러리)
+aptPkgs = [
+    "libpq-dev",
+    "python3-dev",
+    "build-essential",
+    "libssl-dev",
+    "libffi-dev",
+    "libxml2-dev",
+    "libxslt1-dev",
+    "zlib1g-dev",
+    "ffmpeg"  # 비디오 처리용
+]
+
+# 환경 변수 설정
+[variables]
+PYTHON_VERSION = "3.9"
+POETRY_VERSION = "1.3.0"
+NODE_VERSION = "18"  # 프론트엔드 에셋 빌드용
+
+# 의존성 설치
+[phases.install]
+dependencyInstallCommand = """
+    python -m pip install --upgrade pip setuptools wheel && \
+    pip install poetry==$POETRY_VERSION && \
+    poetry config virtualenvs.create false && \
+    poetry install --no-dev --no-interaction --no-ansi
+"""
+
+# 빌드 단계
+[phases.build]
+cmds = [
+    "python manage.py collectstatic --noinput",
+    "python manage.py compress --force",  # 정적 파일 압축
+    "python manage.py compilemessages"     # 번역 파일 컴파일
+]
+
+# 시작 설정
+[start]
+cmd = "daphne -b 0.0.0.0 -p $PORT config.asgi:application"
+
+# 캐싱 설정
+[phases.cache]
+paths = [
+    ".venv",
+    "node_modules",
+    ".cache/pip",
+    "staticfiles"
+]

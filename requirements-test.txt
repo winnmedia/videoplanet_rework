@@ -1,0 +1,43 @@
+# 테스트 관련 패키지
+pytest==7.4.3
+pytest-django==4.7.0
+pytest-cov==4.1.0
+pytest-xdist==3.5.0  # 병렬 테스트 실행
+pytest-timeout==2.2.0  # 테스트 타임아웃
+pytest-mock==3.12.0  # 모킹
+pytest-benchmark==4.0.0  # 성능 테스트
+
+# 테스트 데이터 생성
+factory-boy==3.3.0
+faker==20.1.0
+
+# API 테스트
+responses==0.24.1
+requests-mock==1.11.0
+
+# 코드 품질
+black==23.12.0
+isort==5.13.2
+flake8==6.1.0
+mypy==1.7.1
+django-stubs==4.2.7
+
+# 보안 테스트
+bandit==1.7.5
+safety==3.0.1
+
+# 성능 테스트
+locust==2.20.0
+django-silk==5.0.4
+
+# 데이터베이스 테스트
+pytest-postgresql==5.0.0
+freezegun==1.4.0  # 시간 고정
+
+# 디버깅
+ipdb==0.13.13
+django-debug-toolbar==4.2.0
+
+# 문서화
+sphinx==7.2.6
+sphinx-rtd-theme==2.0.0
