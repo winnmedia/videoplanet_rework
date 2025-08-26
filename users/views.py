@@ -7,11 +7,15 @@ try:
     SECRET_KEY = my_settings.SECRET_KEY
     EMAIL_HOST_PASSWORD = my_settings.EMAIL_HOST_PASSWORD
     FROM_EMAIL = my_settings.FROM_EMAIL
+    NAVER_CLIENT_ID = my_settings.NAVER_CLIENT_ID
+    NAVER_SECRET_KEY = my_settings.NAVER_SECRET_KEY
 except ImportError:
     # Use environment variables in production (Railway)
     SECRET_KEY = os.environ.get('SECRET_KEY', 'fallback-secret-key')
     EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
     FROM_EMAIL = os.environ.get('FROM_EMAIL', 'service@vlanet.net')
+    NAVER_CLIENT_ID = os.environ.get('NAVER_CLIENT_ID', '')
+    NAVER_SECRET_KEY = os.environ.get('NAVER_SECRET_KEY', '')
 from datetime import datetime, timedelta
 from django.shortcuts import render
 from django.contrib.auth import authenticate
@@ -48,8 +52,8 @@ class SignUp(View):
                         "user_id": new_user.id,
                         "exp": datetime.utcnow() + timedelta(days=28),
                     },
-                    my_settings.SECRET_KEY,
-                    my_settings.ALGORITHM,
+                    SECRET_KEY,
+                    "HS256",
                 )
                 res = JsonResponse(
                     {
@@ -84,8 +88,8 @@ class SignIn(View):
             if user is not None:
                 vridge_session = jwt.encode(
                     {"user_id": user.id, "exp": datetime.utcnow() + timedelta(days=28)},
-                    my_settings.SECRET_KEY,
-                    my_settings.ALGORITHM,
+                    SECRET_KEY,
+                    "HS256",
                 )
                 res = JsonResponse(
                     {
@@ -237,8 +241,8 @@ class KakaoLogin(View):
                     "user_id": user.id,
                     "exp": datetime.utcnow() + timedelta(days=28),
                 },
-                my_settings.SECRET_KEY,
-                my_settings.ALGORITHM,
+                SECRET_KEY,
+                "HS256",
             )
             res = JsonResponse(
                 {
@@ -269,9 +273,6 @@ class NaverLogin(View):
 
             code = data.get("code")
             state = data.get("state")
-
-            NAVER_CLIENT_ID = my_settings.NAVER_CLIENT_ID
-            NAVER_SECRET_KEY = my_settings.NAVER_SECRET_KEY
 
             token_request = requests.post(
                 f"https://nid.naver.com/oauth2.0/token?grant_type=authorization_code&state={state}&client_id={NAVER_CLIENT_ID}&client_secret={NAVER_SECRET_KEY}&code={code}"
@@ -319,8 +320,8 @@ class NaverLogin(View):
                     "user_id": user.id,
                     "exp": datetime.utcnow() + timedelta(days=28),
                 },
-                my_settings.SECRET_KEY,
-                my_settings.ALGORITHM,
+                SECRET_KEY,
+                "HS256",
             )
             res = JsonResponse(
                 {
@@ -393,8 +394,8 @@ class GoogleLogin(View):
                     "user_id": user.id,
                     "exp": datetime.utcnow() + timedelta(days=28),
                 },
-                my_settings.SECRET_KEY,
-                my_settings.ALGORITHM,
+                SECRET_KEY,
+                "HS256",
             )
             res = JsonResponse(
                 {
