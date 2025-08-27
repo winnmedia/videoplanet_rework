@@ -1,7 +1,5 @@
-// Real backend API integration
-// TODO: Switch back to Railway URL when deployment is fixed
-// const BACKEND_URL = 'https://videoplanet-backend.up.railway.app'
-const BACKEND_URL = 'http://localhost:8000' // 임시 로컬 테스트용
+// Backend API integration with environment variable
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.vlanet.net'
 
 export const authApi = {
   login: async (email: string, password: string) => {
