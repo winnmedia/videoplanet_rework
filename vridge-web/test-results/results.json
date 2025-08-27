@@ -3,22 +3,23 @@
     "configFile": "/home/winnmedia/VLANET/vridge-web/playwright.config.ts",
     "rootDir": "/home/winnmedia/VLANET/vridge-web/tests/e2e",
     "forbidOnly": false,
-    "fullyParallel": true,
-    "globalSetup": null,
-    "globalTeardown": null,
+    "fullyParallel": false,
+    "globalSetup": "/home/winnmedia/VLANET/vridge-web/tests/e2e/helpers/global-setup.ts",
+    "globalTeardown": "/home/winnmedia/VLANET/vridge-web/tests/e2e/helpers/global-teardown.ts",
     "globalTimeout": 0,
     "grep": {},
     "grepInvert": null,
     "maxFailures": 0,
     "metadata": {
-      "actualWorkers": 8
+      "actualWorkers": 1
     },
     "preserveOutput": "always",
     "reporter": [
       [
         "html",
         {
-          "outputFolder": "test-results/html"
+          "outputFolder": "playwright-report",
+          "open": "never"
         }
       ],
       [
@@ -28,7 +29,17 @@
         }
       ],
       [
+        "junit",
+        {
+          "outputFile": "test-results/junit.xml"
+        }
+      ],
+      [
         "list",
+        null
+      ],
+      [
+        "github",
         null
       ]
     ],
@@ -41,100 +52,164 @@
       {
         "outputDir": "/home/winnmedia/VLANET/vridge-web/test-results",
         "repeatEach": 1,
-        "retries": 0,
+        "retries": 1,
         "metadata": {
-          "actualWorkers": 8
+          "actualWorkers": 1
         },
-        "id": "chromium",
-        "name": "chromium",
+        "id": "api-smoke-tests",
+        "name": "api-smoke-tests",
         "testDir": "/home/winnmedia/VLANET/vridge-web/tests/e2e",
         "testIgnore": [],
         "testMatch": [
-          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+          "**/smoke-test-api-only.spec.ts"
+        ],
+        "timeout": 20000
+      },
+      {
+        "outputDir": "/home/winnmedia/VLANET/vridge-web/test-results",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "production-smoke-tests",
+        "name": "production-smoke-tests",
+        "testDir": "/home/winnmedia/VLANET/vridge-web/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/smoke-test-production.spec.ts"
         ],
         "timeout": 30000
       },
       {
         "outputDir": "/home/winnmedia/VLANET/vridge-web/test-results",
         "repeatEach": 1,
-        "retries": 0,
+        "retries": 1,
         "metadata": {
-          "actualWorkers": 8
+          "actualWorkers": 1
         },
-        "id": "firefox",
-        "name": "firefox",
+        "id": "api-tests",
+        "name": "api-tests",
         "testDir": "/home/winnmedia/VLANET/vridge-web/tests/e2e",
         "testIgnore": [],
         "testMatch": [
-          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+          "**/api-only.spec.ts"
         ],
-        "timeout": 30000
+        "timeout": 20000
       },
       {
         "outputDir": "/home/winnmedia/VLANET/vridge-web/test-results",
         "repeatEach": 1,
-        "retries": 0,
+        "retries": 1,
         "metadata": {
-          "actualWorkers": 8
+          "actualWorkers": 1
         },
-        "id": "mobile-chrome",
-        "name": "mobile-chrome",
+        "id": "critical-path",
+        "name": "critical-path",
         "testDir": "/home/winnmedia/VLANET/vridge-web/tests/e2e",
         "testIgnore": [],
         "testMatch": [
-          "**/*.@(spec|test).?(c|m)[jt]s?(x)"
+          "**/critical-path.spec.ts"
         ],
-        "timeout": 30000
+        "timeout": 90000
+      },
+      {
+        "outputDir": "/home/winnmedia/VLANET/vridge-web/test-results",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "user-journey",
+        "name": "user-journey",
+        "testDir": "/home/winnmedia/VLANET/vridge-web/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/user-journey-production.spec.ts"
+        ],
+        "timeout": 120000
+      },
+      {
+        "outputDir": "/home/winnmedia/VLANET/vridge-web/test-results",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "existing-tests",
+        "name": "existing-tests",
+        "testDir": "/home/winnmedia/VLANET/vridge-web/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/user-journey.spec.ts"
+        ],
+        "timeout": 60000
+      },
+      {
+        "outputDir": "/home/winnmedia/VLANET/vridge-web/test-results",
+        "repeatEach": 1,
+        "retries": 1,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "id": "mobile-critical",
+        "name": "mobile-critical",
+        "testDir": "/home/winnmedia/VLANET/vridge-web/tests/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "**/smoke-test-production.spec.ts",
+          "**/critical-path.spec.ts"
+        ],
+        "timeout": 60000
       }
     ],
     "shard": null,
     "updateSnapshots": "missing",
     "updateSourceMethod": "patch",
     "version": "1.55.0",
-    "workers": 8,
-    "webServer": {
-      "command": "npm run dev",
-      "url": "http://localhost:3000",
-      "reuseExistingServer": true,
-      "timeout": 120000
-    }
+    "workers": 2,
+    "webServer": null
   },
   "suites": [
     {
-      "title": "smoke-test.spec.ts",
-      "file": "smoke-test.spec.ts",
+      "title": "smoke-test-api-only.spec.ts",
+      "file": "smoke-test-api-only.spec.ts",
       "column": 0,
       "line": 0,
       "specs": [],
       "suites": [
         {
-          "title": "VideoPlanet 스모크 테스트",
-          "file": "smoke-test.spec.ts",
+          "title": "API 전용 스모크 테스트",
+          "file": "smoke-test-api-only.spec.ts",
           "line": 11,
           "column": 6,
           "specs": [
             {
-              "title": "백엔드 API 헬스체크 검증",
+              "title": "🚀 서비스 기본 접근성 (API)",
               "ok": true,
               "tags": [],
               "tests": [
                 {
-                  "timeout": 30000,
+                  "timeout": 20000,
                   "annotations": [],
                   "expectedStatus": "passed",
-                  "projectId": "chromium",
-                  "projectName": "chromium",
+                  "projectId": "api-smoke-tests",
+                  "projectName": "api-smoke-tests",
                   "results": [
                     {
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 936,
+                      "duration": 98,
                       "errors": [],
-                      "stdout": [],
+                      "stdout": [
+                        {
+                          "text": "✅ 프론트엔드 인증 보호 정상 작동\n"
+                        }
+                      ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-08-27T01:31:42.729Z",
+                      "startTime": "2025-08-27T02:52:22.054Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -142,133 +217,37 @@
                   "status": "expected"
                 }
               ],
-              "id": "3f58d441499060f9c0b2-f2918a382fb361f4b1e0",
-              "file": "smoke-test.spec.ts",
+              "id": "db98f4c8a7ec913ad912-6d8f106122a442f0c09d",
+              "file": "smoke-test-api-only.spec.ts",
               "line": 13,
               "column": 7
             },
             {
-              "title": "프론트엔드 메인 페이지 접근성",
-              "ok": false,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium",
-                  "projectName": "chromium",
-                  "results": [
-                    {
-                      "workerIndex": 1,
-                      "parallelIndex": 1,
-                      "status": "failed",
-                      "duration": 6,
-                      "error": {
-                        "message": "Error: browserType.launch: \n╔══════════════════════════════════════════════════════╗\n║ Host system is missing dependencies to run browsers. ║\n║ Please install them with the following command:      ║\n║                                                      ║\n║     sudo npx playwright install-deps                 ║\n║                                                      ║\n║ Alternatively, use apt:                              ║\n║     sudo apt-get install libnspr4\\                   ║\n║         libnss3\\                                     ║\n║         libasound2t64                                ║\n║                                                      ║\n║ <3 Playwright Team                                   ║\n╚══════════════════════════════════════════════════════╝",
-                        "stack": "Error: browserType.launch: \n╔══════════════════════════════════════════════════════╗\n║ Host system is missing dependencies to run browsers. ║\n║ Please install them with the following command:      ║\n║                                                      ║\n║     sudo npx playwright install-deps                 ║\n║                                                      ║\n║ Alternatively, use apt:                              ║\n║     sudo apt-get install libnspr4\\                   ║\n║         libnss3\\                                     ║\n║         libasound2t64                                ║\n║                                                      ║\n║ <3 Playwright Team                                   ║\n╚══════════════════════════════════════════════════════╝"
-                      },
-                      "errors": [
-                        {
-                          "message": "Error: browserType.launch: \n╔══════════════════════════════════════════════════════╗\n║ Host system is missing dependencies to run browsers. ║\n║ Please install them with the following command:      ║\n║                                                      ║\n║     sudo npx playwright install-deps                 ║\n║                                                      ║\n║ Alternatively, use apt:                              ║\n║     sudo apt-get install libnspr4\\                   ║\n║         libnss3\\                                     ║\n║         libasound2t64                                ║\n║                                                      ║\n║ <3 Playwright Team                                   ║\n╚══════════════════════════════════════════════════════╝"
-                        }
-                      ],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-08-27T01:31:42.716Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "unexpected"
-                }
-              ],
-              "id": "3f58d441499060f9c0b2-6c49af1d658b62e9c253",
-              "file": "smoke-test.spec.ts",
-              "line": 27,
-              "column": 7
-            },
-            {
-              "title": "인증 관련 API 엔드포인트 접근성",
-              "ok": false,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium",
-                  "projectName": "chromium",
-                  "results": [
-                    {
-                      "workerIndex": 2,
-                      "parallelIndex": 2,
-                      "status": "failed",
-                      "duration": 953,
-                      "error": {
-                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31mfalse\u001b[39m",
-                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31mfalse\u001b[39m\n    at /home/winnmedia/VLANET/vridge-web/tests/e2e/smoke-test.spec.ts:52:62",
-                        "location": {
-                          "file": "/home/winnmedia/VLANET/vridge-web/tests/e2e/smoke-test.spec.ts",
-                          "column": 62,
-                          "line": 52
-                        },
-                        "snippet": "  50 |     \n  51 |     // Then: 엔드포인트가 존재하고 처리됨 (400 또는 422는 정상 - 데이터 누락으로 인한 것)\n> 52 |     expect([400, 422, 500].includes(loginResponse.status())).toBeTruthy()\n     |                                                              ^\n  53 |\n  54 |     // When: 회원가입 엔드포인트 확인\n  55 |     const signupResponse = await request.post(`${BACKEND_URL}/users/signup/`, {"
-                      },
-                      "errors": [
-                        {
-                          "location": {
-                            "file": "/home/winnmedia/VLANET/vridge-web/tests/e2e/smoke-test.spec.ts",
-                            "column": 62,
-                            "line": 52
-                          },
-                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31mfalse\u001b[39m\n\n  50 |     \n  51 |     // Then: 엔드포인트가 존재하고 처리됨 (400 또는 422는 정상 - 데이터 누락으로 인한 것)\n> 52 |     expect([400, 422, 500].includes(loginResponse.status())).toBeTruthy()\n     |                                                              ^\n  53 |\n  54 |     // When: 회원가입 엔드포인트 확인\n  55 |     const signupResponse = await request.post(`${BACKEND_URL}/users/signup/`, {\n    at /home/winnmedia/VLANET/vridge-web/tests/e2e/smoke-test.spec.ts:52:62"
-                        }
-                      ],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-08-27T01:31:42.707Z",
-                      "annotations": [],
-                      "attachments": [],
-                      "errorLocation": {
-                        "file": "/home/winnmedia/VLANET/vridge-web/tests/e2e/smoke-test.spec.ts",
-                        "column": 62,
-                        "line": 52
-                      }
-                    }
-                  ],
-                  "status": "unexpected"
-                }
-              ],
-              "id": "3f58d441499060f9c0b2-ce9bb81e62e566642629",
-              "file": "smoke-test.spec.ts",
-              "line": 45,
-              "column": 7
-            },
-            {
-              "title": "CORS 정책 확인",
+              "title": "🔗 백엔드 API 연결성",
               "ok": true,
               "tags": [],
               "tests": [
                 {
-                  "timeout": 30000,
+                  "timeout": 20000,
                   "annotations": [],
                   "expectedStatus": "passed",
-                  "projectId": "chromium",
-                  "projectName": "chromium",
+                  "projectId": "api-smoke-tests",
+                  "projectName": "api-smoke-tests",
                   "results": [
                     {
-                      "workerIndex": 3,
-                      "parallelIndex": 3,
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 922,
+                      "duration": 391,
                       "errors": [],
-                      "stdout": [],
+                      "stdout": [
+                        {
+                          "text": "✅ API 연결 성공 (385ms, 상태: healthy)\n"
+                        }
+                      ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-08-27T01:31:42.742Z",
+                      "startTime": "2025-08-27T02:52:22.171Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -276,167 +255,37 @@
                   "status": "expected"
                 }
               ],
-              "id": "3f58d441499060f9c0b2-15e7d02d22b9dcdc370b",
-              "file": "smoke-test.spec.ts",
-              "line": 63,
+              "id": "db98f4c8a7ec913ad912-6698d69e0963bfa3b2b3",
+              "file": "smoke-test-api-only.spec.ts",
+              "line": 28,
               "column": 7
             },
             {
-              "title": "정적 리소스 접근성 검증",
-              "ok": false,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium",
-                  "projectName": "chromium",
-                  "results": [
-                    {
-                      "workerIndex": 4,
-                      "parallelIndex": 4,
-                      "status": "failed",
-                      "duration": 6,
-                      "error": {
-                        "message": "Error: browserType.launch: \n╔══════════════════════════════════════════════════════╗\n║ Host system is missing dependencies to run browsers. ║\n║ Please install them with the following command:      ║\n║                                                      ║\n║     sudo npx playwright install-deps                 ║\n║                                                      ║\n║ Alternatively, use apt:                              ║\n║     sudo apt-get install libnspr4\\                   ║\n║         libnss3\\                                     ║\n║         libasound2t64                                ║\n║                                                      ║\n║ <3 Playwright Team                                   ║\n╚══════════════════════════════════════════════════════╝",
-                        "stack": "Error: browserType.launch: \n╔══════════════════════════════════════════════════════╗\n║ Host system is missing dependencies to run browsers. ║\n║ Please install them with the following command:      ║\n║                                                      ║\n║     sudo npx playwright install-deps                 ║\n║                                                      ║\n║ Alternatively, use apt:                              ║\n║     sudo apt-get install libnspr4\\                   ║\n║         libnss3\\                                     ║\n║         libasound2t64                                ║\n║                                                      ║\n║ <3 Playwright Team                                   ║\n╚══════════════════════════════════════════════════════╝"
-                      },
-                      "errors": [
-                        {
-                          "message": "Error: browserType.launch: \n╔══════════════════════════════════════════════════════╗\n║ Host system is missing dependencies to run browsers. ║\n║ Please install them with the following command:      ║\n║                                                      ║\n║     sudo npx playwright install-deps                 ║\n║                                                      ║\n║ Alternatively, use apt:                              ║\n║     sudo apt-get install libnspr4\\                   ║\n║         libnss3\\                                     ║\n║         libasound2t64                                ║\n║                                                      ║\n║ <3 Playwright Team                                   ║\n╚══════════════════════════════════════════════════════╝"
-                        }
-                      ],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-08-27T01:31:42.708Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "unexpected"
-                }
-              ],
-              "id": "3f58d441499060f9c0b2-c815adc4ca3ee794bcc0",
-              "file": "smoke-test.spec.ts",
-              "line": 82,
-              "column": 7
-            },
-            {
-              "title": "기본 성능 메트릭 확인",
-              "ok": false,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium",
-                  "projectName": "chromium",
-                  "results": [
-                    {
-                      "workerIndex": 5,
-                      "parallelIndex": 5,
-                      "status": "failed",
-                      "duration": 6,
-                      "error": {
-                        "message": "Error: browserType.launch: \n╔══════════════════════════════════════════════════════╗\n║ Host system is missing dependencies to run browsers. ║\n║ Please install them with the following command:      ║\n║                                                      ║\n║     sudo npx playwright install-deps                 ║\n║                                                      ║\n║ Alternatively, use apt:                              ║\n║     sudo apt-get install libnspr4\\                   ║\n║         libnss3\\                                     ║\n║         libasound2t64                                ║\n║                                                      ║\n║ <3 Playwright Team                                   ║\n╚══════════════════════════════════════════════════════╝",
-                        "stack": "Error: browserType.launch: \n╔══════════════════════════════════════════════════════╗\n║ Host system is missing dependencies to run browsers. ║\n║ Please install them with the following command:      ║\n║                                                      ║\n║     sudo npx playwright install-deps                 ║\n║                                                      ║\n║ Alternatively, use apt:                              ║\n║     sudo apt-get install libnspr4\\                   ║\n║         libnss3\\                                     ║\n║         libasound2t64                                ║\n║                                                      ║\n║ <3 Playwright Team                                   ║\n╚══════════════════════════════════════════════════════╝"
-                      },
-                      "errors": [
-                        {
-                          "message": "Error: browserType.launch: \n╔══════════════════════════════════════════════════════╗\n║ Host system is missing dependencies to run browsers. ║\n║ Please install them with the following command:      ║\n║                                                      ║\n║     sudo npx playwright install-deps                 ║\n║                                                      ║\n║ Alternatively, use apt:                              ║\n║     sudo apt-get install libnspr4\\                   ║\n║         libnss3\\                                     ║\n║         libasound2t64                                ║\n║                                                      ║\n║ <3 Playwright Team                                   ║\n╚══════════════════════════════════════════════════════╝"
-                        }
-                      ],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-08-27T01:31:42.706Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "unexpected"
-                }
-              ],
-              "id": "3f58d441499060f9c0b2-16a36f83241113c5883a",
-              "file": "smoke-test.spec.ts",
-              "line": 109,
-              "column": 7
-            },
-            {
-              "title": "에러 페이지 처리 확인",
-              "ok": false,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium",
-                  "projectName": "chromium",
-                  "results": [
-                    {
-                      "workerIndex": 6,
-                      "parallelIndex": 6,
-                      "status": "failed",
-                      "duration": 6,
-                      "error": {
-                        "message": "Error: browserType.launch: \n╔══════════════════════════════════════════════════════╗\n║ Host system is missing dependencies to run browsers. ║\n║ Please install them with the following command:      ║\n║                                                      ║\n║     sudo npx playwright install-deps                 ║\n║                                                      ║\n║ Alternatively, use apt:                              ║\n║     sudo apt-get install libnspr4\\                   ║\n║         libnss3\\                                     ║\n║         libasound2t64                                ║\n║                                                      ║\n║ <3 Playwright Team                                   ║\n╚══════════════════════════════════════════════════════╝",
-                        "stack": "Error: browserType.launch: \n╔══════════════════════════════════════════════════════╗\n║ Host system is missing dependencies to run browsers. ║\n║ Please install them with the following command:      ║\n║                                                      ║\n║     sudo npx playwright install-deps                 ║\n║                                                      ║\n║ Alternatively, use apt:                              ║\n║     sudo apt-get install libnspr4\\                   ║\n║         libnss3\\                                     ║\n║         libasound2t64                                ║\n║                                                      ║\n║ <3 Playwright Team                                   ║\n╚══════════════════════════════════════════════════════╝"
-                      },
-                      "errors": [
-                        {
-                          "message": "Error: browserType.launch: \n╔══════════════════════════════════════════════════════╗\n║ Host system is missing dependencies to run browsers. ║\n║ Please install them with the following command:      ║\n║                                                      ║\n║     sudo npx playwright install-deps                 ║\n║                                                      ║\n║ Alternatively, use apt:                              ║\n║     sudo apt-get install libnspr4\\                   ║\n║         libnss3\\                                     ║\n║         libasound2t64                                ║\n║                                                      ║\n║ <3 Playwright Team                                   ║\n╚══════════════════════════════════════════════════════╝"
-                        }
-                      ],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-08-27T01:31:42.717Z",
-                      "annotations": [],
-                      "attachments": []
-                    }
-                  ],
-                  "status": "unexpected"
-                }
-              ],
-              "id": "3f58d441499060f9c0b2-4dca602162926d56cf49",
-              "file": "smoke-test.spec.ts",
-              "line": 127,
-              "column": 7
-            }
-          ]
-        },
-        {
-          "title": "API 기능별 스모크 테스트",
-          "file": "smoke-test.spec.ts",
-          "line": 144,
-          "column": 6,
-          "specs": [
-            {
-              "title": "사용자 관리 API 엔드포인트",
+              "title": "🔒 인증 시스템 기본 동작 (API)",
               "ok": true,
               "tags": [],
               "tests": [
                 {
-                  "timeout": 30000,
+                  "timeout": 20000,
                   "annotations": [],
                   "expectedStatus": "passed",
-                  "projectId": "chromium",
-                  "projectName": "chromium",
+                  "projectId": "api-smoke-tests",
+                  "projectName": "api-smoke-tests",
                   "results": [
                     {
-                      "workerIndex": 7,
-                      "parallelIndex": 7,
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1547,
+                      "duration": 217,
                       "errors": [],
-                      "stdout": [],
+                      "stdout": [
+                        {
+                          "text": "✅ 인증 엔드포인트 정상 작동\n"
+                        }
+                      ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-08-27T01:31:42.711Z",
+                      "startTime": "2025-08-27T02:52:22.578Z",
                       "annotations": [],
                       "attachments": []
                     }
@@ -444,109 +293,199 @@
                   "status": "expected"
                 }
               ],
-              "id": "3f58d441499060f9c0b2-5aadbd56a578820c3cd0",
-              "file": "smoke-test.spec.ts",
-              "line": 146,
+              "id": "db98f4c8a7ec913ad912-a8896392b58f1187d207",
+              "file": "smoke-test-api-only.spec.ts",
+              "line": 42,
               "column": 7
             },
             {
-              "title": "프로젝트 관리 API 접근성",
-              "ok": false,
+              "title": "🌐 CORS 설정 기본 확인",
+              "ok": true,
               "tags": [],
               "tests": [
                 {
-                  "timeout": 30000,
+                  "timeout": 20000,
                   "annotations": [],
                   "expectedStatus": "passed",
-                  "projectId": "chromium",
-                  "projectName": "chromium",
+                  "projectId": "api-smoke-tests",
+                  "projectName": "api-smoke-tests",
                   "results": [
                     {
-                      "workerIndex": 9,
-                      "parallelIndex": 6,
-                      "status": "failed",
-                      "duration": 539,
-                      "error": {
-                        "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31mfalse\u001b[39m",
-                        "stack": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31mfalse\u001b[39m\n    at /home/winnmedia/VLANET/vridge-web/tests/e2e/smoke-test.spec.ts:173:57",
-                        "location": {
-                          "file": "/home/winnmedia/VLANET/vridge-web/tests/e2e/smoke-test.spec.ts",
-                          "column": 57,
-                          "line": 173
-                        },
-                        "snippet": "  171 |     \n  172 |     // 401 (인증 필요) 또는 403 (권한 없음)이 정상 응답\n> 173 |     expect([401, 403, 200].includes(response.status())).toBeTruthy()\n      |                                                         ^\n  174 |   })\n  175 |\n  176 |   test('실시간 기능 WebSocket 엔드포인트', async ({ page }) => {"
-                      },
-                      "errors": [
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 108,
+                      "errors": [],
+                      "stdout": [
                         {
-                          "location": {
-                            "file": "/home/winnmedia/VLANET/vridge-web/tests/e2e/smoke-test.spec.ts",
-                            "column": 57,
-                            "line": 173
-                          },
-                          "message": "Error: \u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeTruthy\u001b[2m()\u001b[22m\n\nReceived: \u001b[31mfalse\u001b[39m\n\n  171 |     \n  172 |     // 401 (인증 필요) 또는 403 (권한 없음)이 정상 응답\n> 173 |     expect([401, 403, 200].includes(response.status())).toBeTruthy()\n      |                                                         ^\n  174 |   })\n  175 |\n  176 |   test('실시간 기능 WebSocket 엔드포인트', async ({ page }) => {\n    at /home/winnmedia/VLANET/vridge-web/tests/e2e/smoke-test.spec.ts:173:57"
+                          "text": "✅ CORS 설정 정상\n"
                         }
                       ],
-                      "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2025-08-27T01:31:43.350Z",
-                      "annotations": [],
-                      "attachments": [],
-                      "errorLocation": {
-                        "file": "/home/winnmedia/VLANET/vridge-web/tests/e2e/smoke-test.spec.ts",
-                        "column": 57,
-                        "line": 173
-                      }
-                    }
-                  ],
-                  "status": "unexpected"
-                }
-              ],
-              "id": "3f58d441499060f9c0b2-5d6533dd1d6f5b45f6ad",
-              "file": "smoke-test.spec.ts",
-              "line": 166,
-              "column": 7
-            },
-            {
-              "title": "실시간 기능 WebSocket 엔드포인트",
-              "ok": false,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "chromium",
-                  "projectName": "chromium",
-                  "results": [
-                    {
-                      "workerIndex": 8,
-                      "parallelIndex": 1,
-                      "status": "failed",
-                      "duration": 4,
-                      "error": {
-                        "message": "Error: browserType.launch: \n╔══════════════════════════════════════════════════════╗\n║ Host system is missing dependencies to run browsers. ║\n║ Please install them with the following command:      ║\n║                                                      ║\n║     sudo npx playwright install-deps                 ║\n║                                                      ║\n║ Alternatively, use apt:                              ║\n║     sudo apt-get install libnspr4\\                   ║\n║         libnss3\\                                     ║\n║         libasound2t64                                ║\n║                                                      ║\n║ <3 Playwright Team                                   ║\n╚══════════════════════════════════════════════════════╝",
-                        "stack": "Error: browserType.launch: \n╔══════════════════════════════════════════════════════╗\n║ Host system is missing dependencies to run browsers. ║\n║ Please install them with the following command:      ║\n║                                                      ║\n║     sudo npx playwright install-deps                 ║\n║                                                      ║\n║ Alternatively, use apt:                              ║\n║     sudo apt-get install libnspr4\\                   ║\n║         libnss3\\                                     ║\n║         libasound2t64                                ║\n║                                                      ║\n║ <3 Playwright Team                                   ║\n╚══════════════════════════════════════════════════════╝"
-                      },
-                      "errors": [
-                        {
-                          "message": "Error: browserType.launch: \n╔══════════════════════════════════════════════════════╗\n║ Host system is missing dependencies to run browsers. ║\n║ Please install them with the following command:      ║\n║                                                      ║\n║     sudo npx playwright install-deps                 ║\n║                                                      ║\n║ Alternatively, use apt:                              ║\n║     sudo apt-get install libnspr4\\                   ║\n║         libnss3\\                                     ║\n║         libasound2t64                                ║\n║                                                      ║\n║ <3 Playwright Team                                   ║\n╚══════════════════════════════════════════════════════╝"
-                        }
-                      ],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2025-08-27T01:31:43.348Z",
+                      "startTime": "2025-08-27T02:52:22.809Z",
                       "annotations": [],
                       "attachments": []
                     }
                   ],
-                  "status": "unexpected"
+                  "status": "expected"
                 }
               ],
-              "id": "3f58d441499060f9c0b2-8a966a9750eed3ac67f1",
-              "file": "smoke-test.spec.ts",
-              "line": 176,
+              "id": "db98f4c8a7ec913ad912-81e12914b1e59c073723",
+              "file": "smoke-test-api-only.spec.ts",
+              "line": 60,
+              "column": 7
+            },
+            {
+              "title": "🛡️ 기본 보안 헤더",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 20000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "api-smoke-tests",
+                  "projectName": "api-smoke-tests",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 19,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "✅ 보안 헤더: 2/4개\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-08-27T02:52:22.927Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "db98f4c8a7ec913ad912-79c29de98552ee2bfae6",
+              "file": "smoke-test-api-only.spec.ts",
+              "line": 78,
+              "column": 7
+            },
+            {
+              "title": "⚡ API 응답 성능",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 20000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "api-smoke-tests",
+                  "projectName": "api-smoke-tests",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 101,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "✅ API 성능 (98ms)\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-08-27T02:52:22.953Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "db98f4c8a7ec913ad912-9b1e8356b47aa8d24a02",
+              "file": "smoke-test-api-only.spec.ts",
+              "line": 100,
+              "column": 7
+            },
+            {
+              "title": "📱 반응형 동작 (헤더)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 20000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "api-smoke-tests",
+                  "projectName": "api-smoke-tests",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 26,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "✅ 모바일 요청 정상 처리\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-08-27T02:52:23.062Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "db98f4c8a7ec913ad912-4e8d00aa776be80d09ca",
+              "file": "smoke-test-api-only.spec.ts",
+              "line": 113,
+              "column": 7
+            },
+            {
+              "title": "🔄 기본 에러 복구",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 20000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "api-smoke-tests",
+                  "projectName": "api-smoke-tests",
+                  "results": [
+                    {
+                      "workerIndex": 0,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 210,
+                      "errors": [],
+                      "stdout": [
+                        {
+                          "text": "✅ 에러 복구 메커니즘 정상\n"
+                        }
+                      ],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2025-08-27T02:52:23.097Z",
+                      "annotations": [],
+                      "attachments": []
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "db98f4c8a7ec913ad912-96757a67f6425efa461b",
+              "file": "smoke-test-api-only.spec.ts",
+              "line": 128,
               "column": 7
             }
           ]
@@ -556,11 +495,11 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2025-08-27T01:31:34.133Z",
-    "duration": 10318.238,
-    "expected": 3,
+    "startTime": "2025-08-27T02:52:21.492Z",
+    "duration": 1847.812,
+    "expected": 8,
     "skipped": 0,
-    "unexpected": 7,
+    "unexpected": 0,
     "flaky": 0
   }
 }

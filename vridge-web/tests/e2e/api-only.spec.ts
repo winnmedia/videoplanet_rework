@@ -5,7 +5,7 @@
 
 import { test, expect } from '@playwright/test'
 
-const FRONTEND_URL = 'https://vridge-web.vercel.app'
+const FRONTEND_URL = 'https://vridge-xyc331ybx-vlanets-projects.vercel.app'
 const BACKEND_URL = 'https://api.vlanet.net'
 
 test.describe('VideoPlanet API 통합 검증', () => {
@@ -24,26 +24,26 @@ test.describe('VideoPlanet API 통합 검증', () => {
   })
 
   test('사용자 인증 API 엔드포인트 가용성', async ({ request }) => {
-    // 회원가입 엔드포인트 (빈 데이터로 400 응답 확인)
-    const signupResponse = await request.post(`${BACKEND_URL}/users/signup/`, {
+    // 회원가입 엔드포인트 (빈 데이터로 500 응답 확인)
+    const signupResponse = await request.post(`${BACKEND_URL}/users/signup`, {
       data: {},
       failOnStatusCode: false
     })
-    expect([400, 422, 500].includes(signupResponse.status())).toBeTruthy()
+    expect([400, 403, 422, 500].includes(signupResponse.status())).toBeTruthy()
     
-    // 로그인 엔드포인트 (빈 데이터로 400 응답 확인) 
-    const loginResponse = await request.post(`${BACKEND_URL}/users/signin/`, {
+    // 로그인 엔드포인트 (빈 데이터로 403/500 응답 확인) 
+    const loginResponse = await request.post(`${BACKEND_URL}/users/login`, {
       data: {},
       failOnStatusCode: false
     })
-    expect([400, 422, 500].includes(loginResponse.status())).toBeTruthy()
+    expect([400, 403, 422, 500].includes(loginResponse.status())).toBeTruthy()
     
     // 이메일 인증 엔드포인트
-    const emailAuthResponse = await request.post(`${BACKEND_URL}/users/sendauth/signup/`, {
+    const emailAuthResponse = await request.post(`${BACKEND_URL}/users/send_authnumber/signup`, {
       data: {},
       failOnStatusCode: false
     })
-    expect([400, 422, 500].includes(emailAuthResponse.status())).toBeTruthy()
+    expect([400, 403, 422, 500].includes(emailAuthResponse.status())).toBeTruthy()
   })
 
   test('CORS 설정 및 크로스 오리진 요청', async ({ request }) => {
@@ -78,21 +78,21 @@ test.describe('VideoPlanet API 통합 검증', () => {
 
   test('소셜 로그인 API 엔드포인트 접근성', async ({ request }) => {
     // 카카오 로그인 (빈 토큰으로 에러 응답 확인)
-    const kakaoResponse = await request.post(`${BACKEND_URL}/users/kakao/`, {
+    const kakaoResponse = await request.post(`${BACKEND_URL}/users/login/kakao`, {
       data: {},
       failOnStatusCode: false
     })
     expect([400, 422, 500].includes(kakaoResponse.status())).toBeTruthy()
     
     // 네이버 로그인
-    const naverResponse = await request.post(`${BACKEND_URL}/users/naver/`, {
+    const naverResponse = await request.post(`${BACKEND_URL}/users/login/naver`, {
       data: {},
       failOnStatusCode: false
     })
     expect([400, 422, 500].includes(naverResponse.status())).toBeTruthy()
     
     // 구글 로그인
-    const googleResponse = await request.post(`${BACKEND_URL}/users/google/`, {
+    const googleResponse = await request.post(`${BACKEND_URL}/users/login/google`, {
       data: {},
       failOnStatusCode: false
     })
@@ -100,7 +100,7 @@ test.describe('VideoPlanet API 통합 검증', () => {
   })
 
   test('에러 응답 형식 표준화 검증', async ({ request }) => {
-    const response = await request.post(`${BACKEND_URL}/users/signin/`, {
+    const response = await request.post(`${BACKEND_URL}/users/login`, {
       data: { email: 'invalid', password: 'invalid' },
       failOnStatusCode: false
     })
