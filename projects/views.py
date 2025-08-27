@@ -3,8 +3,8 @@ import logging, json, random, os
 # Safe import for my_settings (fallback to environment variables in production)
 try:
     import my_settings
-    DEBUG = DEBUG
-except ImportError:
+    DEBUG = getattr(my_settings, 'DEBUG', False)
+except (ImportError, AttributeError):
     # Use environment variables in production (Railway)
     DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 from datetime import datetime

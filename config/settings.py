@@ -62,7 +62,7 @@ ALLOWED_HOSTS = [
 # Application definition
 
 DJANGO_APPS = [
-    "daphne",
+    # "daphne",  # 임시로 비활성화 (테스트용)
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",

@@ -7,9 +7,9 @@ try:
     SECRET_KEY = my_settings.SECRET_KEY
     EMAIL_HOST_PASSWORD = my_settings.EMAIL_HOST_PASSWORD
     FROM_EMAIL = my_settings.FROM_EMAIL
-    NAVER_CLIENT_ID = my_settings.NAVER_CLIENT_ID
-    NAVER_SECRET_KEY = my_settings.NAVER_SECRET_KEY
-except ImportError:
+    NAVER_CLIENT_ID = getattr(my_settings, 'NAVER_CLIENT_ID', '')
+    NAVER_SECRET_KEY = getattr(my_settings, 'NAVER_SECRET_KEY', '')
+except (ImportError, AttributeError):
     # Use environment variables in production (Railway)
     SECRET_KEY = os.environ.get('SECRET_KEY', 'fallback-secret-key')
     EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
