@@ -25,20 +25,33 @@ from django.http import JsonResponse
 from .utils import user_validator, auth_send_email
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
 
 # from rest_framework_simplejwt.views import TokenRefreshView,TokenObtainPairView
 
 
 ########## username이 kakao,naver,google이든 회원가입 때 중복되면 생성x
+@method_decorator(csrf_exempt, name='dispatch')
 class SignUp(View):
+    def options(self, request, *args, **kwargs):
+        """Handle preflight CORS requests"""
+        response = JsonResponse({})
+        return response
+        
     def post(self, request):
         try:
+            # CORS 디버깅을 위한 로깅
+            origin = request.META.get('HTTP_ORIGIN', 'No Origin')
+            print(f"SignUp POST request from origin: {origin}")
+            print(f"Request headers: {dict(request.headers)}")
+            
             data = json.loads(request.body)
             email = data.get("email")
             nickname = data.get("nickname")
             password = data.get("password")
 
-            print(data)
+            print(f"SignUp data: {data}")
             user = models.User.objects.get_or_none(username=email)
             if user:
                 return JsonResponse({"message": "이미 가입되어 있는 사용자입니다."}, status=500)
@@ -77,7 +90,13 @@ class SignUp(View):
             return JsonResponse({"message": "알 수 없는 에러입니다 고객센터에 문의해주세요."}, status=500)
 
 
+@method_decorator(csrf_exempt, name='dispatch')  
 class SignIn(View):
+    def options(self, request, *args, **kwargs):
+        """Handle preflight CORS requests"""
+        response = JsonResponse({})
+        return response
+        
     def post(self, request):
         try:
             data = json.loads(request.body)

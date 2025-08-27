@@ -57,6 +57,7 @@ ALLOWED_HOSTS = [
     "43.201.170.139",
     ".railway.app",
     "localhost",
+    "videoplanet.up.railway.app",
 ]
 
 # Application definition
@@ -93,12 +94,12 @@ INSTALLED_APPS = DJANGO_APPS + PROJECT_APPS + THIRD_PARTY_APPS
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
+    "corsheaders.middleware.CorsMiddleware",
     "django.middleware.common.CommonMiddleware",
     # "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "corsheaders.middleware.CorsMiddleware",
 ]
 
 REST_FRAMEWORK = {
@@ -339,6 +340,10 @@ CORS_ALLOWED_ORIGINS = [
     # Railway 도메인들
     "https://videoplanet-backend.up.railway.app",
     "https://videoplanet-rework-production.up.railway.app",
+    "https://videoplanet.up.railway.app",
+    # Vercel 도메인들
+    "https://videoplanet-kjdrs7r2y-vlanets-projects.vercel.app",
+    "https://vridge-web-vlanets-projects.vercel.app",
 ]
 
 # Railway 환경에서 동적으로 추가되는 도메인들이 스키마를 포함하도록 보장
@@ -359,19 +364,12 @@ CORS_ALLOW_METHODS = (
     "POST",
     "PUT",
 )
-CORS_ALLOW_HEADERS = (
-    "accept",
-    "KA",
-    "accept-encoding",
+CORS_ALLOW_HEADERS = list(default_headers) + [
+    "vridge_session",
     "authorization",
     "content-type",
-    "dnt",
-    "origin",
-    "user-agent",
-    "x-csrftoken",
-    "x-requested-with",
-)
-CORS_ALLOW_HEADERS = list(default_headers) + ["vridge_session"]
+    "ka"
+]
 
 # Email 전송 - SendGrid
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
@@ -402,4 +400,8 @@ CSRF_TRUSTED_ORIGINS = [
     # Railway 도메인들
     "https://videoplanet-backend.up.railway.app",
     "https://videoplanet-rework-production.up.railway.app",
+    "https://videoplanet.up.railway.app",
+    # Vercel 도메인들
+    "https://videoplanet-kjdrs7r2y-vlanets-projects.vercel.app",
+    "https://vridge-web-vlanets-projects.vercel.app",
 ]

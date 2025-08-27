@@ -13,10 +13,10 @@ restartPolicyMaxRetries = 3
 # 환경별 변수 설정
 [environments.production]
 variables = [
-    "DJANGO_SETTINGS_MODULE=config.settings",
+    "DJANGO_SETTINGS_MODULE=config.settings_railway",
     "DEBUG=False",
-    "ALLOWED_HOSTS=*.railway.app,*.up.railway.app,localhost,127.0.0.1",
-    "CORS_ALLOWED_ORIGINS=https://vridge-web.vercel.app,https://videoplanet.vercel.app,https://vlanet.vercel.app"
+    "ALLOWED_HOSTS=*.railway.app,*.up.railway.app,localhost,127.0.0.1,videoplanet.up.railway.app",
+    "CORS_ALLOWED_ORIGINS=https://vridge-web.vercel.app,https://videoplanet.vercel.app,https://vlanet.vercel.app,https://videoplanet-kjdrs7r2y-vlanets-projects.vercel.app,https://vridge-web-vlanets-projects.vercel.app"
 ]
 
 [environments.development] 

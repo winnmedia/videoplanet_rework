@@ -29,6 +29,7 @@ ALLOWED_HOSTS = [
     ".vercel.app",
     "localhost",
     "127.0.0.1",
+    "videoplanet.up.railway.app",
     os.environ.get('RAILWAY_STATIC_URL', '').replace('https://', '').replace('http://', ''),
 ]
 
@@ -192,9 +193,11 @@ CORS_ALLOWED_ORIGINS = [
     # Railway 도메인들
     "https://videoplanet-backend.up.railway.app",
     "https://videoplanet-rework-production.up.railway.app",
+    "https://videoplanet.up.railway.app",
     # Vercel 배포 도메인들
     "https://vridge-xyc331ybx-vlanets-projects.vercel.app",
     "https://vridge-73hhbfs04-vlanets-projects.vercel.app",
+    "https://videoplanet-kjdrs7r2y-vlanets-projects.vercel.app",
     # Vercel 프리뷰 도메인 패턴
     "https://vridge-web-vlanets-projects.vercel.app",
 ]
@@ -226,6 +229,10 @@ CSRF_TRUSTED_ORIGINS = [
     # Railway 도메인들
     "https://videoplanet-backend.up.railway.app",
     "https://videoplanet-rework-production.up.railway.app",
+    "https://videoplanet.up.railway.app",
+    # Vercel 도메인들
+    "https://videoplanet-kjdrs7r2y-vlanets-projects.vercel.app",
+    "https://vridge-web-vlanets-projects.vercel.app",
 ]
 
 # Railway 도메인 동적 추가 (스키마 보장)
