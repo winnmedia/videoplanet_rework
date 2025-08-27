@@ -14,10 +14,7 @@ import {
   mockFileUpload,
   mockCache,
   cachedMockApiCall,
-  type MockConfig,
-  type ApiResponse,
-  type ApiError,
-  type PaginatedResponse
+  type MockConfig
 } from './mockSystem'
 
 // 타이머 모킹
@@ -78,8 +75,6 @@ describe('mockApiCall', () => {
 
   describe('지연 시뮬레이션', () => {
     it('기본 지연 시간을 사용해야 함', async () => {
-      const startTime = Date.now()
-      
       const promise = mockApiCall({ test: true })
       jest.advanceTimersByTime(150) // baseDelay + 평균 randomDelay
       await promise
@@ -465,7 +460,6 @@ describe('캐시 시스템', () => {
       await promise1
 
       // 두 번째 호출 (즉시 완료되어야 함)
-      const startTime = Date.now()
       const response2 = await cachedMockApiCall('cache-key', { data: 'different' })
 
       expect(response2.data).toEqual({ data: 'test' }) // 캐시된 데이터

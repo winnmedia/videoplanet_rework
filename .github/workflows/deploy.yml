@@ -51,8 +51,8 @@ jobs:
       run: npm run build
       env:
         NODE_ENV: production
-        NEXT_PUBLIC_API_URL: https://videoplanet-backend.up.railway.app
-        NEXT_PUBLIC_BACKEND_URL: https://videoplanet-backend.up.railway.app
+        NEXT_PUBLIC_API_URL: https://api.vlanet.net
+        NEXT_PUBLIC_BACKEND_URL: https://api.vlanet.net
         NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET || 'vridge-nextauth-secret-production-2025-very-secure-key-for-deployment' }}
         NEXTAUTH_URL: https://vridge-web.vercel.app
 
@@ -181,7 +181,7 @@ jobs:
           const message = `## 🚀 Deployment Ready!
           
           **Frontend (Vercel):** ${deploymentUrl}
-          **Backend (Railway):** https://videoplanet-backend.up.railway.app
+          **Backend (Railway):** https://api.vlanet.net
           
           ### Quick Links:
           - 🏠 [Dashboard](${deploymentUrl}/dashboard)
@@ -190,7 +190,7 @@ jobs:
           
           ### Health Checks:
           - [Frontend Health](${deploymentUrl}/api/health)
-          - [Backend Health](https://videoplanet-backend.up.railway.app/health)
+          - [Backend Health](https://api.vlanet.net/api/health)
           `;
           
           github.rest.issues.createComment({
@@ -221,7 +221,7 @@ jobs:
     - name: Health Check - Backend (Railway)
       run: |
         echo "Checking backend health..."
-        RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" https://videoplanet-backend.up.railway.app/health)
+        RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" https://api.vlanet.net/api/health)
         if [ $RESPONSE -ne 200 ]; then
           echo "❌ Backend health check failed with status: $RESPONSE"
           echo "⚠️  Backend might be sleeping on Railway free tier"

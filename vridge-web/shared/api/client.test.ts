@@ -15,7 +15,7 @@ describe('ApiClient', () => {
   describe('GET requests', () => {
     it('should make successful GET request', async () => {
       const mockData = { id: 1, name: 'Test' };
-      (global.fetch as any).mockResolvedValueOnce({
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         ok: true,
         status: 200,
         json: async () => mockData,
@@ -29,7 +29,7 @@ describe('ApiClient', () => {
     });
 
     it('should handle GET request errors', async () => {
-      (global.fetch as any).mockResolvedValueOnce({
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         ok: false,
         status: 404,
         json: async () => ({ message: 'Not found' }),
@@ -43,7 +43,7 @@ describe('ApiClient', () => {
     });
 
     it('should handle network errors', async () => {
-      (global.fetch as any).mockRejectedValueOnce(
+      (global.fetch as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
         new Error('Network error')
       );
 
@@ -60,7 +60,7 @@ describe('ApiClient', () => {
       const requestBody = { name: 'New Item' };
       const responseData = { id: 1, ...requestBody };
       
-      (global.fetch as any).mockResolvedValueOnce({
+      (global.fetch as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
         ok: true,
         status: 201,
         json: async () => responseData,
@@ -85,7 +85,7 @@ describe('ApiClient', () => {
       // Mock fetch to throw an AbortError - note it's not an Error but a DOMException
       const abortError = new Error('The operation was aborted');
       abortError.name = 'AbortError';
-      (global.fetch as any).mockRejectedValueOnce(abortError);
+      (global.fetch as ReturnType<typeof vi.fn>).mockRejectedValueOnce(abortError);
 
       const result = await apiClient.get('/api/slow');
 

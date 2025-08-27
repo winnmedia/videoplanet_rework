@@ -5,7 +5,7 @@
  */
 
 // 기본 API 응답 타입
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   data: T
   status: number
   message: string
@@ -16,7 +16,7 @@ export interface ApiResponse<T = any> {
 export interface ApiError {
   code: string
   message: string
-  details?: Record<string, any>
+  details?: Record<string, unknown>
   status: number
   timestamp: string
 }
