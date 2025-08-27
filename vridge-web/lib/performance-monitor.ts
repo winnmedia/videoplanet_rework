@@ -112,7 +112,7 @@ export class PerformanceMonitor {
 
     // FID (First Input Delay) 모니터링
     this.observeMetric('first-input', (entries) => {
-      const firstEntry = entries[0];
+      const firstEntry = entries[0] as PerformanceEventTiming;
       this.metrics.fid = Math.round(firstEntry.processingStart - firstEntry.startTime);
       this.checkBudget('fid', this.metrics.fid);
     });
@@ -121,8 +121,9 @@ export class PerformanceMonitor {
     this.observeMetric('layout-shift', (entries) => {
       let clsValue = 0;
       entries.forEach(entry => {
-        if (!entry.hadRecentInput) {
-          clsValue += entry.value;
+        const layoutShiftEntry = entry as PerformanceEntry & { hadRecentInput?: boolean; value?: number };
+        if (!layoutShiftEntry.hadRecentInput) {
+          clsValue += layoutShiftEntry.value || 0;
         }
       });
       this.metrics.cls = Math.round(clsValue * 1000) / 1000;
