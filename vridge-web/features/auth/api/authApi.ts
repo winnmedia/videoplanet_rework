@@ -1,36 +1,42 @@
-// Backend API integration with environment variable
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.vlanet.net'
+import { api } from '@/lib/api/client';
+
+interface LoginResponse {
+  user: string;
+  vridge_session: string;
+  message?: string;
+}
+
+interface SignupResponse {
+  user: string;
+  vridge_session: string;
+  message?: string;
+}
+
+interface VerificationResponse {
+  message: string;
+}
 
 export const authApi = {
   login: async (email: string, password: string) => {
-    const response = await fetch(`${BACKEND_URL}/users/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include', // 쿠키 포함
-      body: JSON.stringify({
+    try {
+      const response = await api.post<LoginResponse>('/users/login', {
         email,
         password
-      })
-    })
+      }, { withAuth: true });
 
-    const data = await response.json()
-    
-    if (!response.ok) {
-      throw new Error(data.message || '로그인에 실패했습니다.')
-    }
-
-    return {
-      data: {
-        user: {
-          id: data.user,
-          email: data.user,
-          name: data.user,
-          role: 'user'
-        },
-        token: data.vridge_session
+      return {
+        data: {
+          user: {
+            id: response.data.user,
+            email: response.data.user,
+            name: response.data.user,
+            role: 'user'
+          },
+          token: response.data.vridge_session
+        }
       }
+    } catch (error: any) {
+      throw new Error(error.message || '로그인에 실패했습니다.')
     }
   },
 
@@ -40,35 +46,26 @@ export const authApi = {
     password: string;
     auth_number: string;
   }) => {
-    const response = await fetch(`${BACKEND_URL}/users/signup`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include', // 쿠키 포함
-      body: JSON.stringify({
+    try {
+      const response = await api.post<SignupResponse>('/users/signup', {
         email: userData.email,
         nickname: userData.nickname,
         password: userData.password
-      })
-    })
+      }, { withAuth: true });
 
-    const data = await response.json()
-    
-    if (!response.ok) {
-      throw new Error(data.message || '회원가입에 실패했습니다.')
-    }
-
-    return {
-      data: {
-        user: {
-          id: data.user,
-          email: data.user,
-          name: userData.nickname,
-          role: 'user'
-        },
-        token: data.vridge_session
+      return {
+        data: {
+          user: {
+            id: response.data.user,
+            email: response.data.user,
+            name: userData.nickname,
+            role: 'user'
+          },
+          token: response.data.vridge_session
+        }
       }
+    } catch (error: any) {
+      throw new Error(error.message || '회원가입에 실패했습니다.')
     }
   },
 
@@ -77,69 +74,42 @@ export const authApi = {
     auth_number: string;
     password: string;
   }) => {
-    const response = await fetch(`${BACKEND_URL}/users/password_reset`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include', // 쿠키 포함
-      body: JSON.stringify({
+    try {
+      const response = await api.post<VerificationResponse>('/users/password_reset', {
         email: userData.email,
         password: userData.password
-      })
-    })
+      }, { withAuth: true });
 
-    const data = await response.json()
-    
-    if (!response.ok) {
-      throw new Error(data.message || '비밀번호 재설정에 실패했습니다.')
-    }
-
-    return {
-      data: {
-        message: data.message || '비밀번호가 성공적으로 변경되었습니다.'
+      return {
+        data: {
+          message: response.data.message || '비밀번호가 성공적으로 변경되었습니다.'
+        }
       }
+    } catch (error: any) {
+      throw new Error(error.message || '비밀번호 재설정에 실패했습니다.')
     }
   },
 
   sendVerificationCode: async (email: string, type: 'signup' | 'reset' = 'signup') => {
-    const endpoint = type === 'signup' ? '/users/send_authnumber/signup' : '/users/send_authnumber/reset'
-    const response = await fetch(`${BACKEND_URL}${endpoint}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email })
-    })
-
-    const data = await response.json()
-    
-    if (!response.ok) {
-      throw new Error(data.message || '인증번호 발송에 실패했습니다.')
+    try {
+      const endpoint = type === 'signup' ? '/users/send_authnumber/signup' : '/users/send_authnumber/reset'
+      const response = await api.post<VerificationResponse>(endpoint, { email });
+      return { data: response.data }
+    } catch (error: any) {
+      throw new Error(error.message || '인증번호 발송에 실패했습니다.')
     }
-
-    return { data }
   },
 
   verifyEmail: async (email: string, authNumber: string, type: 'signup' | 'reset' = 'signup') => {
-    const endpoint = type === 'signup' ? '/users/signup_emailauth/signup' : '/users/signup_emailauth/reset'
-    const response = await fetch(`${BACKEND_URL}${endpoint}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+    try {
+      const endpoint = type === 'signup' ? '/users/signup_emailauth/signup' : '/users/signup_emailauth/reset'
+      const response = await api.post<VerificationResponse>(endpoint, {
         email,
         auth_number: parseInt(authNumber)
-      })
-    })
-
-    const data = await response.json()
-    
-    if (!response.ok) {
-      throw new Error(data.message || '인증번호 확인에 실패했습니다.')
+      });
+      return { data: response.data }
+    } catch (error: any) {
+      throw new Error(error.message || '인증번호 확인에 실패했습니다.')
     }
-
-    return { data }
   }
 }

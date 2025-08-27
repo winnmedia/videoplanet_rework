@@ -6,6 +6,9 @@ import { defineConfig } from 'vitest/config'
 export default defineConfig({
   plugins: [react()],
   test: {
+    // Global functions (describe, it, expect, etc.)
+    globals: true,
+    
     // Test environment
     environment: 'jsdom',
     

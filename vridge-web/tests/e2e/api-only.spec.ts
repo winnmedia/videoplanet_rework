@@ -6,6 +6,7 @@
 import { test, expect } from '@playwright/test'
 
 const FRONTEND_URL = 'https://vridge-xyc331ybx-vlanets-projects.vercel.app'
+// TODO(human): 환경변수를 사용한 백엔드 URL 설정
 const BACKEND_URL = 'https://api.vlanet.net'
 
 test.describe('VideoPlanet API 통합 검증', () => {

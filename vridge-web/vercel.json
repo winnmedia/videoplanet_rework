@@ -69,7 +69,7 @@
   "rewrites": [
     {
       "source": "/api/proxy/:path*",
-      "destination": "https://vridge-api.railway.app/:path*"
+      "destination": "https://videoplanet.up.railway.app/:path*"
     }
   ],
   "redirects": [

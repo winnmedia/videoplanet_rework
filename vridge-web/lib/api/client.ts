@@ -75,26 +75,13 @@ class ApiClient {
   }
   
   /**
-   * Get authentication headers
+   * Get authentication configuration for requests
    */
-  private async getAuthHeaders(): Promise<HeadersInit> {
-    // Check if we're on the client side
-    if (typeof window !== 'undefined') {
-      // Get token from localStorage or sessionStorage
-      const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
-      if (token) {
-        return { Authorization: `Bearer ${token}` };
-      }
-    }
-    
-    // For server-side, you might get the token from cookies
-    // This would require passing the request context
-    const apiKey = config.get('backendApiKey');
-    if (apiKey) {
-      return { 'X-API-Key': apiKey };
-    }
-    
-    return {};
+  private getAuthConfig(): Partial<RequestInit> {
+    // Use cookie-based authentication to match backend
+    return {
+      credentials: 'include' as RequestCredentials,
+    };
   }
   
   /**
@@ -144,16 +131,18 @@ class ApiClient {
     const url = this.buildUrl(endpoint, params);
     
     // Prepare headers
-    const authHeaders = withAuth ? await this.getAuthHeaders() : {};
     const headers = {
       ...this.defaultHeaders,
-      ...authHeaders,
       ...customHeaders,
     };
+    
+    // Prepare auth configuration
+    const authConfig = withAuth ? this.getAuthConfig() : {};
     
     // Create fetch promise
     const fetchPromise = fetch(url, {
       ...fetchOptions,
+      ...authConfig,
       headers,
     });
     
