@@ -1,15 +1,15 @@
-name: Test Pipeline - Quality Gates
+name: CI/CD Pipeline - Quality Gates & Deployment
 
 on:
   push:
-    branches: [ main, develop, feature/* ]
+    branches: [ main, master, develop, feature/* ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main, master, develop ]
 
 jobs:
-  # Frontend 테스트
+  # Frontend 테스트 및 빌드
   frontend-tests:
-    name: Frontend Tests (Next.js + Vitest)
+    name: Frontend Tests & Build (Next.js + Vitest)
     runs-on: ubuntu-latest
     
     strategy:
@@ -17,29 +17,29 @@ jobs:
         node-version: [18.x, 20.x]
     
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
     - name: Setup Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
-        cache-dependency-path: vridge_front/package-lock.json
+        cache-dependency-path: vridge-web/package-lock.json
     
     - name: Install dependencies
-      working-directory: ./vridge_front
+      working-directory: ./vridge-web
       run: npm ci
     
     - name: Run linter
-      working-directory: ./vridge_front
+      working-directory: ./vridge-web
       run: npm run lint
     
     - name: Run type check
-      working-directory: ./vridge_front
-      run: npx tsc --noEmit
+      working-directory: ./vridge-web
+      run: npm run type-check
     
     - name: Run unit tests with coverage
-      working-directory: ./vridge_front
+      working-directory: ./vridge-web
       run: npm run test:coverage
     
     - name: Check coverage thresholds
