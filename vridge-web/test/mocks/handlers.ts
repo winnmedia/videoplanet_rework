@@ -8,6 +8,7 @@ import { http, HttpResponse, delay } from 'msw'
 import { authHandlers } from './modules/auth.handlers'
 import { calendarHandlers } from './modules/calendar.handlers'
 import { dashboardHandlers } from './modules/dashboard.handlers'
+import { emailVerificationHandlers } from './modules/email-verification.handlers'
 import { externalHandlers } from './modules/external.handlers'
 import { projectHandlers } from './modules/project.handlers'
 import { videoFeedbackHandlers } from './modules/video-feedback.handlers'
@@ -23,6 +24,7 @@ export const handlers = [
   ...authHandlers,
   ...dashboardHandlers,
   ...calendarHandlers,
+  ...emailVerificationHandlers,
   ...projectHandlers,
   ...videoPlanningHandlers,
   ...videoFeedbackHandlers,
@@ -83,6 +85,7 @@ export {
   authHandlers,
   dashboardHandlers,
   calendarHandlers,
+  emailVerificationHandlers,
   projectHandlers,
   videoPlanningHandlers,
   videoFeedbackHandlers,

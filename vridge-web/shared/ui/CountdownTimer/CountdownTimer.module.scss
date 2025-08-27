@@ -1,0 +1,129 @@
+/**
+ * CountdownTimer Component Styles
+ * 이메일 인증 카운트다운 타이머 스타일
+ */
+
+@import '../../config/design-tokens.scss';
+
+.countdown-timer {
+  font-family: $font-family-mono;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-secondary;
+  
+  // 기본 상태
+  background-color: $color-background-subtle;
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $border-radius-sm;
+  border: 1px solid $color-border-subtle;
+  
+  // 트랜지션 효과
+  transition: all $duration-fast $easing-standard;
+  
+  // 접근성을 위한 최소 터치 영역
+  min-height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  
+  // 경고 상태 (30초 미만)
+  &.warning {
+    color: $color-warning-dark;
+    background-color: $color-warning-light;
+    border-color: $color-warning;
+    
+    // 부드러운 깜빡임 효과
+    animation: pulse-warning 1s ease-in-out infinite alternate;
+  }
+  
+  // 만료 상태
+  &.expired {
+    color: $color-danger-dark;
+    background-color: $color-danger-light;
+    border-color: $color-danger;
+    font-weight: $font-weight-semibold;
+    
+    // 긴급함을 나타내는 애니메이션
+    animation: pulse-expired 0.8s ease-in-out infinite alternate;
+  }
+  
+  // 호버 상태
+  &:hover {
+    background-color: $color-background-hover;
+    border-color: $color-border-hover;
+  }
+  
+  // 포커스 상태 (접근성)
+  &:focus {
+    outline: 2px solid $color-primary;
+    outline-offset: 2px;
+  }
+  
+  // reduced-motion 대응
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+    transition: none;
+  }
+}
+
+// 애니메이션 정의
+@keyframes pulse-warning {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0.8;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes pulse-expired {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0.7;
+    transform: scale(1.05);
+  }
+}
+
+// 반응형 디자인
+@media (max-width: $breakpoint-sm) {
+  .countdown-timer {
+    font-size: $font-size-xs;
+    padding: $spacing-xs;
+    min-height: 28px;
+  }
+}
+
+// 고대비 모드 지원
+@media (prefers-contrast: high) {
+  .countdown-timer {
+    border-width: 2px;
+    
+    &.warning {
+      border-color: $color-warning-dark;
+      background-color: transparent;
+    }
+    
+    &.expired {
+      border-color: $color-danger-dark;
+      background-color: transparent;
+    }
+  }
+}
+
+// 다크 모드 지원 (향후 확장)
+@media (prefers-color-scheme: dark) {
+  .countdown-timer {
+    background-color: $color-background-dark;
+    color: $color-text-dark;
+    border-color: $color-border-dark;
+    
+    &:hover {
+      background-color: $color-background-dark-hover;
+    }
+  }
+}
