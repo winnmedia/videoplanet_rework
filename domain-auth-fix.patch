@@ -1,0 +1,11 @@
+# 도메인 인증 완료 후 적용할 코드 수정
+
+# 1. emailService.ts 수정
+private static fromEmail = process.env.FROM_EMAIL || 'service@vlanet.net'
+
+# 2. .env.local 수정  
+FROM_EMAIL=service@vlanet.net
+
+# 3. Vercel 환경변수 업데이트
+# Dashboard → Settings → Environment Variables
+# FROM_EMAIL = service@vlanet.net
