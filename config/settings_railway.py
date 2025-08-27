@@ -180,7 +180,12 @@ MAX_UPLOAD_SIZE = 429916160
 
 # CORS 설정
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_ALL_ORIGINS = DEBUG  # 개발 모드에서만 모든 오리진 허용
+CORS_ALLOW_ALL_ORIGINS = True  # TODO(human): 디버깅을 위해 임시로 모든 오리진 허용
+
+# CORS 디버깅 로그
+import logging
+cors_logger = logging.getLogger('corsheaders')
+cors_logger.setLevel(logging.DEBUG)
 
 CORS_ALLOWED_ORIGINS = [
     "https://vridge.kr",
