@@ -12,7 +12,7 @@ interface EmailTemplateData {
 }
 
 export class EmailService {
-  private static fromEmail = process.env.FROM_EMAIL || 'noreply@vridge.com'
+  private static fromEmail = process.env.FROM_EMAIL || 'winnmedia82@gmail.com'
 
   static async sendEmail({ to, subject, html }: EmailTemplateData): Promise<void> {
     if (!process.env.SENDGRID_API_KEY) {
