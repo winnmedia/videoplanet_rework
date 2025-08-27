@@ -1,0 +1,17 @@
+{
+  "buildCommand": "cd vridge-web && npm run build",
+  "outputDirectory": "vridge-web/.next",
+  "installCommand": "cd vridge-web && npm install",
+  "devCommand": "cd vridge-web && npm run dev",
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/$1"
+    }
+  ],
+  "env": {
+    "NEXT_PUBLIC_API_URL": "https://api.vlanet.net",
+    "NEXTAUTH_URL": "https://vridge-web.vercel.app",
+    "NEXTAUTH_SECRET": "vridge-nextauth-secret-production-2025-very-secure-key-for-deployment"
+  }
+}
