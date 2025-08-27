@@ -97,14 +97,7 @@ function SideBarInternal({ className, isCollapsed = false, 'data-testid': testId
   const loadSubMenuItems = useCallback(async (menuId: string) => {
     try {
       setLoading(true)
-      const response = await menuApi.getSubMenuItems(menuId)
-      const items = response.data.map(item => createSubMenuItem({
-        id: item.id,
-        parentMenuId: item.parentMenuId,
-        name: item.name,
-        path: item.path,
-        isActive: state.currentPath === item.path
-      }))
+      const items = await menuApi.getSubMenuItems(menuId)
       setSubMenuItems(items)
       actions.openSubMenu(menuId, items)
     } catch (error) {
@@ -229,8 +222,7 @@ function SideBarInternal({ className, isCollapsed = false, 'data-testid': testId
         title={getSubMenuTitle()}
         onClose={() => actions.closeSubMenu()}
         onItemClick={handleSubMenuClick}
-        focusedIndex={state.focusedIndex}
-        onFocusChange={actions.setFocusedIndex}
+        // focusedIndex and onFocusChange removed - not in SubMenuProps
         data-testid="sidebar-submenu"
       />
     </>

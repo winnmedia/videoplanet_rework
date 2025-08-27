@@ -1,5 +1,5 @@
 import { Metadata } from 'next'
-import { VideoPlanning } from '@/widgets/VideoPlanning'
+import { VideoPlanningWidget } from '@/widgets/VideoPlanning'
 
 export const metadata: Metadata = {
   title: '영상 기획 - VLANET',
@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 }
 
 export default function PlanningPage() {
-  return <VideoPlanning />
+  return <VideoPlanningWidget projectId="planning-demo" />
 }

@@ -25,7 +25,8 @@ export function useNavigation() {
  * 현재 경로 기반 네비게이션 로직을 처리
  */
 export function useNavigationWithPath() {
-  const { state, actions } = useNavigation()
+  const context = useNavigation()
+  const { state, actions } = context
   
   const isMenuActive = (menuPath: string, exact: boolean = false): boolean => {
     if (exact) {

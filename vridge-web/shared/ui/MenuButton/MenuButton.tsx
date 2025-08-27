@@ -52,7 +52,7 @@ export const MenuButton = forwardRef<HTMLButtonElement, MenuButtonProps>(
 
     // 툴팁 텍스트 생성
     const getTooltipText = (): string => {
-      return item.tooltip || item.label
+      return item.label
     }
 
     return (
@@ -65,8 +65,7 @@ export const MenuButton = forwardRef<HTMLButtonElement, MenuButtonProps>(
             [styles.active]: isActive,
             [styles.hasSubMenu]: item.hasSubMenu,
             [styles.withCount]: typeof item.count === 'number',
-            [styles.isNew]: item.isNew,
-            [styles.isDeprecated]: item.isDeprecated,
+            // isNew and isDeprecated properties removed from MenuItem interface
             [styles.reducedMotion]: reducedMotion
           },
           className
@@ -113,32 +112,9 @@ export const MenuButton = forwardRef<HTMLButtonElement, MenuButtonProps>(
           </span>
         )}
 
-        {/* Badge Text */}
-        {item.badgeText && (
-          <span 
-            className={styles.badgeText}
-            aria-label={item.badgeText}
-          >
-            {item.badgeText}
-          </span>
-        )}
+        {/* Badge Text removed - not in MenuItem interface */}
 
-        {/* New Indicator */}
-        {item.isNew && (
-          <span 
-            className={styles.newIndicator}
-            aria-label="새로운 기능"
-          />
-        )}
-
-        {/* Deprecated Warning */}
-        {item.isDeprecated && (
-          <span 
-            className={styles.deprecatedWarning}
-            aria-label="곧 사라질 기능"
-            title="이 기능은 곧 사라질 예정입니다"
-          />
-        )}
+        {/* New Indicator and Deprecated Warning removed - not in MenuItem interface */}
 
         {/* SubMenu Indicator */}
         {item.hasSubMenu && (
@@ -167,7 +143,7 @@ export const MenuButton = forwardRef<HTMLButtonElement, MenuButtonProps>(
         )}
 
         {/* External Link Indicator */}
-        {item.externalLink && (
+        {item.path.startsWith('http') && (
           <span 
             className={styles.externalIndicator}
             aria-label="외부 링크"

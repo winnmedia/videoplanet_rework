@@ -2,7 +2,7 @@
 
 import React, { useReducer, useCallback, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
-import { NavigationContext } from '../model/useNavigation'
+import { NavigationContext, useNavigation } from '../model/useNavigation'
 import { useReducedMotion } from '../lib/useReducedMotion'
 import type {
   NavigationState,

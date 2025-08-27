@@ -1,345 +1,69 @@
-@use '@/shared/config/precision-craft-tokens.scss' as craft;
+@use '@/shared/config/design-tokens.scss' as *;
 
-// MenuButton Component - Precision Craft Design
 .menuButton {
-  @include craft.craft-button();
   display: flex;
   align-items: center;
   width: 100%;
-  padding: craft.$craft-space-3 0 craft.$craft-space-3 craft.$craft-space-6;
-  margin-top: craft.$craft-space-6;
+  padding: 12px 0 12px 48px;
   background: transparent;
   border: none;
-  border-radius: craft.$craft-radius-md;
-  color: craft.$craft-gray-600;
+  color: $color-gray-500;
   text-align: left;
   position: relative;
-  min-height: #{6 * craft.$craft-unit}; // 48px - 8px grid aligned
-  
-  @include craft.craft-text(craft.$craft-text-md, craft.$craft-weight-normal);
-  
-  &:first-child {
-    margin-top: 0;
-  }
-  
+  min-height: 48px;
+  font-size: $font-size-base;
+  cursor: pointer;
+  transition: color 0.2s ease;
+
   &:hover {
-    color: craft.$craft-primary;
+    color: $color-primary;
   }
-  
+
   &:focus-visible {
-    @include craft.craft-focus();
+    outline: 2px solid $color-primary;
     outline-offset: 2px;
   }
-  
+
   &.active {
-    color: craft.$craft-primary;
-  }
-  
-  &.hasSubMenu {
-    cursor: pointer;
-    
-    &:hover {
-      .subMenuIndicator {
-        transform: rotate(180deg);
-      }
-    }
-  }
-  
-  &.isNew {
-    &::after {
-      content: '';
-      position: absolute;
-      top: craft.$craft-space-2;
-      right: craft.$craft-space-2;
-      width: craft.$craft-space-1;
-      height: craft.$craft-space-1;
-      background: craft.$craft-success;
-      border-radius: craft.$craft-radius-full;
-    }
-  }
-  
-  &.isDeprecated {
-    opacity: 0.6;
-    position: relative;
-    
-    &::before {
-      content: '';
-      position: absolute;
-      top: 50%;
-      left: craft.$craft-space-6;
-      right: craft.$craft-space-2;
-      height: 1px;
-      background: craft.$craft-error;
-      pointer-events: none;
-    }
-  }
-  
-  &.reducedMotion {
-    .iconContainer,
-    .subMenuIndicator,
-    .chevron {
-      transition: none !important;
-      transform: none !important;
-    }
-  }
-  
-  // High contrast mode
-  @media (prefers-contrast: high) {
-    border: craft.$craft-border-thin solid transparent;
-    
-    &:hover,
-    &:focus-visible {
-      border-color: craft.$craft-primary;
-      background: craft.$craft-primary-5;
-    }
-    
-    &.active {
-      border-color: craft.$craft-primary;
-      background: craft.$craft-primary-10;
-    }
+    color: $color-primary;
   }
 }
 
-// Icon Container
 .iconContainer {
   position: absolute;
-  left: 0;
+  left: 8px;
   top: 50%;
   transform: translateY(-50%);
-  width: #{4.25 * craft.$craft-unit}; // 34px
-  height: #{4.25 * craft.$craft-unit}; // 34px
-  border-radius: craft.$craft-radius-sm;
-  background: craft.$craft-gray-200;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: $color-gray-100;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: craft.$craft-transition-fast;
-  
+
   &.active {
-    background: craft.$craft-primary;
+    background: $color-primary;
   }
 }
 
 .icon {
-  width: craft.$craft-icon-xs;
-  height: craft.$craft-icon-xs;
+  width: 20px;
+  height: 20px;
   object-fit: contain;
 }
 
-// Label
 .label {
   flex: 1;
-  @include craft.craft-truncate();
-  margin-right: craft.$craft-space-2;
+  margin-right: 8px;
 }
 
-// Count Badge
 .countBadge {
-  @include craft.craft-text(craft.$craft-text-sm, craft.$craft-weight-semibold);
-  background: craft.$craft-primary;
-  color: craft.$craft-white;
-  padding: craft.$craft-space-xs craft.$craft-space-2;
-  border-radius: craft.$craft-radius-sm;
-  min-width: craft.$craft-space-3;
+  background: $color-primary;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: $font-size-sm;
+  min-width: 20px;
   text-align: center;
-  margin-left: auto;
-}
-
-// Badge Text
-.badgeText {
-  @include craft.craft-text(craft.$craft-text-xs, craft.$craft-weight-semibold);
-  background: craft.$craft-warning;
-  color: craft.$craft-white;
-  padding: craft.$craft-space-xs craft.$craft-space-2;
-  border-radius: craft.$craft-radius-sm;
-  margin-left: craft.$craft-space-2;
-  white-space: nowrap;
-}
-
-// New Indicator
-.newIndicator {
-  width: craft.$craft-space-2;
-  height: craft.$craft-space-2;
-  background: craft.$craft-success;
-  border-radius: craft.$craft-radius-full;
-  margin-left: craft.$craft-space-2;
-  flex-shrink: 0;
-}
-
-// Deprecated Warning
-.deprecatedWarning {
-  width: craft.$craft-space-3;
-  height: craft.$craft-space-3;
-  background: craft.$craft-warning;
-  border-radius: craft.$craft-radius-full;
-  margin-left: craft.$craft-space-2;
-  flex-shrink: 0;
-  position: relative;
-  
-  &::after {
-    content: '!';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    color: craft.$craft-white;
-    font-size: craft.$craft-text-xs;
-    font-weight: craft.$craft-weight-bold;
-  }
-}
-
-// SubMenu Indicator
-.subMenuIndicator {
-  width: craft.$craft-space-3;
-  height: craft.$craft-space-3;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: craft.$craft-space-2;
-  transition: transform craft.$craft-duration-fast craft.$craft-ease-out;
-  
-  &.expanded {
-    transform: rotate(180deg);
-  }
-}
-
-.chevron {
-  transition: transform craft.$craft-duration-fast craft.$craft-ease-out;
-}
-
-// External Indicator
-.externalIndicator {
-  width: craft.$craft-space-3;
-  height: craft.$craft-space-3;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-left: craft.$craft-space-2;
-  color: craft.$craft-gray-500;
-  
-  .menuButton:hover & {
-    color: craft.$craft-primary;
-  }
-}
-
-// Project Menu Specific Styles
-.menuButton.withCount {
-  justify-content: space-between;
-}
-
-// Responsive Design
-@include craft.craft-mobile {
-  .menuButton {
-    @include craft.craft-text(craft.$craft-text-base);
-    padding: craft.$craft-space-2 0 craft.$craft-space-2 craft.$craft-space-5;
-    min-height: #{5.5 * craft.$craft-unit}; // 44px minimum touch target
-    margin-top: craft.$craft-space-4;
-  }
-  
-  .iconContainer {
-    width: #{4 * craft.$craft-unit}; // 32px
-    height: #{4 * craft.$craft-unit}; // 32px
-  }
-  
-  .countBadge {
-    @include craft.craft-text(craft.$craft-text-xs);
-    padding: craft.$craft-space-xs craft.$craft-space-1;
-  }
-  
-  .label {
-    margin-right: craft.$craft-space-1;
-  }
-}
-
-// Dark mode support
-@media (prefers-color-scheme: dark) {
-  .menuButton {
-    color: craft.$craft-gray-300;
-    
-    &:hover,
-    &.active {
-      color: craft.$craft-white;
-    }
-  }
-  
-  .iconContainer {
-    background: craft.$craft-gray-700;
-    
-    &.active {
-      background: craft.$craft-primary;
-    }
-  }
-  
-  .countBadge {
-    background: craft.$craft-primary;
-  }
-}
-
-// Print styles
-@media print {
-  .menuButton {
-    .countBadge,
-    .badgeText,
-    .newIndicator,
-    .deprecatedWarning,
-    .subMenuIndicator,
-    .externalIndicator {
-      display: none;
-    }
-  }
-}
-
-// Animation for reduced motion users
-@media (prefers-reduced-motion: reduce) {
-  .menuButton,
-  .iconContainer,
-  .subMenuIndicator,
-  .chevron {
-    transition: none !important;
-  }
-  
-  .subMenuIndicator {
-    &.expanded {
-      transform: none;
-    }
-    
-    &.expanded .chevron {
-      transform: rotate(180deg);
-    }
-  }
-}
-
-// Focus styles for different input methods
-.menuButton:focus-visible {
-  outline: 3px solid craft.$craft-primary-30;
-  outline-offset: 2px;
-}
-
-// Windows high contrast mode
-@media (forced-colors: active) {
-  .menuButton {
-    border: 1px solid ButtonText;
-    
-    &:hover,
-    &:focus,
-    &.active {
-      background: Highlight;
-      color: HighlightText;
-    }
-  }
-  
-  .iconContainer {
-    border: 1px solid ButtonText;
-    
-    &.active {
-      background: Highlight;
-    }
-  }
-  
-  .countBadge,
-  .badgeText {
-    background: ButtonText;
-    color: ButtonFace;
-    border: 1px solid ButtonText;
-  }
 }

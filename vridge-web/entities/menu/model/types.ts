@@ -32,3 +32,21 @@ export interface MenuApiResponse {
   total: number
   hasMore: boolean
 }
+
+export interface MenuGroup {
+  id: string
+  title: string
+  items: MenuItem[]
+  collapsed?: boolean
+}
+
+export interface MenuValidationError {
+  field: string
+  message: string
+  code: string
+}
+
+export interface MenuValidationResult {
+  isValid: boolean
+  errors: MenuValidationError[]
+}

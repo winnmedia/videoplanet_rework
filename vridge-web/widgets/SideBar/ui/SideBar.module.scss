@@ -1,95 +1,44 @@
-@use '@/shared/config/precision-craft-tokens.scss' as craft;
 @use '@/shared/config/design-tokens.scss' as *;
 
 .sideBar {
   width: 300px;
-  padding: craft.$craft-space-6 craft.$craft-space-4;
+  padding: 24px 16px;
   position: fixed;
   left: 0;
   top: 0;
   bottom: 0;
-  background: craft.$craft-white;
-  box-shadow: craft.$craft-shadow-lg;
-  border-radius: 0 craft.$craft-radius-xl craft.$craft-radius-xl 0;
-  z-index: craft.$craft-z-fixed;
-  transition: craft.$craft-transition-base;
+  background: $color-white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 0 16px 16px 0;
+  z-index: 10;
+  transition: transform 0.3s ease;
 
   &.collapsed {
     transform: translateX(-280px);
   }
-
-  // High contrast support
-  @media (prefers-contrast: high) {
-    border: craft.$craft-border-thick solid craft.$craft-primary;
-    box-shadow: craft.$craft-shadow-xl;
-  }
-
-  // Reduced motion support
-  @media (prefers-reduced-motion: reduce) {
-    transition: none;
-  }
-
-  .nav {
-    display: flex;
-    flex-direction: column;
-    gap: craft.$craft-space-1;
-  }
-
-  .logout {
-    @include craft.craft-button(craft.$craft-button-lg, craft.$craft-space-4);
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    bottom: craft.$craft-space-6;
-    width: calc(100% - #{2 * craft.$craft-space-4});
-    background: craft.$craft-gray-900;
-    color: craft.$craft-white;
-    
-    &:hover {
-      background: craft.$craft-gray-800;
-      @include craft.craft-hover-lift();
-    }
-    
-    &:active {
-      transform: translateX(-50%) translateY(0);
-    }
-  }
 }
 
-// SubMenu styles are now handled in shared/ui/SubMenu/SubMenu.module.scss
-// This keeps the FSD architecture separation
-
-// Overlay styles are now handled in shared/ui/SubMenu/SubMenu.module.scss
-// This keeps the FSD architecture separation
-
-// Responsive Design
-@include craft.craft-mobile {
-  .sideBar {
-    width: 280px;
-    padding: craft.$craft-space-4 craft.$craft-space-3;
-    
-    &.collapsed {
-      transform: translateX(-100%);
-    }
-  }
-  
-  .logout {
-    bottom: craft.$craft-space-4;
-    width: calc(100% - #{2 * craft.$craft-space-3});
-  }
+.nav {
+  flex: 1;
+  padding-top: 32px;
 }
 
-// Dark mode support
-@media (prefers-color-scheme: dark) {
-  .sideBar {
-    background: craft.$craft-gray-900;
-    border-color: craft.$craft-gray-700;
-  }
+.menuProject {
+  margin-bottom: 8px;
 }
 
-// Print styles
-@media print {
-  .sideBar {
-    display: none;
+.logout {
+  margin-top: auto;
+  padding: 12px;
+  background: transparent;
+  border: none;
+  color: $color-gray-500;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background: $color-gray-100;
+    color: $color-primary;
   }
 }

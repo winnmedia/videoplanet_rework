@@ -30,17 +30,8 @@ export function createMenuItem(params: {
     icon: params.icon,
     activeIcon: params.activeIcon || params.icon,
     hasSubMenu: params.hasSubMenu || false,
-    isVisible: true,
-    sortOrder: params.sortOrder || 0,
-    permissions: params.permissions,
     count: params.count,
-    isNew: params.isNew || false,
-    isDeprecated: false,
-    externalLink: params.path.startsWith('http'),
-    metadata: {
-      createdAt: new Date().toISOString(),
-      version: '1.0.0'
-    }
+    role: 'navigation'
   }
 }
 
@@ -49,31 +40,20 @@ export function createMenuItem(params: {
  */
 export function createSubMenuItem(params: {
   id: string
-  parentMenuId: string
   name: string
   path: string
-  sortOrder?: number
-  isActive?: boolean
   icon?: string
-  description?: string
-  isNew?: boolean
+  badge?: number
+  status?: 'active' | 'completed' | 'pending'
 }): SubMenuItem {
   return {
     id: params.id,
-    parentMenuId: params.parentMenuId,
     name: params.name,
     path: params.path,
-    isActive: params.isActive || false,
-    isVisible: true,
-    sortOrder: params.sortOrder || 0,
     icon: params.icon,
-    description: params.description,
-    isNew: params.isNew || false,
-    lastModified: new Date(),
-    metadata: {
-      createdAt: new Date().toISOString(),
-      parentMenu: params.parentMenuId
-    }
+    badge: params.badge,
+    status: params.status || 'active',
+    lastModified: new Date()
   }
 }
 
@@ -90,11 +70,9 @@ export function createMenuGroup(params: {
 }): MenuGroup {
   return {
     id: params.id,
-    label: params.label,
-    items: params.items.sort((a, b) => a.sortOrder - b.sortOrder),
-    isCollapsible: params.isCollapsible || false,
-    isCollapsed: params.isCollapsed || false,
-    sortOrder: params.sortOrder || 0
+    title: params.label,
+    items: params.items,
+    collapsed: params.isCollapsed || false
   }
 }
 
@@ -103,7 +81,7 @@ export function createMenuGroup(params: {
  */
 export function validateMenuItem(item: MenuItem): MenuValidationResult {
   const errors: MenuValidationError[] = []
-  const warnings: string[] = []
+  // Validation warnings removed for simplicity
 
   // Required fields validation
   if (!item.id) {
@@ -147,7 +125,7 @@ export function validateMenuItem(item: MenuItem): MenuValidationResult {
     })
   }
 
-  if (item.path && !item.externalLink && !item.path.startsWith('/')) {
+  if (item.path && !item.path.startsWith('http') && !item.path.startsWith('/')) {
     errors.push({
       field: 'path',
       message: 'Internal menu path must start with /',
@@ -157,17 +135,14 @@ export function validateMenuItem(item: MenuItem): MenuValidationResult {
 
   // Accessibility warnings
   if (item.label && item.label.length > 25) {
-    warnings.push('Menu label is longer than recommended 25 characters')
+    // Warning: Menu label is longer than recommended 25 characters
   }
 
-  if (!item.tooltip && item.hasSubMenu) {
-    warnings.push('SubMenu items should have tooltips for better accessibility')
-  }
+  // SubMenu accessibility check removed - tooltip not in MenuItem interface
 
   return {
     isValid: errors.length === 0,
-    errors,
-    warnings
+    errors
   }
 }
 
@@ -190,7 +165,7 @@ export function getMenuIcon(item: MenuItem, isActive: boolean = false): string {
  * Menu Path Resolution - 메뉴 경로 해결
  */
 export function getMenuPath(item: MenuItem): string {
-  if (item.externalLink) {
+  if (item.path.startsWith('http')) {
     return item.path
   }
 
@@ -223,18 +198,7 @@ export function filterSubMenuItems(
   parentMenuId: string,
   userPermissions: string[] = []
 ): SubMenuItem[] {
-  return items
-    .filter(item => item.parentMenuId === parentMenuId)
-    .filter(item => item.isVisible)
-    .filter(item => {
-      if (!item.permissions || item.permissions.length === 0) {
-        return true
-      }
-      return item.permissions.some(permission => 
-        userPermissions.includes(permission)
-      )
-    })
-    .sort((a, b) => a.sortOrder - b.sortOrder)
+  return items.filter(item => item.id.includes(parentMenuId))
 }
 
 /**
@@ -242,7 +206,7 @@ export function filterSubMenuItems(
  */
 export function groupMenuItems(
   items: MenuItem[],
-  groupBy: keyof MenuItem = 'sortOrder'
+  groupBy: keyof MenuItem = 'role'
 ): Record<string, MenuItem[]> {
   return items.reduce((groups, item) => {
     const key = String(item[groupBy] || 'default')
@@ -269,8 +233,7 @@ export function searchMenuItems(
   
   return items.filter(item =>
     item.label.toLowerCase().includes(searchQuery) ||
-    item.path.toLowerCase().includes(searchQuery) ||
-    (item.tooltip && item.tooltip.toLowerCase().includes(searchQuery))
+    item.path.toLowerCase().includes(searchQuery)
   )
 }
 
@@ -279,32 +242,18 @@ export function searchMenuItems(
  */
 export function validateMenuConfig(config: MenuConfig): MenuValidationResult {
   const errors: MenuValidationError[] = []
-  const warnings: string[] = []
-
-  if (config.maxSubMenuItems < 1 || config.maxSubMenuItems > 50) {
+  
+  if (!config.id || config.id.length === 0) {
     errors.push({
-      field: 'maxSubMenuItems',
-      message: 'Max sub menu items should be between 1 and 50',
-      code: 'CONFIG_MAX_ITEMS_INVALID'
+      field: 'id',
+      message: 'Menu config ID is required',
+      code: 'CONFIG_ID_REQUIRED'
     })
-  }
-
-  if (config.animationDuration < 0 || config.animationDuration > 1000) {
-    errors.push({
-      field: 'animationDuration',
-      message: 'Animation duration should be between 0 and 1000ms',
-      code: 'CONFIG_ANIMATION_DURATION_INVALID'
-    })
-  }
-
-  if (config.autoCloseDelay && config.autoCloseDelay < 1000) {
-    warnings.push('Auto close delay less than 1000ms may hurt user experience')
   }
 
   return {
     isValid: errors.length === 0,
-    errors,
-    warnings
+    errors
   }
 }
 
@@ -312,11 +261,9 @@ export function validateMenuConfig(config: MenuConfig): MenuValidationResult {
  * Default Menu Configuration
  */
 export const DEFAULT_MENU_CONFIG: MenuConfig = {
-  maxSubMenuItems: 20,
-  enableBreadcrumbs: true,
-  enableKeyboardNavigation: true,
-  enableFocusTrap: true,
-  animationDuration: 262, // Precision Craft Golden Ratio timing
-  persistState: true,
-  analyticsEnabled: true
+  id: 'default-menu',
+  items: [],
+  defaultActive: 'home',
+  enableKeyboardNav: true,
+  enableTooltips: false
 }

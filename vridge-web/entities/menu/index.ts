@@ -2,15 +2,13 @@
 export type {
   MenuItem,
   SubMenuItem,
-  MenuGroup,
   MenuConfig,
-  MenuMetrics
+  MenuApiResponse
 } from './model/types'
 
 export {
   createMenuItem,
   createSubMenuItem,
-  createMenuGroup,
   validateMenuItem,
   getMenuIcon,
   getMenuPath,
@@ -18,7 +16,5 @@ export {
 } from './model/menu'
 
 export {
-  menuApi,
-  type MenuApiResponse,
-  type MenuApiError
+  menuApi
 } from './api/menuApi'

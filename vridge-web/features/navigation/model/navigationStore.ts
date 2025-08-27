@@ -106,7 +106,7 @@ export const useNavigationStore = create<NavigationState>()(
           // Load submenu items based on menu type
           if (menuId === 'projects' || menuId === 'feedback') {
             try {
-              const { menuApi } = await import('../../entities/menu/api/menuApi')
+              const { menuApi } = await import('@/entities/menu/api/menuApi')
               const items = await menuApi.getSubMenuItems(menuId)
               set({ subMenuItems: items }, false, 'loadSubMenuItems')
               openSubMenu()
