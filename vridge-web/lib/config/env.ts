@@ -95,8 +95,8 @@ class ConfigManager {
       appVersion: process.env.NEXT_PUBLIC_APP_VERSION || '0.1.0',
       
       // API Configuration
-      apiUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000',
-      apiVersion: process.env.NEXT_PUBLIC_API_VERSION || 'v1',
+      apiUrl: process.env.NEXT_PUBLIC_API_URL || 'https://videoplanet.up.railway.app',
+      apiVersion: process.env.NEXT_PUBLIC_API_VERSION || '',
       apiTimeout: parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '30000', 10),
       backendUrl: process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000',
       backendApiKey: process.env.NEXT_PUBLIC_BACKEND_API_KEY,
@@ -198,7 +198,10 @@ class ConfigManager {
   public getApiEndpoint(path: string): string {
     const baseUrl = this.config.apiUrl.replace(/\/$/, '');
     const cleanPath = path.replace(/^\//, '');
-    return `${baseUrl}/${this.config.apiVersion}/${cleanPath}`;
+    if (this.config.apiVersion) {
+      return `${baseUrl}/${this.config.apiVersion}/${cleanPath}`;
+    }
+    return `${baseUrl}/${cleanPath}`;
   }
   
   public getBackendEndpoint(path: string): string {
