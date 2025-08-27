@@ -102,6 +102,7 @@ function SignupFormComponent() {
       // 개발 모드에서 코드가 반환된 경우
       if (data.devCode) {
         console.log('🔑 개발 모드 인증번호:', data.devCode)
+        console.log('📨 [DEBUG] Email verification sent successfully to:', email)
       }
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : '인증 이메일 발송에 실패했습니다. 다시 시도해주세요.')
@@ -115,6 +116,12 @@ function SignupFormComponent() {
       setError('인증번호를 입력해주세요.')
       return
     }
+
+    console.log('🔍 [DEBUG] Sending verification request:', {
+      email,
+      code: authNumber,
+      type: 'signup'
+    })
 
     try {
       const response = await fetch('/api/auth/verify-email', {
@@ -130,14 +137,18 @@ function SignupFormComponent() {
       })
 
       const data = await response.json()
+      console.log('📥 [DEBUG] Server response:', { status: response.status, data })
 
       if (!response.ok) {
+        console.error('❌ [DEBUG] Verification failed:', data)
         throw new Error(data.error || '인증번호가 올바르지 않습니다.')
       }
 
+      console.log('✅ [DEBUG] Verification successful!')
       setValidEmail(true)
       setError('')
     } catch (err: unknown) {
+      console.error('💥 [DEBUG] Verification error:', err)
       setError(err instanceof Error ? err.message : '인증번호가 올바르지 않습니다.')
     }
   }

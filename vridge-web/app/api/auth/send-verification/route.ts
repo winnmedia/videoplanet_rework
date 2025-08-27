@@ -47,6 +47,8 @@ export async function POST(request: NextRequest) {
 
     // 인증번호 저장
     globalThis.verificationStore.set(email, { code, expires, type: type as 'signup' | 'reset' })
+    console.log('🔑 Stored verification code:', { email, code, expires, type })
+    console.log('🗄️ Store size:', globalThis.verificationStore.size)
 
     try {
       // 이메일 발송

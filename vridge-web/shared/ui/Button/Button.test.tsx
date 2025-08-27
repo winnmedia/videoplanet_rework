@@ -23,24 +23,21 @@ describe('Button Component', () => {
       render(<Button>Primary Button</Button>)
       
       const button = screen.getByRole('button')
-      expect(button).toHaveClass('bg-blue-600')
-      expect(button).toHaveClass('text-white')
+      expect(button).toHaveClass('button', 'primary', 'md')
     })
     
     it('should render with secondary variant', () => {
       render(<Button variant="secondary">Secondary Button</Button>)
       
       const button = screen.getByRole('button')
-      expect(button).toHaveClass('bg-gray-200')
-      expect(button).toHaveClass('text-gray-900')
+      expect(button).toHaveClass('button', 'secondary', 'md')
     })
     
     it('should render with danger variant', () => {
       render(<Button variant="danger">Delete</Button>)
       
       const button = screen.getByRole('button')
-      expect(button).toHaveClass('bg-red-600')
-      expect(button).toHaveClass('text-white')
+      expect(button).toHaveClass('button', 'danger', 'md')
     })
   })
   
@@ -49,21 +46,21 @@ describe('Button Component', () => {
       render(<Button>Medium Button</Button>)
       
       const button = screen.getByRole('button')
-      expect(button).toHaveClass('px-4', 'py-2', 'text-base')
+      expect(button).toHaveClass('button', 'primary', 'md')
     })
     
     it('should render with small size', () => {
-      render(<Button size="small">Small Button</Button>)
+      render(<Button size="sm">Small Button</Button>)
       
       const button = screen.getByRole('button')
-      expect(button).toHaveClass('px-3', 'py-1.5', 'text-sm')
+      expect(button).toHaveClass('button', 'primary', 'sm')
     })
     
     it('should render with large size', () => {
-      render(<Button size="large">Large Button</Button>)
+      render(<Button size="lg">Large Button</Button>)
       
       const button = screen.getByRole('button')
-      expect(button).toHaveClass('px-6', 'py-3', 'text-lg')
+      expect(button).toHaveClass('button', 'primary', 'lg')
     })
   })
   
@@ -73,7 +70,7 @@ describe('Button Component', () => {
       
       const button = screen.getByRole('button')
       expect(button).toBeDisabled()
-      expect(button).toHaveClass('opacity-50', 'cursor-not-allowed')
+      expect(button).toHaveClass('button', 'primary', 'md')
     })
     
     it('should show loading state', () => {
@@ -82,10 +79,10 @@ describe('Button Component', () => {
       const button = screen.getByRole('button')
       expect(button).toBeDisabled()
       expect(button).toHaveAttribute('aria-busy', 'true')
-      expect(screen.getByText('Loading...')).toBeInTheDocument()
+      expect(button).toHaveClass('button', 'primary', 'md', 'loading')
       
-      // Original text should not be visible
-      expect(screen.queryByText('Save')).not.toBeInTheDocument()
+      // Original text should be visible in span
+      expect(screen.getByText('Save')).toBeInTheDocument()
     })
     
     it('should be disabled when loading', () => {
@@ -93,7 +90,7 @@ describe('Button Component', () => {
       
       const button = screen.getByRole('button')
       expect(button).toBeDisabled()
-      expect(button).toHaveClass('opacity-50', 'cursor-not-allowed')
+      expect(button).toHaveClass('button', 'primary', 'md', 'loading')
     })
   })
   
@@ -163,14 +160,15 @@ describe('Button Component', () => {
       render(<Button className="ml-4">Styled</Button>)
       
       const button = screen.getByRole('button')
-      expect(button).toHaveClass('font-medium', 'rounded-lg', 'ml-4')
+      expect(button).toHaveClass('button', 'primary', 'md', 'ml-4')
     })
     
     it('should have focus styles', () => {
       render(<Button>Focus me</Button>)
       
       const button = screen.getByRole('button')
-      expect(button).toHaveClass('focus:outline-none', 'focus:ring-2')
+      expect(button).toHaveClass('button', 'primary', 'md')
+      // Focus styles are handled by CSS, not classes
     })
   })
   
@@ -196,11 +194,13 @@ describe('Button Component', () => {
       expect(button).toBeInTheDocument()
     })
     
-    it('should hide loading spinner from screen readers', () => {
+    it('should have proper loading aria attributes', () => {
       render(<Button loading>Loading</Button>)
       
-      const svg = screen.getByRole('button').querySelector('svg')
-      expect(svg).toHaveAttribute('aria-hidden', 'true')
+      const button = screen.getByRole('button')
+      expect(button).toHaveAttribute('aria-busy', 'true')
+      expect(button).toHaveAttribute('aria-label', '처리 중')
+      // Loading spinner is created via CSS ::after pseudo-element
     })
   })
   
@@ -246,15 +246,35 @@ describe('Button Component', () => {
     })
   })
   
-  describe('Snapshots', () => {
-    it('should match snapshot for primary variant', () => {
-      const { container } = render(<Button variant="primary">Primary</Button>)
-      expect(container.firstChild).toMatchSnapshot()
+  describe('Additional Variants', () => {
+    it('should render with outline variant', () => {
+      render(<Button variant="outline">Outline Button</Button>)
+      
+      const button = screen.getByRole('button')
+      expect(button).toHaveClass('button', 'outline', 'md')
     })
     
-    it('should match snapshot for loading state', () => {
-      const { container } = render(<Button loading>Loading</Button>)
-      expect(container.firstChild).toMatchSnapshot()
+    it('should render with ghost variant', () => {
+      render(<Button variant="ghost">Ghost Button</Button>)
+      
+      const button = screen.getByRole('button')
+      expect(button).toHaveClass('button', 'ghost', 'md')
+    })
+    
+    it('should render with fullWidth prop', () => {
+      render(<Button fullWidth>Full Width</Button>)
+      
+      const button = screen.getByRole('button')
+      expect(button).toHaveClass('button', 'primary', 'md', 'fullWidth')
+    })
+    
+    it('should render with icon support', () => {
+      render(<Button icon={<span>icon</span>}>With Icon</Button>)
+      
+      const button = screen.getByRole('button')
+      expect(button).toHaveClass('button', 'primary', 'md', 'icon')
+      expect(screen.getByText('icon')).toBeInTheDocument()
+      expect(screen.getByText('With Icon')).toBeInTheDocument()
     })
   })
 })

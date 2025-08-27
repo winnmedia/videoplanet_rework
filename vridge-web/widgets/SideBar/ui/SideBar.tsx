@@ -1,32 +1,38 @@
 'use client'
 
+import React, { useState, useEffect, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
 import clsx from 'clsx'
-import Image from 'next/image'
-import { useRouter, usePathname } from 'next/navigation'
-import React, { useState, useEffect } from 'react'
+
+// FSD Imports
+import { useNavigation, useSubMenuKeyboard, useFocusTrap, NavigationProvider } from '../../../features/navigation'
+import { menuApi, createMenuItem, createSubMenuItem, type MenuItem, type SubMenuItem } from '../../../entities/menu'
+import { MenuButton, SubMenu } from '../../../shared/ui'
 
 import styles from './SideBar.module.scss'
-import type { SideBarItem, SubMenuItem } from '../model/types'
+import type { SideBarItem } from '../model/types'
 
 interface SideBarProps {
   className?: string
   isCollapsed?: boolean
   onToggle?: () => void
+  'data-testid'?: string
 }
 
-// TODO(human): 실제 프로젝트 데이터 연동
-// Redux useSelector 또는 커스텀 훅으로 실제 프로젝트 목록을 가져오세요
-// 예: const { projects, loading, error } = useSelector((state) => state.projects)
-// 또는: const { projects, loading, error } = useProjects()
+// Convert legacy SideBarItem to MenuItem
+function convertToMenuItem(item: SideBarItem): MenuItem {
+  return createMenuItem({
+    id: item.id,
+    label: item.label,
+    path: item.path,
+    icon: item.icon,
+    activeIcon: item.activeIcon,
+    hasSubMenu: item.hasSubMenu,
+    count: item.count
+  })
+}
 
-// Mock data - 임시 데이터 (실제 데이터 연동 후 제거)
-const mockProjects: SubMenuItem[] = [
-  { id: '1', name: '웹사이트 리뉴얼 프로젝트', path: '/projects/1' },
-  { id: '2', name: '모바일 앱 개발', path: '/projects/2' },
-  { id: '3', name: '브랜딩 영상 제작', path: '/projects/3' },
-]
-
-const menuItems: SideBarItem[] = [
+const legacyMenuItems: SideBarItem[] = [
   {
     id: 'home',
     label: '홈',
@@ -48,7 +54,15 @@ const menuItems: SideBarItem[] = [
     icon: '/images/icons/sidebar/projects-inactive.svg',
     activeIcon: '/images/icons/sidebar/projects-active.svg',
     hasSubMenu: true,
-    count: mockProjects.length
+    count: 3 // Mock count
+  },
+  {
+    id: 'planning',
+    label: '영상 기획',
+    path: '/planning',
+    icon: '/images/icons/sidebar/planning-inactive.svg',
+    activeIcon: '/images/icons/sidebar/planning-active.svg',
+    hasSubMenu: true
   },
   {
     id: 'feedback',
@@ -67,56 +81,59 @@ const menuItems: SideBarItem[] = [
   }
 ]
 
-export function SideBar({ className, isCollapsed = false }: SideBarProps) {
+// Internal SideBar component that uses navigation context
+function SideBarInternal({ className, isCollapsed = false, 'data-testid': testId }: SideBarProps) {
   const router = useRouter()
-  const pathname = usePathname()
+  const { state, actions } = useNavigation()
   
-  const [isSubMenuOpen, setIsSubMenuOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState('')
+  // Convert legacy items to new format
+  const menuItems = legacyMenuItems.map(convertToMenuItem)
+  
+  // Local state for data loading
   const [subMenuItems, setSubMenuItems] = useState<SubMenuItem[]>([])
+  const [loading, setLoading] = useState(false)
 
-  // 현재 경로에 따라 활성 메뉴 결정
-  useEffect(() => {
-    const currentItem = menuItems.find(item => pathname.startsWith(item.path))
-    if (currentItem) {
-      setActiveTab(currentItem.id)
+  // Load sub menu items when sub menu opens
+  const loadSubMenuItems = useCallback(async (menuId: string) => {
+    try {
+      setLoading(true)
+      const response = await menuApi.getSubMenuItems(menuId)
+      const items = response.data.map(item => createSubMenuItem({
+        id: item.id,
+        parentMenuId: item.parentMenuId,
+        name: item.name,
+        path: item.path,
+        isActive: state.currentPath === item.path
+      }))
+      setSubMenuItems(items)
+      actions.openSubMenu(menuId, items)
+    } catch (error) {
+      console.error('Failed to load sub menu items:', error)
+      setSubMenuItems([])
+    } finally {
+      setLoading(false)
     }
-  }, [pathname])
+  }, [state.currentPath, actions])
 
-  const handleMenuClick = (item: SideBarItem) => {
+  const handleMenuClick = (item: MenuItem) => {
     if (item.hasSubMenu) {
-      // 서브메뉴가 있는 경우
-      if (activeTab === item.id && isSubMenuOpen) {
-        // 이미 열려있는 경우 닫기
-        setIsSubMenuOpen(false)
+      // Toggle sub menu
+      if (state.activeMenuId === item.id && state.isSubMenuOpen) {
+        actions.closeSubMenu()
       } else {
-        // 새로운 서브메뉴 열기
-        setActiveTab(item.id)
-        setIsSubMenuOpen(true)
-        
-        // TODO(human): 실제 API 데이터 연동
-        // if (item.id === 'projects') {
-        //   setSubMenuItems(projects || [])
-        // } else if (item.id === 'feedback') {
-        //   setSubMenuItems(projects?.map(p => ({ ...p, path: `/feedback/${p.id}` })) || [])
-        // }
-        
-        // 임시 Mock 데이터 사용
-        if (item.id === 'projects') {
-          setSubMenuItems(mockProjects)
-        } else if (item.id === 'feedback') {
-          setSubMenuItems(mockProjects.map(p => ({ ...p, path: `/feedback/${p.id}` })))
-        }
+        actions.setActiveMenu(item.id)
+        loadSubMenuItems(item.id)
       }
     } else {
-      // 서브메뉴가 없는 경우 바로 이동
-      setIsSubMenuOpen(false)
-      setActiveTab(item.id)
+      // Direct navigation
+      actions.closeSubMenu()
+      actions.setActiveMenu(item.id)
       router.push(item.path)
     }
   }
 
   const handleSubMenuClick = (subItem: SubMenuItem) => {
+    actions.closeSubMenu()
     router.push(subItem.path)
   }
 
@@ -130,110 +147,101 @@ export function SideBar({ className, isCollapsed = false }: SideBarProps) {
     router.push('/projects/create')
   }
 
-  const isMenuActive = (item: SideBarItem) => {
-    if (item.hasSubMenu && isSubMenuOpen && activeTab === item.id) {
+  const isMenuActive = (item: MenuItem) => {
+    if (item.hasSubMenu && state.isSubMenuOpen && state.activeMenuId === item.id) {
       return true
     }
-    return pathname.startsWith(item.path) || activeTab === item.id
+    return state.currentPath.startsWith(item.path) || state.activeMenuId === item.id
+  }
+
+  // Keyboard navigation for sub menu
+  const keyboardOptions = {
+    onNavigateUp: () => {
+      const newIndex = state.focusedIndex <= 0 ? subMenuItems.length - 1 : state.focusedIndex - 1
+      actions.setFocusedIndex(newIndex)
+    },
+    onNavigateDown: () => {
+      const newIndex = state.focusedIndex >= subMenuItems.length - 1 ? 0 : state.focusedIndex + 1
+      actions.setFocusedIndex(newIndex)
+    },
+    onSelect: (index: number) => {
+      if (subMenuItems[index]) {
+        handleSubMenuClick(subMenuItems[index])
+      }
+    },
+    onClose: () => actions.closeSubMenu(),
+    focusedIndex: state.focusedIndex,
+    itemsCount: subMenuItems.length,
+    trapFocus: true
+  }
+
+  useSubMenuKeyboard(keyboardOptions)
+
+  const getSubMenuTitle = (): string => {
+    if (state.activeMenuId === 'projects') return '프로젝트 관리'
+    if (state.activeMenuId === 'feedback') return '영상 피드백'
+    return '메뉴'
   }
 
   return (
     <>
-      {/* Overlay for mobile */}
-      <div 
-        className={clsx(styles.overlay, { [styles.active]: isSubMenuOpen })}
-        onClick={() => setIsSubMenuOpen(false)}
-      />
-      
       {/* Main Sidebar */}
-      <aside className={clsx(styles.sideBar, className, { [styles.collapsed]: isCollapsed })}>
-        <nav className={styles.nav}>
-          <ul>
-            {menuItems.map((item) => {
-              const active = isMenuActive(item)
-              
-              return (
-                <li 
-                  key={item.id}
-                  className={clsx({ 
-                    [styles.active]: active,
-                    [styles.menuProject]: item.id === 'projects'
-                  })}
-                  onClick={() => handleMenuClick(item)}
-                >
-                  <div className={clsx(styles.menuIcon, { [styles.active]: active })}>
-                    <Image
-                      src={active ? item.activeIcon : item.icon}
-                      alt={item.label}
-                      width={16}
-                      height={16}
-                    />
-                  </div>
-                  <span>{item.label}</span>
-                  {item.count !== undefined && (
-                    <span className={styles.projectCount}>{item.count}</span>
-                  )}
-                </li>
-              )
-            })}
-          </ul>
+      <aside 
+        className={clsx(styles.sideBar, className, { [styles.collapsed]: isCollapsed })}
+        role="complementary"
+        aria-label="네비게이션 사이드바"
+        data-testid={testId || 'sidebar'}
+      >
+        <nav className={styles.nav} role="navigation" aria-label="주 메뉴">
+          {menuItems.map((item) => {
+            const active = isMenuActive(item)
+            const isExpanded = item.hasSubMenu && state.isSubMenuOpen && state.activeMenuId === item.id
+            
+            return (
+              <MenuButton
+                key={item.id}
+                item={item}
+                isActive={active}
+                isExpanded={isExpanded}
+                onClick={() => handleMenuClick(item)}
+                className={clsx({ [styles.menuProject]: item.id === 'projects' })}
+                data-testid={`menu-${item.id}`}
+              />
+            )
+          })}
         </nav>
 
-        <div className={styles.logout} onClick={handleLogout}>
+        <button 
+          type="button"
+          className={styles.logout} 
+          onClick={handleLogout}
+          aria-label="로그아웃"
+          data-testid="logout-button"
+        >
           로그아웃
-        </div>
+        </button>
       </aside>
 
       {/* SubMenu */}
-      <div className={clsx(styles.subMenu, { [styles.active]: isSubMenuOpen })}>
-        <div className={styles.subMenuHeader}>
-          <div className={styles.title}>
-            {activeTab === 'projects' ? '프로젝트 관리' : '영상 피드백'}
-          </div>
-          <div className={styles.actions}>
-            {activeTab === 'projects' && subMenuItems.length > 0 && (
-              <button className={styles.actionButton} onClick={handleCreateProject}>
-                <Image src="/images/icons/plus.png" alt="추가" width={16} height={16} />
-              </button>
-            )}
-            <button 
-              className={clsx(styles.actionButton, styles.close)} 
-              onClick={() => setIsSubMenuOpen(false)}
-            >
-              <Image src="/images/icons/close.png" alt="닫기" width={12} height={12} />
-            </button>
-          </div>
-        </div>
-
-        <nav className={styles.subMenuNav}>
-          {subMenuItems.length > 0 ? (
-            <ul>
-              {subMenuItems.map((subItem) => (
-                <li 
-                  key={subItem.id}
-                  className={clsx({ 
-                    [styles.active]: pathname === subItem.path 
-                  })}
-                  onClick={() => handleSubMenuClick(subItem)}
-                >
-                  {subItem.name}
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <div className={styles.emptyState}>
-              등록된 <br />
-              프로젝트가 없습니다
-              <button 
-                className={styles.createButton}
-                onClick={handleCreateProject}
-              >
-                프로젝트 등록
-              </button>
-            </div>
-          )}
-        </nav>
-      </div>
+      <SubMenu
+        isOpen={state.isSubMenuOpen}
+        items={subMenuItems}
+        title={getSubMenuTitle()}
+        onClose={() => actions.closeSubMenu()}
+        onItemClick={handleSubMenuClick}
+        focusedIndex={state.focusedIndex}
+        onFocusChange={actions.setFocusedIndex}
+        data-testid="sidebar-submenu"
+      />
     </>
+  )
+}
+
+// Main SideBar component with NavigationProvider
+export function SideBar(props: SideBarProps) {
+  return (
+    <NavigationProvider>
+      <SideBarInternal {...props} />
+    </NavigationProvider>
   )
 }

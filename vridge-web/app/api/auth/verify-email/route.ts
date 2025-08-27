@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-// 인증 코드를 임시 저장할 메모리 스토어 (실제 운영에서는 Redis 등 사용)
-// send-verification route와 동일한 스토어를 공유해야 함
-const verificationCodes = new Map<string, { code: string; expires: number; type: 'signup' | 'reset' }>()
-
 // 전역 스토어를 공유하기 위해 globalThis 사용
+// send-verification route와 동일한 스토어를 공유
 declare global {
   var verificationStore: Map<string, { code: string; expires: number; type: 'signup' | 'reset' }>
 }
@@ -18,6 +15,9 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const { email, code, type } = body
+
+    console.log('📧 Verify email request:', { email, code, type })
+    console.log('🗄️ Current store contents:', Array.from(globalThis.verificationStore.entries()))
 
     if (!email || !code || !type) {
       return NextResponse.json(
