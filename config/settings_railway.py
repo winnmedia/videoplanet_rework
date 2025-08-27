@@ -193,6 +193,10 @@ CORS_ALLOWED_ORIGINS = [
     "https://vlanet.net",
     "https://api.vlanet.net",
     "http://localhost:3000",
+    "https://vridge-web.vercel.app",
+    "https://vridge-web-vlanets-projects.vercel.app",
+    "https://videoplanet.vercel.app",
+    "https://vlanet.vercel.app",
     "http://localhost:3003",
     "http://localhost:3004",
     # Railway 도메인들
