@@ -1,8 +1,8 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
-import dynamic from 'next/dynamic'
 
 import styles from './SignupForm.module.scss'
 import { useAuth } from '../model/useAuth'

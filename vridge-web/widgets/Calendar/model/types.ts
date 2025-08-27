@@ -9,7 +9,7 @@
 
 export type CalendarViewMode = 'month' | 'week' | 'day'
 
-export type EventCategory = 'project-deadline' | 'milestone' | 'meeting' | 'personal' | 'holiday'
+export type EventCategory = 'project-deadline' | 'milestone' | 'meeting' | 'personal' | 'holiday' | 'filming'
 
 export type EventPriority = 'high' | 'medium' | 'low'
 
@@ -24,6 +24,7 @@ export interface CalendarEvent {
   isAllDay: boolean
   category: EventCategory
   priority: EventPriority
+  type?: string // 추가 타입 분류 (filming, editing 등)
   
   // Project relation
   projectId?: string
@@ -45,6 +46,7 @@ export interface CalendarEvent {
   // UI state
   backgroundColor?: string
   textColor?: string
+  color?: string // 이벤트 테마 색상
 }
 
 export interface CalendarDay {

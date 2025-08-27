@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useCallback } from 'react'
+
 import type { FocusTrapOptions } from '../model/types'
 
 /**

@@ -349,14 +349,14 @@ export function validatePassword(password: string): {
  * @param rules - 유효성 규칙
  * @returns 에러 객체
  */
-export function validateForm<T extends Record<string, any>>(
+export function validateForm<T extends Record<string, unknown>>(
   data: T,
   rules: Record<keyof T, {
     required?: boolean
     minLength?: number
     maxLength?: number
     pattern?: RegExp
-    custom?: (value: any) => string | null
+    custom?: (value: unknown) => string | null
   }>
 ): Record<keyof T, string> {
   const errors = {} as Record<keyof T, string>
@@ -435,7 +435,7 @@ export function deepClone<T>(obj: T): T {
  * @param obj2 - 두 번째 객체
  * @returns 같으면 true
  */
-export function deepEqual(obj1: any, obj2: any): boolean {
+export function deepEqual(obj1: unknown, obj2: unknown): boolean {
   if (obj1 === obj2) {
     return true
   }
@@ -572,7 +572,7 @@ export function parseQueryParams(url: string): Record<string, string> {
  * @param params - 파라미터 객체
  * @returns 쿼리 문자열
  */
-export function stringifyQueryParams(params: Record<string, any>): string {
+export function stringifyQueryParams(params: Record<string, unknown>): string {
   const searchParams = new URLSearchParams()
   
   for (const [key, value] of Object.entries(params)) {

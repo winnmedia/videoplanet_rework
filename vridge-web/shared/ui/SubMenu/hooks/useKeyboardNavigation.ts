@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback, useEffect } from 'react'
+
 import type { SubMenuItem } from '@/entities/menu/model/types'
 
 interface UseKeyboardNavigationProps {

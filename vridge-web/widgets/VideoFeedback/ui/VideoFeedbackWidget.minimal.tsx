@@ -7,6 +7,7 @@
 'use client'
 
 import React, { useState, useEffect } from 'react'
+
 import styles from './VideoFeedbackWidget.module.scss'
 import type { VideoFeedbackWidgetProps, VideoFeedbackSession } from '../model/types'
 

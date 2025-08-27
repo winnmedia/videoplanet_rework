@@ -16,7 +16,7 @@ interface CustomMatchers<R = unknown> {
 }
 
 declare module 'vitest' {
-  interface Assertion<T = any> extends CustomMatchers<T> {}
+  interface Assertion<T = unknown> extends CustomMatchers<T> {}
   interface AsymmetricMatchersContaining extends CustomMatchers {}
 }
 
@@ -69,7 +69,7 @@ expect.extend({
     }
   },
   
-  toHaveBeenCalledWithError(received: any, error: string | RegExp) {
+  toHaveBeenCalledWithError(received: { mock?: { calls: unknown[][] } }, error: string | RegExp) {
     if (!received.mock) {
       return {
         message: () => 'Expected a mock function',
@@ -79,10 +79,10 @@ expect.extend({
     
     const calls = received.mock.calls
     const errorMatcher = typeof error === 'string' 
-      ? (e: any) => e?.message === error || e === error
-      : (e: any) => error.test(e?.message || e)
+      ? (e: unknown) => (e as { message?: string })?.message === error || e === error
+      : (e: unknown) => error.test((e as { message?: string })?.message || String(e))
     
-    const hasErrorCall = calls.some((call: any[]) => 
+    const hasErrorCall = calls.some((call: unknown[]) => 
       call.some(arg => errorMatcher(arg))
     )
     
@@ -99,7 +99,7 @@ expect.extend({
     }
   },
   
-  toRenderWithoutErrors(received: any) {
+  toRenderWithoutErrors(received: { error?: unknown }) {
     // Check if component rendered without throwing
     const pass = received && !received.error
     

@@ -7,7 +7,7 @@ import type { ProjectFormProps, ProjectFormData, SchedulePreview } from '../mode
 
 // TDD Green 단계를 위한 임시 모킹
 const useCreateProjectMutation = () => [
-  async (data: any) => ({ 
+  async (data: { title: string; description: string }) => ({ 
     unwrap: async () => ({ id: '1', title: data.title, name: 'Test Project' }) 
   }),
   { isLoading: false }

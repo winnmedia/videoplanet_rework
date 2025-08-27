@@ -246,10 +246,21 @@ export const projectHandlers = [
   })
 ]
 
+// 프로젝트 타입 정의
+interface ProjectInput {
+  name: string
+  description: string
+  clientName: string
+  budget: number
+  startDate: string
+  endDate?: string
+  priority?: 'HIGH' | 'MEDIUM' | 'LOW'
+}
+
 // 테스트 유틸리티 함수들
 export const projectTestUtils = {
   getProjects: () => mockProjects,
-  addProject: (project: any) => {
+  addProject: (project: ProjectInput) => {
     const newProject = {
       id: String(mockProjects.length + 1),
       ...project,

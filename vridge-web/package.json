@@ -42,6 +42,7 @@
     "validate:api-schemas": "node scripts/validate-api-schemas.js",
     "_comment_e2e_tests": "=== E2E 테스트 (배포 환경) ===",
     "test:e2e:all": "playwright test",
+    "test:e2e:workflow": "playwright test e2e/video-production-workflow.spec.ts",
     "test:e2e:smoke": "playwright test --project=api-smoke-tests",
     "test:e2e:smoke:browser": "playwright test --project=production-smoke-tests",
     "test:e2e:critical": "playwright test --project=critical-path",
@@ -51,7 +52,13 @@
     "test:e2e:report": "playwright show-report",
     "test:e2e:debug": "playwright test --debug --project=critical-path",
     "test:e2e:headed": "playwright test --headed --project=critical-path",
-    "test:e2e:ui": "playwright test --ui"
+    "test:e2e:ui": "playwright test --ui",
+    "_comment_phase4_tests": "=== Phase 4 통합 테스트 ===",
+    "test:phase4": "npm run test:workflow && npm run test:notifications && npm run test:e2e:workflow",
+    "test:workflow": "vitest run processes/video-production/model/workflowMachine.simple.test.ts",
+    "test:notifications": "vitest run processes/feedback-collection/lib/notificationEngine.test.ts",
+    "test:performance": "vitest run shared/lib/performance-monitor.test.ts",
+    "test:coverage:phase4": "tsx scripts/test-coverage-report.ts"
   },
   "dependencies": {
     "@reduxjs/toolkit": "^2.0.0",
@@ -59,6 +66,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@xstate/react": "^6.0.0",
     "classnames": "^2.5.1",
     "clsx": "^2.1.1",
     "next": "15.5.0",
@@ -70,6 +78,7 @@
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4",
     "typescript": "^5",
+    "xstate": "^5.20.2",
     "zustand": "^5.0.8"
   },
   "devDependencies": {
@@ -91,6 +100,7 @@
     "happy-dom": "^18.0.1",
     "jsdom": "^26.1.0",
     "msw": "^2.0.14",
+    "tsx": "^4.20.5",
     "vitest": "^3.2.4"
   }
 }

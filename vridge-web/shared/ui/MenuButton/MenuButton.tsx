@@ -1,11 +1,12 @@
 'use client'
 
-import React, { forwardRef } from 'react'
 import clsx from 'clsx'
 import Image from 'next/image'
-import { usePrecisionTiming } from '../../../features/navigation/lib/useReducedMotion'
-import type { MenuItem } from '../../../entities/menu'
+import React, { forwardRef } from 'react'
+
 import styles from './MenuButton.module.scss'
+import type { MenuItem } from '../../../entities/menu'
+import { usePrecisionTiming } from '../../../features/navigation/lib/useReducedMotion'
 
 interface MenuButtonProps {
   item: MenuItem

@@ -41,8 +41,27 @@ const mockSchedules = [
   }
 ]
 
+// 일정 타입 정의
+interface ScheduleItem {
+  id: string
+  title: string
+  projectId: string
+  projectName: string
+  type: string
+  startTime: string
+  endTime: string
+  location: string
+  participants: Array<{ id: string; name: string; role: string }>
+  equipment: string[]
+  notes: string
+  color: string
+  status: string
+  createdBy: string
+  createdAt: string
+}
+
 // 충돌 감지 로직
-function detectConflicts(newSchedule: any, existingSchedules: any[]) {
+function detectConflicts(newSchedule: ScheduleItem, existingSchedules: ScheduleItem[]) {
   return []
 }
 

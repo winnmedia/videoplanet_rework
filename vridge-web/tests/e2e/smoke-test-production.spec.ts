@@ -91,14 +91,14 @@ test.describe('Production Smoke Tests', () => {
     await page.setViewportSize({ width: 1200, height: 800 })
     await page.goto(PRODUCTION_URL)
     
-    let desktopWidth = await page.locator('body').evaluate(el => el.scrollWidth)
+    const desktopWidth = await page.locator('body').evaluate(el => el.scrollWidth)
     console.log(`💻 데스크톱 너비: ${desktopWidth}px`)
     
     // 모바일로 전환
     await page.setViewportSize({ width: 375, height: 667 })
     await page.waitForTimeout(1000) // 리사이즈 대기
     
-    let mobileWidth = await page.locator('body').evaluate(el => el.scrollWidth)
+    const mobileWidth = await page.locator('body').evaluate(el => el.scrollWidth)
     console.log(`📱 모바일 너비: ${mobileWidth}px`)
     
     // 모바일에서 가로 스크롤이 발생하지 않아야 함

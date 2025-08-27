@@ -4,6 +4,7 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+
 import { authApi } from '@/features/auth/api/authApi'
 
 describe('VLANET Core Functionality', () => {

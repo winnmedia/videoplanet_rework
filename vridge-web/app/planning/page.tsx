@@ -1,4 +1,5 @@
 import { Metadata } from 'next'
+
 import { VideoPlanningWidget } from '@/widgets/VideoPlanning'
 
 export const metadata: Metadata = {

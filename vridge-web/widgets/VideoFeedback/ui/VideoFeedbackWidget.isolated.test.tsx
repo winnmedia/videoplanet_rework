@@ -4,9 +4,9 @@
  * @strategy TDD Red → Green 단계별 접근
  */
 
-import React from 'react'
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import React from 'react'
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 
 import { VideoFeedbackWidget } from './VideoFeedbackWidget'
@@ -35,7 +35,7 @@ vi.mock('./VideoPlayer', () => ({
 vi.mock('./CommentThread', () => ({
   CommentThread: ({ comments, currentUser, ...props }: any) => (
     <div data-testid="comment-thread" role="region" aria-label="댓글 스레드">
-      {comments?.map((comment: any) => (
+      {comments?.map((comment: { id: string; author: { name: string }; content: string; timestamp: number }) => (
         <article key={comment.id} data-testid={`comment-${comment.id}`} role="article" aria-label={`${comment.author.name}의 댓글`}>
           <div>{comment.author.name}</div>
           <div>{comment.content}</div>
@@ -52,9 +52,9 @@ vi.mock('./CommentThread', () => ({
 
 // FeedbackTimeline 모킹 - 타임라인 렌더링 최소화
 vi.mock('./FeedbackTimeline', () => ({
-  FeedbackTimeline: ({ duration, currentTime, comments, ...props }: any) => (
+  FeedbackTimeline: ({ duration, currentTime, comments, ...props }: { duration?: number; currentTime?: number; comments?: Array<{ id: string; timestamp: number }> }) => (
     <div data-testid="feedback-timeline" role="slider" aria-label="비디오 진행률" aria-valuemin={0} aria-valuemax={duration} aria-valuenow={currentTime}>
-      {comments?.map((comment: any) => (
+      {comments?.map((comment: { id: string; author: { name: string }; content: string; timestamp: number }) => (
         <div key={comment.id} data-testid={`timeline-comment-marker-${comment.id}`} role="button" tabIndex={0} aria-label={`15초 지점의 댓글`}>
           마커
         </div>
@@ -65,7 +65,7 @@ vi.mock('./FeedbackTimeline', () => ({
 
 // FeedbackStatusBar 모킹 - 상태바 렌더링 최소화
 vi.mock('./FeedbackStatusBar', () => ({
-  FeedbackStatusBar: ({ session, stats, ...props }: any) => (
+  FeedbackStatusBar: ({ session, stats, ...props }: { session?: { totalComments?: number; resolvedComments?: number; pendingComments?: number }; stats?: unknown }) => (
     <div data-testid="feedback-status-bar" className="statusBar vridgePrimary">
       <select role="combobox" aria-label="상태 변경">
         <option value="approved">승인됨</option>
@@ -79,7 +79,7 @@ vi.mock('./FeedbackStatusBar', () => ({
 
 // VideoControls 모킹 - 비디오 컨트롤 최소화
 vi.mock('./VideoControls', () => ({
-  VideoControls: ({ playbackState, onControlEvent, showAdvancedControls, ...props }: any) => (
+  VideoControls: ({ playbackState, onControlEvent, showAdvancedControls, ...props }: { playbackState?: { isPlaying?: boolean }; onControlEvent?: unknown; showAdvancedControls?: boolean }) => (
     <div data-testid="video-controls">
       <button role="button" aria-label={playbackState?.isPlaying ? '일시정지' : '재생'}>
         {playbackState?.isPlaying ? '⏸️' : '▶️'}

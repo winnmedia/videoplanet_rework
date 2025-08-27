@@ -191,6 +191,76 @@ const eslintConfig = [
       ],
     },
   },
+  // Critical Priority Components Architecture Rules
+  {
+    files: ["features/conflict-detection/**/*", "features/realtime-collaboration/**/*", "features/permission-control/**/*"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@app/*", "@processes/*", "@widgets/*"],
+              message: "Critical features cannot import from higher layers.",
+            },
+            {
+              group: ["react-dom/server"],
+              message: "Critical features should avoid server-side rendering dependencies.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // VideoIntegration Widget Rules
+  {
+    files: ["widgets/VideoIntegration/**/*"],
+    rules: {
+      "no-restricted-imports": [
+        "error", 
+        {
+          patterns: [
+            {
+              group: ["@app/*", "@processes/*"],
+              message: "VideoIntegration widget cannot import from app or processes layers.",
+            },
+            {
+              group: ["@widgets/*/ui/*"],
+              message: "Direct UI imports from other widgets forbidden. Use public API.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // RBAC Entity Rules - Framework Independence
+  {
+    files: ["entities/rbac/**/*"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["react", "react-dom", "next/*"],
+              message: "RBAC entities must be framework-independent. Move React logic to features layer.",
+            },
+            {
+              group: ["@app/*", "@processes/*", "@widgets/*", "@features/*"],
+              message: "RBAC entities cannot import from higher layers.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // Prevent circular dependencies in critical components
+  {
+    files: ["**/*{ConflictDetection,RealtimeCollaboration,RBAC,VideoIntegration}*"],
+    rules: {
+      "import/no-cycle": ["error", { maxDepth: 3 }],
+    },
+  },
 ];
 
 export default eslintConfig;

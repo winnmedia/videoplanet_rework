@@ -2,7 +2,9 @@
 
 import clsx from 'clsx'
 import { useEffect, useRef } from 'react'
+
 import type { SubMenuItem } from '@/entities/menu/model/types'
+
 import { useKeyboardNavigation } from './hooks/useKeyboardNavigation'
 import styles from './SubMenu.module.scss'
 

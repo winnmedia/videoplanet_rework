@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from 'react'
+
 import styles from './Toast.module.scss'
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info'
@@ -176,8 +177,19 @@ export function ToastContainer({
   )
 }
 
-// Toast 유틸리티 함수
-let addToastFunction: ((toast: any) => void) | null = null
+// Toast 유틸리티 함수 인터페이스 정의
+interface ToastItem {
+  id: string
+  type: ToastType
+  message: string
+  duration?: number
+  action?: {
+    text: string
+    onClick: () => void
+  }
+}
+
+let addToastFunction: ((toast: ToastItem) => void) | null = null
 
 export const toast = {
   success: (message: string, options?: { duration?: number, action?: { text: string, onClick: () => void } }) => {
@@ -224,7 +236,7 @@ export const toast = {
       })
     }
   },
-  setAddFunction: (fn: (toast: any) => void) => {
+  setAddFunction: (fn: (toast: ToastItem) => void) => {
     addToastFunction = fn
   }
 }

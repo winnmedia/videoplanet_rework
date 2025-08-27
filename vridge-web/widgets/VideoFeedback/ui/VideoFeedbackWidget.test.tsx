@@ -4,10 +4,13 @@
  * @priority High (비디오 검토 시스템)
  */
 
-import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import React from 'react'
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+
+
+import { VideoFeedbackWidget } from './VideoFeedbackWidget'
 import { 
   actStable, 
   waitForStable, 
@@ -18,8 +21,6 @@ import {
   a11yHelpers,
   testDataFactory
 } from '../../../test/utils/fsd-test-helpers'
-
-import { VideoFeedbackWidget } from './VideoFeedbackWidget'
 import { VideoFeedbackApi } from '../api/videoFeedbackApi'
 import type { 
   VideoFeedbackSession, 

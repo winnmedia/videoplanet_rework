@@ -286,7 +286,7 @@ export function createSortedMockData<T>(
  * 실시간 업데이트 모킹 (WebSocket 시뮬레이션)
  */
 export class MockWebSocket {
-  private listeners: Map<string, Function[]> = new Map()
+  private listeners: Map<string, Array<(data: unknown) => void>> = new Map()
   private isConnected = false
   private connectionDelay = 1000
 
@@ -319,14 +319,14 @@ export class MockWebSocket {
     }
   }
 
-  on(event: string, callback: Function): void {
+  on(event: string, callback: (data: unknown) => void): void {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, [])
     }
     this.listeners.get(event)!.push(callback)
   }
 
-  off(event: string, callback: Function): void {
+  off(event: string, callback: (data: unknown) => void): void {
     const callbacks = this.listeners.get(event)
     if (callbacks) {
       const index = callbacks.indexOf(callback)
@@ -336,7 +336,7 @@ export class MockWebSocket {
     }
   }
 
-  emit(event: string, data: any): void {
+  emit(event: string, data: unknown): void {
     const callbacks = this.listeners.get(event) || []
     callbacks.forEach(callback => {
       try {
@@ -347,7 +347,7 @@ export class MockWebSocket {
     })
   }
 
-  send(data: any): void {
+  send(data: unknown): void {
     if (!this.isConnected) {
       throw new Error('WebSocket is not connected')
     }
@@ -424,16 +424,16 @@ export async function mockFileUpload(
  * 캐싱 모킹 유틸리티
  */
 class MockCache {
-  private cache = new Map<string, { data: any; expiry: number }>()
+  private cache = new Map<string, { data: unknown; expiry: number }>()
 
-  set(key: string, data: any, ttl: number = 300000): void { // 기본 5분
+  set(key: string, data: unknown, ttl: number = 300000): void { // 기본 5분
     this.cache.set(key, {
       data,
       expiry: Date.now() + ttl
     })
   }
 
-  get(key: string): any | null {
+  get(key: string): unknown | null {
     const cached = this.cache.get(key)
     if (!cached) return null
 

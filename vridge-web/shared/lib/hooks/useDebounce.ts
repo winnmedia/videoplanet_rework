@@ -53,7 +53,7 @@ export function useDebounce<T>(value: T, delay: number): T {
  *   []
  * )
  */
-export function useDebouncedCallback<T extends (...args: any[]) => any>(
+export function useDebouncedCallback<T extends (...args: never[]) => unknown>(
   callback: T,
   delay: number,
   deps: React.DependencyList = []
@@ -107,7 +107,7 @@ export function useDebouncedCallback<T extends (...args: any[]) => any>(
  * // 대기 중인 디바운스 취소
  * cancel()
  */
-export function useAdvancedDebounce<T extends (...args: any[]) => any>(
+export function useAdvancedDebounce<T extends (...args: never[]) => unknown>(
   callback: T,
   delay: number,
   deps: React.DependencyList = []
@@ -161,7 +161,7 @@ export function useAdvancedDebounce<T extends (...args: any[]) => any>(
  *   100
  * )
  */
-export function useThrottle<T extends (...args: any[]) => any>(
+export function useThrottle<T extends (...args: never[]) => unknown>(
   callback: T,
   limit: number,
   deps: React.DependencyList = []
@@ -192,7 +192,7 @@ export function useThrottle<T extends (...args: any[]) => any>(
  * @param delay - 디바운스 지연 시간
  * @returns { call, cancel, isPending }
  */
-export function useDebouncedState<T extends (...args: any[]) => any>(
+export function useDebouncedState<T extends (...args: never[]) => unknown>(
   callback: T,
   delay: number
 ) {

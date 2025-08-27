@@ -3,10 +3,10 @@
  * Utilities for testing different layers of Feature-Sliced Design
  */
 
-import { vi, expect, describe, it } from 'vitest'
 import { render, act, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import React, { ReactElement } from 'react'
+import { vi, expect, describe, it } from 'vitest'
 
 /**
  * 안정적인 React.act() 래핑 헬퍼
@@ -81,8 +81,8 @@ export const testSharedComponent = (
  */
 export const testEntity = (
   entityName: string,
-  entityFactory: () => any,
-  validationRules: Record<string, (value: any) => boolean>
+  entityFactory: () => Record<string, unknown>,
+  validationRules: Record<string, (value: unknown) => boolean>
 ) => {
   describe(`Entity: ${entityName}`, () => {
     it('should create valid entity instance', () => {
@@ -105,8 +105,8 @@ export const testEntity = (
  */
 export const testFeature = (
   featureName: string,
-  setup: () => { trigger: () => void; getState: () => any },
-  expectedBehavior: Record<string, any>
+  setup: () => { trigger: () => void; getState: () => Record<string, unknown> },
+  expectedBehavior: Record<string, unknown>
 ) => {
   describe(`Feature: ${featureName}`, () => {
     it('should handle user interaction', () => {
@@ -127,8 +127,8 @@ export const testFeature = (
  */
 export const testWidget = (
   widgetName: string,
-  WidgetComponent: React.ComponentType<any>,
-  requiredProps: Record<string, any>
+  WidgetComponent: React.ComponentType<Record<string, unknown>>,
+  requiredProps: Record<string, unknown>
 ) => {
   describe(`Widget: ${widgetName}`, () => {
     it('should render with required props', async () => {
@@ -154,8 +154,8 @@ export const testWidget = (
  */
 export const testProcess = (
   processName: string,
-  processSteps: Array<() => Promise<any>>,
-  expectedOutcome: any
+  processSteps: Array<() => Promise<unknown>>,
+  expectedOutcome: unknown
 ) => {
   describe(`Process: ${processName}`, () => {
     it('should complete all process steps', async () => {
@@ -188,7 +188,7 @@ export const testProcess = (
 /**
  * Mock factory for API calls
  */
-export const createApiMock = (endpoint: string, response: any) => {
+export const createApiMock = (endpoint: string, response: unknown) => {
   return vi.fn().mockResolvedValue(response)
 }
 
@@ -238,7 +238,7 @@ export const videoTestHelpers = {
     return mockVideo
   },
 
-  expectVideoControl: async (user: any, controlButton: HTMLElement, expectedState: string) => {
+  expectVideoControl: async (user: ReturnType<typeof userEvent.setup>, controlButton: HTMLElement, expectedState: string) => {
     await actStable(async () => {
       await user.click(controlButton)
     })
@@ -288,7 +288,7 @@ export const dragDropHelpers = {
       const dragStartEvent = new DragEvent('dragstart', { 
         bubbles: true, 
         cancelable: true,
-        dataTransfer: dataTransfer as any
+        dataTransfer: dataTransfer as DataTransfer
       })
       source.dispatchEvent(dragStartEvent)
 
@@ -296,7 +296,7 @@ export const dragDropHelpers = {
       const dragOverEvent = new DragEvent('dragover', { 
         bubbles: true, 
         cancelable: true,
-        dataTransfer: dataTransfer as any
+        dataTransfer: dataTransfer as DataTransfer
       })
       target.dispatchEvent(dragOverEvent)
 
@@ -304,7 +304,7 @@ export const dragDropHelpers = {
       const dropEvent = new DragEvent('drop', { 
         bubbles: true, 
         cancelable: true,
-        dataTransfer: dataTransfer as any
+        dataTransfer: dataTransfer as DataTransfer
       })
       target.dispatchEvent(dropEvent)
     })
@@ -315,7 +315,7 @@ export const dragDropHelpers = {
  * 모달 테스트 헬퍼
  */
 export const modalTestHelpers = {
-  expectModalOpen: async (screen: any, modalTestId: string = 'modal') => {
+  expectModalOpen: async (screen: ReturnType<typeof render>, modalTestId: string = 'modal') => {
     await waitForStable(() => {
       const modal = screen.getByTestId(modalTestId)
       expect(modal).toBeInTheDocument()
@@ -324,13 +324,13 @@ export const modalTestHelpers = {
     })
   },
 
-  expectModalClosed: async (screen: any, modalTestId: string = 'modal') => {
+  expectModalClosed: async (screen: ReturnType<typeof render>, modalTestId: string = 'modal') => {
     await waitForStable(() => {
       expect(screen.queryByTestId(modalTestId)).not.toBeInTheDocument()
     })
   },
 
-  testEscapeClose: async (user: any, screen: any, modalTestId: string = 'modal') => {
+  testEscapeClose: async (user: ReturnType<typeof userEvent.setup>, screen: ReturnType<typeof render>, modalTestId: string = 'modal') => {
     // 모달이 열려있는지 확인
     await modalTestHelpers.expectModalOpen(screen, modalTestId)
     
@@ -343,7 +343,7 @@ export const modalTestHelpers = {
     await modalTestHelpers.expectModalClosed(screen, modalTestId)
   },
 
-  testBackdropClose: async (user: any, screen: any, modalTestId: string = 'modal') => {
+  testBackdropClose: async (user: ReturnType<typeof userEvent.setup>, screen: ReturnType<typeof render>, modalTestId: string = 'modal') => {
     const modal = screen.getByTestId(modalTestId)
     
     await actStable(async () => {
@@ -383,7 +383,7 @@ export const a11yHelpers = {
   },
 
   expectKeyboardNavigation: async (
-    user: any, 
+    user: ReturnType<typeof userEvent.setup>, 
     elements: HTMLElement[], 
     direction: 'forward' | 'backward' = 'forward'
   ) => {
@@ -423,7 +423,7 @@ export const a11yHelpers = {
  * 테스트 데이터 팩토리
  */
 export const testDataFactory = {
-  user: (overrides = {}) => ({
+  user: (overrides: Record<string, unknown> = {}) => ({
     id: `user-${Date.now()}`,
     name: 'Test User',
     email: 'test@example.com',
@@ -439,7 +439,7 @@ export const testDataFactory = {
     ...overrides
   }),
 
-  project: (overrides = {}) => ({
+  project: (overrides: Record<string, unknown> = {}) => ({
     id: `project-${Date.now()}`,
     title: 'Test Project',
     description: 'Test project description',
@@ -454,7 +454,7 @@ export const testDataFactory = {
     ...overrides
   }),
 
-  comment: (overrides = {}) => ({
+  comment: (overrides: Record<string, unknown> = {}) => ({
     id: `comment-${Date.now()}`,
     content: 'Test comment content',
     timestamp: 15.5,

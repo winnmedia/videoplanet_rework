@@ -35,8 +35,8 @@ export const authApi = {
           token: response.data.vridge_session
         }
       }
-    } catch (error: any) {
-      throw new Error(error.message || '로그인에 실패했습니다.')
+    } catch (error: unknown) {
+      throw new Error(error instanceof Error ? error.message : '로그인에 실패했습니다.')
     }
   },
 
@@ -64,8 +64,8 @@ export const authApi = {
           token: response.data.vridge_session
         }
       }
-    } catch (error: any) {
-      throw new Error(error.message || '회원가입에 실패했습니다.')
+    } catch (error: unknown) {
+      throw new Error(error instanceof Error ? error.message : '회원가입에 실패했습니다.')
     }
   },
 
@@ -85,8 +85,8 @@ export const authApi = {
           message: response.data.message || '비밀번호가 성공적으로 변경되었습니다.'
         }
       }
-    } catch (error: any) {
-      throw new Error(error.message || '비밀번호 재설정에 실패했습니다.')
+    } catch (error: unknown) {
+      throw new Error(error instanceof Error ? error.message : '비밀번호 재설정에 실패했습니다.')
     }
   },
 
@@ -95,8 +95,8 @@ export const authApi = {
       const endpoint = type === 'signup' ? '/users/send_authnumber/signup' : '/users/send_authnumber/reset'
       const response = await api.post<VerificationResponse>(endpoint, { email });
       return { data: response.data }
-    } catch (error: any) {
-      throw new Error(error.message || '인증번호 발송에 실패했습니다.')
+    } catch (error: unknown) {
+      throw new Error(error instanceof Error ? error.message : '인증번호 발송에 실패했습니다.')
     }
   },
 
@@ -108,8 +108,8 @@ export const authApi = {
         auth_number: parseInt(authNumber)
       });
       return { data: response.data }
-    } catch (error: any) {
-      throw new Error(error.message || '인증번호 확인에 실패했습니다.')
+    } catch (error: unknown) {
+      throw new Error(error instanceof Error ? error.message : '인증번호 확인에 실패했습니다.')
     }
   }
 }

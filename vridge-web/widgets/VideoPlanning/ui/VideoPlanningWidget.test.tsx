@@ -7,6 +7,8 @@
 import { render, screen, fireEvent, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+
+import { VideoPlanningWidget } from './VideoPlanningWidget'
 import { 
   actStable, 
   waitForStable, 
@@ -16,8 +18,6 @@ import {
   a11yHelpers,
   testDataFactory
 } from '../../../test/utils/fsd-test-helpers'
-
-import { VideoPlanningWidget } from './VideoPlanningWidget'
 import type { 
   VideoPlanningProject,
   PlanningCard,

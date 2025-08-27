@@ -17,7 +17,7 @@ export const NextImageMock = React.forwardRef<
 // Mock Next.js Link component
 export const NextLinkMock = React.forwardRef<
   HTMLAnchorElement,
-  React.PropsWithChildren<{ href: string; [key: string]: any }>
+  React.PropsWithChildren<{ href: string } & React.AnchorHTMLAttributes<HTMLAnchorElement>>
 >(function Link({ children, href, ...props }, ref) {
   return (
     <a ref={ref} href={href} {...props}>

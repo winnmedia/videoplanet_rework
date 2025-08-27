@@ -1,6 +1,7 @@
 'use client'
 
 import { useContext, createContext } from 'react'
+
 import type { NavigationContextType } from './types'
 
 // Navigation Context

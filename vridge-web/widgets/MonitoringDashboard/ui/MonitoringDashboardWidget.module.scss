@@ -1,0 +1,561 @@
+@import '@/shared/config/design-tokens.scss';
+
+// Monitoring Dashboard Main Widget Styles
+.container {
+  width: 100%;
+  min-height: 100vh;
+  background: linear-gradient(135deg, $bg-secondary 0%, $color-white 100%);
+  color: $color-text-primary;
+  font-family: $font-primary;
+  position: relative;
+  
+  &.loading,
+  &.error {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 500px;
+  }
+}
+
+// Header Styles
+.header {
+  position: sticky;
+  top: 0;
+  z-index: $z-index-sticky;
+  background: rgba($color-white, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid $color-border-light;
+  padding: $spacing-lg $spacing-xl;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: $shadow-sm;
+  
+  @include mobile {
+    padding: $spacing-md;
+    flex-direction: column;
+    gap: $spacing-md;
+    align-items: flex-start;
+  }
+}
+
+.titleSection {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.title {
+  font-size: $font-size-2xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  
+  &::before {
+    content: '📊';
+    font-size: $font-size-xl;
+  }
+  
+  @include mobile {
+    font-size: $font-size-xl;
+  }
+}
+
+.projectInfo {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  font-family: $font-mono;
+  background: $color-primary-lighter;
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $radius-md;
+  border: 1px solid $color-primary-light;
+}
+
+.headerControls {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  
+  @include mobile {
+    width: 100%;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+}
+
+.connectionStatus {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $radius-md;
+  
+  &.connected {
+    background: $color-success-lighter;
+    color: $color-success-dark;
+    
+    .statusIndicator {
+      background: $color-success;
+      animation: pulse 2s infinite;
+    }
+  }
+  
+  &.disconnected {
+    background: $color-error-lighter;
+    color: $color-error-dark;
+    
+    .statusIndicator {
+      background: $color-error;
+    }
+  }
+}
+
+.statusIndicator {
+  width: 8px;
+  height: 8px;
+  border-radius: $radius-full;
+  flex-shrink: 0;
+}
+
+.lastUpdate {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  font-family: $font-mono;
+  white-space: nowrap;
+  
+  @include mobile {
+    font-size: 10px;
+  }
+}
+
+.refreshButton {
+  @include button-base;
+  width: 40px;
+  height: 40px;
+  border-radius: $radius-full;
+  background: $color-primary-lighter;
+  color: $color-primary;
+  border: 1px solid $color-primary-light;
+  font-size: $font-size-lg;
+  
+  &:hover:not(:disabled) {
+    background: $color-primary;
+    color: $color-white;
+    transform: rotate(180deg);
+  }
+  
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    animation: rotate 1s linear infinite;
+  }
+}
+
+// Content Layout
+.content {
+  padding: $spacing-xl;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-2xl;
+  max-width: 1600px;
+  margin: 0 auto;
+  
+  @include mobile {
+    padding: $spacing-md;
+    gap: $spacing-xl;
+  }
+}
+
+.topSection {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: $spacing-2xl;
+  align-items: flex-start;
+  
+  @include tablet {
+    grid-template-columns: 1fr;
+    gap: $spacing-xl;
+  }
+  
+  @include mobile {
+    gap: $spacing-lg;
+  }
+}
+
+.performanceSection {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
+}
+
+.performanceChart {
+  // Additional styles for performance chart container
+  min-height: 400px;
+}
+
+.workflowSection {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-lg;
+}
+
+.workflowProgress {
+  // Additional styles for workflow progress container
+  min-height: 300px;
+}
+
+.bottomSection {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $spacing-xl;
+}
+
+.notifications {
+  // Additional styles for notifications container
+  max-height: 600px;
+}
+
+// Empty States
+.noWorkflows {
+  @include card;
+  padding: $spacing-2xl;
+  text-align: center;
+  min-height: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: $color-text-secondary;
+  
+  h3 {
+    font-size: $font-size-lg;
+    font-weight: $font-weight-medium;
+    color: $color-text-primary;
+    margin: $spacing-sm 0;
+  }
+  
+  p {
+    font-size: $font-size-base;
+    margin: 0;
+    max-width: 300px;
+  }
+}
+
+.emptyIcon {
+  font-size: $font-size-4xl;
+  opacity: 0.5;
+  margin-bottom: $spacing-sm;
+}
+
+// Loading State
+.loading {
+  background: linear-gradient(135deg, $color-gray-100 0%, $color-white 100%);
+}
+
+.loadingContent {
+  text-align: center;
+  color: $color-text-secondary;
+  
+  h2 {
+    font-size: $font-size-xl;
+    font-weight: $font-weight-medium;
+    color: $color-text-primary;
+    margin: $spacing-lg 0 $spacing-sm 0;
+  }
+  
+  p {
+    font-size: $font-size-base;
+    margin: 0;
+  }
+}
+
+.loadingSpinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid $color-border-light;
+  border-top: 4px solid $color-primary;
+  border-radius: $radius-full;
+  animation: spin 1s linear infinite;
+  margin: 0 auto $spacing-lg auto;
+}
+
+// Error State
+.error {
+  background: linear-gradient(135deg, $color-error-lighter 0%, $color-white 100%);
+}
+
+.errorContent {
+  text-align: center;
+  color: $color-error-text;
+  
+  h2 {
+    font-size: $font-size-xl;
+    font-weight: $font-weight-medium;
+    color: $color-error-dark;
+    margin: $spacing-lg 0 $spacing-sm 0;
+  }
+  
+  p {
+    font-size: $font-size-base;
+    margin: 0 0 $spacing-lg 0;
+    max-width: 400px;
+  }
+}
+
+.errorIcon {
+  font-size: $font-size-4xl;
+  margin-bottom: $spacing-sm;
+}
+
+.retryButton {
+  @include button-base;
+  padding: $spacing-md $spacing-xl;
+  font-size: $font-size-base;
+  background: $color-error;
+  color: $color-white;
+  border: 1px solid $color-error-dark;
+  border-radius: $radius-lg;
+  
+  &:hover:not(:disabled) {
+    background: $color-error-dark;
+    transform: translateY(-2px);
+    box-shadow: $shadow-md;
+  }
+}
+
+// Error Banner (for runtime errors)
+.errorBanner {
+  position: fixed;
+  bottom: $spacing-lg;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: $z-index-modal;
+  background: $color-error;
+  color: $color-white;
+  padding: $spacing-md $spacing-lg;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-lg;
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  max-width: 90vw;
+  animation: slideUp 0.3s ease-out;
+  
+  @include mobile {
+    bottom: $spacing-md;
+    left: $spacing-md;
+    right: $spacing-md;
+    transform: none;
+    max-width: none;
+  }
+}
+
+.errorText {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  flex: 1;
+}
+
+.dismissButton {
+  background: none;
+  border: none;
+  color: $color-white;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  cursor: pointer;
+  padding: 0;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: $radius-sm;
+  transition: $transition-colors;
+  
+  &:hover {
+    background: rgba($color-white, 0.2);
+  }
+}
+
+// Animations
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(0.95);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translate(-50%, 100%);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, 0%);
+    opacity: 1;
+  }
+}
+
+// Responsive Design
+@include mobile {
+  .topSection {
+    grid-template-columns: 1fr;
+  }
+  
+  .performanceChart,
+  .workflowProgress {
+    min-height: 250px;
+  }
+  
+  .notifications {
+    max-height: 400px;
+  }
+}
+
+@include tablet {
+  .content {
+    padding: $spacing-lg;
+  }
+  
+  .topSection {
+    gap: $spacing-xl;
+  }
+}
+
+@include desktop {
+  .bottomSection {
+    grid-template-columns: 1fr 1fr;
+    gap: $spacing-2xl;
+  }
+}
+
+// High Contrast Mode
+@media (prefers-contrast: high) {
+  .header {
+    border-bottom-width: 2px;
+    background: $color-white;
+  }
+  
+  .connectionStatus {
+    border: 2px solid currentColor;
+  }
+  
+  .errorBanner {
+    border: 2px solid $color-white;
+  }
+}
+
+// Reduced Motion
+@media (prefers-reduced-motion: reduce) {
+  .loadingSpinner,
+  .refreshButton:disabled {
+    animation: none;
+  }
+  
+  .statusIndicator.connected {
+    animation: none;
+  }
+  
+  .refreshButton:hover {
+    transform: none;
+  }
+  
+  .retryButton:hover {
+    transform: none;
+  }
+  
+  .errorBanner {
+    animation: none;
+  }
+}
+
+// Print Styles
+@media print {
+  .container {
+    background: $color-white;
+    min-height: auto;
+  }
+  
+  .header {
+    position: static;
+    box-shadow: none;
+    border-bottom: 2px solid $color-text-primary;
+  }
+  
+  .headerControls {
+    display: none;
+  }
+  
+  .errorBanner {
+    position: static;
+    transform: none;
+    margin: $spacing-lg 0;
+    color: $color-text-primary;
+    background: $color-gray-100;
+    border: 1px solid $color-text-primary;
+  }
+  
+  .content {
+    break-inside: avoid;
+  }
+  
+  .topSection,
+  .bottomSection {
+    grid-template-columns: 1fr;
+    break-inside: avoid;
+  }
+}
+
+// Dark Mode Support (for future)
+@media (prefers-color-scheme: dark) {
+  .container {
+    background: linear-gradient(135deg, $bg-dark 0%, $color-gray-900 100%);
+    color: $color-white;
+  }
+  
+  .header {
+    background: rgba($color-gray-900, 0.95);
+    border-bottom-color: $color-gray-600;
+  }
+  
+  .title {
+    color: $color-white;
+  }
+  
+  .refreshButton {
+    background: rgba($color-primary, 0.2);
+    border-color: $color-primary;
+    
+    &:hover:not(:disabled) {
+      background: $color-primary;
+    }
+  }
+}

@@ -3,8 +3,8 @@
  * @purpose 에러 처리, 엣지 케이스, 접근성 등 모든 시나리오 커버
  */
 
-import React from 'react'
 import { render, screen, waitFor } from '@testing-library/react'
+import React from 'react'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
 import { VideoFeedbackWidget } from './VideoFeedbackWidget.minimal'

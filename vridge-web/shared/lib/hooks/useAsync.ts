@@ -37,7 +37,7 @@ export interface AsyncOptions {
  *   execute(userId)
  * }, [userId])
  */
-export function useAsync<T, P extends any[] = []>(
+export function useAsync<T, P extends unknown[] = []>(
   asyncFunction: (...args: P) => Promise<T>,
   options: AsyncOptions = {}
 ) {

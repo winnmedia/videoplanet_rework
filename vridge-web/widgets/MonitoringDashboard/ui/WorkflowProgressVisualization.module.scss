@@ -1,0 +1,576 @@
+@import '@/shared/config/design-tokens.scss';
+
+// Workflow Progress Visualization Styles
+.container {
+  @include card;
+  padding: $spacing-lg;
+  background: $color-white;
+  border-radius: $radius-2xl;
+  box-shadow: $shadow-md;
+  transition: $transition-shadow;
+  
+  &:hover {
+    box-shadow: $shadow-lg;
+  }
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: $spacing-xl;
+  
+  @include mobile {
+    flex-direction: column;
+    gap: $spacing-md;
+  }
+}
+
+.title {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  
+  &::before {
+    content: '🚀';
+    font-size: $font-size-lg;
+  }
+}
+
+.projectInfo {
+  text-align: right;
+  
+  @include mobile {
+    text-align: left;
+    width: 100%;
+  }
+}
+
+.projectTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-xs;
+}
+
+.projectMeta {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  font-family: $font-mono;
+}
+
+// Overall Progress
+.overallProgress {
+  margin-bottom: $spacing-xl;
+  padding: $spacing-lg;
+  background: linear-gradient(135deg, $color-primary-lighter 0%, $color-white 100%);
+  border-radius: $radius-xl;
+  border: 1px solid $color-primary-light;
+}
+
+.progressHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-sm;
+}
+
+.progressLabel {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.progressPercentage {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+  font-family: $font-mono;
+}
+
+.progressBar {
+  width: 100%;
+  height: 12px;
+  background: rgba($color-primary, 0.1);
+  border-radius: $radius-full;
+  overflow: hidden;
+  margin-bottom: $spacing-sm;
+  position: relative;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.4) 50%, transparent 100%);
+    animation: shimmer 2s infinite;
+  }
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, $color-primary 0%, $color-primary-dark 100%);
+  border-radius: $radius-full;
+  transition: width 0.5s ease-out;
+  position: relative;
+}
+
+.statusMessage {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  text-align: center;
+  font-weight: $font-weight-medium;
+}
+
+// Stages
+.stages {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+  position: relative;
+}
+
+.stage {
+  display: flex;
+  align-items: center;
+  gap: $spacing-lg;
+  padding: $spacing-lg;
+  border-radius: $radius-lg;
+  border: 2px solid $color-border-light;
+  background: $color-white;
+  transition: $transition-all;
+  position: relative;
+  
+  &:hover {
+    border-color: $color-primary-light;
+    transform: translateX(4px);
+    box-shadow: $shadow-sm;
+  }
+  
+  &.stageCompleted {
+    background: linear-gradient(135deg, $color-success-lighter 0%, $color-white 100%);
+    border-color: $color-success;
+    
+    .stageIcon {
+      background: $color-success;
+      color: $color-white;
+      box-shadow: $shadow-sm;
+    }
+  }
+  
+  &.stageCurrent {
+    background: linear-gradient(135deg, $color-primary-lighter 0%, $color-white 100%);
+    border-color: $color-primary;
+    animation: pulse 2s infinite;
+    
+    .stageIcon {
+      background: $color-primary;
+      color: $color-white;
+      box-shadow: $shadow-sm;
+      animation: bounce 2s infinite;
+    }
+  }
+  
+  &.stageClickable {
+    cursor: pointer;
+    
+    &:hover {
+      transform: translateX(8px);
+      box-shadow: $shadow-md;
+    }
+    
+    &:focus {
+      @include focus-visible;
+      transform: translateX(8px);
+    }
+    
+    &:active {
+      transform: translateX(4px);
+    }
+  }
+}
+
+.stageIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: $radius-full;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: $font-size-lg;
+  background: $color-gray-200;
+  color: $color-gray-500;
+  transition: $transition-all;
+  flex-shrink: 0;
+}
+
+.stageInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.stageName {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin-bottom: $spacing-xs;
+}
+
+.stageDescription {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-bottom: $spacing-sm;
+  line-height: $line-height-normal;
+}
+
+.stageStatus {
+  margin-bottom: $spacing-sm;
+}
+
+.statusCompleted {
+  color: $color-success-dark;
+  font-weight: $font-weight-semibold;
+  font-size: $font-size-sm;
+  
+  &::before {
+    content: '✓';
+    margin-right: $spacing-xs;
+  }
+}
+
+.statusCurrent {
+  color: $color-primary;
+  font-weight: $font-weight-semibold;
+  font-size: $font-size-sm;
+  
+  &::before {
+    content: '▶';
+    margin-right: $spacing-xs;
+    animation: blink 1.5s infinite;
+  }
+}
+
+.statusPending {
+  color: $color-text-secondary;
+  font-weight: $font-weight-medium;
+  font-size: $font-size-sm;
+  
+  &::before {
+    content: '⏳';
+    margin-right: $spacing-xs;
+  }
+}
+
+.stageMetadata {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  background: rgba($color-primary, 0.05);
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $radius-sm;
+  margin-bottom: $spacing-sm;
+  font-family: $font-mono;
+}
+
+.estimatedTime {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  font-weight: $font-weight-medium;
+}
+
+// Stage Progress
+.stageProgress {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-top: $spacing-sm;
+}
+
+.stageProgressBar {
+  flex: 1;
+  height: 6px;
+  background: rgba($color-primary, 0.1);
+  border-radius: $radius-full;
+  overflow: hidden;
+}
+
+.stageProgressFill {
+  height: 100%;
+  border-radius: $radius-full;
+  transition: width 0.3s ease-out;
+}
+
+.stageProgressText {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-bold;
+  color: $color-text-secondary;
+  font-family: $font-mono;
+  min-width: 32px;
+}
+
+// Connectors
+.connector {
+  position: absolute;
+  right: -$spacing-md;
+  top: 50%;
+  transform: translateY(-50%);
+  width: $spacing-sm;
+  height: 2px;
+  background: $color-border;
+  transition: $transition-colors;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    right: -6px;
+    top: -3px;
+    width: 8px;
+    height: 8px;
+    border-radius: $radius-full;
+    background: $color-border;
+    transition: $transition-colors;
+  }
+  
+  &.connectorCompleted {
+    background: $color-success;
+    
+    &::after {
+      background: $color-success;
+    }
+  }
+}
+
+// Widget Connections
+.widgetConnections {
+  margin-top: $spacing-xl;
+  padding-top: $spacing-lg;
+  border-top: 1px solid $color-border-light;
+  
+  h3 {
+    font-size: $font-size-md;
+    font-weight: $font-weight-semibold;
+    color: $color-text-primary;
+    margin: 0 0 $spacing-md 0;
+  }
+}
+
+.connectedWidgets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-sm;
+}
+
+.widgetChip {
+  padding: $spacing-xs $spacing-sm;
+  background: $color-primary-lighter;
+  color: $color-primary;
+  border-radius: $radius-full;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  border: 1px solid $color-primary-light;
+}
+
+// Alerts
+.pausedAlert,
+.rejectionAlert {
+  margin-top: $spacing-lg;
+  padding: $spacing-md;
+  border-radius: $radius-lg;
+  display: flex;
+  align-items: flex-start;
+  gap: $spacing-md;
+}
+
+.pausedAlert {
+  background: linear-gradient(135deg, $color-warning-lighter 0%, $color-white 100%);
+  border: 1px solid $color-warning;
+}
+
+.rejectionAlert {
+  background: linear-gradient(135deg, $color-error-lighter 0%, $color-white 100%);
+  border: 1px solid $color-error;
+}
+
+.alertIcon {
+  font-size: $font-size-lg;
+  flex-shrink: 0;
+}
+
+.alertContent {
+  flex: 1;
+  
+  strong {
+    display: block;
+    font-weight: $font-weight-semibold;
+    margin-bottom: $spacing-xs;
+  }
+  
+  p {
+    margin: 0;
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+  }
+}
+
+// Loading State
+.loading {
+  pointer-events: none;
+}
+
+.loadingSkeleton {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.skeletonHeader {
+  height: 40px;
+  background: $color-gray-200;
+  border-radius: $radius-md;
+  margin-bottom: $spacing-lg;
+}
+
+.skeletonProgress {
+  height: 80px;
+  background: $color-gray-200;
+  border-radius: $radius-lg;
+  margin-bottom: $spacing-xl;
+}
+
+.skeletonStages {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+.skeletonStage {
+  height: 80px;
+  background: $color-gray-200;
+  border-radius: $radius-lg;
+}
+
+// Animations
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-3px);
+  }
+  60% {
+    transform: translateY(-2px);
+  }
+}
+
+@keyframes blink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0.3;
+  }
+}
+
+// Responsive Design
+@include mobile {
+  .container {
+    padding: $spacing-md;
+  }
+  
+  .stage {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: $spacing-md;
+    text-align: left;
+  }
+  
+  .stageIcon {
+    align-self: flex-start;
+  }
+  
+  .connector {
+    display: none;
+  }
+  
+  .overallProgress {
+    padding: $spacing-md;
+  }
+}
+
+@include tablet {
+  .stage {
+    padding: $spacing-md;
+  }
+}
+
+// High Contrast Mode
+@media (prefers-contrast: high) {
+  .stage {
+    border-width: 3px;
+  }
+  
+  .progressBar,
+  .stageProgressBar {
+    border: 2px solid $color-text-primary;
+  }
+}
+
+// Reduced Motion
+@media (prefers-reduced-motion: reduce) {
+  .stage,
+  .stageIcon,
+  .progressFill,
+  .stageProgressFill {
+    transition: none;
+  }
+  
+  .stageCurrent,
+  .statusCurrent::before {
+    animation: none;
+  }
+  
+  .progressBar::after {
+    animation: none;
+  }
+  
+  .loadingSkeleton {
+    animation: none;
+  }
+}
+
+// Print Styles
+@media print {
+  .container {
+    box-shadow: none;
+    border: 1px solid $color-text-primary;
+  }
+  
+  .stage {
+    break-inside: avoid;
+  }
+  
+  .alertIcon {
+    display: none;
+  }
+}

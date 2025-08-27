@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useCallback } from 'react'
+
 import type { SubMenuKeyboardOptions } from '../model/types'
 
 /**

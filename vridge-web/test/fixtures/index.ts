@@ -179,20 +179,20 @@ export const fixtures = {
  * Factory functions for generating dynamic fixtures
  */
 export const factories = {
-  createUser: (overrides = {}) => ({
+  createUser: (overrides: Record<string, unknown> = {}) => ({
     ...fixtures.users.validUser,
     id: Math.random().toString(36).substr(2, 9),
     createdAt: new Date().toISOString(),
     ...overrides,
   }),
   
-  createProduct: (overrides = {}) => ({
+  createProduct: (overrides: Record<string, unknown> = {}) => ({
     ...fixtures.products.singleProduct,
     id: Math.random().toString(36).substr(2, 9),
     ...overrides,
   }),
   
-  createApiResponse: (data: any, status = 200) => ({
+  createApiResponse: (data: unknown, status = 200) => ({
     status,
     data,
     headers: {

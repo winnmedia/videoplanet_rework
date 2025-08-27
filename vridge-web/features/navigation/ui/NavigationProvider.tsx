@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useReducer, useCallback, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
-import { NavigationContext, useNavigation } from '../model/useNavigation'
+import React, { useReducer, useCallback, useEffect } from 'react'
+
 import { useReducedMotion } from '../lib/useReducedMotion'
 import type {
   NavigationState,
@@ -10,6 +10,7 @@ import type {
   NavigationContextType,
   SubMenuItemData
 } from '../model/types'
+import { NavigationContext, useNavigation } from '../model/useNavigation'
 
 // Navigation State Reducer
 type NavigationAction =

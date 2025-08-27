@@ -1,9 +1,10 @@
 /**
  * VideoControls 컴포넌트 단위 테스트
  */
-import React from 'react'
 import { render, screen, fireEvent } from '@testing-library/react'
+import React from 'react'
 import { describe, it, expect, vi } from 'vitest'
+
 import { VideoControls } from './VideoControls'
 import type { VideoPlaybackState } from '../model/types'
 
