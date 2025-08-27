@@ -2,14 +2,16 @@
 
 import { useRouter } from 'next/navigation'
 import { useState, useEffect, useRef } from 'react'
+import dynamic from 'next/dynamic'
 
 import styles from './SignupForm.module.scss'
 import { useAuth } from '../model/useAuth'
 
-export function SignupForm() {
+function SignupFormComponent() {
   const router = useRouter()
   const { signup } = useAuth()
   const [email, setEmail] = useState('')
+  const [mounted, setMounted] = useState(false)
   const [authNumber, setAuthNumber] = useState('')
   const [nickname, setNickname] = useState('')
   const [password, setPassword] = useState('')
@@ -43,6 +45,11 @@ export function SignupForm() {
     }, 1000)
   }
 
+  // 마운트 상태 설정
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
   // 컴포넌트 언마운트 시 타이머 정리
   useEffect(() => {
     return () => {
@@ -51,6 +58,15 @@ export function SignupForm() {
       }
     }
   }, [])
+
+  // 서버 사이드 렌더링 시 로딩 표시
+  if (!mounted) {
+    return (
+      <div className={styles.form}>
+        <div className={styles.loading}>로딩 중...</div>
+      </div>
+    )
+  }
 
   const handleSendVerification = async () => {
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -101,8 +117,8 @@ export function SignupForm() {
     }
 
     try {
-      const response = await fetch('/api/auth/send-verification', {
-        method: 'PUT',
+      const response = await fetch('/api/auth/verify-email', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
@@ -292,3 +308,13 @@ export function SignupForm() {
     </form>
   )
 }
+
+// 동적 import로 클라이언트 사이드 렌더링 강제
+export const SignupForm = dynamic(() => Promise.resolve(SignupFormComponent), {
+  ssr: false,
+  loading: () => (
+    <div style={{ padding: '20px', textAlign: 'center' }}>
+      <div>회원가입 폼 로딩 중...</div>
+    </div>
+  )
+})
