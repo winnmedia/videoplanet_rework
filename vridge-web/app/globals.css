@@ -1,4 +1,5 @@
-@import "tailwindcss";
+/* Tailwind CSS removed for build compatibility */
+/* @import "tailwindcss"; */
 
 /* Font faces - suit 폰트 패밀리 - 시스템 폰트로 대체 */
 /* 추후 실제 폰트 파일 추가 시 아래 주석 해제 */
