@@ -1,9 +1,10 @@
 'use client'
 
-import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '../model/useAuth'
+import { useState } from 'react'
+
 import styles from './ResetPasswordForm.module.scss'
+import { useAuth } from '../model/useAuth'
 
 export function ResetPasswordForm() {
   const router = useRouter()
@@ -52,8 +53,8 @@ export function ResetPasswordForm() {
       if (data.devCode) {
         console.log('🔑 개발 모드 인증번호:', data.devCode)
       }
-    } catch (err: any) {
-      setError(err.message || '이메일 발송에 실패했습니다. 다시 시도해주세요.')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : '이메일 발송에 실패했습니다. 다시 시도해주세요.')
     } finally {
       setEmailSendLoading(false)
     }
@@ -86,8 +87,8 @@ export function ResetPasswordForm() {
 
       setValidEmail(true)
       setError('')
-    } catch (err: any) {
-      setError(err.message || '인증번호가 올바르지 않습니다.')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : '인증번호가 올바르지 않습니다.')
     }
   }
 
@@ -120,7 +121,7 @@ export function ResetPasswordForm() {
       })
       alert('비밀번호가 성공적으로 변경되었습니다.')
       router.push('/login')
-    } catch (err) {
+    } catch (_err) {
       setError('비밀번호 변경에 실패했습니다. 다시 시도해주세요.')
     } finally {
       setLoading(false)

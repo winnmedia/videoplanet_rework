@@ -186,6 +186,43 @@ button.ty02:hover {
   color: var(--primary);
 }
 
+/* Legacy Card Component - TDD 테스트용 */
+.legacy-card {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 49, 255, 0.15);
+  border: 1px solid #e4e4e4;
+}
+
+/* VRidge Brand Colors - TDD 테스트용 */
+.bg-vridge-primary {
+  background-color: #0031ff;
+}
+
+.bg-vridge-primary-dark {
+  background-color: #0059db;
+}
+
+.text-vridge-primary {
+  color: #0031ff;
+}
+
+.border-vridge-primary {
+  border-color: #0031ff;
+}
+
+.ring-vridge-primary {
+  --tw-ring-color: #0031ff;
+}
+
+.focus\:ring-vridge-primary:focus {
+  --tw-ring-color: #0031ff;
+}
+
+.focus\:border-vridge-primary:focus {
+  border-color: #0031ff;
+}
+
 /* 접근성 유틸리티 클래스 */
 .sr-only {
   position: absolute;

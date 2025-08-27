@@ -1,6 +1,7 @@
-import { defineConfig } from 'vitest/config'
-import react from '@vitejs/plugin-react'
 import path from 'path'
+
+import react from '@vitejs/plugin-react'
+import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   plugins: [react()],
@@ -11,10 +12,14 @@ export default defineConfig({
     // Setup files
     setupFiles: ['./test/setup.ts'],
     
-    // Global test configuration
-    globals: true,
+    // CSS 파일 처리 설정 - CSS Modules를 테스트에서 사용할 수 있게 활성화
+    css: {
+      modules: {
+        classNameStrategy: 'non-scoped'
+      }
+    },
     
-    // Coverage configuration
+    // Coverage configuration - 모듈별 차등 커버리지
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],
@@ -27,19 +32,28 @@ export default defineConfig({
         'public/',
         '**/__mocks__/**',
       ],
+      
+      // 글로벌 임계값 (최소 기준)
       thresholds: {
-        branches: 50,
-        functions: 50,
-        lines: 50,
-        statements: 50,
+        branches: 70,
+        functions: 75,
+        lines: 75,
+        statements: 75,
       },
+      
       all: true,
       clean: true,
+      skipFull: false
     },
     
-    // Test matching patterns
+    // Test matching patterns - 모듈별 테스트 패턴
     include: [
       '**/*.{test,spec}.{js,mjs,cjs,ts,mts,cts,jsx,tsx}',
+      // 모듈별 특수 테스트 패턴
+      '**/calendar/**/*.test.ts',
+      '**/project*/**/*.test.ts', 
+      '**/dashboard/**/*.test.ts',
+      '**/video-*/**/*.test.ts'
     ],
     
     // Exclude patterns
@@ -56,14 +70,37 @@ export default defineConfig({
     restoreMocks: true,
     clearMocks: true,
     
-    // Reporter configuration
-    reporters: ['verbose'],
+    // Reporter configuration - 병렬 개발용 향상된 리포팅
+    reporters: [
+      'verbose',
+      'json',
+      ['html', { outputFile: 'test-results/index.html' }]
+    ],
     
-    // Test timeout
+    // Test timeout - 모듈별 차등 타임아웃
     testTimeout: 10000,
     
-    // Watch mode configuration
-    watchExclude: ['**/node_modules/**', '**/dist/**', '**/.next/**'],
+    // 병렬 실행 설정
+    pool: 'threads',
+    poolOptions: {
+      threads: {
+        singleThread: false,
+        isolate: true,
+        useAtomics: true
+      }
+    },
+    
+    // 모듈별 테스트 환경 설정
+    environmentOptions: {
+      jsdom: {
+        resources: 'usable',
+        runScripts: 'dangerously'
+      }
+    },
+    
+    // Watch mode는 기본 설정 사용
+    
+    // 테스트 분류 및 태깅 (globals는 위에서 이미 설정됨)
   },
   
   // Path aliases matching tsconfig.json

@@ -1,8 +1,9 @@
 'use client'
 
+import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
-import Image from 'next/image'
+
 import styles from '@/styles/home.module.scss'
 
 export default function Home() {
@@ -100,7 +101,7 @@ export default function Home() {
           <h2>번거로운 n가지 툴 사용은 이제 그만,</h2>
           <p>
             영상 편집 피드백, 프로젝트 관리가 까다로우셨나요?<br />
-            이제는 <span className={styles.brandName}>'브이래닛'</span>로 쉬워집니다
+            이제는 <span className={styles.brandName}>&apos;브이래닛&apos;</span>로 쉬워집니다
           </p>
         </section>
 

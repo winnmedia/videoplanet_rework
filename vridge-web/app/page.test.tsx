@@ -3,9 +3,11 @@
  * Following TDD principles - Writing tests first before implementation
  */
 
-import { describe, it, expect, beforeEach } from 'vitest'
 import { screen, within } from '@testing-library/react'
+import { describe, it, expect } from 'vitest'
+
 import { render, setup } from '@/test/utils/test-utils'
+
 import Home from './page'
 
 describe('Homepage', () => {

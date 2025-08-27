@@ -3,7 +3,8 @@
  * Used by deployment platforms and monitoring tools
  */
 
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
+
 import { config } from '@/lib/config/env';
 
 interface HealthStatus {
@@ -159,7 +160,7 @@ async function checkApi(): Promise<{ status: 'ok' | 'error'; responseTime?: numb
  * GET /api/health
  * Returns the health status of the application
  */
-export async function GET(request: NextRequest) {
+export async function GET() {
   const startTime = process.uptime();
   
   // Run health checks in parallel

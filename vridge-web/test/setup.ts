@@ -7,8 +7,9 @@ import '@testing-library/jest-dom'
 import './utils/custom-matchers'
 import { cleanup } from '@testing-library/react'
 import { afterEach, beforeAll, afterAll, vi } from 'vitest'
-import { server } from './mocks/server'
+
 import { NextImageMock, NextLinkMock } from './mocks/next'
+import { server } from './mocks/server'
 
 // Setup MSW (Mock Service Worker)
 beforeAll(() => {
@@ -97,3 +98,5 @@ Object.defineProperty(window, 'matchMedia', {
 // Mock scrollTo
 global.scrollTo = vi.fn()
 window.scrollTo = vi.fn()
+
+// CSS modules은 vitest.config.ts의 css.modules.classNameStrategy: 'non-scoped'로 처리됨

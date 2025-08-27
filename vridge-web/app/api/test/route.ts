@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server'
+
 import { withErrorHandler, createErrorResponse, ValidationError, AuthenticationError, AuthorizationError, NotFoundError } from '@/lib/api/error-handler'
 
 /**
@@ -56,26 +57,33 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
  * POST endpoint for testing validation errors
  */
 export const POST = withErrorHandler(async (request: NextRequest) => {
-  let body: any
+  let body: unknown
   
   try {
     body = await request.json()
-  } catch (error) {
+  } catch {
     return createErrorResponse(400, 'Invalid JSON format')
   }
+  
+  // Type guard to check if body is a valid object
+  if (!body || typeof body !== 'object') {
+    return createErrorResponse(400, 'Invalid request body')
+  }
+  
+  const typedBody = body as { email?: unknown; password?: unknown }
   
   // Validate required fields
   const errors: Record<string, string[]> = {}
   
-  if (!body.email) {
+  if (!typedBody.email) {
     errors.email = ['이메일은 필수 항목입니다']
-  } else if (!body.email.includes('@')) {
+  } else if (typeof typedBody.email !== 'string' || !typedBody.email.includes('@')) {
     errors.email = ['올바른 이메일 형식이 아닙니다']
   }
   
-  if (!body.password) {
+  if (!typedBody.password) {
     errors.password = ['비밀번호는 필수 항목입니다']
-  } else if (body.password.length < 8) {
+  } else if (typeof typedBody.password !== 'string' || typedBody.password.length < 8) {
     errors.password = ['비밀번호는 8자 이상이어야 합니다']
   }
   
@@ -88,7 +96,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     success: true,
     message: '데이터가 성공적으로 처리되었습니다',
     data: {
-      email: body.email,
+      email: typedBody.email,
       createdAt: new Date().toISOString()
     }
   }), {

@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { Header } from "@widgets/Header";
+
+
 import { StoreProvider } from "@shared/ui";
+
 import { ConditionalHeader } from "./components/ConditionalHeader";
 import "./globals.css";
 
@@ -16,8 +18,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "VRidge - Video Review Platform",
-  description: "Professional video review and feedback platform",
+  title: "VLANET 영상 협업툴의 신세계, 비디오플래닛",
+  description: "VLANET - 영상 제작 및 협업을 위한 프로페셔널 플랫폼",
 };
 
 export default function RootLayout({

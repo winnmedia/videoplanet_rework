@@ -32,6 +32,11 @@ export interface CreateProjectDto {
   description?: string;
   tags?: string[];
   settings?: Partial<ProjectSettings>;
+  autoSchedule?: {
+    planning: { duration: number }
+    shooting: { duration: number }
+    editing: { duration: number }
+  }
 }
 
 export interface UpdateProjectDto {

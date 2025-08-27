@@ -1,98 +1,90 @@
 /**
- * MSW Request Handlers
- * Define mock API endpoints for testing
+ * MSW Request Handlers - Modularized for 5 Core Modules
+ * VRidge 병렬 개발을 위한 모듈별 전문화된 API 모킹
  */
 
 import { http, HttpResponse, delay } from 'msw'
 
-// Base API URL - adjust this based on your actual API
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'
+import { authHandlers } from './modules/auth.handlers'
+import { calendarHandlers } from './modules/calendar.handlers'
+import { dashboardHandlers } from './modules/dashboard.handlers'
+import { externalHandlers } from './modules/external.handlers'
+import { projectHandlers } from './modules/project.handlers'
+import { videoFeedbackHandlers } from './modules/video-feedback.handlers'
+import { videoPlanningHandlers } from './modules/video-planning.handlers'
 
+// Base API URL - adjust this based on your actual API
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'
+
+/**
+ * 통합된 핸들러 배열 - 모든 모듈의 핸들러 결합
+ */
 export const handlers = [
-  // Example: Mock user authentication endpoint
-  http.post(`${API_BASE_URL}/auth/login`, async ({ request }) => {
-    const body = await request.json() as { email: string; password: string }
-    
-    // Simulate network delay
-    await delay(100)
-    
-    // Mock successful login
-    if (body.email === 'test@example.com' && body.password === 'password') {
-      return HttpResponse.json({
-        user: {
-          id: '1',
-          email: 'test@example.com',
-          name: 'Test User',
-        },
-        token: 'mock-jwt-token',
-      })
-    }
-    
-    // Mock failed login
-    return HttpResponse.json(
-      { error: 'Invalid credentials' },
-      { status: 401 }
-    )
-  }),
-  
-  // Example: Mock user profile endpoint
-  http.get(`${API_BASE_URL}/user/profile`, async () => {
-    await delay(100)
-    
-    return HttpResponse.json({
-      id: '1',
-      email: 'test@example.com',
-      name: 'Test User',
-      avatar: '/default-avatar.png',
-    })
-  }),
-  
-  // Example: Mock data fetching endpoint
-  http.get(`${API_BASE_URL}/items`, async ({ request }) => {
-    const url = new URL(request.url)
-    const page = url.searchParams.get('page') || '1'
-    const limit = url.searchParams.get('limit') || '10'
-    
-    await delay(100)
-    
-    return HttpResponse.json({
-      items: Array.from({ length: Number(limit) }, (_, i) => ({
-        id: `${page}-${i}`,
-        title: `Item ${i + 1}`,
-        description: `Description for item ${i + 1}`,
-      })),
-      pagination: {
-        page: Number(page),
-        limit: Number(limit),
-        total: 100,
-      },
-    })
-  }),
+  ...authHandlers,
+  ...dashboardHandlers,
+  ...calendarHandlers,
+  ...projectHandlers,
+  ...videoPlanningHandlers,
+  ...videoFeedbackHandlers,
+  ...externalHandlers,
   
   // Catch-all handler for unhandled requests (optional)
-  http.get('*', () => {
-    console.warn('Unhandled request')
-    return HttpResponse.json(null, { status: 404 })
+  http.get('*', ({ request }) => {
+    const url = new URL(request.url)
+    if (url.pathname.startsWith('/api/')) {
+      console.warn(`Unhandled API request: ${request.method} ${url.pathname}`)
+      return HttpResponse.json(
+        { 
+          error: 'Not Found',
+          message: `API endpoint ${url.pathname} not found`,
+          timestamp: new Date().toISOString()
+        }, 
+        { status: 404 }
+      )
+    }
+    // Non-API requests pass through
+    return undefined
   }),
 ]
 
 /**
- * Error handlers for testing error scenarios
+ * 에러 시나리오 테스트용 핸들러
  */
 export const errorHandlers = [
-  http.get(`${API_BASE_URL}/user/profile`, async () => {
+  // 인증 실패 시나리오
+  http.post(`${API_BASE_URL}/auth/login`, async () => {
     await delay(100)
+    return HttpResponse.json(
+      { error: 'Authentication failed' },
+      { status: 401 }
+    )
+  }),
+  
+  // 서버 에러 시나리오
+  http.get(`${API_BASE_URL}/dashboard/feed`, async () => {
+    await delay(500)
     return HttpResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
     )
   }),
   
-  http.get(`${API_BASE_URL}/items`, async () => {
-    await delay(100)
-    return HttpResponse.json(
-      { error: 'Service unavailable' },
-      { status: 503 }
-    )
+  // 네트워크 타임아웃 시나리오
+  http.get(`${API_BASE_URL}/calendar/schedules`, async () => {
+    await delay(10000) // 10초 지연으로 타임아웃 시뮬레이션
+    return HttpResponse.json(null)
   }),
 ]
+
+/**
+ * 모듈별 핸들러 개별 내보내기 (테스트에서 선택적 사용)
+ */
+export {
+  authHandlers,
+  dashboardHandlers,
+  calendarHandlers,
+  projectHandlers,
+  videoPlanningHandlers,
+  videoFeedbackHandlers,
+  externalHandlers
+}

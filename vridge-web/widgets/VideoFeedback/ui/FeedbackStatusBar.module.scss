@@ -1,0 +1,41 @@
+@use '@/shared/config/design-tokens.scss' as *;
+
+.feedbackStatusBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-md $spacing-lg;
+  background: $bg-secondary;
+  border-radius: $radius-md;
+  border: $border-1 solid $color-gray-200;
+  
+  &.vridge-primary {
+    border-color: $color-primary;
+    background: rgba($color-primary, 0.05);
+  }
+}
+
+.statusSelect {
+  padding: $spacing-sm $spacing-md;
+  border: $border-1 solid $color-gray-300;
+  border-radius: $radius-sm;
+  background: $color-white;
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  
+  &:focus {
+    outline: 2px solid $color-primary;
+    border-color: $color-primary;
+  }
+}
+
+.stats {
+  display: flex;
+  gap: $spacing-lg;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  
+  span {
+    font-weight: $font-weight-medium;
+  }
+}

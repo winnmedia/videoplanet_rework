@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '../model/useAuth'
+import { useState } from 'react'
+
 import styles from './SignupForm.module.scss'
+import { useAuth } from '../model/useAuth'
 
 export function SignupForm() {
   const router = useRouter()
@@ -53,8 +54,8 @@ export function SignupForm() {
       if (data.devCode) {
         console.log('🔑 개발 모드 인증번호:', data.devCode)
       }
-    } catch (err: any) {
-      setError(err.message || '인증 이메일 발송에 실패했습니다. 다시 시도해주세요.')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : '인증 이메일 발송에 실패했습니다. 다시 시도해주세요.')
     } finally {
       setEmailSendLoading(false)
     }
@@ -87,8 +88,8 @@ export function SignupForm() {
 
       setValidEmail(true)
       setError('')
-    } catch (err: any) {
-      setError(err.message || '인증번호가 올바르지 않습니다.')
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : '인증번호가 올바르지 않습니다.')
     }
   }
 
@@ -126,7 +127,7 @@ export function SignupForm() {
         auth_number: authNumber
       })
       router.push('/dashboard')
-    } catch (err) {
+    } catch (_err) {
       setError('회원가입에 실패했습니다. 다시 시도해주세요.')
     } finally {
       setLoading(false)

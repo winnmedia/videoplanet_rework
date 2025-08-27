@@ -3,9 +3,9 @@
  * Provides enhanced render function with providers and utilities
  */
 
-import React, { ReactElement } from 'react'
 import { render, RenderOptions, RenderResult } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import React, { ReactElement } from 'react'
 
 /**
  * Provider wrapper for tests

@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '../model/useAuth'
+import { useState, useEffect } from 'react'
+
 import styles from './LoginForm.module.scss'
+import { useAuth } from '../model/useAuth'
 
 export function LoginForm() {
   const router = useRouter()
@@ -49,7 +50,7 @@ export function LoginForm() {
       }
       
       router.push('/dashboard')
-    } catch (err) {
+    } catch (_err) {
       setError('로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.')
     } finally {
       setLoading(false)

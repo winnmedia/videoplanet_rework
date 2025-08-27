@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+
 import { ResetPasswordForm } from '@/features/auth'
 
 export default function ResetPasswordPage() {

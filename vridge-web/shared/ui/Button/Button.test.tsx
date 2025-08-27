@@ -3,9 +3,11 @@
  * Testing a shared UI component following TDD principles
  */
 
-import { describe, it, expect, vi } from 'vitest'
 import { screen, fireEvent, waitFor } from '@testing-library/react'
+import { describe, it, expect, vi } from 'vitest'
+
 import { render, setup } from '@/test/utils/test-utils'
+
 import { Button } from './Button'
 
 describe('Button Component', () => {

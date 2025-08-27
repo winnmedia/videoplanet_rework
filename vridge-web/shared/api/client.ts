@@ -1,5 +1,3 @@
-import { cookies } from 'next/headers';
-
 export interface ApiConfig {
   baseUrl: string;
   timeout?: number;
@@ -28,9 +26,18 @@ class ApiClient {
 
   private async getAuthToken(): Promise<string | null> {
     if (typeof window === 'undefined') {
-      const cookieStore = await cookies();
-      return cookieStore.get('auth-token')?.value || null;
+      // Server-side: safely import next/headers
+      try {
+        const { cookies } = await import('next/headers');
+        const cookieStore = await cookies();
+        return cookieStore.get('auth-token')?.value || null;
+      } catch (error) {
+        console.warn('Unable to access server-side cookies:', error);
+        return null;
+      }
     }
+    
+    // Client-side: use document.cookie
     return document.cookie
       .split('; ')
       .find(row => row.startsWith('auth-token='))
@@ -52,7 +59,7 @@ class ApiClient {
       const headers: Record<string, string> = {
         'Content-Type': 'application/json',
         ...this.config.headers,
-        ...options.headers,
+        ...(options.headers as Record<string, string>),
       };
 
       if (token) {
@@ -141,4 +148,8 @@ const apiClient = new ApiClient({
   baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000',
 });
 
+// Named export for named imports
+export { apiClient };
+
+// Default export for default imports (backward compatibility)
 export default apiClient;

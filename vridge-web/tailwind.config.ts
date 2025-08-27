@@ -1,7 +1,7 @@
 import type { Config } from "tailwindcss";
 
 export default {
-  darkMode: ["class"],
+  darkMode: "class",
   content: [
     "./pages/**/*.{ts,tsx}",
     "./components/**/*.{ts,tsx}",
@@ -25,6 +25,16 @@ export default {
     extend: {
       // Legacy Design System Colors
       colors: {
+        // VRidge Brand Colors
+        vridge: {
+          primary: "#0031ff",
+          'primary-dark': "#0059db",
+          secondary: "#1631f8",
+          accent: "#3dcdbf",
+          'tint-planning': "rgba(0, 49, 255, 0.12)",
+          'tint-shooting': "rgba(22, 49, 248, 0.12)",
+          'tint-editing': "rgba(61, 205, 191, 0.12)",
+        },
         // Primary Blues (기존 시스템)
         primary: {
           DEFAULT: "#0031ff",
@@ -104,7 +114,7 @@ export default {
         "caption": ["14px", "1.5"],
         "small": ["13px", "1.5"],
       },
-      // Spacing (mt10~mt200)
+      // Spacing (mt10~mt200) and legacy-card utility
       spacing: {
         "54": "54px", // 기본 input/button height
         "15": "15px", // padding

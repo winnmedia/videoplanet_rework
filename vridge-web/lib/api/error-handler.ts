@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextResponse, NextRequest } from 'next/server'
 
 // 에러 타입 정의
 export interface APIError {
@@ -7,7 +7,7 @@ export interface APIError {
   statusCode: number
   timestamp: string
   path?: string
-  details?: any
+  details?: Record<string, unknown> | string | number | null
 }
 
 // HTTP 상태 코드별 기본 메시지
@@ -30,7 +30,7 @@ const statusMessages: Record<number, string> = {
 export function createErrorResponse(
   statusCode: number,
   message?: string,
-  details?: any,
+  details?: Record<string, unknown> | string | number | null,
   path?: string
 ): NextResponse {
   const errorResponse: APIError = {
@@ -65,13 +65,16 @@ function getErrorName(statusCode: number): string {
   return errorNames[statusCode] || 'ERROR'
 }
 
+// Next.js API 라우트 핸들러 타입 (NextRequest 지원)
+type NextApiHandler = (request: NextRequest, context?: { params: Record<string, string> }) => Promise<Response | NextResponse>
+
 // 에러 처리 래퍼
-export function withErrorHandler<T extends (...args: any[]) => Promise<Response | NextResponse>>(
+export function withErrorHandler<T extends NextApiHandler>(
   handler: T
 ): T {
-  return (async (...args: Parameters<T>) => {
+  return (async (request: NextRequest, context?: { params: Record<string, string> }) => {
     try {
-      return await handler(...args)
+      return await handler(request, context)
     } catch (error) {
       console.error('API Error:', error)
       

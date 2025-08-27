@@ -1,0 +1,323 @@
+@use '@/shared/config/design-tokens.scss' as *;
+
+.projectCard {
+  @include card;
+  padding: $spacing-lg;
+  border-radius: 20px; // legacy-card 스타일
+  cursor: pointer;
+  transition: $transition-all;
+  position: relative;
+  background: $color-white;
+  border: 1px solid $color-gray-200;
+
+  &:hover {
+    @include hover-lift;
+    border-color: $color-primary;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $color-primary;
+    outline-offset: 2px;
+  }
+
+  // 전역 클래스 스타일 정의
+  :global(.project-card) {
+    border-radius: 20px;
+    box-shadow: $shadow-sm;
+  }
+
+  :global(.hover-lift) {
+    transition: transform $transition-base, box-shadow $transition-base;
+    
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: $shadow-hover;
+    }
+  }
+}
+
+// 컴팩트 모드
+.compact {
+  padding: $spacing-md;
+  
+  .projectTitle {
+    font-size: $font-size-sm;
+    margin-bottom: $spacing-xs;
+  }
+}
+
+// 카드 헤더
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: $spacing-md;
+}
+
+.projectInfo {
+  flex: 1;
+}
+
+.projectTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin: 0 0 $spacing-sm 0;
+  line-height: $line-height-tight;
+
+  @include truncate;
+}
+
+.metaInfo {
+  display: flex;
+  gap: $spacing-xs;
+  flex-wrap: wrap;
+}
+
+// 상태 배지
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: $spacing-xs $spacing-sm;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  border-radius: $radius-full;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.statusPlanning {
+  background: rgba(255, 193, 7, 0.1);
+  color: #e6a000;
+  border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.statusShooting {
+  background: rgba(0, 49, 255, 0.1);
+  color: $color-primary;
+  border: 1px solid rgba(0, 49, 255, 0.3);
+}
+
+.statusEditing {
+  background: rgba(23, 162, 184, 0.1);
+  color: $color-info;
+  border: 1px solid rgba(23, 162, 184, 0.3);
+}
+
+.statusCompleted {
+  background: rgba(40, 167, 69, 0.1);
+  color: $color-success;
+  border: 1px solid rgba(40, 167, 69, 0.3);
+}
+
+.statusCancelled {
+  background: rgba(217, 58, 58, 0.1);
+  color: $color-error;
+  border: 1px solid rgba(217, 58, 58, 0.3);
+}
+
+// 우선순위 배지
+.priorityBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: $spacing-xs $spacing-sm;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-medium;
+  border-radius: $radius-full;
+}
+
+.priorityHigh {
+  background: rgba(217, 58, 58, 0.1);
+  color: $color-error;
+  border: 1px solid rgba(217, 58, 58, 0.3);
+}
+
+.priorityMedium {
+  background: rgba(255, 193, 7, 0.1);
+  color: #e6a000;
+  border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+.priorityLow {
+  background: rgba(108, 117, 125, 0.1);
+  color: $color-gray-700;
+  border: 1px solid rgba(108, 117, 125, 0.3);
+}
+
+// 팀 정보
+.teamInfo {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  margin-left: $spacing-md;
+}
+
+.teamIcon {
+  font-size: $font-size-sm;
+}
+
+.teamCount {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-secondary;
+}
+
+// 진행률 섹션
+.progressSection {
+  margin-bottom: $spacing-md;
+}
+
+.progressHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-xs;
+}
+
+.progressLabel {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  font-weight: $font-weight-medium;
+}
+
+.progressValue {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-primary;
+}
+
+.progressBarContainer {
+  position: relative;
+  height: 8px;
+  background: $color-gray-200;
+  border-radius: $radius-full;
+  overflow: hidden;
+}
+
+.progressBar {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, $color-primary, $color-primary-light);
+  border-radius: $radius-full;
+  transition: width $transition-base ease-out;
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.2),
+      transparent
+    );
+    animation: shimmer 2s infinite;
+  }
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+// 날짜 정보
+.dateInfo {
+  display: flex;
+  justify-content: space-between;
+  gap: $spacing-md;
+}
+
+.dateItem {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+}
+
+.dateLabel {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  font-weight: $font-weight-medium;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.dateValue {
+  font-size: $font-size-sm;
+  color: $color-text-primary;
+  font-weight: $font-weight-medium;
+}
+
+// 컴팩트 모드 날짜 정보
+.compactInfo {
+  display: flex;
+  gap: $spacing-xs;
+  align-items: center;
+  margin-top: $spacing-sm;
+}
+
+.compactDate {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+}
+
+.compactEndDate {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+}
+
+// 액션 아이콘
+.actionIcon {
+  position: absolute;
+  top: $spacing-md;
+  right: $spacing-md;
+  font-size: $font-size-lg;
+  color: $color-gray-500;
+  opacity: 0;
+  transform: translateX(-4px);
+  transition: $transition-all;
+
+  .projectCard:hover & {
+    opacity: 1;
+    transform: translateX(0);
+    color: $color-primary;
+  }
+}
+
+// 반응형 조정
+@include mobile {
+  .projectCard {
+    padding: $spacing-md;
+  }
+
+  .cardHeader {
+    flex-direction: column;
+    gap: $spacing-sm;
+  }
+
+  .teamInfo {
+    margin-left: 0;
+    align-self: flex-start;
+  }
+
+  .dateInfo {
+    flex-direction: column;
+    gap: $spacing-sm;
+  }
+
+  .actionIcon {
+    position: static;
+    opacity: 1;
+    transform: none;
+    margin-top: $spacing-sm;
+    text-align: center;
+  }
+}

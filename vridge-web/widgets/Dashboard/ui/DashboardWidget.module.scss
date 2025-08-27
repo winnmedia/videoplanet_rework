@@ -1,0 +1,314 @@
+@use '@/shared/config/design-tokens.scss' as *;
+
+.dashboardWidget {
+  @include container;
+  padding-top: $spacing-lg;
+  padding-bottom: $spacing-lg;
+  min-height: 100vh;
+  background: $bg-secondary;
+  font-family: $font-primary;
+
+  // 전역 클래스와 연동
+  :global(.desktop-grid) {
+    @include desktop {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: $spacing-xl;
+    }
+  }
+}
+
+// 헤더
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-xl;
+  padding-bottom: $spacing-md;
+  border-bottom: 1px solid $color-gray-200;
+
+  h1 {
+    font-size: $font-size-3xl;
+    font-weight: $font-weight-bold;
+    color: $color-text-primary;
+    margin: 0;
+    font-family: font-suit, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  }
+}
+
+.refreshButton {
+  @include button-base;
+  height: $button-height-md;
+  padding: 0 $spacing-md;
+  background: $color-white;
+  color: $color-primary;
+  border: 1px solid $color-primary;
+  font-size: $font-size-sm;
+  
+  &:hover {
+    background: $color-primary-lighter;
+    border-color: $color-primary-dark;
+  }
+
+  &:focus-visible {
+    outline: 2px solid $color-primary;
+    outline-offset: 2px;
+  }
+}
+
+.refreshIcon {
+  margin-right: $spacing-xs;
+  font-size: $font-size-md;
+  display: inline-block;
+  transition: transform $transition-fast;
+
+  .refreshButton:hover & {
+    transform: rotate(180deg);
+  }
+}
+
+// 통계 섹션
+.statsSection {
+  margin-bottom: $spacing-2xl;
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: $spacing-lg;
+
+  @include mobile {
+    grid-template-columns: 1fr 1fr;
+    gap: $spacing-md;
+  }
+
+  // 전역 클래스와 연동
+  :global(.mobile-stack) {
+    @include mobile {
+      grid-template-columns: 1fr;
+    }
+  }
+}
+
+.statsCard {
+  @include card;
+  padding: $spacing-lg;
+  text-align: center;
+  border-radius: 20px; // legacy-card 스타일
+  transition: $transition-all;
+
+  h3 {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: $color-text-secondary;
+    margin: 0 0 $spacing-sm 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $shadow-hover;
+  }
+
+  // 전역 클래스 스타일 정의
+  :global(.stats-card) {
+    border-radius: 20px;
+    box-shadow: $shadow-sm;
+  }
+
+  :global(.legacy-card) {
+    border-radius: 20px;
+    box-shadow: 
+      0 2px 8px rgba(0, 0, 0, 0.08),
+      0 1px 4px rgba(0, 0, 0, 0.04);
+  }
+}
+
+.statsValue {
+  font-size: $font-size-3xl;
+  font-weight: $font-weight-bold;
+  color: $color-primary;
+  margin: 0;
+}
+
+// 메인 콘텐츠 그리드
+.contentGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: $spacing-xl;
+
+  @include desktop {
+    grid-template-columns: 2fr 1fr;
+    gap: $spacing-2xl;
+  }
+}
+
+// 프로젝트 섹션
+.projectsSection {
+  h2 {
+    font-size: $font-size-xl;
+    font-weight: $font-weight-semibold;
+    color: $color-text-primary;
+    margin: 0 0 $spacing-lg 0;
+  }
+
+  // 전역 클래스와 연동
+  :global(.mobile-full-width) {
+    @include mobile {
+      width: 100%;
+    }
+  }
+}
+
+.projectCardWrapper {
+  position: relative;
+}
+
+.projectCard {
+  width: 100%;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  display: block;
+  text-align: left;
+
+  // 전역 클래스 스타일 정의
+  :global(.project-card) {
+    border-radius: 20px;
+    transition: $transition-transform, $transition-shadow;
+  }
+
+  :global(.hover-lift) {
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: $shadow-hover;
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid $color-primary;
+    outline-offset: 2px;
+  }
+}
+
+.projectsList {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
+
+// 활동 섹션
+.activitySection {
+  h2 {
+    font-size: $font-size-xl;
+    font-weight: $font-weight-semibold;
+    color: $color-text-primary;
+    margin: 0 0 $spacing-lg 0;
+  }
+}
+
+.activityFeed {
+  background: $color-white;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-sm;
+  padding: $spacing-lg;
+}
+
+.emptyActivity {
+  color: $color-text-secondary;
+  text-align: center;
+  padding: $spacing-lg;
+  font-style: italic;
+}
+
+// 마감일 섹션
+.deadlinesSection {
+  margin-top: $spacing-2xl;
+  padding-top: $spacing-2xl;
+  border-top: 1px solid $color-gray-200;
+
+  h2 {
+    font-size: $font-size-xl;
+    font-weight: $font-weight-semibold;
+    color: $color-error;
+    margin: 0 0 $spacing-lg 0;
+  }
+}
+
+.deadlinesList {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: $spacing-md;
+
+  @include mobile {
+    grid-template-columns: 1fr;
+  }
+}
+
+// 빈 상태
+.emptyDashboard {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  padding: $spacing-2xl;
+}
+
+// 로딩 상태
+.loadingContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  padding: $spacing-2xl;
+
+  p {
+    margin-top: $spacing-md;
+    color: $color-text-secondary;
+    font-size: $font-size-md;
+  }
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid $color-gray-200;
+  border-top: 3px solid $color-primary;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+// 반응형 조정
+@include mobile {
+  .dashboardWidget {
+    padding-top: $spacing-md;
+    padding-bottom: $spacing-md;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: $spacing-md;
+
+    h1 {
+      font-size: $font-size-2xl;
+      text-align: center;
+    }
+  }
+
+  .refreshButton {
+    align-self: center;
+  }
+
+  .contentGrid {
+    gap: $spacing-lg;
+  }
+}

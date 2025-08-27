@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+
 import { SignupForm } from '@/features/auth'
 
 export default function SignupPage() {

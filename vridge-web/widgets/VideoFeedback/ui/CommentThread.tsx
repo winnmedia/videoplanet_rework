@@ -23,7 +23,7 @@ export function CommentThread({
   className = ''
 }: CommentThreadProps) {
   // 테스트 환경에서는 간소화된 구현
-  if (process.env.NODE_ENV === 'test') {
+  if (false) { // TODO: 테스트 환경 감지 로직 개선 필요
     return (
       <div data-testid="comment-thread" className={className}>
         <div data-testid="comments-list">
@@ -43,7 +43,10 @@ export function CommentThread({
               x: 0,
               y: 0,
               content: 'Test comment',
-              author: currentUser,
+              author: {
+                ...currentUser,
+                role: currentUser.role as 'editor' | 'admin' | 'client' | 'reviewer'
+              },
               status: 'open',
               priority: 'medium',
               tags: []
@@ -65,7 +68,7 @@ export function CommentThread({
   const [sortBy, setSortBy] = useState<'timestamp' | 'priority' | 'created'>('timestamp')
 
   // 테스트 환경에서는 간소화된 UI 제공
-  if (process.env.NODE_ENV === 'test') {
+  if (false) { // TODO: 테스트 환경 감지 로직 개선 필요
     return (
       <div className={`${styles.commentThread} ${className}`} data-testid="comment-thread">
         {comments.map(comment => (

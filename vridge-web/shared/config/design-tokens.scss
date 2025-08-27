@@ -8,6 +8,7 @@
 // Primary Colors
 $color-primary: #0031ff;
 $color-primary-dark: #0059db;
+$color-primary-darker: #004bc4; // $color-primary-darker 대체
 $color-primary-light: #006ae8;
 $color-primary-lighter: #e6ecff;
 
@@ -15,25 +16,75 @@ $color-primary-lighter: #e6ecff;
 $color-black: #000000;
 $color-dark: #25282f;
 $color-gray-900: #333333;
+$color-gray-800: #1f2937; // 추가됨
 $color-gray-700: #555555;
+$color-gray-600: #6b7280; // 추가됨
 $color-gray-500: #919191;
+$color-gray-400: #9ca3af; // 추가됨
 $color-gray-300: #e4e4e4;
 $color-gray-200: #eeeeee;
 $color-gray-100: #f8f9ff;
 $color-gray-50: #fafafa;
 $color-white: #ffffff;
 
+// Border Colors
+$color-border: $color-gray-300;
+$color-border-light: $color-gray-200;
+$color-border-dark: $color-gray-400;
+
 // Semantic Colors
 $color-success: #28a745;
+$color-success-dark: #218838; // darken($color-success, 10%) 대체
+$color-success-darker: #1c7430; // darken($color-success, 20%) 대체
+$color-success-light: #10b981; // Toast 컴포넌트용
+$color-success-lighter: #f0f9ff; // Toast 배경색
+$color-success-text: #065f46; // Toast 텍스트
+
 $color-warning: #ffc107;
+$color-warning-dark: #cc9a06; // $color-warning-dark 대체
+$color-warning-darker: #e6a000; // ProjectStatusCard용
+$color-warning-light: #f59e0b; // Toast 컴포넌트용
+$color-warning-lighter: #fffbeb; // Toast 배경색
+$color-warning-text: #92400e; // Toast 텍스트
+
 $color-error: #d93a3a;
+$color-error-dark: #b02a2a; // $color-error-dark 대체
+$color-error-darker: #9d2424; // $color-error-darker 대체
+$color-error-light: #ef4444; // Toast 컴포넌트용
+$color-error-lighter: #fef2f2; // Toast 배경색
+$color-error-text: #991b1b; // Toast 텍스트
+$color-error-weekend: #ff6b6b; // DatePicker 주말 색상
+
 $color-info: #17a2b8;
+$color-info-dark: #128299; // $color-info-dark 대체
+$color-info-darker: #0e6b7e; // $color-info-darker 대체
+$color-info-light: #3b82f6; // Toast 컴포넌트용
+$color-info-lighter: #f0f9ff; // Toast 배경색
+$color-info-text: #1e40af; // Toast 텍스트
+
+// Legacy Colors (for compatibility)
+$color-accent: #3dcdbf;
+$color-accent-dark: #33b3a6; // $color-accent-dark 대체
+$color-text-primary: #25282f;
+$color-text-secondary: #555555;
+
+// Modern SCSS Color Function Replacements
+$color-dark-lighter: #2a2d36; // lighten($color-dark, 5%) 대체
+$color-gray-999: #999999; // 자주 사용되는 999 색상
+$color-highlight-yellow: #fff88f; // 하이라이트 색상
 
 // Background Colors
 $bg-primary: $color-white;
 $bg-secondary: #f8f9ff;
 $bg-tertiary: #ecefff;
 $bg-dark: $color-dark;
+$bg-gradient-light: #1a1a1a; // VideoFeedback 다크 그라데이션용
+$bg-gradient-dark: #2d2d2d; // VideoFeedback 다크 그라데이션용
+
+// Overlay Colors
+$overlay-light: rgba(255, 255, 255, 0.9);
+$overlay-dark: rgba(0, 0, 0, 0.5);
+$overlay-backdrop: rgba(0, 0, 0, 0.3);
 
 // ===========================
 // 2. TYPOGRAPHY
@@ -74,6 +125,7 @@ $line-height-loose: 2;
 
 $spacing-0: 0;
 $spacing-xs: 4px;
+$spacing-xs-half: 2px; // $spacing-xs-half 대체
 $spacing-sm: 8px;
 $spacing-md: 16px;
 $spacing-lg: 24px;
@@ -125,6 +177,16 @@ $radius-2xl: 20px;
 $radius-3xl: 24px;
 $radius-full: 9999px;
 
+// Border Radius Aliases (호환성을 위해)
+$border-radius-none: $radius-none;
+$border-radius-sm: $radius-sm;
+$border-radius-md: $radius-md;
+$border-radius-lg: $radius-lg;
+$border-radius-xl: $radius-xl;
+$border-radius-2xl: $radius-2xl;
+$border-radius-3xl: $radius-3xl;
+$border-radius-full: $radius-full;
+
 // ===========================
 // 6. SHADOWS - Minimal & Elegant
 // ===========================
@@ -140,7 +202,27 @@ $shadow-primary: 0 5px 20px rgba(0, 49, 255, 0.3);
 $shadow-hover: 0 5px 15px rgba(0, 0, 0, 0.1);
 
 // ===========================
-// 7. TRANSITIONS
+// 7. OPACITY SCALE
+// ===========================
+
+$opacity-0: 0;
+$opacity-5: 0.05;
+$opacity-10: 0.1;
+$opacity-20: 0.2;
+$opacity-25: 0.25;
+$opacity-30: 0.3;
+$opacity-40: 0.4;
+$opacity-50: 0.5;
+$opacity-60: 0.6;
+$opacity-70: 0.7;
+$opacity-75: 0.75;
+$opacity-80: 0.8;
+$opacity-90: 0.9;
+$opacity-95: 0.95;
+$opacity-100: 1;
+
+// ===========================
+// 8. TRANSITIONS
 // ===========================
 
 $transition-fast: 150ms ease-in-out;
@@ -204,8 +286,51 @@ $avatar-size-xl: 64px;
 $avatar-size-2xl: 80px;
 $avatar-size-3xl: 96px;
 
+// Toast Specific
+$toast-min-width: 300px;
+$toast-max-width: 420px;
+
+// Progress Bar
+$progress-bar-height: 8px;
+
+// DatePicker Specific
+$datepicker-width: 320px;
+$datepicker-width-mobile: 280px;
+$datepicker-day-size: 36px;
+$datepicker-day-size-mobile: 32px;
+$datepicker-nav-button-size: 32px;
+
 // ===========================
-// 10. MIXINS
+// 10. OPACITY VALUES
+// ===========================
+
+$opacity-0: 0;
+$opacity-5: 0.05;
+$opacity-10: 0.1;
+$opacity-20: 0.2;
+$opacity-30: 0.3;
+$opacity-40: 0.4;
+$opacity-50: 0.5;
+$opacity-60: 0.6;
+$opacity-70: 0.7;
+$opacity-80: 0.8;
+$opacity-90: 0.9;
+$opacity-95: 0.95;
+$opacity-100: 1;
+
+// ===========================
+// 11. ANIMATION DURATIONS
+// ===========================
+
+$duration-instant: 50ms;
+$duration-fast: 100ms;
+$duration-normal: 200ms;
+$duration-slow: 300ms;
+$duration-slower: 500ms;
+$duration-slowest: 1000ms;
+
+// ===========================
+// 12. MIXINS
 // ===========================
 
 // Responsive Breakpoint Mixins

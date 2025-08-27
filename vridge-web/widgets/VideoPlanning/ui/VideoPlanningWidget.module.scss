@@ -1,0 +1,514 @@
+/**
+ * @description Video Planning Widget 스타일
+ * @purpose 기획 전용 테마 및 레거시 디자인 토큰 적용
+ */
+
+@use '@/shared/config/design-tokens.scss' as *;
+
+.widget {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: $bg-primary;
+  font-family: $font-primary;
+  overflow: hidden;
+
+  // 기획 전용 CSS 변수
+  --planning-primary: #{$color-primary};
+  --planning-bg: linear-gradient(135deg, #{$bg-secondary} 0%, #{$color-white} 100%);
+  --planning-card-bg: #{$color-white};
+  --planning-border: #{$color-gray-300};
+  --planning-shadow: #{$shadow-md};
+
+  @include desktop {
+    height: calc(100vh - 80px); // 헤더 높이 제외
+  }
+}
+
+// =====================================
+// 헤더 영역
+// =====================================
+
+.header {
+  background: var(--planning-bg);
+  border-bottom: $border-1 solid var(--planning-border);
+  box-shadow: $shadow-sm;
+  z-index: $z-index-sticky;
+  position: sticky;
+  top: 0;
+
+  .headerTop {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: $spacing-lg $spacing-xl;
+    gap: $spacing-lg;
+
+    @include mobile {
+      flex-direction: column;
+      padding: $spacing-md;
+      gap: $spacing-md;
+    }
+  }
+
+  .projectInfo {
+    flex: 1;
+    min-width: 0;
+
+    .title {
+      font-size: $font-size-2xl;
+      font-weight: $font-weight-bold;
+      color: $color-text-primary;
+      margin: 0 0 $spacing-sm 0;
+      line-height: $line-height-tight;
+      
+      @include truncate;
+
+      @include mobile {
+        font-size: $font-size-xl;
+      }
+    }
+
+    .description {
+      font-size: $font-size-md;
+      color: $color-text-secondary;
+      margin: 0;
+      line-height: $line-height-normal;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+
+      @include mobile {
+        font-size: $font-size-sm;
+        -webkit-line-clamp: 3;
+      }
+    }
+  }
+
+  .statusInfo {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: $spacing-md;
+
+    @include mobile {
+      flex-direction: row;
+      align-items: center;
+      align-self: stretch;
+      justify-content: space-between;
+    }
+
+    .status {
+      text-align: right;
+
+      @include mobile {
+        text-align: left;
+      }
+
+      .statusLabel {
+        display: block;
+        font-size: $font-size-sm;
+        color: $color-text-secondary;
+        margin-bottom: $spacing-xs;
+      }
+
+      .statusValue {
+        font-size: $font-size-lg;
+        font-weight: $font-weight-semibold;
+        color: var(--planning-primary);
+      }
+    }
+
+    .projectStatus {
+      display: flex;
+      gap: $spacing-sm;
+      align-items: center;
+    }
+  }
+}
+
+// 상태 뱃지
+.statusBadge, .priorityBadge {
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $radius-full;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  // 상태별 색상
+  &.status-draft { 
+    background: $color-gray-200; 
+    color: $color-gray-700; 
+  }
+  &.status-active { 
+    background: rgba($color-primary, 0.1); 
+    color: $color-primary; 
+  }
+  &.status-on_hold { 
+    background: rgba($color-warning, 0.1); 
+    color: $color-warning; 
+  }
+  &.status-completed { 
+    background: rgba($color-success, 0.1); 
+    color: $color-success; 
+  }
+  &.status-cancelled { 
+    background: rgba($color-error, 0.1); 
+    color: $color-error; 
+  }
+
+  // 우선순위별 색상
+  &.priority-low { 
+    background: rgba($color-gray-500, 0.1); 
+    color: $color-gray-500; 
+  }
+  &.priority-medium { 
+    background: rgba($color-info, 0.1); 
+    color: $color-info; 
+  }
+  &.priority-high { 
+    background: rgba($color-warning, 0.1); 
+    color: $color-warning; 
+  }
+  &.priority-urgent { 
+    background: rgba($color-error, 0.1); 
+    color: $color-error; 
+  }
+}
+
+// 단계 네비게이션
+.stageNav {
+  display: flex;
+  background: rgba($color-white, 0.8);
+  border-top: $border-1 solid var(--planning-border);
+  padding: 0 $spacing-xl;
+  overflow-x: auto;
+  scrollbar-width: none;
+  
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  @include mobile {
+    padding: 0 $spacing-md;
+  }
+
+  .stageButton {
+    flex: 0 0 auto;
+    padding: $spacing-md $spacing-lg;
+    background: none;
+    border: none;
+    font-family: $font-primary;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: $color-text-secondary;
+    cursor: pointer;
+    position: relative;
+    transition: $transition-colors;
+    white-space: nowrap;
+
+    @include focus-visible;
+
+    &:hover:not(:disabled) {
+      color: var(--planning-primary);
+      background: rgba($color-primary, 0.05);
+    }
+
+    &.active {
+      color: var(--planning-primary);
+      font-weight: $font-weight-semibold;
+
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--planning-primary);
+        border-radius: $radius-full;
+      }
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    @include mobile {
+      padding: $spacing-sm $spacing-md;
+      font-size: $font-size-xs;
+    }
+  }
+}
+
+// 자동 저장 상태
+.autoSaveStatus {
+  padding: $spacing-sm $spacing-xl;
+  background: rgba($color-success, 0.05);
+  border-top: $border-1 solid rgba($color-success, 0.2);
+  font-size: $font-size-xs;
+  color: $color-success;
+  text-align: center;
+  animation: fadeInOut 3s ease-in-out;
+
+  @include mobile {
+    padding: $spacing-sm $spacing-md;
+  }
+}
+
+// =====================================
+// 콘텐츠 영역
+// =====================================
+
+.content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+
+  @include mobile {
+    flex-direction: column;
+  }
+}
+
+.main {
+  flex: 1;
+  overflow: auto;
+  background: $bg-secondary;
+  padding: $spacing-xl;
+
+  @include mobile {
+    padding: $spacing-md;
+  }
+
+  @include tablet {
+    padding: $spacing-lg;
+  }
+}
+
+.sidebar {
+  width: 380px;
+  background: var(--planning-card-bg);
+  border-left: $border-1 solid var(--planning-border);
+  overflow-y: auto;
+  box-shadow: inset 4px 0 8px rgba(0, 0, 0, 0.05);
+
+  @include mobile {
+    width: 100%;
+    border-left: none;
+    border-top: $border-1 solid var(--planning-border);
+    max-height: 40vh;
+  }
+
+  @include tablet {
+    width: 320px;
+  }
+}
+
+// =====================================
+// 상태별 화면
+// =====================================
+
+// 로딩 상태
+.loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 60vh;
+  color: $color-text-secondary;
+
+  .loadingSpinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid $color-gray-300;
+    border-top: 3px solid var(--planning-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: $spacing-lg;
+  }
+
+  p {
+    font-size: $font-size-md;
+    margin: 0;
+  }
+}
+
+// 에러 상태
+.error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 60vh;
+  text-align: center;
+  padding: $spacing-xl;
+
+  h2 {
+    font-size: $font-size-xl;
+    font-weight: $font-weight-semibold;
+    color: $color-error;
+    margin: 0 0 $spacing-md 0;
+  }
+
+  p {
+    font-size: $font-size-md;
+    color: $color-text-secondary;
+    margin: 0 0 $spacing-lg 0;
+    max-width: 400px;
+  }
+
+  .retryButton {
+    @include button-base;
+    background: var(--planning-primary);
+    color: $color-white;
+    padding: $spacing-sm $spacing-lg;
+    font-size: $font-size-sm;
+
+    &:hover {
+      background: $color-primary-dark;
+    }
+
+    &:active {
+      transform: translateY(1px);
+    }
+  }
+}
+
+// 빈 상태
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 60vh;
+  text-align: center;
+  padding: $spacing-xl;
+
+  h2 {
+    font-size: $font-size-xl;
+    font-weight: $font-weight-semibold;
+    color: $color-text-primary;
+    margin: 0 0 $spacing-md 0;
+  }
+
+  p {
+    font-size: $font-size-md;
+    color: $color-text-secondary;
+    margin: 0;
+    max-width: 400px;
+  }
+}
+
+// =====================================
+// 애니메이션
+// =====================================
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fadeInOut {
+  0% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  20%, 80% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+}
+
+// =====================================
+// 접근성 개선
+// =====================================
+
+// 고대비 모드 지원
+@media (prefers-contrast: high) {
+  .widget {
+    --planning-border: #{$color-black};
+    --planning-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  .statusBadge, .priorityBadge {
+    border: $border-2 solid currentColor;
+  }
+
+  .stageButton.active::after {
+    height: 4px;
+  }
+}
+
+// 애니메이션 감소 모드 지원
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .loadingSpinner {
+    animation: none;
+    border-top-color: currentColor;
+  }
+}
+
+// 다크 모드 지원 (향후 확장용)
+@media (prefers-color-scheme: dark) {
+  .widget {
+    --planning-bg: linear-gradient(135deg, #{$color-dark} 0%, #{$color-gray-900} 100%);
+    --planning-card-bg: #{$color-gray-900};
+    --planning-border: #{$color-gray-700};
+  }
+}
+
+// 포커스 표시 강화
+.stageButton:focus-visible,
+.retryButton:focus-visible {
+  outline: 3px solid rgba($color-primary, 0.5);
+  outline-offset: 2px;
+}
+
+// 터치 디바이스 지원
+@media (hover: none) {
+  .stageButton:hover {
+    background: none;
+    color: $color-text-secondary;
+  }
+
+  .stageButton:active {
+    background: rgba($color-primary, 0.1);
+    color: var(--planning-primary);
+  }
+}
+
+// 인쇄 스타일
+@media print {
+  .widget {
+    height: auto;
+    overflow: visible;
+  }
+
+  .sidebar {
+    display: none;
+  }
+
+  .stageNav {
+    display: none;
+  }
+
+  .autoSaveStatus {
+    display: none;
+  }
+}

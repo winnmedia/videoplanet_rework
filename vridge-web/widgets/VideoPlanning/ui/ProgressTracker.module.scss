@@ -1,0 +1,214 @@
+@use '@/shared/config/design-tokens.scss' as *;
+
+.tracker {
+  background: $color-white;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  margin-bottom: $spacing-lg;
+  box-shadow: $shadow-sm;
+
+  .header h3 {
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
+    color: $color-text-primary;
+    margin: 0 0 $spacing-lg 0;
+  }
+}
+
+.overallProgress {
+  margin-bottom: $spacing-lg;
+
+  .progressHeader {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: $spacing-sm;
+    font-size: $font-size-sm;
+    color: $color-text-primary;
+    font-weight: $font-weight-medium;
+  }
+
+  .percentage {
+    color: $color-primary;
+    font-weight: $font-weight-semibold;
+  }
+}
+
+.progressBar {
+  height: 8px;
+  background: $color-gray-200;
+  border-radius: $radius-full;
+  overflow: hidden;
+
+  .progressFill {
+    height: 100%;
+    background: linear-gradient(90deg, $color-primary 0%, $color-primary-light 100%);
+    transition: width 0.5s ease-in-out;
+  }
+
+  .budgetFill {
+    height: 100%;
+    background: linear-gradient(90deg, $color-warning 0%, lighten($color-warning, 10%) 100%);
+    transition: width 0.5s ease-in-out;
+  }
+}
+
+.taskStats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+  gap: $spacing-md;
+  margin-bottom: $spacing-lg;
+
+  .statItem {
+    text-align: center;
+    padding: $spacing-md;
+    background: rgba($color-primary, 0.05);
+    border-radius: $radius-md;
+
+    .statNumber {
+      display: block;
+      font-size: $font-size-xl;
+      font-weight: $font-weight-bold;
+      color: $color-primary;
+      margin-bottom: $spacing-xs;
+
+      &.blocked {
+        color: $color-error;
+      }
+    }
+
+    .statLabel {
+      font-size: $font-size-xs;
+      color: $color-text-secondary;
+      text-transform: uppercase;
+      font-weight: $font-weight-medium;
+    }
+  }
+}
+
+.schedule {
+  margin-bottom: $spacing-lg;
+
+  .scheduleItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: $spacing-sm 0;
+    border-bottom: $border-1 solid $color-gray-100;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    .scheduleLabel {
+      font-size: $font-size-sm;
+      color: $color-text-secondary;
+    }
+
+    .scheduleValue {
+      font-size: $font-size-sm;
+      font-weight: $font-weight-semibold;
+      color: $color-text-primary;
+
+      &.urgent {
+        color: $color-error;
+        animation: pulse 2s infinite;
+      }
+    }
+  }
+}
+
+.budget {
+  margin-bottom: $spacing-lg;
+
+  .budgetHeader {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: $spacing-sm;
+    font-size: $font-size-sm;
+
+    .budgetAmount {
+      font-weight: $font-weight-semibold;
+      color: $color-warning;
+    }
+  }
+}
+
+.milestones {
+  h4 {
+    font-size: $font-size-md;
+    font-weight: $font-weight-semibold;
+    color: $color-text-primary;
+    margin: 0 0 $spacing-md 0;
+  }
+
+  .milestone {
+    margin-bottom: $spacing-md;
+
+    &:last-child {
+      margin-bottom: 0;
+    }
+
+    .milestoneHeader {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: $spacing-xs;
+
+      .milestoneTitle {
+        font-size: $font-size-sm;
+        color: $color-text-primary;
+        font-weight: $font-weight-medium;
+      }
+
+      .milestoneProgress {
+        font-size: $font-size-sm;
+        font-weight: $font-weight-semibold;
+        color: $color-primary;
+      }
+    }
+
+    .milestoneBar {
+      height: 6px;
+      background: $color-gray-200;
+      border-radius: $radius-full;
+      margin-bottom: $spacing-xs;
+
+      .milestoneFill {
+        height: 100%;
+        border-radius: $radius-full;
+        transition: width 0.5s ease-in-out;
+
+        &.status-completed {
+          background: $color-success;
+        }
+
+        &.status-in_progress {
+          background: $color-primary;
+        }
+
+        &.status-todo {
+          background: $color-gray-400;
+        }
+      }
+    }
+
+    .milestoneDate {
+      font-size: $font-size-xs;
+      color: $color-text-secondary;
+    }
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+@include mobile {
+  .taskStats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

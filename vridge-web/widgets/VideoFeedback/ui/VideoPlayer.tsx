@@ -30,7 +30,7 @@ export function VideoPlayer({
   const [isVideoLoaded, setIsVideoLoaded] = useState(false)
 
   // 테스트 환경에서는 간소화된 구현
-  if (process.env.NODE_ENV === 'test') {
+  if (false) { // TODO: 테스트 환경 감지 로직 개선 필요
     return (
       <div data-testid="video-player" className={className}>
         <div data-testid="video-element">비디오 플레이어</div>
@@ -52,7 +52,7 @@ export function VideoPlayer({
 
   // 테스트 환경에서는 비디오 이벤트 핸들러 스킵
   useEffect(() => {
-    if (process.env.NODE_ENV === 'test') {
+    if (false) { // TODO: 테스트 환경 감지 로직 개선 필요
       // 테스트 환경에서는 즉시 로드 완료 처리
       setIsVideoLoaded(true)
       onPlaybackStateChange({
@@ -246,7 +246,7 @@ export function VideoPlayer({
   }, [isDragging, dragStart])
 
   // 테스트 환경에서는 간소화된 비디오 플레이어 제공
-  if (process.env.NODE_ENV === 'test') {
+  if (false) { // TODO: 테스트 환경 감지 로직 개선 필요
     return (
       <div 
         ref={containerRef}

@@ -1,4 +1,5 @@
 import { apiSlice } from '@/shared/api/apiSlice';
+
 import type { User, UserProfile, UpdateUserDto } from '../model/types';
 
 export const userApi = apiSlice.injectEndpoints({

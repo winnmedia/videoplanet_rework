@@ -9,16 +9,16 @@ export interface ApiError {
   message: string;
   status: number;
   code?: string;
-  details?: any;
+  details?: unknown;
 }
 
 export interface ApiRequestConfig extends RequestInit {
-  params?: Record<string, any>;
+  params?: Record<string, string | number | boolean>;
   timeout?: number;
   withAuth?: boolean;
 }
 
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   data: T;
   status: number;
   headers: Headers;
@@ -60,7 +60,7 @@ class ApiClient {
   /**
    * Build URL with query parameters
    */
-  private buildUrl(endpoint: string, params?: Record<string, any>): string {
+  private buildUrl(endpoint: string, params?: Record<string, string | number | boolean>): string {
     const url = new URL(config.getApiEndpoint(endpoint));
     
     if (params) {
@@ -100,7 +100,7 @@ class ApiClient {
   /**
    * Handle API errors
    */
-  private handleError(error: any, status?: number): ApiError {
+  private handleError(error: unknown, status?: number): ApiError {
     if (error instanceof Error) {
       return {
         message: error.message,
@@ -110,11 +110,12 @@ class ApiClient {
     }
     
     if (typeof error === 'object' && error !== null) {
+      const errorObj = error as Record<string, unknown>;
       return {
-        message: error.message || 'An error occurred',
-        status: error.status || status || 500,
-        code: error.code,
-        details: error.details || error,
+        message: (typeof errorObj.message === 'string' ? errorObj.message : 'An error occurred'),
+        status: (typeof errorObj.status === 'number' ? errorObj.status : status || 500),
+        code: (typeof errorObj.code === 'string' ? errorObj.code : undefined),
+        details: errorObj.details || error,
       };
     }
     
@@ -197,7 +198,7 @@ class ApiClient {
   /**
    * GET request
    */
-  public async get<T = any>(
+  public async get<T = unknown>(
     endpoint: string,
     config?: ApiRequestConfig
   ): Promise<ApiResponse<T>> {
@@ -210,9 +211,9 @@ class ApiClient {
   /**
    * POST request
    */
-  public async post<T = any>(
+  public async post<T = unknown>(
     endpoint: string,
-    data?: any,
+    data?: unknown,
     config?: ApiRequestConfig
   ): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, {
@@ -225,9 +226,9 @@ class ApiClient {
   /**
    * PUT request
    */
-  public async put<T = any>(
+  public async put<T = unknown>(
     endpoint: string,
-    data?: any,
+    data?: unknown,
     config?: ApiRequestConfig
   ): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, {
@@ -240,9 +241,9 @@ class ApiClient {
   /**
    * PATCH request
    */
-  public async patch<T = any>(
+  public async patch<T = unknown>(
     endpoint: string,
-    data?: any,
+    data?: unknown,
     config?: ApiRequestConfig
   ): Promise<ApiResponse<T>> {
     return this.request<T>(endpoint, {
@@ -255,7 +256,7 @@ class ApiClient {
   /**
    * DELETE request
    */
-  public async delete<T = any>(
+  public async delete<T = unknown>(
     endpoint: string,
     config?: ApiRequestConfig
   ): Promise<ApiResponse<T>> {
@@ -268,10 +269,10 @@ class ApiClient {
   /**
    * Upload file
    */
-  public async upload<T = any>(
+  public async upload<T = unknown>(
     endpoint: string,
     file: File | Blob,
-    additionalData?: Record<string, any>,
+    additionalData?: Record<string, string | number | boolean>,
     config?: ApiRequestConfig
   ): Promise<ApiResponse<T>> {
     const formData = new FormData();
@@ -279,7 +280,7 @@ class ApiClient {
     
     if (additionalData) {
       Object.entries(additionalData).forEach(([key, value]) => {
-        formData.append(key, value);
+        formData.append(key, String(value));
       });
     }
     
@@ -290,7 +291,6 @@ class ApiClient {
       headers: {
         ...config?.headers,
         // Remove Content-Type to let browser set it with boundary
-        'Content-Type': undefined as any,
       },
     });
   }
@@ -301,25 +301,25 @@ export const apiClient = ApiClient.getInstance();
 
 // Export convenience functions
 export const api = {
-  get: <T = any>(endpoint: string, config?: ApiRequestConfig) => 
+  get: <T = unknown>(endpoint: string, config?: ApiRequestConfig) => 
     apiClient.get<T>(endpoint, config),
   
-  post: <T = any>(endpoint: string, data?: any, config?: ApiRequestConfig) => 
+  post: <T = unknown>(endpoint: string, data?: unknown, config?: ApiRequestConfig) => 
     apiClient.post<T>(endpoint, data, config),
   
-  put: <T = any>(endpoint: string, data?: any, config?: ApiRequestConfig) => 
+  put: <T = unknown>(endpoint: string, data?: unknown, config?: ApiRequestConfig) => 
     apiClient.put<T>(endpoint, data, config),
   
-  patch: <T = any>(endpoint: string, data?: any, config?: ApiRequestConfig) => 
+  patch: <T = unknown>(endpoint: string, data?: unknown, config?: ApiRequestConfig) => 
     apiClient.patch<T>(endpoint, data, config),
   
-  delete: <T = any>(endpoint: string, config?: ApiRequestConfig) => 
+  delete: <T = unknown>(endpoint: string, config?: ApiRequestConfig) => 
     apiClient.delete<T>(endpoint, config),
   
-  upload: <T = any>(
+  upload: <T = unknown>(
     endpoint: string, 
     file: File | Blob, 
-    additionalData?: Record<string, any>,
+    additionalData?: Record<string, string | number | boolean>,
     config?: ApiRequestConfig
   ) => apiClient.upload<T>(endpoint, file, additionalData, config),
 };

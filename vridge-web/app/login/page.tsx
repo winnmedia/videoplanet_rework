@@ -1,8 +1,9 @@
 'use client'
 
-import { LoginForm } from '@/features/auth'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+
+import { LoginForm } from '@/features/auth'
 
 export default function LoginPage() {
   const router = useRouter()

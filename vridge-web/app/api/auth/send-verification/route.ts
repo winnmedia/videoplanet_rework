@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+
 import { EmailService } from '@/shared/services/emailService'
 
 // 인증 코드를 임시 저장할 메모리 스토어 (실제 운영에서는 Redis 등 사용)

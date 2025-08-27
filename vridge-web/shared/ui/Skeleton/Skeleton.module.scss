@@ -1,4 +1,4 @@
-@import '@/shared/config/design-tokens.scss';
+@use '@/shared/config/design-tokens.scss' as *;
 
 .skeleton {
   background-color: $color-gray-200;

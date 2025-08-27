@@ -1,8 +1,9 @@
 'use client'
 
 import { useAppDispatch, useAppSelector } from '@/shared/lib/hooks'
-import { authApi } from '../api/authApi'
+
 import { setCredentials, logout as logoutAction } from './authSlice'
+import { authApi } from '../api/authApi'
 
 export function useAuth() {
   const dispatch = useAppDispatch()

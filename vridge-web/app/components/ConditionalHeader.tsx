@@ -1,28 +1,20 @@
 'use client'
 
 import { usePathname } from 'next/navigation'
-import { Header } from '@widgets/Header'
+
+import { Header, type HeaderItem } from '@widgets/Header'
 
 interface ConditionalHeaderProps {
-  leftItems: Array<{
-    type: 'img' | 'string'
-    src?: string
-    text?: string
-    className: string
-  }>
-  rightItems: Array<{
-    type: 'img' | 'string'
-    src?: string
-    text?: string
-    className: string
-  }>
+  leftItems?: HeaderItem[]
+  rightItems?: HeaderItem[]
 }
 
 export function ConditionalHeader({ leftItems, rightItems }: ConditionalHeaderProps) {
   const pathname = usePathname()
   
-  // 랜딩 페이지에서는 헤더를 렌더링하지 않음
-  if (pathname === '/') {
+  // 인증 관련 페이지에서는 헤더를 렌더링하지 않음
+  const authPages = ['/', '/login', '/signup', '/reset-password', '/forgot-password']
+  if (authPages.includes(pathname)) {
     return null
   }
   

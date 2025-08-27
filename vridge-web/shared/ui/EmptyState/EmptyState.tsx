@@ -1,4 +1,5 @@
 import React from 'react'
+
 import styles from './EmptyState.module.scss'
 
 export interface EmptyStateProps {

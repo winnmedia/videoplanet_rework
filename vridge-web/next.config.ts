@@ -4,9 +4,6 @@ const nextConfig: NextConfig = {
   // Enable React strict mode for better development experience
   reactStrictMode: true,
   
-  // SWC minification for faster builds
-  swcMinify: true,
-  
   // Image optimization configuration
   images: {
     domains: process.env.NEXT_PUBLIC_IMAGE_DOMAINS?.split(',') || ['localhost'],
@@ -65,16 +62,19 @@ const nextConfig: NextConfig = {
   },
   
   // Webpack configuration
-  webpack: (config, { dev, isServer }) => {
+  webpack: (config) => {
     // Add custom webpack configurations here if needed
     
-    // Example: Add alias for easier imports
+    // Add FSD architecture aliases
     config.resolve.alias = {
       ...config.resolve.alias,
-      '@': './src',
-      '@components': './src/components',
-      '@lib': './lib',
-      '@styles': './styles',
+      '@': '.',
+      '@app': './app',
+      '@processes': './processes',
+      '@widgets': './widgets',
+      '@features': './features',
+      '@entities': './entities',
+      '@shared': './shared',
     };
     
     return config;
@@ -82,10 +82,7 @@ const nextConfig: NextConfig = {
   
   // Experimental features
   experimental: {
-    // Enable server actions
-    serverActions: {
-      enabled: true,
-    },
+    // Server actions configuration (enabled by default in Next.js 15)
   },
   
   // Output configuration for deployment
