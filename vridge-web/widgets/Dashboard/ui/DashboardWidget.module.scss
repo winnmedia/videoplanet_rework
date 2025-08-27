@@ -1,12 +1,12 @@
 @use '@/shared/config/design-tokens.scss' as *;
 
 .dashboardWidget {
-  @include container;
   padding-top: $spacing-lg;
   padding-bottom: $spacing-lg;
   min-height: 100vh;
   background: $bg-secondary;
   font-family: $font-primary;
+  @include container;
 
   // 전역 클래스와 연동
   :global(.desktop-grid) {

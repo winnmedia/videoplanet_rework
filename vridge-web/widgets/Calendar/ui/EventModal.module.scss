@@ -4,6 +4,7 @@
  */
 
 @use '@/shared/config/design-tokens.scss' as *;
+@use 'sass:color';
 
 // ===========================
 // 모달 오버레이
@@ -523,7 +524,7 @@
   
   .modalHeader,
   .modalFooter {
-    background: lighten($color-dark, 5%);
+    background: color.adjust($color-dark, $lightness: 5%);
     border-color: $color-gray-700;
   }
   
@@ -547,7 +548,7 @@
   .input,
   .textarea,
   .select {
-    background: lighten($color-dark, 5%);
+    background: color.adjust($color-dark, $lightness: 5%);
     border-color: $color-gray-700;
     color: $color-white;
     
@@ -568,7 +569,7 @@
   }
   
   .checkbox {
-    background: lighten($color-dark, 5%);
+    background: color.adjust($color-dark, $lightness: 5%);
     border-color: $color-gray-700;
   }
   
