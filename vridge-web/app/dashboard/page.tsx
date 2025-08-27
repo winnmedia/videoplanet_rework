@@ -4,6 +4,7 @@ import { QuickActions } from '@/features/project'
 import { SideBar } from '@/widgets'
 import { ProjectStatusCard } from '@/widgets/Dashboard'
 import { RecentActivityFeed } from '@/widgets/Dashboard'
+import type { ProjectStatus } from '@/widgets/Dashboard/model/types'
 
 export default function DashboardPage() {
   return (
@@ -28,8 +29,10 @@ export default function DashboardPage() {
               title: '샘플 프로젝트',
               status: 'shooting',
               progress: 65,
+              startDate: new Date().toISOString(),
+              priority: 'high',
               teamMembers: 3
-            } as any} />
+            } satisfies ProjectStatus} />
           </div>
           
           {/* Main Content Grid */}
@@ -37,7 +40,7 @@ export default function DashboardPage() {
             <div className="lg:col-span-2">
               <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <h2 className="text-xl font-semibold mb-4 text-gray-800">최근 활동</h2>
-                <RecentActivityFeed />
+                <RecentActivityFeed activities={[]} />
               </div>
             </div>
             <div>
