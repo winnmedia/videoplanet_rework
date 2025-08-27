@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 import styles from './SignupForm.module.scss'
 import { useAuth } from '../model/useAuth'
@@ -19,6 +19,38 @@ export function SignupForm() {
   const [validEmail, setValidEmail] = useState(false)
   const [emailVerificationSent, setEmailVerificationSent] = useState(false)
   const [emailSendLoading, setEmailSendLoading] = useState(false)
+  const [countdown, setCountdown] = useState(0)
+  const [canResend, setCanResend] = useState(true)
+  const countdownRef = useRef<NodeJS.Timeout | null>(null)
+
+  // 카운트다운 타이머 시작
+  const startCountdown = () => {
+    setCountdown(60)
+    setCanResend(false)
+    
+    countdownRef.current = setInterval(() => {
+      setCountdown(prev => {
+        if (prev <= 1) {
+          setCanResend(true)
+          if (countdownRef.current) {
+            clearInterval(countdownRef.current)
+            countdownRef.current = null
+          }
+          return 0
+        }
+        return prev - 1
+      })
+    }, 1000)
+  }
+
+  // 컴포넌트 언마운트 시 타이머 정리
+  useEffect(() => {
+    return () => {
+      if (countdownRef.current) {
+        clearInterval(countdownRef.current)
+      }
+    }
+  }, [])
 
   const handleSendVerification = async () => {
     if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -49,6 +81,7 @@ export function SignupForm() {
 
       setEmailVerificationSent(true)
       setError('')
+      startCountdown() // 이메일 발송 성공 시 카운트다운 시작
       
       // 개발 모드에서 코드가 반환된 경우
       if (data.devCode) {
@@ -157,6 +190,18 @@ export function SignupForm() {
                 disabled={emailSendLoading || !email}
               >
                 {emailSendLoading ? '발송 중...' : '인증번호 발송'}
+              </button>
+            )}
+            
+            {emailVerificationSent && (
+              <button
+                type="button"
+                className={`${styles.verifyButton} ${!canResend ? styles.disabled : ''}`}
+                onClick={handleSendVerification}
+                disabled={emailSendLoading || !canResend}
+              >
+                {emailSendLoading ? '발송 중...' : 
+                 !canResend ? `재발송 (${countdown}초)` : '인증번호 재발송'}
               </button>
             )}
           </div>
