@@ -156,7 +156,53 @@ class ApiClient {
       // Check if response is ok
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw this.handleError(errorData, response.status);
+        
+        // Production Railway backend error handling
+        // Log Railway backend responses for debugging
+        if (process.env.NODE_ENV === 'production') {
+          console.error('Railway API Error:', {
+            url,
+            status: response.status,
+            statusText: response.statusText,
+            headers: Object.fromEntries(response.headers.entries()),
+            data: errorData
+          });
+        }
+        
+        // Handle specific Railway backend error codes
+        let enhancedError = errorData;
+        switch (response.status) {
+          case 404:
+            enhancedError = {
+              ...errorData,
+              message: 'API 엔드포인트를 찾을 수 없습니다. Railway 백엔드 연결을 확인해주세요.',
+              code: 'RAILWAY_ENDPOINT_NOT_FOUND'
+            };
+            break;
+          case 403:
+            enhancedError = {
+              ...errorData,
+              message: errorData.message || '인증에 실패했습니다.',
+              code: 'RAILWAY_AUTH_FAILED'
+            };
+            break;
+          case 500:
+            enhancedError = {
+              ...errorData,
+              message: errorData.message || 'Railway 서버 오류가 발생했습니다.',
+              code: 'RAILWAY_SERVER_ERROR'
+            };
+            break;
+          case 0:
+            // Network error or CORS issue
+            enhancedError = {
+              message: 'Railway 백엔드 연결에 실패했습니다. CORS 설정을 확인해주세요.',
+              code: 'RAILWAY_CONNECTION_FAILED'
+            };
+            break;
+        }
+        
+        throw this.handleError(enhancedError, response.status);
       }
       
       // Parse response
