@@ -36,7 +36,21 @@ export const authApi = {
         }
       }
     } catch (error: unknown) {
-      throw new Error(error instanceof Error ? error.message : '로그인에 실패했습니다.')
+      // Railway API 에러 처리 개선
+      if (error instanceof Error && error.message) {
+        // Railway 에러 코드별 사용자 친화적 메시지
+        if (error.message.includes('RAILWAY_AUTH_FAILED')) {
+          throw new Error('인증에 실패했습니다. 이메일과 비밀번호를 확인해주세요.');
+        }
+        if (error.message.includes('RAILWAY_CONNECTION_FAILED')) {
+          throw new Error('서버 연결에 실패했습니다. 잠시 후 다시 시도해주세요.');
+        }
+        if (error.message.includes('RAILWAY_SERVER_ERROR')) {
+          throw new Error('서버 오류가 발생했습니다. 관리자에게 문의해주세요.');
+        }
+        throw new Error(error.message);
+      }
+      throw new Error('로그인에 실패했습니다. 네트워크 상태를 확인해주세요.');
     }
   },
 
@@ -65,7 +79,20 @@ export const authApi = {
         }
       }
     } catch (error: unknown) {
-      throw new Error(error instanceof Error ? error.message : '회원가입에 실패했습니다.')
+      // Railway API 에러 처리 개선
+      if (error instanceof Error && error.message) {
+        if (error.message.includes('RAILWAY_ENDPOINT_NOT_FOUND')) {
+          throw new Error('회원가입 서비스를 찾을 수 없습니다. 관리자에게 문의해주세요.');
+        }
+        if (error.message.includes('RAILWAY_CONNECTION_FAILED')) {
+          throw new Error('서버 연결에 실패했습니다. 잠시 후 다시 시도해주세요.');
+        }
+        if (error.message.includes('이미 존재하는 사용자')) {
+          throw new Error('이미 가입된 이메일 주소입니다.');
+        }
+        throw new Error(error.message);
+      }
+      throw new Error('회원가입에 실패했습니다. 네트워크 상태를 확인해주세요.');
     }
   },
 
