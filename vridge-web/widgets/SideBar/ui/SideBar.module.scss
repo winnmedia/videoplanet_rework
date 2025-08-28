@@ -1,20 +1,30 @@
 @use '@/shared/config/design-tokens.scss' as *;
 
 .sideBar {
-  width: 300px;
+  width: var(--sidebar-width);
   padding: 24px 16px;
   position: fixed;
   left: 0;
-  top: 0;
+  top: var(--header-height);
   bottom: 0;
   background: $color-white;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   border-radius: 0 16px 16px 0;
-  z-index: 10;
-  transition: transform 0.3s ease;
+  z-index: var(--z-sidebar);
+  transition: transform var(--transition-duration) ease;
 
   &.collapsed {
-    transform: translateX(-280px);
+    transform: translateX(calc(-1 * var(--sidebar-width) + var(--sidebar-collapsed-width)));
+  }
+
+  @media (max-width: 768px) {
+    &.collapsed {
+      transform: translateX(-100%);
+    }
+    
+    &:not(.collapsed) {
+      box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.5);
+    }
   }
 }
 

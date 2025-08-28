@@ -10,6 +10,12 @@ export { ProjectStatusCard } from './ui/ProjectStatusCard'
 export { RecentActivityFeed } from './ui/RecentActivityFeed'
 export { EmptyState } from './ui/EmptyState'
 
+// 새로운 핵심 기능 위젯들 (DEVPLAN.md 기준)
+export { FeedbackSummaryCard } from './ui/FeedbackSummaryCard'
+export { InvitationSummaryCard } from './ui/InvitationSummaryCard'
+export { ScheduleSummaryCard } from './ui/ScheduleSummaryCard'
+export { UnreadBadge } from './ui/UnreadBadge'
+
 // Types and Interfaces
 export type {
   // Core Data Types
@@ -18,11 +24,29 @@ export type {
   DashboardStats,
   DashboardData,
   
+  // 새로운 핵심 기능 데이터 타입들
+  FeedbackSummary,
+  FeedbackSummaryStats,
+  InvitationSummary,
+  InvitationStats,
+  ProjectSchedule,
+  ScheduleStats,
+  UnreadBadge as UnreadBadgeType,
+  UnreadStats,
+  DashboardFilters,
+  QuickAction,
+  
   // Component Props
   DashboardWidgetProps,
   ProjectStatusCardProps,
   RecentActivityFeedProps,
   EmptyStateProps,
+  
+  // 새로운 컴포넌트 Props
+  FeedbackSummaryCardProps,
+  InvitationSummaryCardProps,
+  ScheduleSummaryCardProps,
+  UnreadBadgeProps,
   
   // Mock Data Types
   MockProjectData

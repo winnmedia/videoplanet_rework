@@ -31,7 +31,7 @@
 
 - **Frontend (신규 스택 - New Stack):**
     - **Framework/Library:** Next.js 15.5, React 19.
-    - **Language:** TypeScript 5.7 (Strict Mode).
+    - **Language:** TypeScript 5.92 (Strict Mode).
     - **Styling:** **Tailwind CSS v4 (표준).**
     - **State Management:** Redux Toolkit 2.0.
 

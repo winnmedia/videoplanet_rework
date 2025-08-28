@@ -29,6 +29,7 @@ export default function Home() {
               width={140} 
               height={40}
               priority
+              style={{ width: 'auto', height: '40px' }}
             />
           </div>
           <nav className={styles.nav}>
@@ -97,6 +98,7 @@ export default function Home() {
             width={420} 
             height={300}
             className={styles.toolImage}
+            style={{ width: 'auto', height: '300px' }}
           />
           <h2>번거로운 n가지 툴 사용은 이제 그만,</h2>
           <p>
@@ -138,6 +140,7 @@ export default function Home() {
                   width={600} 
                   height={400}
                   loading="lazy"
+                  style={{ width: 'auto', height: '400px' }}
                 />
               </div>
             </div>
@@ -365,7 +368,13 @@ export default function Home() {
               <div className={styles.personas}>
                 <div className={styles.persona}>
                   <div className={styles.avatar}>
-                    <img src="/images/Home/emoji02.png" alt="K" />
+                    <Image 
+                      src="/images/Home/emoji02.png" 
+                      alt="영상 제작 꿈나무 K 아바타" 
+                      width={100} 
+                      height={100}
+                      loading="lazy"
+                    />
                   </div>
                   <div className={styles.dialogue}>
                     <div className={styles.name}>
@@ -386,7 +395,13 @@ export default function Home() {
                 </div>
                 <div className={styles.persona}>
                   <div className={styles.avatar}>
-                    <img src="/images/Home/emoji04.png" alt="J" />
+                    <Image 
+                      src="/images/Home/emoji04.png" 
+                      alt="영상디자인학과 학생 J 아바타" 
+                      width={100} 
+                      height={100}
+                      loading="lazy"
+                    />
                   </div>
                   <div className={styles.dialogue}>
                     <div className={styles.name}>

@@ -17,6 +17,7 @@ export default defineConfig({
   use: {
     // 배포 환경 URL 사용
     baseURL: 'https://vridge-xyc331ybx-vlanets-projects.vercel.app',
+    viewport: { width: 1280, height: 720 }, // MCP 호환성을 위한 뷰포트 크기 제한
     trace: 'on-first-retry',
     screenshot: 'only-on-failure', 
     video: 'retain-on-failure',

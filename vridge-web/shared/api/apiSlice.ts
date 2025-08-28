@@ -3,7 +3,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { RootState } from '@/app/store/store';
 
 const baseQuery = fetchBaseQuery({
-  baseUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000',
+  baseUrl: process.env.NEXT_PUBLIC_API_URL || 'https://api.vlanet.net',
   credentials: 'include',
   prepareHeaders: (headers, { getState }) => {
     const token = (getState() as RootState).auth?.token;
@@ -16,6 +16,6 @@ const baseQuery = fetchBaseQuery({
 
 export const apiSlice = createApi({
   baseQuery,
-  tagTypes: ['User', 'Project', 'Feedback', 'Video'],
+  tagTypes: ['User', 'Project', 'ProjectTeam', 'Feedback', 'Video'],
   endpoints: () => ({}),
 });

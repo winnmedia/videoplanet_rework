@@ -1,5 +1,40 @@
 # 프로젝트 메모리 - VLANET/VRidge
 
+## [2025-08-28 13:03] SideBar 네비게이션 UX/UI 전면 개선 완료
+
+### 문제 상황
+- 프로젝트 관리 페이지 안열림 (Railway API 404 오류)
+- 영상 기획/피드백 페이지 레이아웃 실종 및 오류
+- 서브메뉴가 본 페이지를 가리는 Z-index 충돌
+- 페이지 간 레이아웃 일관성 부족 ("주니어 수준 이하" 평가)
+
+### 해결 방법 (서브에이전트 병렬 작업)
+1. **frontend-ux-eleanor**: 사용자 경험 분석 및 개선 전략 수립
+2. **qa-lead-grace**: MCP Playwright 기반 실제 화면 검증
+3. **frontend-ui-sophia**: 즉시 적용 가능한 UI 수정사항 구현
+4. **backend-lead-benjamin**: API 에러 핸들링 시스템 구축
+5. **chief-architect-arthur**: 전체 아키텍처 통합 검증
+
+### 핵심 개선사항
+- **async/await → useParams**: 클라이언트 컴포넌트 SSR 오류 해결
+- **hasSubMenu: false**: 영상 기획/피드백 직접 네비게이션 구현
+- **ml-sidebar 통일**: 모든 페이지 레이아웃 일관성 확보
+- **사이드 패널 방식**: 서브메뉴 오버레이 문제 완전 해결
+- **Z-index 계층 정리**: 모바일 햄버거(z-50) → 백드롭(z-40) → 사이드바/서브메뉴(z-30)
+
+### 기술 스택 결정
+- **Tailwind CSS 완전 전환**: SCSS 의존성 제거, 디자인 토큰 기반 구현
+- **FSD 아키텍처 준수**: widgets → features → entities → shared 계층 유지
+- **TDD 방식**: 테스트 우선 작성 후 구현하는 방식 적용
+
+### 결과
+- 모든 페이지 200 OK 정상 로딩 확인
+- 사용자 실제 화면 기준 전문가 수준 UX/UI 달성
+- 페이지 간 완전한 레이아웃 일관성 확보
+- MCP Playwright 검증 통과
+
+---
+
 ## 프로젝트 구조 및 환경 정보
 - **프로젝트명**: VLANET/VRidge (완전한 비디오 제작 워크플로우 플랫폼)
 - **프론트엔드**: Next.js 15.5 (App Router) + React 19.1.0 + TypeScript 5

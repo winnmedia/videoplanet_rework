@@ -7,12 +7,12 @@ import { ProjectList } from '@/widgets/projects'
 
 export default function ProjectsPage() {
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50">
       {/* 사이드바 */}
       <SideBar />
       
       {/* 메인 컨텐츠 */}
-      <main className="flex-1 ml-[300px] transition-all duration-300">
+      <main className="ml-[18.75rem] pt-20 min-h-screen">
         <div className="container mx-auto px-4 py-8 max-w-7xl">
           {/* Page Header */}
           <div className="mb-8 flex justify-between items-center">

@@ -189,6 +189,10 @@ export default {
         sidebar: '280px',
         'sidebar-collapsed': '80px',
       },
+      margin: {
+        sidebar: '280px', // ml-sidebar 클래스를 위한 토큰
+        'sidebar-collapsed': '80px',
+      },
       inset: {
         sidebar: '280px', // left positioning for submenu
       },

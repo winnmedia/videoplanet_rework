@@ -2,7 +2,6 @@
 
 import React from 'react'
 
-import styles from './DashboardWidget.module.scss'
 import { EmptyState } from './EmptyState'
 import { ProjectStatusCard } from './ProjectStatusCard'
 import { RecentActivityFeed } from './RecentActivityFeed'
@@ -17,9 +16,9 @@ export const DashboardWidget: React.FC<DashboardWidgetProps> = ({
   // 로딩 상태 처리
   if (isLoading) {
     return (
-      <div className={styles.loadingContainer} data-testid="dashboard-loading">
-        <div className={styles.spinner} />
-        <p>데이터를 불러오고 있습니다...</p>
+      <div className="flex flex-col justify-center items-center min-h-96 p-8" data-testid="dashboard-loading">
+        <div className="w-10 h-10 border-3 border-gray-200 border-t-blue-600 rounded-full animate-spin" />
+        <p className="mt-4 text-gray-600">데이터를 불러오고 있습니다...</p>
       </div>
     )
   }
@@ -44,23 +43,23 @@ export const DashboardWidget: React.FC<DashboardWidgetProps> = ({
 
   if (hasNoProjects) {
     return (
-      <main className={styles.dashboardWidget} role="main" aria-label="대시보드">
-        <header className={styles.header}>
-          <h1>프로젝트 대시보드</h1>
+      <main className="min-h-screen bg-gray-50 p-8" role="main" aria-label="대시보드">
+        <header className="flex justify-between items-center mb-8 pb-4 border-b border-gray-200">
+          <h1 className="text-3xl font-bold text-gray-900">프로젝트 대시보드</h1>
           {onRefresh && (
             <button 
-              className={styles.refreshButton}
+              className="px-4 py-2 bg-white text-blue-600 border border-blue-600 rounded hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-600"
               onClick={onRefresh}
               aria-label="새로고침"
               type="button"
             >
-              <span className={styles.refreshIcon}>↻</span>
+              <span className="inline-block mr-2 transform transition-transform hover:rotate-180">↻</span>
               새로고침
             </button>
           )}
         </header>
 
-        <div className={styles.emptyDashboard}>
+        <div className="flex justify-center items-center min-h-96">
           <EmptyState
             title="아직 생성된 프로젝트가 없습니다"
             description="새로운 프로젝트를 생성해보세요"
@@ -75,22 +74,22 @@ export const DashboardWidget: React.FC<DashboardWidgetProps> = ({
 
   return (
     <main 
-      className={`${styles.dashboardWidget} desktop-grid`} 
+      className="min-h-screen bg-gray-50 p-8" 
       role="main" 
       aria-label="대시보드"
       data-testid="dashboard-container"
     >
       {/* 헤더 */}
-      <header className={styles.header}>
-        <h1>프로젝트 대시보드</h1>
+      <header className="flex justify-between items-center mb-8 pb-4 border-b border-gray-200">
+        <h1 className="text-3xl font-bold text-gray-900">프로젝트 대시보드</h1>
         {onRefresh && (
           <button 
-            className={styles.refreshButton}
+            className="px-4 py-2 bg-white text-blue-600 border border-blue-600 rounded hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-600"
             onClick={onRefresh}
             aria-label="새로고침"
             type="button"
           >
-            <span className={styles.refreshIcon}>↻</span>
+            <span className="inline-block mr-2 transform transition-transform hover:rotate-180">↻</span>
             새로고침
           </button>
         )}
@@ -98,48 +97,48 @@ export const DashboardWidget: React.FC<DashboardWidgetProps> = ({
 
       {/* 통계 카드들 */}
       <section 
-        className={`${styles.statsSection} mobile-stack`}
+        className="mb-8"
         role="region"
         aria-label="프로젝트 통계"
         data-testid="stats-container"
       >
-        <div className={`${styles.statsGrid} mobile-stack`}>
-          <div className={`${styles.statsCard} stats-card legacy-card`} data-testid="stats-card">
-            <h3>전체 프로젝트</h3>
-            <div className={styles.statsValue}>{stats.totalProjects}</div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="bg-white p-6 rounded-3xl shadow-sm text-center border border-gray-200 hover:shadow-md transition-shadow" data-testid="stats-card">
+            <h3 className="text-sm font-medium text-gray-600 uppercase tracking-wide mb-2">전체 프로젝트</h3>
+            <div className="text-3xl font-bold text-blue-600">{stats.totalProjects}</div>
           </div>
           
-          <div className={`${styles.statsCard} stats-card legacy-card`} data-testid="stats-card">
-            <h3>진행중인 프로젝트</h3>
-            <div className={styles.statsValue}>{stats.activeProjects}</div>
+          <div className="bg-white p-6 rounded-3xl shadow-sm text-center border border-gray-200 hover:shadow-md transition-shadow" data-testid="stats-card">
+            <h3 className="text-sm font-medium text-gray-600 uppercase tracking-wide mb-2">진행중인 프로젝트</h3>
+            <div className="text-3xl font-bold text-blue-600">{stats.activeProjects}</div>
           </div>
           
-          <div className={`${styles.statsCard} stats-card legacy-card`} data-testid="stats-card">
-            <h3>완료된 프로젝트</h3>
-            <div className={styles.statsValue}>{stats.completedProjects}</div>
+          <div className="bg-white p-6 rounded-3xl shadow-sm text-center border border-gray-200 hover:shadow-md transition-shadow" data-testid="stats-card">
+            <h3 className="text-sm font-medium text-gray-600 uppercase tracking-wide mb-2">완료된 프로젝트</h3>
+            <div className="text-3xl font-bold text-blue-600">{stats.completedProjects}</div>
           </div>
           
-          <div className={`${styles.statsCard} stats-card legacy-card`} data-testid="stats-card">
-            <h3>팀 멤버</h3>
-            <div className={styles.statsValue}>{stats.totalTeamMembers}</div>
+          <div className="bg-white p-6 rounded-3xl shadow-sm text-center border border-gray-200 hover:shadow-md transition-shadow" data-testid="stats-card">
+            <h3 className="text-sm font-medium text-gray-600 uppercase tracking-wide mb-2">팀 멤버</h3>
+            <div className="text-3xl font-bold text-blue-600">{stats.totalTeamMembers}</div>
           </div>
         </div>
       </section>
 
       {/* 메인 콘텐츠 그리드 */}
-      <div className={`${styles.contentGrid} desktop-grid`}>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* 최근 프로젝트 */}
         <section 
-          className={`${styles.projectsSection} mobile-full-width`}
+          className="lg:col-span-2"
           role="region"
           aria-label="최근 프로젝트"
           data-testid="projects-container"
         >
-          <h2>최근 프로젝트</h2>
-          <div className={`${styles.projectsList} mobile-full-width`}>
+          <h2 className="text-xl font-semibold text-gray-800 mb-6">최근 프로젝트</h2>
+          <div className="flex flex-col gap-4">
             {recentProjects.length > 0 ? (
               recentProjects.map(project => (
-                <div key={project.id} className={styles.projectCardWrapper}>
+                <div key={project.id} className="relative">
                   <ProjectStatusCard
                     project={project}
                     onClick={onProjectClick}
@@ -159,12 +158,12 @@ export const DashboardWidget: React.FC<DashboardWidgetProps> = ({
 
         {/* 최근 활동 */}
         <section 
-          className={styles.activitySection}
+          className="bg-white rounded-3xl shadow-sm p-6 border border-gray-200"
           role="region"
           aria-label="최근 활동"
         >
-          <h2>최근 활동</h2>
-          <div className={styles.activityFeed}>
+          <h2 className="text-xl font-semibold text-gray-800 mb-6">최근 활동</h2>
+          <div>
             {recentActivity.length > 0 ? (
               <RecentActivityFeed
                 activities={recentActivity}
@@ -172,31 +171,11 @@ export const DashboardWidget: React.FC<DashboardWidgetProps> = ({
                 showTimestamp={true}
               />
             ) : (
-              <p className={styles.emptyActivity}>최근 활동이 없습니다</p>
+              <p className="text-gray-500 text-center italic p-4">최근 활동이 없습니다</p>
             )}
           </div>
         </section>
       </div>
-
-      {/* 다가오는 마감일 섹션은 테스트에서 중복 문제 발생으로 주석 처리 */}
-      {/* 
-      {upcomingDeadlines.length > 0 && (
-        <section className={styles.deadlinesSection}>
-          <h2>다가오는 마감일</h2>
-          <div className={styles.deadlinesList}>
-            {upcomingDeadlines.map(project => (
-              <ProjectStatusCard
-                key={`deadline-${project.id}`}
-                project={project}
-                onClick={onProjectClick}
-                compact={true}
-                showProgress={false}
-              />
-            ))}
-          </div>
-        </section>
-      )}
-      */}
     </main>
   )
 }

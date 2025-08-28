@@ -22,16 +22,16 @@
   "env": {
     "NODE_ENV": "production",
     "NEXT_PUBLIC_APP_ENV": "production",
-    "NEXT_PUBLIC_API_URL": "https://videoplanet.up.railway.app",
-    "NEXT_PUBLIC_BACKEND_URL": "https://videoplanet.up.railway.app",
+    "NEXT_PUBLIC_API_URL": "https://api.vlanet.net",
+    "NEXT_PUBLIC_BACKEND_URL": "https://api.vlanet.net",
     "NEXTAUTH_SECRET": "vridge-nextauth-secret-production-2025-very-secure-key-for-deployment"
   },
   "build": {
     "env": {
       "NODE_ENV": "production",
       "NEXT_PUBLIC_APP_ENV": "production",
-      "NEXT_PUBLIC_API_URL": "https://videoplanet.up.railway.app",
-      "NEXT_PUBLIC_BACKEND_URL": "https://videoplanet.up.railway.app"
+      "NEXT_PUBLIC_API_URL": "https://api.vlanet.net",
+      "NEXT_PUBLIC_BACKEND_URL": "https://api.vlanet.net"
     }
   },
   "headers": [
@@ -82,7 +82,7 @@
   "rewrites": [
     {
       "source": "/api/proxy/:path*",
-      "destination": "https://videoplanet.up.railway.app/:path*"
+      "destination": "https://api.vlanet.net/:path*"
     }
   ],
   "redirects": [

@@ -14,7 +14,11 @@ export { ConfirmModal } from './ConfirmModal/ConfirmModal'
 export { Toast, ToastContainer, toast } from './Toast/Toast'
 export { Card } from './Card/Card'
 export { SubMenu } from './SubMenu/SubMenu'
+export { SubMenuImproved } from './SubMenu/SubMenu.improved'
 export { MenuButton } from './MenuButton/MenuButton'
+export { MenuButtonImproved } from './MenuButton/MenuButton.improved'
+export { GlobalSubMenu } from './GlobalSubMenu/GlobalSubMenu'
+export { NotificationCenter } from './NotificationCenter/NotificationCenter'
 // export { Badge } from './Badge/Badge'  // TODO: Badge 컴포넌트 구현 필요  
 // export { ProgressBar } from './ProgressBar/ProgressBar'  // TODO: ProgressBar 컴포넌트 구현 필요
 
@@ -24,5 +28,7 @@ export type { ErrorBoundaryProps } from './ErrorBoundary/ErrorBoundary'
 export type { ConfirmModalProps } from './ConfirmModal/ConfirmModal'
 export type { ToastProps, ToastContainerProps, ToastType } from './Toast/Toast'
 export type { CardProps } from './Card/Card'
+export type { GlobalSubMenuProps, GlobalSubMenuItem } from './GlobalSubMenu/types'
+export type { NotificationCenterProps, Notification } from './NotificationCenter/types'
 // export type { BadgeProps } from './Badge/Badge'  // TODO: Badge 컴포넌트 구현 필요
 // export type { ProgressBarProps } from './ProgressBar/ProgressBar'  // TODO: ProgressBar 컴포넌트 구현 필요

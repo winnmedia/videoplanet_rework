@@ -1,0 +1,59 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 Pre-commit Quality Gates Starting..."
+
+# 1. Run lint-staged for changed files
+echo "📋 Running lint-staged..."
+pnpm dlx lint-staged
+
+# 2. Check for TypeScript compilation errors
+echo "🔧 Running TypeScript check..."
+pnpm type-check || {
+  echo "❌ TypeScript check failed!"
+  exit 1
+}
+
+# 3. Run unit tests related to changed files
+echo "🧪 Running affected unit tests..."
+git diff --cached --name-only | grep -E '\.(ts|tsx)$' | grep -v "\.test\." | while IFS= read -r file; do
+  # Find corresponding test files
+  test_file="${file//.tsx/.test.tsx}"
+  test_file="${test_file//.ts/.test.ts}"
+  
+  if [ -f "$test_file" ]; then
+    echo "Running test for: $test_file"
+    pnpm vitest run "$test_file" --reporter=basic
+  fi
+done
+
+# 4. Architecture boundary validation
+echo "🏗️  Validating FSD architecture boundaries..."
+node scripts/validate-architecture.js || {
+  echo "❌ Architecture boundary violations detected!"
+  exit 1
+}
+
+# 5. Check for styling conflicts
+echo "🎨 Checking styling conflicts..."
+
+# Check for Tailwind arbitrary values
+if git diff --cached --name-only | xargs grep -l "\[.*\]" | grep -E "\.(tsx|ts)$" | xargs grep -H "\[.*\]" | grep -E "w-\[|h-\[|p-\[|m-\[|text-\[|bg-\["; then
+  echo "❌ Tailwind arbitrary values detected! Use design tokens instead."
+  exit 1
+fi
+
+# Check for Styled Components usage
+if git diff --cached --name-only | xargs grep -l "styled\." 2>/dev/null; then
+  echo "❌ Styled Components usage detected! Use Tailwind CSS instead."
+  exit 1
+fi
+
+# Check for new SCSS files
+if git diff --cached --name-only | grep "\.scss$"; then
+  echo "❌ New SCSS files detected! Use Tailwind CSS for new components."
+  exit 1
+fi
+
+echo "✅ All pre-commit checks passed!"
+echo "🚀 Commit ready to proceed"

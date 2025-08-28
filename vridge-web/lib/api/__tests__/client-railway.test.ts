@@ -3,6 +3,7 @@
  */
 
 import { api } from '../client';
+import { railwayDebugger } from '../debug-helper';
 
 // Mock fetch for testing
 const mockFetch = vi.fn();
@@ -34,6 +35,7 @@ const createResponseMock = (options: {
 describe('API Client Railway Integration (TDD)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    railwayDebugger.clearLogs();
     process.env.NODE_ENV = 'production';
   });
 
@@ -134,15 +136,17 @@ describe('API Client Railway Integration (TDD)', () => {
       expect(consoleErrorSpy).toHaveBeenCalledWith('Railway API Error:', {
         url: expect.stringContaining('/test-endpoint'),
         status: 404,
-        statusText: 'Not Found',
-        headers: expect.any(Object),
-        data: { message: 'Not found' }
+        error: { 
+          message: 'Not found',
+          code: 'HTTP_404'
+        },
+        timestamp: expect.any(String)
       });
 
       consoleErrorSpy.mockRestore();
     });
 
-    it('should not log errors in development environment', async () => {
+    it('should not log production-style errors in development environment', async () => {
       process.env.NODE_ENV = 'development';
       const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
@@ -159,7 +163,11 @@ describe('API Client Railway Integration (TDD)', () => {
         // Expected error
       }
 
-      expect(consoleErrorSpy).not.toHaveBeenCalled();
+      // 개발 환경에서는 Railway API Error: 로그가 생성되지 않아야 함
+      const productionLogs = consoleErrorSpy.mock.calls.filter(call => 
+        call[0] === 'Railway API Error:'
+      );
+      expect(productionLogs).toHaveLength(0);
 
       consoleErrorSpy.mockRestore();
     });

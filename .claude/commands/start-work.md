@@ -1,31 +1,33 @@
----
-description: Solve a task with lightweight parallel reasoning in a single command—produce a concise plan, implement, then smoke-test and check for hallucinations.
-argument-hint: [Problem] | [Constraints] | [Output format]
----
+name: /load-context-and-standby
+description: Establishes full operational readiness by determining locality (CWD/FSD mapping), loading hierarchical guidelines (CLAUDE.md) and root history (MEMORY.md), analyzing trajectory and proactive risks, verifying the environment, checking overrides (STARTWORK.md), and efficiently synthesizing the context.
+argument-hint: N/A
 
-Input:
-$ARGUMENTS
+execution-steps:
+  1. Determine Operational Locality:
+     - Identify the Current Working Directory (CWD).
+     - Map the CWD to the FSD architecture (Identify Layer and Slice).
 
-Output format (must follow exactly):
-- [Summary] one line
-- [Immediate Plan] up to 3 short steps
-- [Solution] final code/content only (no extra narration)
-- [Smoke Test] 1–2 minimal usage/run examples
-- [Hallucination Check] confirm no out-of-input assumptions, no “unknown source” facts, and constraints are reflected
+  2. Load Guidelines (CLAUDE.md - Hierarchical):
+     - Perform a hierarchical search (bottom-up) starting from the CWD for `CLAUDE.md`. Load the closest file.
+     - If not found: Abort and notify the user that essential guidelines are missing.
+     - Internalize core pillars (FSD, TDD, Stack Duality, AI Guardrails).
+     - CRITICAL: Identify the "Active Ruleset" based on the loaded file's location (e.g., Standard vs. Legacy mode).
 
-Procedure:
-1) Parse `$ARGUMENTS` into `Problem | Constraints | Output format` (empty if missing).
-2) Brief “micro-parallel” exploration (A/B/C). If helpful, **invoke already-registered subagents by name** for 1–2 line recommendations; otherwise reason internally. Keep only **one** shortest path.
-3) Implement the solution **with a TDD cycle (red → green → refactor)** and **preserve FSD boundaries & public APIs**:
-   - Write a failing test first → make it pass with the smallest change → refactor while keeping tests green. :contentReference[oaicite:0]{index=0}
-   - Keep domain logic in features/entities; put generic, reusable UI/utility in shared; import across slices/layers **only via each slice’s public API**. :contentReference[oaicite:1]{index=1}
-4) Provide a tiny smoke test (sample input/output or command to run). Prefer **behavior-centric tests** (e.g., `getByRole`, `getByLabelText`) that mirror user interactions. :contentReference[oaicite:2]{index=2}
-5) Hallucination check:
-   - Do not invent APIs/versions/numbers not present in the input.
-   - Exclude anything with unknown or unverifiable sources.
-   - State in one line that constraints **and** the FSD/TDD guardrails are enforced in both solution & test.
+  3. Load and Analyze History (MEMORY.md - Root):
+     - Locate and load `MEMORY.md` (typically at the Project Root).
+     - If not found: Abort and notify the user that essential history is missing.
+     - Analyze recent entries (last 3-5) to synthesize the current project trajectory and proactively identify current risks or technical debt.
 
-Architecture & Testing Requirements (must follow):
-- **FSD layers & boundaries:** Organize by FSD layers (e.g., app → processes → pages → widgets → features → entities → shared); cross-slice imports go **only through the slice’s Public API** (e.g., `index.ts` re-exports). This allows internal refactors without breaking external contracts. :contentReference[oaicite:3]{index=3}
-- **TDD discipline:** Apply **red → green → refactor** in small increments; sequence tests so they quickly drive key design decisions; keep code well-structured via refactoring once tests are green. :contentReference[oaicite:4]{index=4}
-- **Behavior-focused testing:** Prefer accessibility-aligned queries (`getByRole`, `getByLabelText`) over implementation details when writing examples or smoke tests. :contentReference[oaicite:5]{index=5}
+  4. Environment and Tooling Verification:
+     - Verify the current execution environment against requirements defined in `CLAUDE.md` (Part 0).
+     - Check essential tools (PNPM) and core dependencies (TypeScript 5.7). Report any discrepancies.
+
+  5. Load Immediate Context Overrides (STARTWORK.md):
+     - Check for the existence of `STARTWORK.md` in the immediate context.
+     - If it exists: Read its content as high-priority constraints that OVERRIDE all other contexts.
+
+  6. Synthesis and Confirmation (Context Optimization):
+     - Synthesize the combined context (Locality + Guidelines + History + Environment + Overrides).
+     - CRITICAL: Optimize for context window efficiency by summarizing principles and history rather than embedding large volumes of raw text.
+     - Output a comprehensive "Context Acknowledgment Report".
+     - Confirm readiness.

@@ -133,10 +133,10 @@ export function NavigationProvider({
       dispatch({ type: 'SET_ACTIVE_MENU', payload: 'calendar' })
     } else if (pathname.startsWith('/projects')) {
       dispatch({ type: 'SET_ACTIVE_MENU', payload: 'projects' })
+    } else if (pathname.startsWith('/planning')) {
+      dispatch({ type: 'SET_ACTIVE_MENU', payload: 'planning' })
     } else if (pathname.startsWith('/feedback')) {
       dispatch({ type: 'SET_ACTIVE_MENU', payload: 'feedback' })
-    } else if (pathname.startsWith('/content')) {
-      dispatch({ type: 'SET_ACTIVE_MENU', payload: 'content' })
     }
   }, [pathname])
 

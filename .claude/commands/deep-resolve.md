@@ -1,58 +1,84 @@
----
-description: Perform parallel deep analysis with available subagents, produce an actionable plan, implement via a TDD cycle while preserving FSD boundaries, then verify with tests and hallucination checks.
-argument-hint: [Problem] | [Constraints] | [Agents (optional)] | [Output format]
----
+# deep-resolve Rule Addendum: FSD–TDD Strategy Emphasis and Seven-Agent Parallelism
 
-Input:
-$ARGUMENTS
+This addendum preserves parallel analysis while preventing excessive output on small tasks via budgeted selection, lead assignment, and escalation controls. The screen-first definition of done, FSD boundaries, and TDD gates remain unchanged. This addendum complements the main “deep-resolve Rule Addendum: FSD–TDD Strategy Emphasis and Seven-Agent Parallelism,” including its Output format section.
 
-High-level steps:
-1) Break the problem into logical components.  
-2) Assign each component to available subagents for specialized, **parallel** analysis (or reason internally if none are available).  
-3) Collect and merge results into a **comprehensive Action Plan**.  
-4) Apply the plan **using a Test-Driven Development (TDD) cycle (red → green → refactor)** while **preserving Feature-Sliced Design (FSD) boundaries and public APIs**, to deliver a **complete and robust solution**.  
-5) Review the final code/content and **verify whether any hallucinations or fabricated details exist**.  
-Ensure all outputs are consistent, accurate, and production-ready.
+1) Objectives and Design Principles
 
-Output format (must follow exactly):
-- [Summary] one line
-- [Action Plan] numbered list (3–7 steps, each 1–2 lines, owner noted if a subagent contributed)
-- [Solution] final code/content only (no extra narration)
-- [Tests] 1–3 minimal smoke tests (command or sample I/O)
-- [Hallucination Check]
-  - No out-of-input assumptions (APIs/versions/numbers)
-  - No “unknown source” claims; sources listed below
-  - Constraints reflected in solution & tests (one line verdict)
-- [Sources] bullet list of links or identifiers (only if external info was used)
+Maintain parallelism, but cap active agents and output according to task complexity and risk.
 
-Procedure:
-1) Parse `$ARGUMENTS` into four slots: `Problem | Constraints | Agents | Output`.
-   - If `Agents` is empty, use any already-registered subagents by description match.
-   - If no subagents are available, reason internally.
+Appoint exactly one accountable lead per task; the lead selects agents and sets output ceilings before execution.
 
-2) Parallel deep analysis (keep it simple):
-   - For each logical component (max 5), obtain a 1–2 line note from a relevant subagent.
-   - Summarize conflicts/risks in 1–2 lines.
-   - Collapse into a **single** optimal, minimal-change plan.
+Apply cache and incremental rules to suppress redundant output while keeping traceability.
 
-3) Implementation:
-   - Generate only the artifacts required by the plan.
-   - If file edits are implied, list target files before changes.
-   - Avoid extra commentary.
+2) Orchestration Layer and Lead Assignment
 
-4) Tests:
-   - Provide 1–3 smallest smoke tests (runnable commands or I/O examples).
-   - Prefer repo-native runners if present (e.g., `npm test -w <pkg>` or `pytest -q`).
+The orchestrator produces no standalone deliverables and only:
+a) scores complexity and risk, b) selects active agents and per-note length limits, c) allocates output budget and blocks overruns, d) applies cache reuse and incremental mode.
+Lead assignment priority: product scope → Product; structural boundaries → Architecture; data contract/performance/error model → Backend; behavioral screen → UX Design; visual system/tokens → UI Design; test/release gate → QA; schema/instrumentation → Data.
 
-5) Hallucination check:
-   - If any external facts were used, include a short [Sources] section (no fabricated URLs).
-   - State whether constraints are enforced in both solution and tests.
-   - Remove any TODO/FIXME placeholders from final output.
+3) Tiering Model and Agent Selection
 
-Architecture & Testing Requirements:
-- **FSD structure:** Respect the standard layers (e.g., app → processes → pages → widgets → features → entities → shared); import across slices/modules **only via their public APIs**; keep domain-aware logic in **features/entities** and place generic, reusable UI/utility in **shared**. :contentReference[oaicite:2]{index=2}
-- **TDD strategy:** For each actionable step, **write a failing test first**, implement the minimum code to pass, then **refactor** while keeping tests green. Prefer **behavior-focused tests** over implementation details and include **1–3 smoke tests** in the output. :contentReference[oaicite:3]{index=3}
+Score Complexity (files changed, layer impact, external interfaces, concurrency/state) and Risk (user visibility, release proximity, regression likelihood, regulatory/security). Each 0–3; sum defines tier.
 
-Notes:
-- Use MCP tools **only when** external docs/data are strictly required; otherwise rely on repository context. :contentReference[oaicite:4]{index=4}
-- If a subagent fails or is missing, fall back to internal reasoning and continue. :contentReference[oaicite:5]{index=5}
+Micro (0–2): up to 2 agents — Lead + QA.
+
+Small (3–4): up to 3 — Lead, QA, and one domain agent (Architecture/Backend/UX or UI).
+
+Medium (5–6): up to 5 — Lead, QA, Architecture, one domain agent; Data optional.
+
+Large/Critical (7–12): all seven agents.
+Tasks with user-visible screens must include UX or UI at minimum. Tasks changing domain models or public APIs must include Architecture.
+
+4) Output Ceilings and Incremental Rules
+
+Each active-agent note is one line, ≤160 characters.
+
+Action Plan has 3–7 steps.
+
+For the same commit hash and file set within 24 hours, reuse cached summaries and output only deltas.
+
+On repeated runs of the same step, print only differences from the previous note.
+
+Micro tier fast path: a single combined note from Lead may replace individual notes to minimize output, provided QA signs off.
+
+5) Escalation Triggers and Auto-Augmentation
+
+Escalate one tier and add required agents upon detecting:
+
+FSD boundary violation or direct internal-file import, 2) new external dependency, 3) breaking public API/schema change, 4) security/privacy sensitivity, 5) minimum accessibility failure.
+
+6) FSD and TDD Strategy (Immutable)
+
+Enforce one-way layer dependencies and the public-API import rule.
+
+Do not begin implementation without a failing test.
+
+Prioritize user-behavior and accessibility-focused tests.
+
+Perform DTO→ViewModel transformation only in the API layer with mandatory runtime validation.
+
+Test entities/shared in Node and features/widgets/pages/app in JSDOM.
+
+Fix or mock time, randomness, network, and WebSocket.
+
+Completion is defined by the user-visible screen, not by code merge or isolated test passing.
+
+7) Dev–QA Mutual Checks (Mandatory Gate)
+
+No merge to main or release without QA approval.
+
+QA holds veto over test specifications, regression thresholds, and release gates.
+
+Upon escaped defects, Development and QA document joint root-cause analysis and preventive actions.
+
+8) Conflict-Resolution Priority (Retained)
+
+Follow the established sequence across Architecture → Product → Backend → UX Design → UI Design → QA → Data. When user-facing screen requirements conflict with structural constraints, prioritize the screen and require Architecture to propose structural alternatives.
+
+9) Preflight, Screen Contract, and Compliance
+
+Run preflight checks defined in the main addendum (FSD boundaries, import hygiene, style duplication, design tokens, accessibility basics, test-environment split, dependency additions).
+
+For any user-visible work, produce or reference a screen contract and verify the screen-first DoD against it.
+
+Keep an audit log for each task: tier, selected agents, reasons for inclusion/exclusion, cache usage, fast-path application, and any suppressed notes.

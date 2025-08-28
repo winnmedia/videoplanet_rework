@@ -77,9 +77,18 @@ export function SubMenu({
     if (!status) return null
     
     const statusConfig = {
-      active: { label: '진행중', className: 'bg-success-50 text-success-600' },
-      completed: { label: '완료', className: 'bg-primary-50 text-primary-600' },
-      pending: { label: '대기', className: 'bg-warning-50 text-warning-600' }
+      active: { 
+        label: '진행중', 
+        className: 'bg-success-50 dark:bg-success-900/30 text-success-600 dark:text-success-400' 
+      },
+      completed: { 
+        label: '완료', 
+        className: 'bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-400' 
+      },
+      pending: { 
+        label: '대기', 
+        className: 'bg-warning-50 dark:bg-warning-900/30 text-warning-600 dark:text-warning-400' 
+      }
     }
     
     const config = statusConfig[status]
@@ -100,18 +109,18 @@ export function SubMenu({
 
   const renderEmptyState = () => (
     <div className="text-center py-12" role="alert">
-      <div className="w-12 h-12 mx-auto mb-4 text-gray-300">
+      <div className="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600">
         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
         </svg>
       </div>
-      <p className="text-gray-500 text-sm mb-6 leading-relaxed">
+      <p className="text-gray-500 dark:text-gray-400 text-sm mb-6 leading-relaxed">
         등록된<br />
         프로젝트가 없습니다
       </p>
       {onCreateNew && (
         <button
-          className="px-4 py-2 bg-primary text-white text-sm font-medium rounded-lg hover:bg-primary-600 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors duration-200"
+          className="px-4 py-2 bg-primary hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-700 text-white text-sm font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 transition-colors duration-200"
           onClick={onCreateNew}
           type="button"
           aria-label="새 프로젝트 생성"
@@ -122,23 +131,33 @@ export function SubMenu({
     </div>
   )
 
-  if (!isOpen) return null
-
   return (
     <>
-      {/* Backdrop with proper z-index */}
-      <div 
-        className="fixed inset-0 bg-black/50 z-backdrop backdrop-blur-xs"
-        onClick={onClose}
-        aria-hidden="true"
-      />
+      {/* Mobile only backdrop - DEVPLAN.md 요구사항: 투명도 90% + 블러 */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/40 backdrop-blur-md md:hidden z-40"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
       
-      {/* SubMenu Panel - positioned after sidebar with higher z-index */}
+      {/* SubMenu Panel - DEVPLAN.md 요구사항: 투명도 90% + 라이트/다크 일관성 */}
       <nav
         ref={containerRef}
         className={clsx(
-          'fixed top-0 h-full w-full bg-white shadow-xl z-45 overflow-y-auto overflow-x-hidden',
-          'md:left-sidebar md:w-80 animate-slide-in-left motion-reduce:animate-none',
+          'fixed top-20 h-[calc(100vh-5rem)] w-80 shadow-xl overflow-y-auto overflow-x-hidden',
+          // DEVPLAN.md 핵심 요구사항: 투명도 90% (라이트/다크 일관)
+          'bg-white/90 dark:bg-gray-900/90',
+          'backdrop-blur-md',
+          'border border-gray-200/50 dark:border-gray-700/50',
+          'transition-all duration-300 ease-out',
+          // Position: right beside sidebar, not overlay
+          'left-[18.75rem] z-40', // Higher than header to ensure visibility
+          // Animation: slide in from left
+          isOpen ? 'translate-x-0' : 'translate-x-[-100%]',
+          // Mobile: full screen overlay behavior
+          'md:relative md:translate-x-0 md:shadow-lg md:border-l',
           className
         )}
         role="menu"
@@ -147,17 +166,17 @@ export function SubMenu({
         data-testid={testId}
         onKeyDown={handleKeyDown}
       >
-        {/* Header */}
-        <header className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 z-10">
+        {/* Header - 다크모드 지원 + 투명도 95% */}
+        <header className="sticky top-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 px-6 py-4 z-10" role="banner" aria-label={title}>
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-gray-900 truncate" id="submenu-title">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white truncate" id="submenu-title">
               {title}
             </h2>
             
             <div className="flex items-center space-x-2 flex-shrink-0">
               {onCreateNew && items.length > 0 && (
                 <button
-                  className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="p-2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary/20"
                   onClick={onCreateNew}
                   type="button"
                   aria-label="새 항목 추가"
@@ -170,7 +189,7 @@ export function SubMenu({
               )}
               
               <button
-                className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500/20"
+                className="p-2 text-gray-400 dark:text-gray-500 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500/20"
                 onClick={onClose}
                 type="button"
                 aria-label="서브메뉴 닫기"
@@ -198,9 +217,9 @@ export function SubMenu({
                       ref={index === 0 ? firstItemRef : undefined}
                       className={clsx(
                         'w-full text-left px-4 py-3 rounded-lg transition-all duration-200 min-h-12 group',
-                        'hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary/20',
-                        isActive && 'bg-primary/5 ring-1 ring-primary/20',
-                        isFocused && 'bg-gray-50'
+                        'hover:bg-gray-50 dark:hover:bg-gray-800/50 focus:outline-none focus:ring-2 focus:ring-primary/20',
+                        isActive && 'bg-primary/5 dark:bg-primary/10 ring-1 ring-primary/20 dark:ring-primary/40',
+                        isFocused && 'bg-gray-50 dark:bg-gray-800/50'
                       )}
                       role="menuitem"
                       tabIndex={index === 0 ? 0 : -1}
@@ -211,7 +230,9 @@ export function SubMenu({
                       <div className="flex items-center justify-between">
                         <span className={clsx(
                           'flex-1 text-sm font-medium truncate pr-3',
-                          isActive ? 'text-primary-600' : 'text-gray-700 group-hover:text-gray-900'
+                          isActive 
+                            ? 'text-primary-600 dark:text-primary-400' 
+                            : 'text-gray-700 dark:text-gray-300 group-hover:text-gray-900 dark:group-hover:text-white'
                         )}>
                           {item.name}
                         </span>

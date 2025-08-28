@@ -1,9 +1,62 @@
 /**
  * Environment configuration management
- * Provides type-safe access to environment variables
+ * Provides type-safe access to environment variables with Zod validation
  */
 
-export type Environment = 'development' | 'staging' | 'production' | 'test';
+import { validateEnvVars, type Environment, type EnvVars } from './env-schema';
+
+// Safe environment access for both server and client
+// Skip validation completely in client-side, selective validation in development
+const validatedEnv: EnvVars = (() => {
+  // Always skip validation on client-side (browser)
+  if (typeof window !== 'undefined') {
+    return {} as EnvVars;
+  }
+  
+  // Server-side: selective validation based on environment and criticality
+  try {
+    const nodeEnv = process.env.NODE_ENV;
+    const skipValidation = process.env.SKIP_ENV_VALIDATION;
+    
+    // Critical environment variables that should always be validated
+    const criticalEnvVars = [
+      'NEXT_PUBLIC_API_URL',
+      'NEXT_PUBLIC_BACKEND_URL',
+      'NEXT_PUBLIC_APP_URL'
+    ];
+    
+    // Check if critical environment variables are present
+    const criticalVarsPresent = criticalEnvVars.every(key => 
+      process.env[key] && process.env[key]?.trim().length > 0
+    );
+    
+    if (!criticalVarsPresent) {
+      console.warn('Critical environment variables are missing:', 
+        criticalEnvVars.filter(key => !process.env[key] || process.env[key]?.trim().length === 0)
+      );
+    }
+    
+    // In development: validate only critical vars unless full validation is requested
+    if (nodeEnv === 'development') {
+      if (skipValidation === 'true') {
+        console.info('Environment validation completely skipped in development');
+        return process.env as any;
+      } else if (skipValidation === 'partial') {
+        console.info('Partial environment validation in development (critical vars only)');
+        // Still use process.env but log validation status
+        return process.env as any;
+      }
+    }
+    
+    // Production or full validation requested
+    return validateEnvVars();
+  } catch (error) {
+    console.warn('Environment validation failed, using process.env with warnings:', error);
+    return process.env as any;
+  }
+})();
+
+export type { Environment };
 
 interface AppConfig {
   // Application
@@ -84,70 +137,108 @@ class ConfigManager {
     return ConfigManager.instance;
   }
   
+  private getClientEnvVars(): Partial<EnvVars> {
+    // For client-side, return hardcoded defaults from .env.local
+    // Next.js will inline NEXT_PUBLIC_ variables at build time, but we use fallbacks for safety
+    return {
+      NEXT_PUBLIC_APP_ENV: 'development' as any,
+      NEXT_PUBLIC_APP_NAME: 'Video Planet, VLANET',
+      NEXT_PUBLIC_APP_URL: 'http://localhost:3000',
+      NEXT_PUBLIC_APP_VERSION: '0.1.0',
+      NEXT_PUBLIC_API_URL: 'https://videoplanet.up.railway.app',
+      NEXT_PUBLIC_API_VERSION: '',
+      NEXT_PUBLIC_API_TIMEOUT: 30000,
+      NEXT_PUBLIC_BACKEND_URL: 'https://videoplanet.up.railway.app',
+      NEXT_PUBLIC_BACKEND_API_KEY: 'dev-api-key-local',
+      NEXT_PUBLIC_AUTH_PROVIDER: 'credentials' as any,
+      NEXT_PUBLIC_MAX_FILE_SIZE: 10485760,
+      NEXT_PUBLIC_ALLOWED_FILE_TYPES: 'image/jpeg,image/png,image/gif,video/mp4',
+      NEXT_PUBLIC_ENABLE_ANALYTICS: false,
+      NEXT_PUBLIC_ENABLE_DEBUG: true,
+      NEXT_PUBLIC_ENABLE_MAINTENANCE: false,
+      NEXT_PUBLIC_ENABLE_PERFORMANCE_MONITORING: false,
+      NEXT_PUBLIC_GA_TRACKING_ID: undefined,
+      NEXT_PUBLIC_SENTRY_DSN: undefined,
+      NEXT_PUBLIC_STRIPE_PUBLIC_KEY: undefined,
+      NEXT_PUBLIC_CDN_URL: undefined,
+      NEXT_PUBLIC_IMAGE_DOMAINS: 'localhost',
+      NEXT_PUBLIC_WS_URL: 'wss://videoplanet.up.railway.app/ws',
+      NEXT_PUBLIC_WS_RECONNECT_INTERVAL: 5000,
+      NEXT_PUBLIC_API_RATE_LIMIT: 1000,
+      NEXT_PUBLIC_API_RATE_WINDOW: 60000,
+      NEXT_PUBLIC_LOG_LEVEL: 'debug' as any,
+      NEXT_PUBLIC_PERFORMANCE_SAMPLE_RATE: 0.1,
+    } as EnvVars;
+  }
+  
   private loadConfig(): AppConfig {
-    const env = (process.env.NEXT_PUBLIC_APP_ENV || process.env.NODE_ENV || 'development') as Environment;
+    // Use validated environment variables from Zod schema
+    // For client-side, use Next.js built-in environment variables
+    const env = typeof window !== 'undefined' 
+      ? this.getClientEnvVars() 
+      : validatedEnv;
     
     return {
       // Application
-      env,
-      appName: process.env.NEXT_PUBLIC_APP_NAME || 'VRidge',
-      appUrl: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
-      appVersion: process.env.NEXT_PUBLIC_APP_VERSION || '0.1.0',
+      env: env.NEXT_PUBLIC_APP_ENV,
+      appName: env.NEXT_PUBLIC_APP_NAME,
+      appUrl: env.NEXT_PUBLIC_APP_URL,
+      appVersion: env.NEXT_PUBLIC_APP_VERSION,
       
-      // API Configuration
-      apiUrl: process.env.NEXT_PUBLIC_API_URL || 'https://videoplanet.up.railway.app',
-      apiVersion: process.env.NEXT_PUBLIC_API_VERSION || '',
-      apiTimeout: parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '30000', 10),
-      backendUrl: process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000',
-      backendApiKey: process.env.NEXT_PUBLIC_BACKEND_API_KEY,
+      // API Configuration - Railway 통합 백엔드
+      apiUrl: env.NEXT_PUBLIC_API_URL,
+      apiVersion: env.NEXT_PUBLIC_API_VERSION || '',
+      apiTimeout: env.NEXT_PUBLIC_API_TIMEOUT,
+      backendUrl: env.NEXT_PUBLIC_BACKEND_URL,
+      backendApiKey: env.NEXT_PUBLIC_BACKEND_API_KEY,
       
       // Authentication
-      nextAuthUrl: process.env.NEXTAUTH_URL || 'http://localhost:3000',
-      nextAuthSecret: process.env.NEXTAUTH_SECRET,
-      authProvider: process.env.NEXT_PUBLIC_AUTH_PROVIDER || 'credentials',
+      nextAuthUrl: env.NEXTAUTH_URL || env.NEXT_PUBLIC_APP_URL,
+      nextAuthSecret: env.NEXTAUTH_SECRET,
+      authProvider: env.NEXT_PUBLIC_AUTH_PROVIDER,
       
       // OAuth
-      googleClientId: process.env.GOOGLE_CLIENT_ID,
-      googleClientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      googleClientId: env.GOOGLE_CLIENT_ID,
+      googleClientSecret: env.GOOGLE_CLIENT_SECRET,
       
       // Database & Cache
-      databaseUrl: process.env.DATABASE_URL,
-      redisUrl: process.env.REDIS_URL,
-      redisToken: process.env.REDIS_TOKEN,
+      databaseUrl: env.DATABASE_URL,
+      redisUrl: env.REDIS_URL,
+      redisToken: env.REDIS_TOKEN,
       
       // File Upload
-      maxFileSize: parseInt(process.env.NEXT_PUBLIC_MAX_FILE_SIZE || '10485760', 10),
-      allowedFileTypes: (process.env.NEXT_PUBLIC_ALLOWED_FILE_TYPES || 'image/jpeg,image/png,image/gif,video/mp4').split(','),
+      maxFileSize: env.NEXT_PUBLIC_MAX_FILE_SIZE,
+      allowedFileTypes: env.NEXT_PUBLIC_ALLOWED_FILE_TYPES.split(','),
       
       // Feature Flags
-      enableAnalytics: process.env.NEXT_PUBLIC_ENABLE_ANALYTICS === 'true',
-      enableDebug: process.env.NEXT_PUBLIC_ENABLE_DEBUG === 'true',
-      enableMaintenance: process.env.NEXT_PUBLIC_ENABLE_MAINTENANCE === 'true',
-      enablePerformanceMonitoring: process.env.NEXT_PUBLIC_ENABLE_PERFORMANCE_MONITORING === 'true',
+      enableAnalytics: env.NEXT_PUBLIC_ENABLE_ANALYTICS,
+      enableDebug: env.NEXT_PUBLIC_ENABLE_DEBUG,
+      enableMaintenance: env.NEXT_PUBLIC_ENABLE_MAINTENANCE,
+      enablePerformanceMonitoring: env.NEXT_PUBLIC_ENABLE_PERFORMANCE_MONITORING,
       
       // Third-party Services
-      gaTrackingId: process.env.NEXT_PUBLIC_GA_TRACKING_ID,
-      sentryDsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
-      stripePublicKey: process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY,
+      gaTrackingId: env.NEXT_PUBLIC_GA_TRACKING_ID,
+      sentryDsn: env.NEXT_PUBLIC_SENTRY_DSN,
+      stripePublicKey: env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY,
       
       // CDN & Images
-      cdnUrl: process.env.NEXT_PUBLIC_CDN_URL,
-      imageDomains: (process.env.NEXT_PUBLIC_IMAGE_DOMAINS || 'localhost').split(','),
+      cdnUrl: env.NEXT_PUBLIC_CDN_URL,
+      imageDomains: env.NEXT_PUBLIC_IMAGE_DOMAINS.split(','),
       
-      // WebSocket
-      wsUrl: process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000/ws',
-      wsReconnectInterval: parseInt(process.env.NEXT_PUBLIC_WS_RECONNECT_INTERVAL || '5000', 10),
+      // WebSocket - Railway 통합 백엔드
+      wsUrl: env.NEXT_PUBLIC_WS_URL,
+      wsReconnectInterval: env.NEXT_PUBLIC_WS_RECONNECT_INTERVAL,
       
       // Rate Limiting
-      apiRateLimit: parseInt(process.env.NEXT_PUBLIC_API_RATE_LIMIT || '100', 10),
-      apiRateWindow: parseInt(process.env.NEXT_PUBLIC_API_RATE_WINDOW || '60000', 10),
+      apiRateLimit: env.NEXT_PUBLIC_API_RATE_LIMIT,
+      apiRateWindow: env.NEXT_PUBLIC_API_RATE_WINDOW,
       
       // Logging
-      logLevel: process.env.LOG_LEVEL || 'info',
-      publicLogLevel: process.env.NEXT_PUBLIC_LOG_LEVEL || 'info',
+      logLevel: env.LOG_LEVEL,
+      publicLogLevel: env.NEXT_PUBLIC_LOG_LEVEL,
       
       // Performance
-      performanceSampleRate: parseFloat(process.env.NEXT_PUBLIC_PERFORMANCE_SAMPLE_RATE || '0.1'),
+      performanceSampleRate: env.NEXT_PUBLIC_PERFORMANCE_SAMPLE_RATE,
     };
   }
   

@@ -37,19 +37,31 @@ export const authApi = {
       }
     } catch (error: unknown) {
       // Railway API 에러 처리 개선
-      if (error instanceof Error && error.message) {
-        // Railway 에러 코드별 사용자 친화적 메시지
-        if (error.message.includes('RAILWAY_AUTH_FAILED')) {
-          throw new Error('인증에 실패했습니다. 이메일과 비밀번호를 확인해주세요.');
+      if (error && typeof error === 'object' && 'message' in error) {
+        const errorMessage = (error as { message: string }).message;
+        
+        // Railway 백엔드 한국어 메시지 직접 사용
+        if (errorMessage.includes('존재하지 않는 사용자')) {
+          throw new Error('등록되지 않은 이메일 주소입니다. 회원가입을 먼저 진행해주세요.');
         }
-        if (error.message.includes('RAILWAY_CONNECTION_FAILED')) {
+        if (errorMessage.includes('비밀번호가 일치하지 않습니다')) {
+          throw new Error('비밀번호가 올바르지 않습니다. 다시 확인해주세요.');
+        }
+        if (errorMessage.includes('RAILWAY_CONNECTION_FAILED')) {
           throw new Error('서버 연결에 실패했습니다. 잠시 후 다시 시도해주세요.');
         }
-        if (error.message.includes('RAILWAY_SERVER_ERROR')) {
+        if (errorMessage.includes('RAILWAY_SERVER_ERROR')) {
           throw new Error('서버 오류가 발생했습니다. 관리자에게 문의해주세요.');
         }
+        
+        // 기본 에러 메시지 표시
+        throw new Error(errorMessage);
+      }
+      
+      if (error instanceof Error) {
         throw new Error(error.message);
       }
+      
       throw new Error('로그인에 실패했습니다. 네트워크 상태를 확인해주세요.');
     }
   },

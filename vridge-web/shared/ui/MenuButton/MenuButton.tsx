@@ -1,7 +1,6 @@
 'use client'
 
 import clsx from 'clsx'
-import Image from 'next/image'
 import React, { forwardRef } from 'react'
 
 import styles from './MenuButton.module.scss'
@@ -89,12 +88,11 @@ export const MenuButton = forwardRef<HTMLButtonElement, MenuButtonProps>(
           })}
           aria-hidden="true"
         >
-          <Image
-            src={isActive ? item.activeIcon : item.icon}
-            alt=""
-            width={16}
-            height={16}
-            className={styles.icon}
+          <i 
+            className={clsx(
+              isActive ? item.activeIcon : item.icon,
+              styles.icon
+            )}
           />
         </div>
 

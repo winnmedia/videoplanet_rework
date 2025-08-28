@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
-
 import { StoreProvider } from "@shared/ui";
+import { NavigationProvider } from "@/features/navigation";
 
 import { ConditionalHeader } from "./components/ConditionalHeader";
 import "./globals.css";
+
+// FontAwesome 설정 import
+import '@/lib/fontawesome';
+import '@fortawesome/fontawesome-svg-core/styles.css';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -51,16 +55,27 @@ export default function RootLayout({
 
   return (
     <html lang="en">
+      <head>
+        <link
+          rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+          integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+          crossOrigin="anonymous"
+          referrerPolicy="no-referrer"
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <StoreProvider>
-          <div className="min-h-screen flex flex-col">
-            <ConditionalHeader leftItems={leftItems} rightItems={rightItems} />
-            <main className="flex-1">
-              {children}
-            </main>
-          </div>
+          <NavigationProvider>
+            <div className="min-h-screen flex flex-col">
+              <ConditionalHeader leftItems={leftItems} rightItems={rightItems} />
+              <main className="flex-1">
+                {children}
+              </main>
+            </div>
+          </NavigationProvider>
         </StoreProvider>
       </body>
     </html>

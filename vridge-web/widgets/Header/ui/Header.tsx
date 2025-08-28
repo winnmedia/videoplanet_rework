@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+import { NotificationBell } from '@/features/notification'
 
 import type { HeaderProps, HeaderItem } from '../model/types'
 
@@ -21,9 +22,10 @@ export function Header({ leftItems = [], rightItems = [] }: HeaderProps) {
             alt={`header-img-${index}`}
             width={150}
             height={40}
-            className="cursor-pointer"
+            className="cursor-pointer object-contain"
             onClick={item.onClick ?? (() => router.push('/dashboard'))}
             priority
+            style={{ aspectRatio: '150/40' }}
           />
         </div>
       )
@@ -68,12 +70,13 @@ export function Header({ leftItems = [], rightItems = [] }: HeaderProps) {
   }
 
   return (
-    <header className="flex items-center justify-between h-20 px-8 bg-white border-b border-gray-200">
+    <header className="fixed top-0 left-[18.75rem] right-0 flex items-center justify-between h-20 px-8 bg-white border-b border-gray-200 z-30">
       <div className="flex items-center space-x-4">
         {leftItems.map(renderItem)}
       </div>
       
       <div className="flex items-center space-x-3">
+        <NotificationBell data-testid="header-notification-bell" />
         {renderRightSection()}
       </div>
     </header>

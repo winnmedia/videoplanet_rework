@@ -4,6 +4,15 @@
  */
 
 import { config } from '@/lib/config/env';
+import { railwayDebugger } from './debug-helper';
+import { 
+  withRetry, 
+  getRetryConfigForEndpoint, 
+  apiCircuitBreaker,
+  DEFAULT_RETRY_CONFIG
+} from './retry-handler';
+import { apiMonitor } from './monitoring';
+import { apiCache, getCacheConfigForEndpoint, CacheOptions } from './cache';
 
 export interface ApiError {
   message: string;
@@ -16,6 +25,15 @@ export interface ApiRequestConfig extends RequestInit {
   params?: Record<string, string | number | boolean>;
   timeout?: number;
   withAuth?: boolean;
+  retryConfig?: {
+    maxRetries?: number;
+    baseDelay?: number;
+    enableRetry?: boolean;
+  };
+  cacheConfig?: CacheOptions & {
+    enabled?: boolean;
+    forceRefresh?: boolean;
+  };
 }
 
 export interface ApiResponse<T = unknown> {
@@ -113,22 +131,74 @@ class ApiClient {
   }
   
   /**
-   * Main request method
+   * Main request method with retry logic and monitoring
    */
   private async request<T>(
     endpoint: string,
     config: ApiRequestConfig = {}
   ): Promise<ApiResponse<T>> {
+    const requestId = apiMonitor.generateRequestId()
+    const startTime = Date.now()
+    let retryAttempts = 0
+    let success = false
+    let statusCode = 500
     const {
       params,
       timeout = this.defaultTimeout,
       withAuth = false,
       headers: customHeaders = {},
+      retryConfig = {},
+      cacheConfig = {},
       ...fetchOptions
     } = config;
     
     // Build URL
     const url = this.buildUrl(endpoint, params);
+    const method = fetchOptions.method || 'GET';
+    
+    // 캐시 설정 준비
+    const endpointCacheConfig = getCacheConfigForEndpoint(endpoint);
+    const finalCacheConfig = {
+      ...endpointCacheConfig,
+      ...cacheConfig,
+      enabled: cacheConfig.enabled !== false // 기본값: true
+    };
+    
+    // GET 요청이고 캐시가 활성화된 경우 캐시 확인
+    if (method === 'GET' && finalCacheConfig.enabled && !finalCacheConfig.forceRefresh) {
+      try {
+        const cachedResult = await apiCache.get<T>(url, method, finalCacheConfig);
+        
+        if (cachedResult) {
+          const { data: cachedData, isStale } = cachedResult;
+          
+          // 캐시 히트 로깅
+          apiMonitor.logInfo(`캐시 히트: ${method} ${endpoint}${isStale ? ' (stale)' : ''}`, {
+            endpoint,
+            url,
+            requestId,
+            method,
+            cached: true,
+            stale: isStale
+          });
+          
+          // 백그라운드 갱신이 필요한 경우 비동기로 실행
+          if (isStale && finalCacheConfig.staleWhileRevalidate) {
+            // 백그라운드에서 새 데이터를 가져와 캐시 갱신
+            this.backgroundRefresh(endpoint, config, url, method, finalCacheConfig);
+          }
+          
+          return cachedData;
+        }
+      } catch (cacheError) {
+        // 캐시 에러는 무시하고 정상 요청 진행
+        apiMonitor.logWarning('캐시 조회 실패', {
+          endpoint,
+          error: (cacheError as Error).message,
+          requestId
+        });
+      }
+    }
     
     // Prepare headers
     const headers = {
@@ -139,35 +209,73 @@ class ApiClient {
     // Prepare auth configuration
     const authConfig = withAuth ? this.getAuthConfig() : {};
     
-    // Create fetch promise
-    const fetchPromise = fetch(url, {
-      ...fetchOptions,
-      ...authConfig,
-      headers,
-    });
+    // 재시도 설정 준비
+    const enableRetry = retryConfig.enableRetry !== false; // 기본값: true
+    const endpointRetryConfig = getRetryConfigForEndpoint(endpoint);
+    const finalRetryConfig = {
+      ...endpointRetryConfig,
+      ...retryConfig,
+      maxRetries: retryConfig.maxRetries ?? endpointRetryConfig.maxRetries,
+      baseDelay: retryConfig.baseDelay ?? endpointRetryConfig.baseDelay
+    };
     
-    try {
+    // Fetch function with circuit breaker
+    const fetchFunction = async (): Promise<Response> => {
+      const fetchPromise = fetch(url, {
+        ...fetchOptions,
+        ...authConfig,
+        headers,
+      });
+      
       // Race between fetch and timeout
-      const response = await Promise.race([
+      return Promise.race([
         fetchPromise,
         this.createTimeoutPromise(timeout),
-      ]) as Response;
+      ]) as Promise<Response>;
+    };
+    
+    // 재시도 로직 적용 또는 직접 실행
+    const response = enableRetry
+      ? await withRetry(
+          () => apiCircuitBreaker.execute(fetchFunction),
+          finalRetryConfig,
+          undefined,
+          undefined,
+          (context) => {
+            retryAttempts = context.attempt - 1
+            apiMonitor.logWarning(`API 재시도: ${endpoint} (${context.attempt}/${context.totalAttempts})`, {
+              endpoint,
+              url,
+              requestId,
+              error: context.lastError.message,
+              nextDelay: context.nextDelay,
+              method: fetchOptions.method || 'GET'
+            });
+          }
+        )
+      : await apiCircuitBreaker.execute(fetchFunction);
+    
+    try {
       
       // Check if response is ok
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         
-        // Production Railway backend error handling
-        // Log Railway backend responses for debugging
-        if (process.env.NODE_ENV === 'production') {
-          console.error('Railway API Error:', {
-            url,
-            status: response.status,
-            statusText: response.statusText,
-            headers: Object.fromEntries(response.headers.entries()),
-            data: errorData
-          });
-        }
+        // Railway API 디버깅 로깅
+        railwayDebugger.logRequest({
+          timestamp: new Date().toISOString(),
+          url,
+          method: fetchOptions.method || 'GET',
+          requestHeaders: Object.fromEntries(Object.entries(headers)),
+          requestBody: fetchOptions.body ? JSON.parse(fetchOptions.body as string) : undefined,
+          responseStatus: response.status,
+          responseHeaders: Object.fromEntries(response.headers.entries()),
+          responseData: errorData,
+          errorDetails: {
+            message: errorData.message || response.statusText,
+            code: `HTTP_${response.status}`
+          }
+        });
         
         // Handle specific Railway backend error codes
         let enhancedError = errorData;
@@ -202,8 +310,28 @@ class ApiClient {
             break;
         }
         
-        throw this.handleError(enhancedError, response.status);
+        const apiError = this.handleError(enhancedError, response.status);
+        
+        // 에러 로깅
+        apiMonitor.logError(
+          `API 요청 실패: ${fetchOptions.method || 'GET'} ${endpoint}`,
+          apiError,
+          {
+            endpoint,
+            url,
+            requestId,
+            statusCode: response.status,
+            method: fetchOptions.method || 'GET',
+            retryAttempts
+          }
+        );
+        
+        throw apiError;
       }
+      
+      // 성공 처리
+      statusCode = response.status;
+      success = true;
       
       // Parse response
       let data: T;
@@ -217,16 +345,92 @@ class ApiClient {
         data = await response.blob() as T;
       }
       
-      return {
+      const responseData: ApiResponse<T> = {
         data,
         status: response.status,
         headers: response.headers,
       };
-    } catch (error) {
-      if (error instanceof Error && error.message.includes('timed out')) {
-        throw this.handleError(error, 408);
+      
+      // 성공한 GET 요청인 경우 캐시에 저장
+      if (method === 'GET' && finalCacheConfig.enabled) {
+        try {
+          await apiCache.set(url, method, responseData, finalCacheConfig);
+        } catch (cacheError) {
+          // 캐시 저장 실패는 무시 (메인 응답에 영향 없음)
+          apiMonitor.logWarning('캐시 저장 실패', {
+            endpoint,
+            error: (cacheError as Error).message,
+            requestId
+          });
+        }
       }
+      
+      // 성공 로깅
+      apiMonitor.logInfo(
+        `API 요청 성공: ${method} ${endpoint}`,
+        {
+          endpoint,
+          url,
+          requestId,
+          statusCode,
+          method,
+          retryAttempts,
+          responseTime: Date.now() - startTime,
+          cached: false
+        }
+      );
+      
+      return responseData;
+    } catch (error) {
+      // 타임아웃 에러 처리
+      if (error instanceof Error && error.message.includes('timed out')) {
+        const timeoutError = this.handleError(error, 408);
+        
+        apiMonitor.logError(
+          `API 타임아웃: ${fetchOptions.method || 'GET'} ${endpoint}`,
+          timeoutError,
+          {
+            endpoint,
+            url,
+            requestId,
+            timeout,
+            method: fetchOptions.method || 'GET',
+            retryAttempts
+          }
+        );
+        
+        throw timeoutError;
+      }
+      
+      // 기타 에러 처리
+      apiMonitor.logError(
+        `API 요청 중 예상치 못한 에러: ${fetchOptions.method || 'GET'} ${endpoint}`,
+        error as Error,
+        {
+          endpoint,
+          url,
+          requestId,
+          method: fetchOptions.method || 'GET',
+          retryAttempts
+        }
+      );
+      
       throw error;
+    } finally {
+      // 메트릭 기록
+      const responseTime = Date.now() - startTime;
+      
+      apiMonitor.recordApiCall(
+        endpoint,
+        fetchOptions.method || 'GET',
+        statusCode,
+        responseTime,
+        {
+          requestId,
+          success,
+          retryAttempts
+        }
+      );
     }
   }
   
@@ -299,6 +503,86 @@ class ApiClient {
       ...config,
       method: 'DELETE',
     });
+  }
+  
+  /**
+   * 백그라운드에서 캐시 리프레시
+   */
+  private async backgroundRefresh<T>(
+    endpoint: string,
+    originalConfig: ApiRequestConfig,
+    url: string,
+    method: string,
+    cacheConfig: CacheOptions
+  ): Promise<void> {
+    try {
+      // 백그라운드 요청은 캐시를 사용하지 않도록 설정
+      const backgroundConfig: ApiRequestConfig = {
+        ...originalConfig,
+        cacheConfig: {
+          ...cacheConfig,
+          enabled: false // 캐시 비활성화
+        }
+      };
+      
+      const freshData = await this.request<T>(endpoint, backgroundConfig);
+      
+      // 새로운 데이터를 캐시에 저장
+      await apiCache.set(url, method, freshData, cacheConfig);
+      
+      apiMonitor.logInfo(`백그라운드 캐시 갱신 완료: ${method} ${endpoint}`, {
+        endpoint,
+        url,
+        method,
+        backgroundRefresh: true
+      });
+      
+    } catch (error) {
+      // 백그라운드 리프레시 실패는 로그만 남기고 무시
+      apiMonitor.logWarning(`백그라운드 캐시 갱신 실패: ${method} ${endpoint}`, {
+        endpoint,
+        url,
+        method,
+        error: (error as Error).message,
+        backgroundRefresh: true
+      });
+    }
+  }
+  
+  /**
+   * 캐시 무효화
+   */
+  public async invalidateCache(
+    endpoint?: string,
+    method?: string,
+    tag?: string
+  ): Promise<void> {
+    try {
+      if (tag) {
+        await apiCache.invalidateByTag(tag);
+        apiMonitor.logInfo(`태그 기반 캐시 무효화: ${tag}`);
+      } else if (endpoint && method) {
+        const url = this.buildUrl(endpoint);
+        await apiCache.delete(url, method);
+        apiMonitor.logInfo(`캐시 삭제: ${method} ${endpoint}`);
+      } else {
+        await apiCache.clear();
+        apiMonitor.logInfo('전체 캐시 클리어');
+      }
+    } catch (error) {
+      apiMonitor.logError('캐시 무효화 실패', error as Error, {
+        endpoint,
+        method,
+        tag
+      });
+    }
+  }
+  
+  /**
+   * 캐시 통계 조회
+   */
+  public getCacheStats() {
+    return apiCache.getStats();
   }
   
   /**
