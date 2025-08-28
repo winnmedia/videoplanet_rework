@@ -14,8 +14,9 @@ WORKDIR /app
 # 패키지 파일 복사 (캐시 최적화)
 COPY package*.json ./
 
-# 프로덕션 의존성만 설치
-RUN npm ci --only=production --frozen-lockfile && npm cache clean --force
+# PNPM 설치 및 프로덕션 의존성 설치
+RUN npm install -g pnpm@10.15.0
+RUN pnpm install --prod --frozen-lockfile
 
 # ========================================
 # Stage 2: Builder (빌드 단계)
@@ -25,8 +26,9 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 # 전체 의존성 설치 (빌드용)
-COPY package*.json ./
-RUN npm ci --frozen-lockfile
+COPY package*.json pnpm-lock.yaml ./
+RUN npm install -g pnpm@10.15.0
+RUN pnpm install --frozen-lockfile
 
 # 소스 코드 복사
 COPY . .
@@ -42,10 +44,10 @@ ENV VERSION=$VERSION
 ENV ENVIRONMENT=$ENVIRONMENT
 
 # TypeScript 타입 체크
-RUN npm run type-check
+RUN pnpm run type-check
 
 # Next.js 프로덕션 빌드
-RUN npm run build
+RUN pnpm run build
 
 # ========================================
 # Stage 3: Production (실행 단계)

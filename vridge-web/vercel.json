@@ -14,10 +14,10 @@
     "silent": true,
     "autoAlias": false
   },
-  "buildCommand": "npm run build",
+  "buildCommand": "pnpm run build",
   "outputDirectory": ".next",
-  "devCommand": "npm run dev",
-  "installCommand": "npm install",
+  "devCommand": "pnpm run dev",
+  "installCommand": "pnpm install --frozen-lockfile",
   "regions": ["icn1"],
   "env": {
     "NODE_ENV": "production",

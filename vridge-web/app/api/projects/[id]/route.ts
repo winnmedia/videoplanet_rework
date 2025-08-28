@@ -31,7 +31,7 @@ let PROJECTS_DATA: ProjectType[] = [
   }
 ]
 
-export const GET = withErrorHandler(async (
+export const GET = withErrorHandler<{ id: string }>(async (
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) => {
@@ -83,7 +83,7 @@ export const GET = withErrorHandler(async (
   }
 })
 
-export const PUT = withErrorHandler(async (
+export const PUT = withErrorHandler<{ id: string }>(async (
   request: NextRequest,
   context: { params: { id: string } }
 ) => {
@@ -137,7 +137,7 @@ export const PUT = withErrorHandler(async (
   }
 })
 
-export const DELETE = withErrorHandler(async (
+export const DELETE = withErrorHandler<{ id: string }>(async (
   request: NextRequest,
   context: { params: { id: string } }
 ) => {
