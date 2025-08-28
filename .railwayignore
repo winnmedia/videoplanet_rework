@@ -1,0 +1,11 @@
+# Django 백엔드 디렉토리 무시
+vridge_back/
+vridge_front/
+
+# 문서 및 기타 파일들 무시
+*.md
+docs/
+.claude/
+.github/
+
+# Railway는 vridge-web 디렉토리만 사용

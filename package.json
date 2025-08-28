@@ -1,0 +1,14 @@
+{
+  "name": "vlanet-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": ["vridge-web"],
+  "scripts": {
+    "build": "cd vridge-web && npm run build",
+    "start": "cd vridge-web && npm run start",
+    "dev": "cd vridge-web && npm run dev"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

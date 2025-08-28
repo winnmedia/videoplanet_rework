@@ -8,6 +8,11 @@
     "builder": "NIXPACKS",
     "buildCommand": "npm run build"
   },
+  "source": {
+    "repo": "winnmedia/videoplanet_rework",
+    "branch": "railway-deploy",
+    "rootDirectory": "vridge-web"
+  },
   "deploy": {
     "numReplicas": 1,
     "startCommand": "npm run start",
