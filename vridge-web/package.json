@@ -21,7 +21,7 @@
     "format:check": "prettier --check .",
     "validate": "npm run type-check && npm run lint && npm run format:check",
     "validate:build": "node scripts/build-validation.js",
-    "prepare": "if [ \"$CI\" != \"true\" ]; then husky install; fi",
+    "postinstall": "if [ \"$NODE_ENV\" != \"production\" ] && command -v husky > /dev/null; then husky install; fi",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
