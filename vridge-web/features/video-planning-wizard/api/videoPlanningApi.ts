@@ -3,7 +3,7 @@
  * @description Railway 백엔드의 Google Gemini API를 통한 영상 기획 자동화
  */
 
-import { client } from '@/shared/api/client'
+import { apiClient } from '@/shared/api/apiClient'
 import type {
   GenerateStagesRequest,
   GenerateStagesResponse,
@@ -32,7 +32,7 @@ export class VideoPlanningWizardApi {
     const request: GenerateStagesRequest = { input }
 
     try {
-      const response = await client.post<GenerateStagesResponse>(
+      const response = await apiClient.post<GenerateStagesResponse>(
         `${this.BASE_PATH}/generate-stages`,
         request,
         {
@@ -69,7 +69,7 @@ export class VideoPlanningWizardApi {
     const request: GenerateShotsRequest = { stages, input: originalInput }
 
     try {
-      const response = await client.post<GenerateShotsResponse>(
+      const response = await apiClient.post<GenerateShotsResponse>(
         `${this.BASE_PATH}/generate-shots`,
         request,
         {
@@ -106,7 +106,7 @@ export class VideoPlanningWizardApi {
     const request: GenerateStoryboardRequest = { shot }
 
     try {
-      const response = await client.post<GenerateStoryboardResponse>(
+      const response = await apiClient.post<GenerateStoryboardResponse>(
         `${this.BASE_PATH}/generate-storyboard`,
         request,
         {
@@ -151,7 +151,7 @@ export class VideoPlanningWizardApi {
     }
 
     try {
-      const response = await client.post<ExportPlanResponse>(
+      const response = await apiClient.post<ExportPlanResponse>(
         `${this.BASE_PATH}/export-plan`,
         request,
         {
@@ -189,7 +189,7 @@ export class VideoPlanningWizardApi {
     insertShots: InsertShot[]
   }): Promise<string> {
     try {
-      const response = await client.post<{ success: boolean; projectId: string; error?: string }>(
+      const response = await apiClient.post<{ success: boolean; projectId: string; error?: string }>(
         `${this.BASE_PATH}/save-project`,
         projectData,
         {
@@ -227,7 +227,7 @@ export class VideoPlanningWizardApi {
     insertShots: InsertShot[]
   }> {
     try {
-      const response = await client.get<{
+      const response = await apiClient.get<{
         success: boolean
         project?: {
           title: string
@@ -266,7 +266,7 @@ export class VideoPlanningWizardApi {
     progress: number
   }>> {
     try {
-      const response = await client.get<{
+      const response = await apiClient.get<{
         success: boolean
         projects?: Array<{
           id: string

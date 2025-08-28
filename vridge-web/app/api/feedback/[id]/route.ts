@@ -49,10 +49,10 @@ let FEEDBACK_DATA: FeedbackType[] = [
 
 export const GET = withErrorHandler(async (
   request: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) => {
   try {
-    const { id } = context.params
+    const { id } = await context.params
     
     // ID 형식 검증
     if (!id || (typeof id !== 'string')) {
@@ -111,7 +111,7 @@ export const PUT = withErrorHandler(async (
   context: { params: { id: string } }
 ) => {
   try {
-    const { id } = context.params
+    const { id } = await context.params
     
     // 피드백 존재 확인
     const feedbackIndex = FEEDBACK_DATA.findIndex(f => f.id === id)
@@ -175,7 +175,7 @@ export const DELETE = withErrorHandler(async (
   context: { params: { id: string } }
 ) => {
   try {
-    const { id } = context.params
+    const { id } = await context.params
     
     // 피드백 존재 확인
     const feedbackIndex = FEEDBACK_DATA.findIndex(f => f.id === id)
