@@ -1,21 +1,17 @@
 # Railway Nixpacks 설정 - 강제로 Node.js 프로젝트로 인식
-[phases.build]
-dependsOn = ["setup"]
+providers = ["node"]
 
 [phases.setup]
-nixPkgs = ["nodejs-18_x", "nodePackages.pnpm"]
-nixLibs = []
+nixPkgs = ["nodejs-18_x", "pnpm"]
 
-[providers]
-node = "18.0.0"
-
-[build]
+[phases.build]
+dependsOn = ["setup"]
 cmds = [
   "cd vridge-web && pnpm install --frozen-lockfile",
   "cd vridge-web && pnpm run build"
 ]
 
-[start]
+[phases.start]
 cmd = "cd vridge-web && pnpm run start"
 
 [variables]
