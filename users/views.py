@@ -28,6 +28,10 @@ from django.utils.html import strip_tags
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 
+# 새로운 에러 핸들링 시스템 import
+from core.responses import CompatibilityResponse, safe_error_response
+from core.exceptions import ValidationException, BusinessLogicException
+
 # from rest_framework_simplejwt.views import TokenRefreshView,TokenObtainPairView
 
 
@@ -46,48 +50,66 @@ class SignUp(View):
             print(f"SignUp POST request from origin: {origin}")
             print(f"Request headers: {dict(request.headers)}")
             
-            data = json.loads(request.body)
-            email = data.get("email")
-            nickname = data.get("nickname")
-            password = data.get("password")
+            # 데이터 파싱 및 검증
+            try:
+                data = json.loads(request.body)
+                email = data.get("email")
+                nickname = data.get("nickname")
+                password = data.get("password")
+                
+                if not all([email, nickname, password]):
+                    raise ValidationException("필수 입력값이 누락되었습니다.")
+                    
+            except json.JSONDecodeError:
+                raise ValidationException("잘못된 JSON 형식입니다.")
 
             print(f"SignUp data: {data}")
+            
+            # 사용자 존재 여부 확인
             user = models.User.objects.get_or_none(username=email)
             if user:
-                return JsonResponse({"message": "이미 가입되어 있는 사용자입니다."}, status=500)
-            else:
-                new_user = models.User.objects.create(username=email, nickname=nickname)
-                new_user.set_password(password)
-                new_user.save()
+                return CompatibilityResponse.user_already_exists()
+            
+            # 새 사용자 생성
+            new_user = models.User.objects.create(username=email, nickname=nickname)
+            new_user.set_password(password)
+            new_user.save()
 
-                vridge_session = jwt.encode(
-                    {
-                        "user_id": new_user.id,
-                        "exp": datetime.utcnow() + timedelta(days=28),
-                    },
-                    SECRET_KEY,
-                    "HS256",
-                )
-                res = JsonResponse(
-                    {
-                        "message": "success",
-                        "vridge_session": vridge_session,
-                        "user": new_user.username,
-                    },
-                    status=201,
-                )
-                res.set_cookie(
-                    "vridge_session",
-                    vridge_session,
-                    samesite="None",
-                    secure=True,
-                    max_age=2419200,
-                )
-                return res
+            # JWT 토큰 생성
+            vridge_session = jwt.encode(
+                {
+                    "user_id": new_user.id,
+                    "exp": datetime.utcnow() + timedelta(days=28),
+                },
+                SECRET_KEY,
+                "HS256",
+            )
+            
+            # 성공 응답 (기존 형식 유지)
+            response_data = {
+                "message": "success",
+                "vridge_session": vridge_session,
+                "user": new_user.username,
+            }
+            res = CompatibilityResponse.success_with_data(response_data, 201)
+            res.set_cookie(
+                "vridge_session",
+                vridge_session,
+                samesite="None",
+                secure=True,
+                max_age=2419200,
+            )
+            return res
+            
+        except ValidationException as e:
+            return safe_error_response(e)
+        except BusinessLogicException as e:
+            return safe_error_response(e)
         except Exception as e:
+            # 기존 로깅 방식 유지 (하위 호환성)
             print(e)
             logging.info(str(e))
-            return JsonResponse({"message": "알 수 없는 에러입니다 고객센터에 문의해주세요."}, status=500)
+            return safe_error_response(e)
 
 
 @method_decorator(csrf_exempt, name='dispatch')  
@@ -99,25 +121,35 @@ class SignIn(View):
         
     def post(self, request):
         try:
-            data = json.loads(request.body)
-            email = data.get("email")
-            password = data.get("password")
+            # 데이터 파싱 및 검증
+            try:
+                data = json.loads(request.body)
+                email = data.get("email")
+                password = data.get("password")
+                
+                if not all([email, password]):
+                    raise ValidationException("이메일과 비밀번호를 모두 입력해주세요.")
+                    
+            except json.JSONDecodeError:
+                raise ValidationException("잘못된 JSON 형식입니다.")
 
+            # 인증 시도
             user = authenticate(request, username=email, password=password, login_method="email")
             if user is not None:
+                # JWT 토큰 생성
                 vridge_session = jwt.encode(
                     {"user_id": user.id, "exp": datetime.utcnow() + timedelta(days=28)},
                     SECRET_KEY,
                     "HS256",
                 )
-                res = JsonResponse(
-                    {
-                        "message": "success",
-                        "vridge_session": vridge_session,
-                        "user": user.username,
-                    },
-                    status=201,
-                )
+                
+                # 성공 응답 (기존 형식 유지)
+                response_data = {
+                    "message": "success",
+                    "vridge_session": vridge_session,
+                    "user": user.username,
+                }
+                res = CompatibilityResponse.success_with_data(response_data, 201)
                 res.set_cookie(
                     "vridge_session",
                     vridge_session,
@@ -127,11 +159,15 @@ class SignIn(View):
                 )
                 return res
             else:
-                return JsonResponse({"message": "존재하지 않는 사용자입니다."}, status=403)
+                return CompatibilityResponse.user_not_found()
+                
+        except ValidationException as e:
+            return safe_error_response(e)
         except Exception as e:
+            # 기존 로깅 방식 유지 (하위 호환성)
             print(e)
             logging.info(str(e))
-            return JsonResponse({"message": str(e)}, status=500)
+            return safe_error_response(e)
 
 
 class SendAuthNumber(View):
@@ -243,7 +279,7 @@ class KakaoLogin(View):
             # if not email:
             #     email = kakao_id
             if not email:
-                return JsonResponse({"message": "카카오 이메일이 없습니다."}, status=500)
+                return CompatibilityResponse.social_email_required("kakao")
 
             user, is_created = models.User.objects.get_or_create(username=email)
 
@@ -253,7 +289,7 @@ class KakaoLogin(View):
                 user.save()
             else:
                 if user.login_method != "kakao":
-                    return JsonResponse({"message": "로그인 방식이 잘못되었습니다."}, status=500)
+                    return CompatibilityResponse.login_method_mismatch()
 
             vridge_session = jwt.encode(
                 {
@@ -319,7 +355,7 @@ class NaverLogin(View):
             name = response.get("name", None)
             naver_id = response.get("id", None)
             if not email:
-                return JsonResponse({"message": "네이버 이메일이 없습니다."}, status=500)
+                return CompatibilityResponse.social_email_required("naver")
 
             user, is_created = models.User.objects.get_or_create(username=email)
 
@@ -332,7 +368,7 @@ class NaverLogin(View):
                 user.save()
             else:
                 if user.login_method != "naver":
-                    return JsonResponse({"message": "로그인 방식이 잘못되었습니다."}, status=500)
+                    return CompatibilityResponse.login_method_mismatch()
 
             vridge_session = jwt.encode(
                 {
@@ -397,7 +433,7 @@ class GoogleLogin(View):
             nickname = userinfo.get("name")
             ids = userinfo.get("id")
             if not email:
-                return JsonResponse({"message": "구글 이메일이 없습니다."}, status=500)
+                return CompatibilityResponse.social_email_required("google")
 
             user, is_created = models.User.objects.get_or_create(username=email)
             if is_created:
@@ -406,7 +442,7 @@ class GoogleLogin(View):
                 user.save()
             else:
                 if user.login_method != "google":
-                    return JsonResponse({"message": "로그인 방식이 잘못되었습니다."}, status=500)
+                    return CompatibilityResponse.login_method_mismatch()
 
             vridge_session = jwt.encode(
                 {
