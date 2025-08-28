@@ -323,6 +323,20 @@ async function collectJourneyMetrics(timeRangeHours: number) {
         averageTime: 342,
         bounceRate: 12.6,
         conversionRate: 8.9,
+        overallConversionRate: 8.9 / 100, // Convert percentage to decimal
+        topJourneys: [
+          {
+            name: '프로젝트 생성',
+            completionRate: 0.85,
+            avgDuration: 180,
+            dropOffPoint: '프로젝트 정보 입력',
+            trend: 5.2
+          }
+        ],
+        funnelAnalysis: [
+          { step: '페이지 진입', users: 1000, dropOff: 50, conversionRate: 0.95 },
+          { step: '완료', users: 750, dropOff: 0, conversionRate: 1.0 }
+        ],
         dropOffPoints: [
           { step: 'login', rate: 5.2 },
           { step: 'dashboard', rate: 3.1 },
