@@ -4,8 +4,8 @@
     "branch": "railway-deploy"
   },
   "build": {
-    "builder": "DOCKERFILE",
-    "dockerfilePath": "vridge-web/Dockerfile"
+    "builder": "NIXPACKS",
+    "buildCommand": "npm run build"
   },
   "deploy": {
     "numReplicas": 1,
