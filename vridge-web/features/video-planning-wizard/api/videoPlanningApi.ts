@@ -3,7 +3,7 @@
  * @description Railway 백엔드의 Google Gemini API를 통한 영상 기획 자동화
  */
 
-import { apiClient } from '@/shared/api/apiClient'
+import { apiClient } from '@/shared/api/client'
 import type {
   GenerateStagesRequest,
   GenerateStagesResponse,

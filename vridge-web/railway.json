@@ -1,7 +1,8 @@
 {
   "$schema": "https://railway.app/railway.schema.json",
   "git": {
-    "branch": "railway-deploy"
+    "branch": "railway-deploy",
+    "rootDirectory": "vridge-web"
   },
   "build": {
     "builder": "NIXPACKS",
