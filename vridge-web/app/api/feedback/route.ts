@@ -292,7 +292,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     return NextResponse.json(responseData, { 
       status: 201,
       headers: {
-        'Location': `/api/feedback/${validatedFeedback.id}`
+        'Location': `/api/feedback/${newFeedback.id}`
       }
     })
     

@@ -257,7 +257,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     return NextResponse.json(responseData, { 
       status: 201,
       headers: {
-        'Location': `/api/projects/${validatedProject.id}`
+        'Location': `/api/projects/${newProject.id}`
       }
     })
     
