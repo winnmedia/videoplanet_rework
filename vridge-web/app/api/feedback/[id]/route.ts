@@ -129,7 +129,9 @@ export const PUT = withErrorHandler<{ id: string }>(async (
       ...body,
       id: currentFeedback.id, // ID 변경 방지
       createdAt: currentFeedback.createdAt, // 생성일 변경 방지
-      updatedAt: new Date().toISOString() // 수정일 자동 업데이트
+      updatedAt: new Date().toISOString(), // 수정일 자동 업데이트
+      attachments: body.attachments || currentFeedback.attachments || [], // attachments 기본값 보장
+      tags: body.tags || currentFeedback.tags || [] // tags 기본값 보장
     }
     
     // 상태 변경에 따른 resolvedAt 업데이트
