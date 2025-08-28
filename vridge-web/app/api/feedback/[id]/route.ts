@@ -47,6 +47,7 @@ let FEEDBACK_DATA: FeedbackType[] = [
   }
 ]
 
+// TODO(human): Next.js 15 RouteContext 타입 호환성 확인 및 수정 필요
 export const GET = withErrorHandler<{ id: string }>(async (
   request: NextRequest,
   context: { params: Promise<{ id: string }> }

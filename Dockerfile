@@ -1,7 +1,7 @@
 # Railway 강제 Node.js 빌드를 위한 Dockerfile
 # vridge-web 디렉토리만 빌드하고 Django 완전 무시
 
-FROM node:18-alpine AS base
+FROM node:20-alpine AS base
 WORKDIR /app
 
 # vridge-web만 복사 (Django 디렉토리 완전 제외)
