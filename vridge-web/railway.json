@@ -6,14 +6,15 @@
   "build": {
     "builder": "NIXPACKS",
     "buildCommand": "npm run build",
+    "rootDirectory": "vridge-web",
     "watchPatterns": [
-      "app/**",
-      "components/**",
-      "lib/**",
-      "public/**",
-      "styles/**",
-      "package.json",
-      "next.config.ts"
+      "vridge-web/app/**",
+      "vridge-web/components/**",
+      "vridge-web/lib/**",
+      "vridge-web/public/**",
+      "vridge-web/styles/**",
+      "vridge-web/package.json",
+      "vridge-web/next.config.ts"
     ]
   },
   "deploy": {
