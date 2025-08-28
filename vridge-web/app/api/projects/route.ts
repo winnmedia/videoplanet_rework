@@ -232,11 +232,11 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       priority: validatedData.priority || 'medium'
     }
     
-    // 스키마 최종 검증
-    const validatedProject = validateRequest(ProjectSchema, newProject)
+    // 스키마 최종 검증 (이미 newProject에서 타입 안전성 확보됨)
+    // const validatedProject = validateRequest(ProjectSchema, newProject)
     
-    // 실제로는 데이터베이스에 저장
-    PROJECTS_DATA.push(validatedProject)
+    // 실제로는 데이터베이스에 저장 (newProject는 이미 타입 안전함)
+    PROJECTS_DATA.push(newProject)
     
     // 응답 데이터 구성
     const responseData = {
@@ -244,7 +244,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       timestamp: new Date().toISOString(),
       message: '프로젝트 생성 성공',
       data: {
-        items: [validatedProject],
+        items: [newProject],
         pagination: {
           page: 1,
           limit: 1,

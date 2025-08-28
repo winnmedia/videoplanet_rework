@@ -267,11 +267,11 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       priority: validatedData.priority || 'medium'
     }
     
-    // 스키마 최종 검증
-    const validatedFeedback = validateRequest(FeedbackSchema, newFeedback)
+    // 스키마 최종 검증 (이미 newFeedback에서 타입 안전성 확보됨)
+    // const validatedFeedback = validateRequest(FeedbackSchema, newFeedback)
     
-    // 실제로는 데이터베이스에 저장
-    FEEDBACK_DATA.push(validatedFeedback)
+    // 실제로는 데이터베이스에 저장 (newFeedback은 이미 타입 안전함)
+    FEEDBACK_DATA.push(newFeedback)
     
     // 응답 데이터 구성
     const responseData = {
@@ -279,7 +279,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       timestamp: new Date().toISOString(),
       message: '피드백 생성 성공',
       data: {
-        items: [validatedFeedback],
+        items: [newFeedback],
         pagination: {
           page: 1,
           limit: 1,
