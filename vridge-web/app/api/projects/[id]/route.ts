@@ -105,7 +105,11 @@ export const PUT = withErrorHandler<{ id: string }>(async (
       ...body,
       id: currentProject.id, // ID 변경 방지
       createdAt: currentProject.createdAt, // 생성일 변경 방지
-      updatedAt: new Date().toISOString() // 수정일 자동 업데이트
+      updatedAt: new Date().toISOString(), // 수정일 자동 업데이트
+      // 기본값 명시적 설정
+      tags: body.tags || currentProject.tags || [],
+      priority: body.priority || currentProject.priority || 'medium',
+      status: body.status || currentProject.status || 'draft'
     }
     
     // 스키마 검증

@@ -225,7 +225,11 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       ...validatedData,
       id: `proj-${Date.now()}`, // 실제로는 UUID 생성
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      // 기본값 명시적 설정
+      status: validatedData.status || 'draft',
+      tags: validatedData.tags || [],
+      priority: validatedData.priority || 'medium'
     }
     
     // 스키마 최종 검증
