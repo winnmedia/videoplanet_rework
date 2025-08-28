@@ -331,6 +331,8 @@ CORS_ALLOW_ALL_ORIGINS = False
 CORS_ALLOWED_ORIGINS = [
     "https://vridge.kr",
     "http://localhost:3000",
+    "http://localhost:3001",
+    "http://localhost:3002",  # TODO(human) - 현재 개발 서버 포트 추가
     "http://localhost:3003",
     "http://localhost:3004", 
     "https://api.vridge.kr",
@@ -397,6 +399,10 @@ CSRF_TRUSTED_ORIGINS = [
     "https://vlanet.net",
     "https://api.vlanet.net",
     "http://localhost:3000",
+    "http://localhost:3001",
+    "http://localhost:3002",
+    "http://localhost:3003",
+    "http://localhost:3004",
     # Railway 도메인들
     "https://videoplanet-backend.up.railway.app",
     "https://videoplanet-rework-production.up.railway.app",
