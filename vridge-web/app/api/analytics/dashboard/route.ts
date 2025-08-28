@@ -227,11 +227,16 @@ async function collectPerformanceMetrics(timeRangeHours: number) {
     // 자기참조 루프 방지: 직접 fallback 데이터 반환
     if (true) { // Always use fallback to prevent self-referencing timeout
       return {
+        lcp: { current: 2000, trend: 0 },
+        fid: { current: 80, trend: 0 },
+        cls: { current: 0.08, trend: 0 },
+        pageLoadTime: { current: 1500, trend: 0 },
+        apiResponseTime: { current: 250, trend: 0 },
+        errorRate: { current: 0.02, trend: 0 },
         responseTime: 245,
         uptime: 99.8,
         memoryUsage: 67.3,
-        cpuUsage: 23.1,
-        errorRate: 0.02
+        cpuUsage: 23.1
       };
     }
     
