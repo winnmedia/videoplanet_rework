@@ -65,14 +65,14 @@ function getErrorName(statusCode: number): string {
   return errorNames[statusCode] || 'ERROR'
 }
 
-// Next.js API 라우트 핸들러 타입 (NextRequest 지원)
-type NextApiHandler = (request: NextRequest, context?: { params: Record<string, string> }) => Promise<Response | NextResponse>
+// Next.js API 라우트 핸들러 타입 (NextRequest 지원) - Next.js 15 호환
+type NextApiHandler = (request: NextRequest, context?: { params: Promise<Record<string, string>> }) => Promise<Response | NextResponse>
 
 // 에러 처리 래퍼
 export function withErrorHandler<T extends NextApiHandler>(
   handler: T
 ): T {
-  return (async (request: NextRequest, context?: { params: Record<string, string> }) => {
+  return (async (request: NextRequest, context?: { params: Promise<Record<string, string>> }) => {
     try {
       return await handler(request, context)
     } catch (error) {
