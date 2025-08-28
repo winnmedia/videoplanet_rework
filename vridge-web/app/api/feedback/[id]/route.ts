@@ -147,8 +147,15 @@ export const PUT = withErrorHandler<{ id: string }>(async (
     // 스키마 검증
     const validatedFeedback = validateRequest(FeedbackSchema, updateData)
     
+    // 타입 안전성을 위한 명시적 기본값 설정
+    const safeValidatedFeedback = {
+      ...validatedFeedback,
+      attachments: validatedFeedback.attachments || [],
+      tags: validatedFeedback.tags || []
+    }
+    
     // 피드백 업데이트
-    FEEDBACK_DATA[feedbackIndex] = validatedFeedback
+    FEEDBACK_DATA[feedbackIndex] = safeValidatedFeedback
     
     // 응답 데이터 구성
     const responseData = {
@@ -156,7 +163,7 @@ export const PUT = withErrorHandler<{ id: string }>(async (
       timestamp: new Date().toISOString(),
       message: '피드백 수정 성공',
       data: {
-        items: [validatedFeedback],
+        items: [safeValidatedFeedback],
         pagination: {
           page: 1,
           limit: 1,
