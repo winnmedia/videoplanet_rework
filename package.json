@@ -1,14 +1,33 @@
 {
-  "name": "vlanet-monorepo",
-  "version": "1.0.0",
+  "name": "vlanet-monorepo-frontend",
+  "version": "1.0.0", 
   "private": true,
-  "workspaces": ["vridge-web"],
-  "scripts": {
-    "build": "cd vridge-web && npm run build",
-    "start": "cd vridge-web && npm run start",
-    "dev": "cd vridge-web && npm run dev"
-  },
+  "description": "VideoPlanet Frontend - Railway 철벽 방어 3단계: 강제 Node.js 감지",
+  "packageManager": "pnpm@10.15.0",
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "scripts": {
+    "dev": "cd vridge-web && pnpm run dev",
+    "build": "cd vridge-web && pnpm install --frozen-lockfile && pnpm run build", 
+    "start": "cd vridge-web && pnpm run start",
+    "lint": "cd vridge-web && pnpm run lint",
+    "test": "cd vridge-web && pnpm run test"
+  },
+  "keywords": [
+    "nextjs",
+    "react", 
+    "typescript",
+    "video-platform",
+    "railway-deploy"
+  ],
+  "author": "VRidge Team",
+  "license": "UNLICENSED",
+  "workspaces": [
+    "vridge-web"
+  ],
+  "devDependencies": {
+    "pnpm": "^10.15.0"
   }
 }

@@ -1,28 +1,50 @@
-# Django 백엔드 디렉토리 완전 무시
+# Railway 철벽 방어 2단계: Django 프로젝트 완전 차단
+# Python/Django 관련 파일/디렉토리 무시
+
+# Django 백엔드 전체 차단
 vridge_back/
-vridge_back/**/*
 vridge_front/
-vridge_front/**/*
 
-# Python 관련 파일들 무시
+# Python 파일들
 *.py
-*.pyc
-requirements.txt
+*.pyc  
+__pycache__/
+*.pyo
+*.pyd
+.Python
+
+# Django 관련 설정 파일
 manage.py
-*.pth
-Pipfile*
+requirements.txt
+requirements-test.txt
+pyproject.toml
+poetry.lock
+pytest.ini
 
-# Django 관련 파일들 무시
-settings.py
-wsgi.py
-asgi.py
-urls.py
+# Django 특화 파일들
+*.sqlite3
+db.sqlite3
+uploads/
+staticfiles/
+media/
 
-# 문서 및 기타 파일들 무시
-*.md
-docs/
-.claude/
-.github/
+# Python 환경
+venv/
+env/
+.env
+.venv
 
-# Railway는 오직 vridge-web 디렉토리만 사용
-# 모든 빌드와 실행은 vridge-web 내에서만 수행됨
+# Railway Django 설정 차단
+railway.toml
+
+# 기타 Python 도구
+.coverage
+.pytest_cache/
+*.egg-info/
+
+# 오직 Next.js만 허용
+!vridge-web/
+!package.json
+!pnpm-lock.yaml
+!nixpacks.toml
+!vercel.json

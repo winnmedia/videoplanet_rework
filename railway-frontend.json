@@ -1,0 +1,64 @@
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "git": {
+    "branch": "master",
+    "rootDirectory": "vridge-web"
+  },
+  "build": {
+    "builder": "NIXPACKS",
+    "buildCommand": "pnpm install --frozen-lockfile && pnpm run build",
+    "watchPaths": ["vridge-web/**"]
+  },
+  "source": {
+    "repo": "winnmedia/VLANET", 
+    "branch": "master",
+    "rootDirectory": "vridge-web"
+  },
+  "deploy": {
+    "numReplicas": 1,
+    "startCommand": "pnpm run start",
+    "healthcheckPath": "/api/health",
+    "healthcheckTimeout": 30,
+    "restartPolicyType": "ON_FAILURE", 
+    "restartPolicyMaxRetries": 3,
+    "region": "us-west1"
+  },
+  "environments": {
+    "production": {
+      "build": {
+        "buildCommand": "pnpm install --frozen-lockfile && pnpm run build"
+      },
+      "deploy": {
+        "numReplicas": 2,
+        "startCommand": "pnpm run start"
+      },
+      "variables": {
+        "NODE_ENV": "production",
+        "NEXT_PUBLIC_API_URL": "https://api.vlanet.net",
+        "NEXT_PUBLIC_BACKEND_URL": "https://api.vlanet.net"
+      }
+    },
+    "staging": {
+      "build": {
+        "buildCommand": "pnpm install --frozen-lockfile && pnpm run build"
+      },
+      "deploy": {
+        "numReplicas": 1,
+        "startCommand": "pnpm run start"
+      },
+      "variables": {
+        "NODE_ENV": "staging",
+        "NEXT_PUBLIC_API_URL": "https://api-staging.vlanet.net",
+        "NEXT_PUBLIC_BACKEND_URL": "https://api-staging.vlanet.net"
+      }
+    }
+  },
+  "ignorePaths": [
+    "vridge_back/**",
+    "vridge_front/**",
+    "*.py", 
+    "requirements.txt",
+    "pyproject.toml",
+    "manage.py"
+  ]
+}

@@ -1,10 +1,11 @@
-# Railway Nixpacks 설정 - 강제로 Node.js 프로젝트로 인식
+# Railway Nixpacks 설정 - 철벽 방어 1단계: 강제 Node.js 감지
+[build]
 providers = ["node"]
 
 [phases.setup]
 nixPkgs = ["nodejs-18_x", "pnpm"]
 
-[phases.build]
+[phases.build]  
 dependsOn = ["setup"]
 cmds = [
   "cd vridge-web && pnpm install --frozen-lockfile",
@@ -17,3 +18,14 @@ cmd = "cd vridge-web && pnpm run start"
 [variables]
 NODE_ENV = "production"
 PORT = "3000"
+
+# Django 감지 방지 - Python 파일 무시
+[build.ignorePaths]
+paths = [
+  "vridge_back/**",
+  "vridge_front/**", 
+  "*.py",
+  "requirements.txt",
+  "pyproject.toml",
+  "manage.py"
+]
