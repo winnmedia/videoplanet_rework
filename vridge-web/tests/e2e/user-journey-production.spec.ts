@@ -107,10 +107,7 @@ test.describe('배포 환경 사용자 여정 테스트', () => {
         page.locator('a').count()
       ])
       
-      console.log(`📊 Email inputs: ${authElements[0]}`)
-      console.log(`📊 Password inputs: ${authElements[1]}`) 
-      console.log(`📊 Buttons: ${authElements[2]}`)
-      console.log(`📊 Links: ${authElements[3]}`)
+      // 인증 요소 카운트 확인 (보안을 위해 상세 정보는 로그에 기록하지 않음)
       
       // RED Phase: 현재 구현 상태 확인
       if (authElements[0] > 0 && authElements[1] > 0) {
@@ -181,7 +178,7 @@ test.describe('배포 환경 사용자 여정 테스트', () => {
           page.locator('input[name="nickname"], input[name="username"], input[name="name"]').count(),
         ])
         
-        console.log(`📊 회원가입 폼 필드: email=${formFields[0]}, password=${formFields[1]}, name=${formFields[2]}`)
+        // 회원가입 폼 필드 확인 (보안을 위해 상세 정보는 로그에 기록하지 않음)
         
         if (formFields[0] > 0 && formFields[1] > 0) {
           // 실제 회원가입 시도 (테스트 계정)

@@ -51,7 +51,7 @@ test.describe('Production Smoke Tests', () => {
     
     const [emailInputs, passwordInputs, forms] = authElements
     
-    console.log(`📊 인증 요소: 이메일=${emailInputs}, 비밀번호=${passwordInputs}, 폼=${forms}`)
+    // 인증 요소 확인 (보안을 위해 실제 값은 로그에 기록하지 않음)
     
     // 최소한 하나의 인증 관련 요소가 있어야 함
     const hasAuthElements = emailInputs > 0 || passwordInputs > 0 || forms > 0

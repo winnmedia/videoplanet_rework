@@ -255,7 +255,7 @@ export default function DashboardPage() {
                 {dashboardData?.feedbackSummary?.totalUnread > 0 && (
                   <div className="absolute -top-1 -right-1">
                     <UnreadBadge 
-                      count={dashboardData.feedbackSummary.totalUnread}
+                      count={dashboardData?.feedbackSummary?.totalUnread || 0}
                       priority="high"
                       size="sm"
                     />
