@@ -252,7 +252,7 @@ export default function DashboardPage() {
                   <FontAwesomeIcon icon={faComments} className="w-8 h-8 text-white" />
                 </div>
                 {/* 피드백 배지 */}
-                {dashboardData?.feedbackSummary?.totalUnread > 0 && (
+                {(dashboardData?.feedbackSummary?.totalUnread ?? 0) > 0 && (
                   <div className="absolute -top-1 -right-1">
                     <UnreadBadge 
                       count={dashboardData?.feedbackSummary?.totalUnread || 0}
