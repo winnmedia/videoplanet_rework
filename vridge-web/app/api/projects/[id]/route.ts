@@ -59,7 +59,7 @@ export const GET = withErrorHandler<{ id: string }>(async (
       timestamp: new Date().toISOString(),
       message: '프로젝트 조회 성공',
       data: {
-        items: [updateData as ProjectType],
+        items: [project],
         pagination: {
           page: 1,
           limit: 1,
