@@ -229,7 +229,8 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       // 기본값 명시적 설정
       status: validatedData.status || 'draft',
       tags: validatedData.tags || [],
-      priority: validatedData.priority || 'medium'
+      priority: validatedData.priority || 'medium',
+      progress: validatedData.progress || 0
     }
     
     // 스키마 최종 검증 (이미 newProject에서 타입 안전성 확보됨)
