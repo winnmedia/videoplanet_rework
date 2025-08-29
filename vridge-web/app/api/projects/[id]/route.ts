@@ -85,7 +85,7 @@ export const GET = withErrorHandler<{ id: string }>(async (
 
 export const PUT = withErrorHandler<{ id: string }>(async (
   request: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) => {
   try {
     const { id } = await context.params
@@ -143,7 +143,7 @@ export const PUT = withErrorHandler<{ id: string }>(async (
 
 export const DELETE = withErrorHandler<{ id: string }>(async (
   request: NextRequest,
-  context: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) => {
   try {
     const { id } = await context.params
