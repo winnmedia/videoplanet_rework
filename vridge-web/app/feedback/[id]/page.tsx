@@ -101,10 +101,10 @@ export default function FeedbackDetailPage() {
     if (isPlaying) {
       interval = setInterval(() => {
         setCurrentTime(prev => {
-          const [minutes, seconds] = prev.split(':').map(part => {
+          const [minutes, seconds] = prev.split(':').map((part: string) => {
             const [sec, ms] = part.split('.')
-            return [parseInt(sec) || parseInt(minutes) || 0, parseInt(ms) || 0]
-          }).flat()
+            return [parseInt(sec) || 0, parseInt(ms) || 0]
+          }).flat() as [number, number]
           
           let newMs = (seconds || 0) + 100
           let newSec = minutes || 0
