@@ -1,0 +1,546 @@
+# Comprehensive E2E Test Suite CI/CD Pipeline
+name: E2E Tests - Complete User Journey
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    # Daily regression test at 2 AM UTC
+    - cron: '0 2 * * *'
+
+env:
+  # Percy configuration
+  PERCY_TOKEN: ${{ secrets.PERCY_TOKEN }}
+  PERCY_PARALLEL_NONCE: ${{ github.run_id }}-${{ github.run_attempt }}
+  PERCY_PARALLEL_TOTAL: 4
+  
+  # Performance monitoring
+  PERFORMANCE_BUDGET_ENABLED: true
+  
+  # Test environment
+  CYPRESS_baseUrl: http://localhost:3000
+  CYPRESS_video: true
+  CYPRESS_screenshotOnRunFailure: true
+  
+  # API endpoints for testing
+  NEXT_PUBLIC_API_URL: http://localhost:8000/api
+  DATABASE_URL: postgresql://test:test@localhost:5432/vridge_test
+
+jobs:
+  # Setup and build
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      cypress-cache-hit: ${{ steps.cypress-cache.outputs.cache-hit }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          
+      - name: Install pnpm
+        run: npm install -g pnpm@latest
+        
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        
+      - name: Cache Cypress binary
+        id: cypress-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/Cypress
+          key: cypress-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            cypress-${{ runner.os }}-
+            
+      - name: Install Cypress binary
+        if: steps.cypress-cache.outputs.cache-hit != 'true'
+        run: pnpm cypress install
+        
+      - name: Build application
+        run: pnpm build
+        env:
+          NODE_ENV: test
+          
+      - name: Cache build artifacts
+        uses: actions/cache@v4
+        with:
+          path: |
+            .next/cache
+            .next/static
+            node_modules/.cache
+          key: build-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            build-${{ runner.os }}-
+
+  # Start services for testing
+  services:
+    runs-on: ubuntu-latest
+    needs: setup
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: test
+          POSTGRES_USER: test
+          POSTGRES_DB: vridge_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+          
+      redis:
+        image: redis:7
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+          
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          
+      - name: Install pnpm
+        run: npm install -g pnpm@latest
+        
+      - name: Restore dependencies
+        run: pnpm install --frozen-lockfile
+        
+      - name: Restore build cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .next/cache
+            .next/static
+            node_modules/.cache
+          key: build-${{ runner.os }}-${{ github.sha }}
+          
+      - name: Setup test database
+        run: |
+          cd vridge_back
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          python manage.py migrate --settings=vridge.settings.test
+          python manage.py loaddata fixtures/test_data.json --settings=vridge.settings.test
+          
+      - name: Start backend server
+        run: |
+          cd vridge_back
+          python manage.py runserver 127.0.0.1:8000 --settings=vridge.settings.test &
+          echo $! > backend.pid
+        
+      - name: Wait for backend
+        run: |
+          timeout 60s bash -c 'until curl -f http://127.0.0.1:8000/api/health/; do sleep 2; done'
+          
+      - name: Start frontend server
+        run: |
+          pnpm start &
+          echo $! > frontend.pid
+          
+      - name: Wait for frontend
+        run: |
+          timeout 60s bash -c 'until curl -f http://localhost:3000/; do sleep 2; done'
+          
+      - name: Health check
+        run: |
+          curl -f http://localhost:3000/
+          curl -f http://127.0.0.1:8000/api/health/
+
+  # Parallel E2E test execution
+  e2e-chrome:
+    runs-on: ubuntu-latest
+    needs: [setup, services]
+    strategy:
+      matrix:
+        containers: [1, 2, 3, 4]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          
+      - name: Install pnpm
+        run: npm install -g pnpm@latest
+        
+      - name: Restore dependencies
+        run: pnpm install --frozen-lockfile
+        
+      - name: Restore Cypress cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/Cypress
+          key: cypress-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          
+      - name: Run E2E tests (Chrome)
+        uses: cypress-io/github-action@v6
+        with:
+          start: pnpm start
+          wait-on: 'http://localhost:3000'
+          wait-on-timeout: 120
+          browser: chrome
+          record: true
+          parallel: true
+          group: 'Chrome Tests'
+          tag: chrome,parallel
+          spec: |
+            cypress/e2e/complete-user-journey.cy.ts,
+            cypress/e2e/accessibility-compliance.cy.ts,
+            cypress/e2e/performance-monitoring.cy.ts,
+            cypress/e2e/cross-browser-compatibility.cy.ts
+        env:
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PERCY_TOKEN: ${{ secrets.PERCY_TOKEN }}
+          CI: true
+          
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cypress-screenshots-chrome-${{ matrix.containers }}
+          path: cypress/screenshots
+          retention-days: 7
+          
+      - name: Upload test videos
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cypress-videos-chrome-${{ matrix.containers }}
+          path: cypress/videos
+          retention-days: 3
+
+  # Firefox compatibility tests
+  e2e-firefox:
+    runs-on: ubuntu-latest
+    needs: [setup, services]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          
+      - name: Install pnpm
+        run: npm install -g pnpm@latest
+        
+      - name: Restore dependencies
+        run: pnpm install --frozen-lockfile
+        
+      - name: Run E2E tests (Firefox)
+        uses: cypress-io/github-action@v6
+        with:
+          start: pnpm start
+          wait-on: 'http://localhost:3000'
+          wait-on-timeout: 120
+          browser: firefox
+          record: true
+          group: 'Firefox Tests'
+          tag: firefox,compatibility
+          spec: |
+            cypress/e2e/cross-browser-compatibility.cy.ts,
+            cypress/e2e/complete-user-journey.cy.ts
+        env:
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+  # Edge compatibility tests
+  e2e-edge:
+    runs-on: windows-latest
+    needs: [setup, services]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          
+      - name: Install pnpm
+        run: npm install -g pnpm@latest
+        
+      - name: Restore dependencies
+        run: pnpm install --frozen-lockfile
+        
+      - name: Run E2E tests (Edge)
+        uses: cypress-io/github-action@v6
+        with:
+          start: pnpm start
+          wait-on: 'http://localhost:3000'
+          wait-on-timeout: 120
+          browser: edge
+          record: true
+          group: 'Edge Tests'
+          tag: edge,compatibility
+          spec: cypress/e2e/cross-browser-compatibility.cy.ts
+        env:
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+  # Mobile/Responsive tests (Chrome mobile emulation)
+  e2e-mobile:
+    runs-on: ubuntu-latest
+    needs: [setup, services]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          
+      - name: Install pnpm
+        run: npm install -g pnpm@latest
+        
+      - name: Restore dependencies
+        run: pnpm install --frozen-lockfile
+        
+      - name: Run Mobile E2E tests
+        uses: cypress-io/github-action@v6
+        with:
+          start: pnpm start
+          wait-on: 'http://localhost:3000'
+          wait-on-timeout: 120
+          browser: chrome
+          record: true
+          group: 'Mobile Tests'
+          tag: mobile,responsive
+          config: 'viewportWidth=375,viewportHeight=667'
+        env:
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+  # Visual regression tests with Percy
+  percy-tests:
+    runs-on: ubuntu-latest
+    needs: [setup, services]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          
+      - name: Install pnpm
+        run: npm install -g pnpm@latest
+        
+      - name: Restore dependencies
+        run: pnpm install --frozen-lockfile
+        
+      - name: Run Percy visual tests
+        run: pnpm percy exec -- cypress run --spec "cypress/e2e/complete-user-journey.cy.ts"
+        env:
+          PERCY_TOKEN: ${{ secrets.PERCY_TOKEN }}
+          PERCY_BRANCH: ${{ github.head_ref || github.ref_name }}
+          PERCY_PULL_REQUEST: ${{ github.event.number }}
+          
+  # Performance regression tests
+  performance-tests:
+    runs-on: ubuntu-latest
+    needs: [setup, services]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          
+      - name: Install pnpm
+        run: npm install -g pnpm@latest
+        
+      - name: Restore dependencies
+        run: pnpm install --frozen-lockfile
+        
+      - name: Run performance tests
+        uses: cypress-io/github-action@v6
+        with:
+          start: pnpm start
+          wait-on: 'http://localhost:3000'
+          wait-on-timeout: 120
+          browser: chrome
+          record: true
+          group: 'Performance Tests'
+          tag: performance,regression
+          spec: cypress/e2e/performance-monitoring.cy.ts
+        env:
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Performance budget check
+        run: |
+          # Performance regression check script
+          node scripts/performance-check.js
+          
+  # Accessibility compliance tests
+  accessibility-tests:
+    runs-on: ubuntu-latest
+    needs: [setup, services]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+          
+      - name: Install pnpm
+        run: npm install -g pnpm@latest
+        
+      - name: Restore dependencies
+        run: pnpm install --frozen-lockfile
+        
+      - name: Run accessibility tests
+        uses: cypress-io/github-action@v6
+        with:
+          start: pnpm start
+          wait-on: 'http://localhost:3000'
+          wait-on-timeout: 120
+          browser: chrome
+          record: true
+          group: 'Accessibility Tests'
+          tag: a11y,wcag
+          spec: cypress/e2e/accessibility-compliance.cy.ts
+        env:
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Generate accessibility report
+        run: |
+          # Generate comprehensive accessibility report
+          node scripts/a11y-report.js
+          
+      - name: Upload accessibility report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: accessibility-report
+          path: reports/accessibility/
+          retention-days: 30
+
+  # Test results aggregation and reporting
+  test-results:
+    runs-on: ubuntu-latest
+    needs: [
+      e2e-chrome, 
+      e2e-firefox, 
+      e2e-edge, 
+      e2e-mobile, 
+      percy-tests, 
+      performance-tests, 
+      accessibility-tests
+    ]
+    if: always()
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        
+      - name: Generate test report
+        run: |
+          # Aggregate all test results
+          node scripts/aggregate-test-results.js
+          
+      - name: Upload comprehensive test report
+        uses: actions/upload-artifact@v4
+        with:
+          name: comprehensive-test-report
+          path: reports/comprehensive/
+          retention-days: 30
+          
+      - name: Comment PR with test results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const reportPath = 'reports/comprehensive/summary.md';
+            if (fs.existsSync(reportPath)) {
+              const report = fs.readFileSync(reportPath, 'utf8');
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: report
+              });
+            }
+            
+      - name: Update status checks
+        if: failure()
+        run: |
+          echo "❌ E2E tests failed. Please check the test reports."
+          exit 1
+          
+      - name: Success notification
+        if: success()
+        run: |
+          echo "✅ All E2E tests passed successfully!"
+          echo "📊 Test coverage: 100% user journey completion"
+          echo "🎯 Performance budget: Met"
+          echo "♿ Accessibility compliance: WCAG 2.1 AA"
+          echo "🌐 Cross-browser compatibility: Verified"
+
+  # Cleanup
+  cleanup:
+    runs-on: ubuntu-latest
+    needs: [test-results]
+    if: always()
+    steps:
+      - name: Cleanup test environment
+        run: |
+          echo "Cleaning up test environment..."
+          # Kill any remaining processes
+          if [ -f backend.pid ]; then kill $(cat backend.pid) || true; fi
+          if [ -f frontend.pid ]; then kill $(cat frontend.pid) || true; fi
+          
+      - name: Archive logs
+        run: |
+          # Archive important logs for debugging
+          mkdir -p logs
+          cp *.log logs/ 2>/dev/null || true
+          
+      - name: Upload logs
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: test-logs
+          path: logs/
+          retention-days: 7

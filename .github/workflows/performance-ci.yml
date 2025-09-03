@@ -1,0 +1,196 @@
+name: Performance CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  performance-test:
+    name: Performance Testing
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      - name: Bundle Analysis
+        run: |
+          chmod +x ./scripts/bundle-analysis.js
+          node ./scripts/bundle-analysis.js
+        continue-on-error: true
+
+      - name: Start application
+        run: npm start &
+        env:
+          NODE_ENV: production
+
+      - name: Wait for application
+        run: |
+          timeout 60 bash -c 'until curl -f http://localhost:3000; do sleep 2; done'
+
+      - name: Install Lighthouse CI
+        run: npm install -g @lhci/cli
+
+      - name: Run Lighthouse CI
+        run: lhci autorun
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Lighthouse results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: lighthouse-results
+          path: |
+            .lighthouseci/
+            bundle-analysis-report.json
+
+  accessibility-test:
+    name: Accessibility Testing
+    runs-on: ubuntu-latest
+    needs: performance-test
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application  
+        run: npm run build
+
+      - name: Start application
+        run: npm start &
+        
+      - name: Wait for application
+        run: |
+          timeout 60 bash -c 'until curl -f http://localhost:3000; do sleep 2; done'
+
+      - name: Install axe CLI
+        run: npm install -g @axe-core/cli
+
+      - name: Run accessibility tests
+        run: |
+          axe http://localhost:3000 --exit
+          axe http://localhost:3000/projects --exit  
+          axe http://localhost:3000/calendar --exit
+          axe http://localhost:3000/feedback --exit
+
+  performance-regression:
+    name: Performance Regression Detection
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout PR
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build PR version
+        run: npm run build
+
+      - name: Run bundle analysis (PR)
+        run: |
+          chmod +x ./scripts/bundle-analysis.js
+          node ./scripts/bundle-analysis.js
+          mv bundle-analysis-report.json bundle-analysis-pr.json
+
+      - name: Checkout main branch
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          path: main-branch
+
+      - name: Build main version
+        run: |
+          cd main-branch
+          npm ci
+          npm run build
+
+      - name: Run bundle analysis (main)
+        run: |
+          cd main-branch
+          chmod +x ./scripts/bundle-analysis.js
+          node ./scripts/bundle-analysis.js
+          mv bundle-analysis-report.json ../bundle-analysis-main.json
+
+      - name: Compare bundle sizes
+        run: |
+          # This would be a more sophisticated comparison script
+          # For now, just check if PR bundle is significantly larger
+          echo "Comparing bundle sizes between main and PR..."
+          
+          # Extract sizes and compare (simplified)
+          PR_SIZE=$(node -e "console.log(JSON.parse(require('fs').readFileSync('bundle-analysis-pr.json')).javascript.total)")
+          MAIN_SIZE=$(node -e "console.log(JSON.parse(require('fs').readFileSync('bundle-analysis-main.json')).javascript.total)")
+          
+          echo "Main branch JS bundle: $MAIN_SIZE bytes"
+          echo "PR branch JS bundle: $PR_SIZE bytes"
+          
+          # Fail if PR is more than 10% larger
+          node -e "
+            const prSize = $PR_SIZE;
+            const mainSize = $MAIN_SIZE;
+            const increase = (prSize - mainSize) / mainSize;
+            
+            if (increase > 0.1) {
+              console.error('❌ Bundle size increased by more than 10%');
+              process.exit(1);
+            } else {
+              console.log('✅ Bundle size increase is acceptable');
+            }
+          "
+
+      - name: Comment PR
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `## ⚠️ Performance Regression Detected
+              
+              The bundle size has increased significantly compared to the main branch.
+              
+              Please review your changes and consider:
+              - Code splitting for large features
+              - Removing unused dependencies
+              - Optimizing imports
+              - Using dynamic imports for non-critical code
+              
+              Check the Performance CI artifacts for detailed analysis.`
+            })

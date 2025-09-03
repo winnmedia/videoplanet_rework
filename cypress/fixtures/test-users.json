@@ -1,0 +1,102 @@
+{
+  "testUsers": [
+    {
+      "id": "user-owner-1",
+      "username": "project_owner",
+      "email": "owner@test.com",
+      "password": "Test123!@#",
+      "role": "owner",
+      "projects": [
+        {
+          "id": "project-123",
+          "name": "E2E Test Project",
+          "role": "owner"
+        }
+      ]
+    },
+    {
+      "id": "user-admin-1",
+      "username": "project_admin",
+      "email": "admin@test.com",
+      "password": "Test123!@#",
+      "role": "admin",
+      "projects": [
+        {
+          "id": "project-123",
+          "name": "E2E Test Project",
+          "role": "admin"
+        }
+      ]
+    },
+    {
+      "id": "user-editor-1",
+      "username": "video_editor",
+      "email": "editor@test.com",
+      "password": "Test123!@#",
+      "role": "editor",
+      "projects": [
+        {
+          "id": "project-123",
+          "name": "E2E Test Project",
+          "role": "editor"
+        }
+      ]
+    },
+    {
+      "id": "user-reviewer-1",
+      "username": "client_reviewer",
+      "email": "reviewer@test.com",
+      "password": "Test123!@#",
+      "role": "reviewer",
+      "projects": [
+        {
+          "id": "project-123",
+          "name": "E2E Test Project",
+          "role": "reviewer"
+        }
+      ]
+    },
+    {
+      "id": "user-viewer-1",
+      "username": "stakeholder",
+      "email": "viewer@test.com",
+      "password": "Test123!@#",
+      "role": "viewer",
+      "projects": [
+        {
+          "id": "project-123",
+          "name": "E2E Test Project",
+          "role": "viewer"
+        }
+      ]
+    },
+    {
+      "id": "user-creative-1",
+      "username": "creative_director",
+      "email": "creative@test.com",
+      "password": "Test123!@#",
+      "role": "creative_director",
+      "specialization": "ai_scenario_development",
+      "projects": [
+        {
+          "id": "project-123",
+          "name": "E2E Test Project",
+          "role": "editor"
+        }
+      ]
+    }
+  ],
+  "invitationTestData": {
+    "validEmails": [
+      "newteamember1@test.com",
+      "newteamember2@test.com",
+      "external.client@client.com"
+    ],
+    "invalidEmails": [
+      "invalid-email",
+      "@test.com",
+      "test@"
+    ],
+    "roles": ["owner", "admin", "editor", "reviewer", "viewer"]
+  }
+}

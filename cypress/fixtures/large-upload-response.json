@@ -1,0 +1,11 @@
+{
+  "success": true,
+  "data": {
+    "videoId": "test-video-large-123",
+    "filename": "large-video.mp4",
+    "size": 104857600,
+    "duration": 300,
+    "format": "mp4",
+    "uploadedAt": "2025-09-03T00:00:00Z"
+  }
+}

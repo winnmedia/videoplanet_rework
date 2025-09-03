@@ -1,0 +1,435 @@
+name: 품질 게이트 파이프라인
+
+on:
+  push:
+    branches: [ main, master, develop ]
+  pull_request:
+    branches: [ main, master, develop ]
+
+env:
+  NODE_VERSION: '20'
+  PNPM_VERSION: '10'
+
+jobs:
+  # 1단계: 기본 품질 검사
+  lint-and-format:
+    name: 린트 및 포맷 검사
+    runs-on: ubuntu-latest
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+        
+      - name: PNPM 설정
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          
+      - name: Node.js 설정
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+          
+      - name: 의존성 설치
+        run: pnpm install --frozen-lockfile
+        
+      - name: TypeScript 타입 검사
+        run: npx tsc --noEmit --skipLibCheck
+        
+      - name: ESLint 검사
+        run: pnpm lint
+        
+      - name: Prettier 포맷 검사
+        run: pnpm format:check
+        
+      - name: 순환 의존성 검사
+        run: npx madge --circular --extensions ts,tsx src/
+
+  # 2단계: 단위 테스트 및 커버리지
+  unit-tests:
+    name: 단위 테스트 및 커버리지
+    runs-on: ubuntu-latest
+    needs: lint-and-format
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+        
+      - name: PNPM 설정
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          
+      - name: Node.js 설정
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+          
+      - name: 의존성 설치
+        run: pnpm install --frozen-lockfile
+        
+      - name: 단위 테스트 실행 (커버리지 포함)
+        run: pnpm test:coverage
+        
+      - name: 커버리지 임계값 검증
+        run: |
+          node -e "
+          const fs = require('fs');
+          const coverage = JSON.parse(fs.readFileSync('./coverage/coverage-summary.json', 'utf8'));
+          const { lines, functions, branches, statements } = coverage.total;
+          
+          const failures = [];
+          if (lines.pct < 80) failures.push(\`Lines: \${lines.pct}% < 80%\`);
+          if (functions.pct < 80) failures.push(\`Functions: \${functions.pct}% < 80%\`);
+          if (branches.pct < 80) failures.push(\`Branches: \${branches.pct}% < 80%\`);
+          if (statements.pct < 80) failures.push(\`Statements: \${statements.pct}% < 80%\`);
+          
+          if (failures.length > 0) {
+            console.error('❌ 커버리지 임계값 미달:');
+            failures.forEach(f => console.error(\`  \${f}\`));
+            process.exit(1);
+          }
+          console.log('✅ 커버리지 임계값 통과');
+          "
+          
+      - name: 커버리지 결과 업로드
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./coverage/lcov.info
+          fail_ci_if_error: true
+
+  # 3단계: Mutation Testing (핵심 코드만)
+  mutation-testing:
+    name: Mutation Testing
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # 변경 파일 감지를 위해 전체 히스토리 필요
+          
+      - name: PNPM 설정
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          
+      - name: Node.js 설정
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+          
+      - name: 의존성 설치
+        run: pnpm install --frozen-lockfile
+        
+      - name: 변경된 파일 감지
+        id: changed-files
+        run: |
+          CHANGED_FILES=$(git diff --name-only ${{ github.event.pull_request.base.sha }} ${{ github.sha }} | grep -E "src/(entities|features).*\.(ts|tsx)$" | grep -v "\.test\." | head -10)
+          echo "changed_files=$CHANGED_FILES" >> $GITHUB_OUTPUT
+          
+      - name: Mutation Testing 실행 (변경된 파일만)
+        if: steps.changed-files.outputs.changed_files != ''
+        run: |
+          # 변경된 파일만 대상으로 mutation testing 실행
+          npx stryker run --mutate "${{ steps.changed-files.outputs.changed_files }}"
+          
+      - name: Mutation 결과 업로드
+        if: steps.changed-files.outputs.changed_files != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutation-report
+          path: reports/mutation/
+
+  # 4단계: 성능 및 번들 검사
+  performance-tests:
+    name: 성능 및 번들 검사
+    runs-on: ubuntu-latest
+    needs: lint-and-format
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+        
+      - name: PNPM 설정
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          
+      - name: Node.js 설정
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+          
+      - name: 의존성 설치
+        run: pnpm install --frozen-lockfile
+        
+      - name: 프로덕션 빌드
+        run: pnpm build
+        
+      - name: 번들 사이즈 검사
+        run: npx size-limit
+        
+      - name: 성능 모니터링 실행
+        run: node scripts/performance-monitor.js
+        
+      - name: 성능 리포트 업로드
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-report
+          path: reports/performance/
+
+  # 5단계: Contract Testing
+  contract-tests:
+    name: API 계약 테스트
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+        
+      - name: PNPM 설정
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          
+      - name: Node.js 설정
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+          
+      - name: 의존성 설치
+        run: pnpm install --frozen-lockfile
+        
+      - name: Pact 테스트 실행
+        run: pnpm test -- --testPathPattern="pact-contract.test.ts"
+        
+      - name: Pact 파일 업로드
+        uses: actions/upload-artifact@v4
+        with:
+          name: pact-contracts
+          path: pacts/
+
+  # 6단계: E2E 테스트
+  e2e-tests:
+    name: E2E 테스트
+    runs-on: ubuntu-latest
+    needs: [unit-tests, performance-tests]
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+        
+      - name: PNPM 설정
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          
+      - name: Node.js 설정
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+          
+      - name: 의존성 설치
+        run: pnpm install --frozen-lockfile
+        
+      - name: 프로덕션 빌드
+        run: pnpm build
+        
+      - name: Cypress E2E 테스트 실행
+        uses: cypress-io/github-action@v6
+        with:
+          start: pnpm start
+          wait-on: 'http://localhost:3000'
+          wait-on-timeout: 120
+          browser: chrome
+          record: true
+          parallel: true
+        env:
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Percy 시각적 테스트
+        if: github.event_name == 'pull_request'
+        run: npx percy exec -- cypress run
+        env:
+          PERCY_TOKEN: ${{ secrets.PERCY_TOKEN }}
+          
+      - name: E2E 테스트 결과 업로드
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cypress-screenshots
+          path: cypress/screenshots
+          
+      - name: E2E 비디오 업로드
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cypress-videos
+          path: cypress/videos
+
+  # 7단계: 접근성 테스트
+  accessibility-tests:
+    name: 접근성 테스트
+    runs-on: ubuntu-latest
+    needs: unit-tests
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+        
+      - name: PNPM 설정
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          
+      - name: Node.js 설정
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+          
+      - name: 의존성 설치
+        run: pnpm install --frozen-lockfile
+        
+      - name: 프로덕션 빌드
+        run: pnpm build
+        
+      - name: 접근성 테스트 실행
+        run: |
+          pnpm start &
+          sleep 10
+          pnpm accessibility
+          
+      - name: 접근성 테스트 (Jest)
+        run: pnpm test -- --testPathPattern="accessibility.test.ts"
+
+  # 8단계: 보안 검사
+  security-scan:
+    name: 보안 검사
+    runs-on: ubuntu-latest
+    needs: lint-and-format
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+        
+      - name: 의존성 취약점 검사
+        run: pnpm audit --audit-level moderate
+        
+      - name: CodeQL 분석
+        uses: github/codeql-action/init@v3
+        with:
+          languages: javascript
+          
+      - name: CodeQL 자동 빌드
+        uses: github/codeql-action/autobuild@v3
+        
+      - name: CodeQL 분석 수행
+        uses: github/codeql-action/analyze@v3
+
+  # 9단계: 품질 게이트 종합 평가
+  quality-gate-final:
+    name: 최종 품질 게이트
+    runs-on: ubuntu-latest
+    needs: [unit-tests, performance-tests, contract-tests, e2e-tests, accessibility-tests, security-scan]
+    if: always()
+    steps:
+      - name: 품질 게이트 결과 수집
+        run: |
+          echo "🔍 품질 게이트 결과 종합..."
+          
+          # 각 작업의 성공/실패 상태 확인
+          if [ "${{ needs.unit-tests.result }}" != "success" ]; then
+            echo "❌ 단위 테스트 실패"
+            exit 1
+          fi
+          
+          if [ "${{ needs.performance-tests.result }}" != "success" ]; then
+            echo "❌ 성능 테스트 실패"
+            exit 1
+          fi
+          
+          if [ "${{ needs.contract-tests.result }}" != "success" ]; then
+            echo "❌ 계약 테스트 실패" 
+            exit 1
+          fi
+          
+          if [ "${{ needs.e2e-tests.result }}" != "success" ]; then
+            echo "❌ E2E 테스트 실패"
+            exit 1
+          fi
+          
+          if [ "${{ needs.accessibility-tests.result }}" != "success" ]; then
+            echo "❌ 접근성 테스트 실패"
+            exit 1
+          fi
+          
+          if [ "${{ needs.security-scan.result }}" != "success" ]; then
+            echo "❌ 보안 검사 실패"
+            exit 1
+          fi
+          
+          echo "✅ 모든 품질 게이트 통과"
+          
+      - name: 배포 승인
+        if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+        run: |
+          echo "🚀 프로덕션 배포 승인됨"
+          echo "DEPLOY_APPROVED=true" >> $GITHUB_ENV
+
+# 별도 워크플로우: 야간 전체 품질 검사
+  nightly-full-scan:
+    name: 야간 전체 품질 검사
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+        
+      - name: PNPM 설정
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          
+      - name: Node.js 설정
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'pnpm'
+          
+      - name: 의존성 설치
+        run: pnpm install --frozen-lockfile
+        
+      - name: 전체 Mutation Testing
+        run: npx stryker run
+        
+      - name: 성능 회귀 테스트
+        run: |
+          pnpm build
+          node scripts/performance-monitor.js
+          
+      - name: 전체 접근성 스캔
+        run: |
+          pnpm start &
+          sleep 10
+          # 주요 페이지 접근성 스캔
+          for page in / /auth/login /auth/signup /dashboard /video/upload; do
+            pnpm accessibility "$page"
+          done
+          
+      - name: 보안 심화 스캔
+        run: |
+          pnpm audit --audit-level low
+          # 추가 보안 도구 실행 가능
+          
+      - name: 품질 리포트 생성
+        run: node scripts/quality-dashboard.js
+        
+      - name: 리포트 업로드
+        uses: actions/upload-artifact@v4
+        with:
+          name: nightly-quality-report
+          path: reports/

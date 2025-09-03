@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 커밋 메시지 검사..."
+npx --no-install commitlint --edit "$1"
+echo "✅ 커밋 메시지 검사 완료"

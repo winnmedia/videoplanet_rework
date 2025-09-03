@@ -1,0 +1,17 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 품질 게이트 검사 시작..."
+
+# Lint staged files
+npx lint-staged
+
+# TypeScript 타입 검사
+echo "🔍 TypeScript 타입 검사..."
+npx tsc --noEmit --skipLibCheck
+
+# 테스트 실행 (변경된 파일에 대한 테스트만)
+echo "🧪 관련 테스트 실행..."
+npm run test -- --findRelatedTests --passWithNoTests
+
+echo "✅ Pre-commit 검사 완료"

@@ -1,0 +1,276 @@
+{
+  "success": true,
+  "data": {
+    "comments": [
+      {
+        "id": "comment-001",
+        "videoId": "video-test-project-123",
+        "parentId": null,
+        "author": {
+          "id": "user-client-123",
+          "name": "박클라이언트",
+          "email": "client@company.com", 
+          "avatar": "/avatars/client.jpg",
+          "role": "client",
+          "color": "#FF6B6B"
+        },
+        "content": "오프닝 로고가 좀 더 크게 나오면 좋겠어요. 브랜딩이 중요하거든요.",
+        "timestamp": 12.5,
+        "timeRange": {
+          "start": 12.0,
+          "end": 15.0
+        },
+        "position": {
+          "x": 150,
+          "y": 200,
+          "width": 200,
+          "height": 100
+        },
+        "type": "text",
+        "status": "pending",
+        "priority": "high",
+        "tags": ["브랜딩", "로고", "오프닝"],
+        "mentions": ["user-director-123"],
+        "reactions": [
+          {
+            "emoji": "👍",
+            "users": [
+              {
+                "id": "user-director-123", 
+                "name": "김감독"
+              }
+            ],
+            "count": 1
+          }
+        ],
+        "attachments": [],
+        "createdAt": "2025-01-15T09:15:00Z",
+        "updatedAt": "2025-01-15T09:15:00Z",
+        "editHistory": [],
+        "isEdited": false,
+        "isPinned": true,
+        "isPrivate": false,
+        "drawingData": null
+      },
+      {
+        "id": "comment-002",
+        "videoId": "video-test-project-123", 
+        "parentId": null,
+        "author": {
+          "id": "user-editor-123",
+          "name": "이편집자",
+          "email": "editor@videoplanet.com",
+          "avatar": "/avatars/editor.jpg", 
+          "role": "editor",
+          "color": "#4ECDC4"
+        },
+        "content": "1분 30초 부근 색보정이 다른 씬과 톤이 맞지 않는 것 같습니다. 좀 더 따뜻하게 조정해보면 어떨까요?",
+        "timestamp": 90.2,
+        "timeRange": null,
+        "position": null,
+        "type": "text",
+        "status": "pending", 
+        "priority": "medium",
+        "tags": ["색보정", "후반작업", "톤매칭"],
+        "mentions": [],
+        "reactions": [
+          {
+            "emoji": "🤔",
+            "users": [
+              {
+                "id": "user-director-123",
+                "name": "김감독" 
+              }
+            ],
+            "count": 1
+          }
+        ],
+        "attachments": [],
+        "createdAt": "2025-01-15T10:22:00Z",
+        "updatedAt": "2025-01-15T10:22:00Z",
+        "editHistory": [],
+        "isEdited": false,
+        "isPinned": false,
+        "isPrivate": false,
+        "drawingData": null
+      },
+      {
+        "id": "comment-003",
+        "videoId": "video-test-project-123",
+        "parentId": "comment-001",
+        "author": {
+          "id": "user-director-123",
+          "name": "김감독",
+          "email": "director@videoplanet.com",
+          "avatar": "/avatars/director.jpg",
+          "role": "director", 
+          "color": "#45B7D1"
+        },
+        "content": "좋은 지적입니다. 로고 크기를 20% 정도 키워보겠습니다.",
+        "timestamp": 12.5,
+        "timeRange": null,
+        "position": null,
+        "type": "text",
+        "status": "approved",
+        "priority": "high", 
+        "tags": ["브랜딩", "로고"],
+        "mentions": ["user-client-123"],
+        "reactions": [],
+        "attachments": [],
+        "createdAt": "2025-01-15T11:45:00Z",
+        "updatedAt": "2025-01-15T11:45:00Z",
+        "editHistory": [],
+        "isEdited": false,
+        "isPinned": false,
+        "isPrivate": false,
+        "drawingData": null
+      },
+      {
+        "id": "comment-004",
+        "videoId": "video-test-project-123",
+        "parentId": null,
+        "author": {
+          "id": "user-client-123",
+          "name": "박클라이언트", 
+          "email": "client@company.com",
+          "avatar": "/avatars/client.jpg",
+          "role": "client",
+          "color": "#FF6B6B"
+        },
+        "content": "전체적인 템포가 좋습니다만, 마지막 CTA 부분이 좀 더 임팩트 있게 나왔으면 합니다.",
+        "timestamp": 165.8,
+        "timeRange": {
+          "start": 165.0,
+          "end": 180.0
+        },
+        "position": null,
+        "type": "text", 
+        "status": "pending",
+        "priority": "high",
+        "tags": ["CTA", "마케팅", "임팩트"],
+        "mentions": ["user-director-123", "user-editor-123"],
+        "reactions": [
+          {
+            "emoji": "💯",
+            "users": [
+              {
+                "id": "user-director-123",
+                "name": "김감독"
+              }
+            ],
+            "count": 1
+          }
+        ],
+        "attachments": [
+          {
+            "id": "attachment-001",
+            "type": "image",
+            "url": "/media/attachments/comment-004/reference.jpg",
+            "name": "CTA 참고 이미지.jpg",
+            "size": 245760,
+            "mimeType": "image/jpeg"
+          }
+        ],
+        "createdAt": "2025-01-15T13:20:00Z",
+        "updatedAt": "2025-01-15T13:20:00Z", 
+        "editHistory": [],
+        "isEdited": false,
+        "isPinned": true,
+        "isPrivate": false,
+        "drawingData": null
+      },
+      {
+        "id": "comment-005",
+        "videoId": "video-test-project-123",
+        "parentId": null,
+        "author": {
+          "id": "user-editor-123",
+          "name": "이편집자",
+          "email": "editor@videoplanet.com",
+          "avatar": "/avatars/editor.jpg",
+          "role": "editor",
+          "color": "#4ECDC4"  
+        },
+        "content": "사운드 믹스 체크 완료. 모든 레벨이 방송 기준에 맞습니다.",
+        "timestamp": 0,
+        "timeRange": null,
+        "position": null,
+        "type": "annotation",
+        "status": "approved",
+        "priority": "low",
+        "tags": ["오디오", "사운드믹스", "QC"],
+        "mentions": [],
+        "reactions": [
+          {
+            "emoji": "✅",
+            "users": [
+              {
+                "id": "user-director-123",
+                "name": "김감독"
+              },
+              {
+                "id": "user-client-123", 
+                "name": "박클라이언트"
+              }
+            ],
+            "count": 2
+          }
+        ],
+        "attachments": [],
+        "createdAt": "2025-01-15T14:15:00Z",
+        "updatedAt": "2025-01-15T14:15:00Z",
+        "editHistory": [],
+        "isEdited": false,
+        "isPinned": false,
+        "isPrivate": false,
+        "drawingData": null
+      }
+    ],
+    "pagination": {
+      "currentPage": 1,
+      "totalPages": 1,
+      "totalItems": 5,
+      "itemsPerPage": 50,
+      "hasNext": false,
+      "hasPrevious": false
+    },
+    "filters": {
+      "sortBy": "timestamp",
+      "sortOrder": "asc", 
+      "showResolved": true,
+      "showPrivate": true,
+      "authorFilter": null,
+      "typeFilter": null,
+      "statusFilter": null,
+      "priorityFilter": null,
+      "tagFilter": null,
+      "timeRangeFilter": null,
+      "dateRangeFilter": null
+    },
+    "statistics": {
+      "totalComments": 5,
+      "pendingComments": 3,
+      "approvedComments": 2,
+      "resolvedComments": 0,
+      "pinnedComments": 2,
+      "commentsWithAttachments": 1,
+      "commentsByPriority": {
+        "high": 3,
+        "medium": 1, 
+        "low": 1,
+        "critical": 0
+      },
+      "commentsByType": {
+        "text": 4,
+        "drawing": 0,
+        "annotation": 1,
+        "approval": 0,
+        "revision": 0
+      },
+      "activeUsers": 3,
+      "averageResponseTime": 120
+    }
+  },
+  "message": "댓글 목록을 성공적으로 불러왔습니다.",
+  "timestamp": "2025-01-15T14:30:00Z"
+}

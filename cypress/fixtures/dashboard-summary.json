@@ -1,0 +1,44 @@
+{
+  "newComments": 8,
+  "newReplies": 3,
+  "newReactions": 15,
+  "pendingInvites": 4,
+  "activeProjects": 6,
+  "upcomingDeadlines": 2,
+  "recentActivity": [
+    {
+      "type": "comment",
+      "message": "새로운 댓글이 달렸습니다",
+      "projectName": "Commercial Project A",
+      "timestamp": "2024-01-15T10:30:00Z"
+    },
+    {
+      "type": "invite",
+      "message": "팀원 초대를 수락했습니다",
+      "projectName": "Documentary Project B",
+      "timestamp": "2024-01-15T09:15:00Z"
+    },
+    {
+      "type": "upload",
+      "message": "새로운 비디오가 업로드되었습니다",
+      "projectName": "Music Video Project C",
+      "timestamp": "2024-01-15T08:45:00Z"
+    }
+  ],
+  "projectProgress": [
+    {
+      "id": "project-1",
+      "name": "Commercial Project A",
+      "status": "editing",
+      "progress": 65,
+      "deadline": "2024-01-30T23:59:59Z"
+    },
+    {
+      "id": "project-2",
+      "name": "Documentary Project B",
+      "status": "shooting",
+      "progress": 30,
+      "deadline": "2024-02-15T23:59:59Z"
+    }
+  ]
+}

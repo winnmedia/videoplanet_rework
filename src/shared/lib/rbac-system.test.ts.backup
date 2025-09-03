@@ -1,0 +1,90 @@
+import { renderHook } from '@testing-library/react'
+import { usePermission, checkProjectPermission, RBAC_ROLES, RBACContext } from './rbac-system'
+import { AuthenticatedUser } from '@/features/authentication/model/types'
+
+describe('RBAC System', () => {
+  const mockOwner: AuthenticatedUser = {
+    id: '1',
+    email: 'owner@test.com',
+    username: 'owner',
+    role: 'owner',
+    permissions: ['project:full', 'member:invite', 'project:delete']
+  }
+
+  const mockViewer: AuthenticatedUser = {
+    id: '2', 
+    email: 'viewer@test.com',
+    username: 'viewer',
+    role: 'viewer',
+    permissions: ['project:read']
+  }
+
+  describe('checkProjectPermission', () => {
+    it('should allow owner full access', () => {
+      expect(checkProjectPermission(mockOwner, 'project:delete')).toBe(true)
+      expect(checkProjectPermission(mockOwner, 'member:invite')).toBe(true)
+    })
+
+    it('should restrict viewer permissions', () => {
+      expect(checkProjectPermission(mockViewer, 'project:edit')).toBe(false)
+      expect(checkProjectPermission(mockViewer, 'project:delete')).toBe(false)
+      expect(checkProjectPermission(mockViewer, 'project:read')).toBe(true)
+    })
+
+    it('should handle invalid permissions', () => {
+      expect(checkProjectPermission(null, 'project:edit')).toBe(false)
+      expect(checkProjectPermission(mockViewer, 'invalid:permission')).toBe(false)
+    })
+  })
+
+  describe('usePermission hook', () => {
+    it('should return correct permission status', () => {
+      const mockContext = {
+        user: mockOwner,
+        projectId: '123',
+        permissions: mockOwner.permissions
+      }
+
+      const { result } = renderHook(() => usePermission('project:delete'), {
+        wrapper: ({ children }) => (
+          <RBACContext.Provider value={mockContext}>
+            {children}
+          </RBACContext.Provider>
+        )
+      })
+
+      expect(result.current.hasPermission).toBe(true)
+      expect(result.current.loading).toBe(false)
+      expect(result.current.error).toBeNull()
+    })
+
+    it('should handle loading state during permission check', () => {
+      const mockContext = {
+        user: null,
+        projectId: '123',
+        permissions: [],
+        loading: true
+      }
+
+      const { result } = renderHook(() => usePermission('project:edit'), {
+        wrapper: ({ children }) => (
+          <RBACContext.Provider value={mockContext}>
+            {children}
+          </RBACContext.Provider>
+        )
+      })
+
+      expect(result.current.hasPermission).toBe(false)
+      expect(result.current.loading).toBe(true)
+    })
+  })
+
+  describe('RBAC Role Hierarchy', () => {
+    it('should enforce correct role hierarchy', () => {
+      expect(RBAC_ROLES.owner.level).toBeGreaterThan(RBAC_ROLES.admin.level)
+      expect(RBAC_ROLES.admin.level).toBeGreaterThan(RBAC_ROLES.editor.level)
+      expect(RBAC_ROLES.editor.level).toBeGreaterThan(RBAC_ROLES.reviewer.level)
+      expect(RBAC_ROLES.reviewer.level).toBeGreaterThan(RBAC_ROLES.viewer.level)
+    })
+  })
+})
