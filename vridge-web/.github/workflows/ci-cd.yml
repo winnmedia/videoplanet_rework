@@ -9,7 +9,7 @@ on:
 
 env:
   NODE_VERSION: '20.x'
-  PNPM_VERSION: 8
+  PNPM_VERSION: '10.15.0'
 
 jobs:
   # 1. 코드 품질 검사

@@ -77,6 +77,27 @@ class ApiClient {
       const data = await response.json().catch(() => null);
 
       if (!response.ok) {
+        // HTTP 에러 핸들러 통합
+        const { handleHttpError, HttpStatusCodeSchema } = await import('../lib/error-handler');
+        const statusCode = HttpStatusCodeSchema.safeParse(response.status);
+        
+        if (statusCode.success) {
+          const standardizedError = await handleHttpError(
+            statusCode.data,
+            data?.message || `HTTP ${response.status}`,
+            { endpoint, method: options.method || 'GET', responseData: data }
+          );
+          
+          return {
+            error: {
+              message: standardizedError.userMessage,
+              code: data?.code,
+              details: standardizedError,
+            },
+            status: response.status,
+          };
+        }
+
         return {
           error: {
             message: data?.message || `HTTP ${response.status}`,

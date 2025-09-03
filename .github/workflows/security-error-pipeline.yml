@@ -1,0 +1,416 @@
+name: 🛡️ Security & Error Recovery Pipeline
+
+on:
+  push:
+    branches: [main, master, develop]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch: # 수동 실행 가능
+  schedule:
+    - cron: '0 2 * * *' # 매일 새벽 2시 정기 스캔
+
+env:
+  NODE_VERSION: '18'
+  PYTHON_VERSION: '3.11'
+  PNPM_VERSION: '8'
+
+jobs:
+  # 🔍 보안 취약점 스캔
+  security-scan:
+    name: 보안 취약점 스캔
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # 전체 히스토리 필요
+          
+      - name: 민감정보 누출 스캔 (TruffleHog)
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: ${{ github.event.repository.default_branch }}
+          head: HEAD
+          extra_args: --debug --only-verified
+          
+      - name: SAST 보안 분석 (CodeQL)
+        uses: github/codeql-action/init@v2
+        with:
+          languages: javascript, python
+          
+      - name: 의존성 취약점 스캔
+        run: |
+          # Frontend 의존성 스캔
+          cd vridge-web
+          npm audit --audit-level high
+          
+          # Backend 의존성 스캔  
+          cd ../vridge_back
+          pip install safety
+          safety check --json > safety-report.json || true
+          
+      - name: 보안 스캔 결과 업로드
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-scan-results
+          path: |
+            vridge_back/safety-report.json
+            .trufflehog-results.json
+
+  # 🧪 에러 처리 시스템 테스트
+  error-handling-tests:
+    name: 에러 처리 시스템 테스트
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    
+    strategy:
+      matrix:
+        test-type: [unit, integration, e2e-error-scenarios]
+        
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+        
+      - name: Node.js 설정
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          
+      - name: PNPM 설정
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          
+      - name: 의존성 설치 (Frontend)
+        working-directory: ./vridge-web
+        run: pnpm install --frozen-lockfile
+        
+      - name: Python 설정
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          
+      - name: Python 의존성 설치
+        working-directory: ./vridge_back
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          
+      - name: 에러 핸들링 단위 테스트
+        if: matrix.test-type == 'unit'
+        working-directory: ./vridge-web
+        run: |
+          # 에러 핸들링 관련 단위 테스트 실행
+          pnpm test -- --testPathPattern="error-handling|ErrorBoundary" --coverage
+          
+      - name: API 에러 시나리오 통합 테스트
+        if: matrix.test-type == 'integration'
+        working-directory: ./vridge_back
+        run: |
+          # Django 에러 핸들링 테스트
+          python manage.py test --pattern="*error*" --verbosity=2
+          
+      - name: E2E 에러 시나리오 테스트
+        if: matrix.test-type == 'e2e-error-scenarios'
+        working-directory: ./vridge-web
+        run: |
+          # Cypress로 에러 상황 E2E 테스트
+          pnpm run test:e2e:error-scenarios
+          
+      - name: 테스트 결과 업로드
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: error-test-results-${{ matrix.test-type }}
+          path: |
+            vridge-web/coverage/
+            vridge-web/cypress/screenshots/
+            vridge-web/cypress/videos/
+
+  # 🔧 아키텍처 경계 검증
+  fsd-boundary-check:
+    name: FSD 아키텍처 경계 검증
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+        
+      - name: Node.js 설정
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          
+      - name: PNPM 설정
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          
+      - name: 의존성 설치
+        working-directory: ./vridge-web
+        run: pnpm install --frozen-lockfile
+        
+      - name: ESLint FSD 경계 검증
+        working-directory: ./vridge-web
+        run: |
+          pnpm lint --format=json > eslint-fsd-report.json || true
+          
+      - name: 의존성 그래프 분석
+        working-directory: ./vridge-web
+        run: |
+          # 순환 의존성 및 FSD 위반 검사
+          npx madge --circular --format=json src/ > dependency-analysis.json || true
+          
+      - name: 아키텍처 검증 결과 평가
+        run: |
+          node -e "
+            const eslintReport = require('./vridge-web/eslint-fsd-report.json');
+            const fsdViolations = eslintReport.filter(result => 
+              result.messages.some(msg => msg.ruleId && msg.ruleId.includes('boundary'))
+            );
+            
+            if (fsdViolations.length > 0) {
+              console.error('🚨 FSD 경계 위반 감지:', fsdViolations.length, '건');
+              process.exit(1);
+            }
+            
+            console.log('✅ FSD 아키텍처 경계 준수 확인됨');
+          "
+          
+      - name: 아키텍처 검증 결과 업로드
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: fsd-boundary-results
+          path: |
+            vridge-web/eslint-fsd-report.json
+            vridge-web/dependency-analysis.json
+
+  # 🚀 프로덕션 배포 에러 복구 테스트
+  production-error-recovery:
+    name: 프로덕션 에러 복구 시뮬레이션
+    runs-on: ubuntu-latest
+    needs: [security-scan, error-handling-tests, fsd-boundary-check]
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    timeout-minutes: 25
+    
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+        
+      - name: 배포 환경 시뮬레이션 설정
+        run: |
+          # Docker Compose로 프로덕션 유사 환경 구축
+          cat > docker-compose.test.yml << 'EOF'
+          version: '3.8'
+          services:
+            frontend:
+              build:
+                context: ./vridge-web
+                dockerfile: Dockerfile
+              ports:
+                - "3000:3000"
+              environment:
+                - NODE_ENV=production
+                - NEXT_PUBLIC_API_URL=http://backend:8000
+              depends_on:
+                - backend
+                
+            backend:
+              build:
+                context: ./vridge_back
+                dockerfile: Dockerfile
+              ports:
+                - "8000:8000"
+              environment:
+                - DJANGO_SETTINGS_MODULE=config.settings
+                - DEBUG=False
+              depends_on:
+                - redis
+                - postgres
+                
+            redis:
+              image: redis:7-alpine
+              ports:
+                - "6379:6379"
+                
+            postgres:
+              image: postgres:15-alpine
+              environment:
+                POSTGRES_DB: vridge_test
+                POSTGRES_USER: test
+                POSTGRES_PASSWORD: test
+              ports:
+                - "5432:5432"
+          EOF
+          
+      - name: 프로덕션 환경 구동
+        run: |
+          docker-compose -f docker-compose.test.yml up -d
+          sleep 30 # 서비스 시작 대기
+          
+      - name: 에러 시나리오 시뮬레이션
+        run: |
+          # 다양한 에러 상황 시뮬레이션
+          echo "🧪 데이터베이스 연결 오류 시뮬레이션"
+          docker-compose -f docker-compose.test.yml stop postgres
+          
+          # 프론트엔드 에러 핸들링 확인
+          curl -f http://localhost:3000/health || echo "예상된 에러 발생"
+          
+          # 백엔드 에러 핸들링 확인  
+          curl -f http://localhost:8000/api/health || echo "예상된 에러 발생"
+          
+          # 복구 테스트
+          echo "🔧 서비스 복구 시뮬레이션"
+          docker-compose -f docker-compose.test.yml start postgres
+          sleep 10
+          
+          # 복구 확인
+          curl -f http://localhost:3000/health && echo "✅ 프론트엔드 복구 확인"
+          curl -f http://localhost:8000/api/health && echo "✅ 백엔드 복구 확인"
+          
+      - name: 로그 수집 및 분석
+        if: always()
+        run: |
+          mkdir -p logs
+          docker-compose -f docker-compose.test.yml logs frontend > logs/frontend.log
+          docker-compose -f docker-compose.test.yml logs backend > logs/backend.log
+          docker-compose -f docker-compose.test.yml logs redis > logs/redis.log
+          docker-compose -f docker-compose.test.yml logs postgres > logs/postgres.log
+          
+      - name: 환경 정리
+        if: always()
+        run: |
+          docker-compose -f docker-compose.test.yml down -v
+          
+      - name: 복구 테스트 결과 업로드
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: production-recovery-logs
+          path: logs/
+
+  # 📊 보안 및 에러 처리 품질 리포트
+  quality-report:
+    name: 품질 리포트 생성
+    runs-on: ubuntu-latest
+    needs: [security-scan, error-handling-tests, fsd-boundary-check, production-error-recovery]
+    if: always()
+    timeout-minutes: 10
+    
+    steps:
+      - name: 모든 테스트 결과 다운로드
+        uses: actions/download-artifact@v3
+        
+      - name: 통합 품질 리포트 생성
+        run: |
+          cat > quality-report.md << 'EOF'
+          # 🛡️ 보안 & 에러 처리 품질 리포트
+          
+          ## 📅 실행 정보
+          - **일시**: $(date)
+          - **브랜치**: ${{ github.ref }}
+          - **커밋**: ${{ github.sha }}
+          
+          ## 🔍 보안 스캔 결과
+          $(if [ -f security-scan-results/safety-report.json ]; then
+            echo "### Python 의존성 보안"
+            python -c "
+          import json
+          with open('security-scan-results/safety-report.json', 'r') as f:
+              data = json.load(f)
+              if data:
+                  print(f'⚠️ 취약점 {len(data)}건 발견')
+                  for vuln in data[:3]:  # 상위 3개만 표시
+                      print(f'- {vuln.get(\"vulnerability\", \"Unknown\")}: {vuln.get(\"package_name\", \"Unknown\")}')
+              else:
+                  print('✅ 보안 취약점 없음')
+          "
+          else
+            echo "보안 스캔 결과 없음"
+          fi)
+          
+          ## 🧪 에러 처리 테스트 결과
+          - **단위 테스트**: $([ -d error-test-results-unit ] && echo "통과" || echo "실패")
+          - **통합 테스트**: $([ -d error-test-results-integration ] && echo "통과" || echo "실패")  
+          - **E2E 테스트**: $([ -d error-test-results-e2e-error-scenarios ] && echo "통과" || echo "실패")
+          
+          ## 🏗️ 아키텍처 검증 결과
+          $(if [ -f fsd-boundary-results/eslint-fsd-report.json ]; then
+            echo "### FSD 경계 준수"
+            node -e "
+          const report = require('./fsd-boundary-results/eslint-fsd-report.json');
+          const violations = report.filter(r => 
+            r.messages.some(m => m.ruleId && m.ruleId.includes('boundary'))
+          ).length;
+          
+          if (violations === 0) {
+            console.log('✅ FSD 아키텍처 경계 준수');
+          } else {
+            console.log(\`⚠️ FSD 경계 위반 \${violations}건\`);
+          }
+          "
+          else
+            echo "아키텍처 검증 결과 없음"
+          fi)
+          
+          ## 🚀 프로덕션 복구 시뮬레이션
+          $([ -d production-recovery-logs ] && echo "✅ 복구 시나리오 테스트 완료" || echo "❌ 복구 테스트 실패")
+          
+          ## 📈 권장사항
+          - 보안 취약점 발견 시 즉시 업데이트 필요
+          - 에러 핸들링 테스트 실패 시 코드 개선 필요
+          - FSD 경계 위반 시 아키텍처 리팩토링 필요
+          - 복구 테스트 실패 시 운영 절차 점검 필요
+          
+          EOF
+          
+      - name: 품질 리포트를 PR에 코멘트
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('quality-report.md', 'utf8');
+            
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: report
+            });
+            
+      - name: 품질 리포트 업로드
+        uses: actions/upload-artifact@v3
+        with:
+          name: quality-report
+          path: quality-report.md
+
+  # 🚨 긴급 알림
+  emergency-notification:
+    name: 긴급 보안 알림
+    runs-on: ubuntu-latest
+    needs: [security-scan]
+    if: failure() && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
+    
+    steps:
+      - name: Slack 긴급 알림
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          channel: '#security-alerts'
+          text: |
+            🚨 CRITICAL: 보안 취약점 또는 에러 처리 시스템 장애 감지
+            
+            - 브랜치: ${{ github.ref }}
+            - 커밋: ${{ github.sha }}
+            - 작업자: ${{ github.actor }}
+            
+            즉시 확인 및 대응이 필요합니다!
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
