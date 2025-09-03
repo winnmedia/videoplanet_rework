@@ -446,7 +446,7 @@ export class ImportExportPipeline {
     }
 
     let finalData: any = exportPackage
-    let originalSize = Buffer.byteLength(JSON.stringify(finalData), 'utf8')
+    const originalSize = Buffer.byteLength(JSON.stringify(finalData), 'utf8')
     let compressedSize = originalSize
     let compressionRatio = 1
 
@@ -808,7 +808,7 @@ export class ImportExportPipeline {
     }
 
     let importedCount = 0
-    let skippedCount = 0
+    const skippedCount = 0
     let errorCount = 0
     const errors: any[] = []
     const importedPrompts: VideoPlanetPrompt[] = []

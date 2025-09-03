@@ -33,7 +33,7 @@ interface WebSocketTask {
 // WebSocket 서버 인스턴스
 let wsServer: WebSocketServer | null = null
 let httpServer: any = null
-let connectedClients = new Set<any>()
+const connectedClients = new Set<any>()
 
 // 네트워크 지연 시뮬레이션
 let networkLatency = 0

@@ -1052,7 +1052,7 @@ export class PromptWorkflowEngine {
   }
 
   private optimizePrompt(prompt: VideoPlanetPrompt, qualityReport: QualityReport): VideoPlanetPrompt {
-    let optimized = { ...prompt }
+    const optimized = { ...prompt }
 
     // 품질 점수가 임계값 미만인 경우 최적화 적용
     if (qualityReport.overallScore < this.config.qualityGates.minConsistencyScore) {
@@ -1073,7 +1073,7 @@ export class PromptWorkflowEngine {
 
   private optimizePromptText(prompt: string): string {
     // 중복 단어 제거 및 효율적인 키워드로 치환
-    let optimized = prompt
+    const optimized = prompt
       .replace(/\b(high quality|detailed)\b.*\b(high quality|detailed)\b/gi, 'high quality, detailed')
       .replace(/,\s*,/g, ',')
       .replace(/\s+/g, ' ')

@@ -21,7 +21,7 @@ const frontendEnvSchema = z.object({
 
   // API 연동 (필수 - Vercel 환경변수에서 가져옴)
   NEXT_PUBLIC_API_BASE: z.string().url('올바른 API URL이 필요합니다').default('https://api.vlanet.net'),
-  
+
   // 백엔드 API - variables.md에 없으므로 API_BASE 기반으로 유도하거나 선택사항으로 처리
   NEXT_PUBLIC_BACKEND_API: z.string().url('올바른 백엔드 API URL이 필요합니다').optional(),
 
@@ -69,7 +69,7 @@ export type AppEnv = FrontendEnv & ServerEnv
 /**
  * 프론트엔드 환경변수 검증 및 로드
  * 배포 환경별 안전한 검증 처리
- * 
+ *
  * Vercel 배포 시 환경변수가 undefined일 수 있으므로 graceful fallback 적용
  */
 export function validateFrontendEnv(): FrontendEnv {
@@ -99,19 +99,21 @@ export function validateFrontendEnv(): FrontendEnv {
     }
 
     const validatedEnv = frontendEnvSchema.parse(rawEnv)
-    
+
     // 배포 환경에서 검증 성공 로그 (개발환경에서만 상세 출력)
     if (process.env.NODE_ENV === 'development') {
       console.log('✅ 프론트엔드 환경변수 검증 성공')
     }
-    
+
     return validatedEnv
   } catch (error) {
     // 배포 환경에서 graceful 처리 - 기본값으로 폴백
     if (process.env.VERCEL || process.env.NODE_ENV === 'production') {
-      console.warn('⚠️ 일부 환경변수 누락, 기본값 사용:', error instanceof z.ZodError ? 
-        error.errors.map(e => e.path.join('.')).join(', ') : 'Unknown error')
-      
+      console.warn(
+        '⚠️ 일부 환경변수 누락, 기본값 사용:',
+        error instanceof z.ZodError ? error.errors.map(e => e.path.join('.')).join(', ') : 'Unknown error'
+      )
+
       // 최소한의 필수 환경변수로 폴백
       return {
         NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME || 'Video Planet, VLANET',
@@ -120,7 +122,10 @@ export function validateFrontendEnv(): FrontendEnv {
         NEXT_PUBLIC_PRODUCTION_DOMAIN: process.env.NEXT_PUBLIC_PRODUCTION_DOMAIN || 'vlanet.net',
         NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'https://vlanet.net',
         NEXT_PUBLIC_API_BASE: process.env.NEXT_PUBLIC_API_BASE || 'https://api.vlanet.net',
-        NEXT_PUBLIC_BACKEND_API: process.env.NEXT_PUBLIC_BACKEND_API || process.env.NEXT_PUBLIC_API_BASE || 'https://videoplanet.up.railway.app',
+        NEXT_PUBLIC_BACKEND_API:
+          process.env.NEXT_PUBLIC_BACKEND_API ||
+          process.env.NEXT_PUBLIC_API_BASE ||
+          'https://videoplanet.up.railway.app',
         NEXT_PUBLIC_WS_URL: process.env.NEXT_PUBLIC_WS_URL || 'wss://videoplanet.up.railway.app',
         NEXT_PUBLIC_WS_RECONNECT_INTERVAL: Number(process.env.NEXT_PUBLIC_WS_RECONNECT_INTERVAL) || 5000,
         NEXT_PUBLIC_WS_HEARTBEAT_INTERVAL: Number(process.env.NEXT_PUBLIC_WS_HEARTBEAT_INTERVAL) || 30000,
@@ -134,13 +139,16 @@ export function validateFrontendEnv(): FrontendEnv {
 
     // 개발환경에서는 엄격한 검증 유지
     console.error('❌ 프론트엔드 환경변수 검증 실패:', error)
-    
+
     if (error instanceof z.ZodError) {
-      console.error('상세 오류:', error.errors?.map(err => ({
-        path: err.path?.join('.') || 'unknown',
-        message: err.message,
-        received: err.input
-      })) || 'No detailed errors available')
+      console.error(
+        '상세 오류:',
+        error.errors?.map(err => ({
+          path: err.path?.join('.') || 'unknown',
+          message: err.message,
+          received: err.input,
+        })) || 'No detailed errors available'
+      )
     }
 
     throw new Error('환경변수 검증 실패로 인해 애플리케이션을 시작할 수 없습니다.')
@@ -177,7 +185,7 @@ export function checkEnvHealth(): void {
   if (process.env.NODE_ENV !== 'development') return
 
   console.log('🔧 환경변수 상태 확인:')
-  
+
   const frontendEnv = validateFrontendEnv()
   console.log('✅ 프론트엔드 환경변수 검증 통과')
   console.log(`📱 앱: ${frontendEnv.NEXT_PUBLIC_APP_NAME} (${frontendEnv.NEXT_PUBLIC_APP_ENV})`)

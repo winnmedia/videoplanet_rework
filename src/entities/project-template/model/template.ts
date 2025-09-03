@@ -382,7 +382,7 @@ export function getRecommendedTemplates(
   },
   availableTemplates: ProjectTemplate[]
 ): ProjectTemplate[] {
-  let scored = availableTemplates.map(template => ({
+  const scored = availableTemplates.map(template => ({
     template,
     score: calculateRecommendationScore(template, userProfile)
   }))

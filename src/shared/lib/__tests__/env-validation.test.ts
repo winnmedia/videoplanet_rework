@@ -25,7 +25,7 @@ describe('환경변수 검증 시스템', () => {
     it('완전한 환경변수 설정 시 정상 검증되어야 함', () => {
       // Arrange: 모든 필수 환경변수 설정
       process.env.NEXT_PUBLIC_APP_NAME = 'Video Planet, VLANET'
-      process.env.NEXT_PUBLIC_APP = 'VideoPlanet' 
+      process.env.NEXT_PUBLIC_APP = 'VideoPlanet'
       process.env.NEXT_PUBLIC_APP_ENV = 'production'
       process.env.NEXT_PUBLIC_PRODUCTION_DOMAIN = 'vlanet.net'
       process.env.NEXT_PUBLIC_APP_URL = 'https://vlanet.net'
@@ -108,7 +108,7 @@ describe('환경변수 검증 시스템', () => {
       process.env = {
         NODE_ENV: 'development',
         NEXT_PUBLIC_APP_URL: 'invalid-url',
-        NEXT_PUBLIC_API_BASE: 'not-a-url'
+        NEXT_PUBLIC_API_BASE: 'not-a-url',
       }
 
       // Act & Assert: 엄격한 검증으로 인한 에러 발생 확인

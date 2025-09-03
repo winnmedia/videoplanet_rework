@@ -360,7 +360,7 @@ describe('PlanningWizard Component - RTK Query Pattern', () => {
   // RTK Query Pattern: API 호출 순서 검증 테스트 
   it('should verify API call sequence: Story → 4Act → 12Shot', async () => {
     const user = userEvent.setup()
-    let apiCallOrder: string[] = []
+    const apiCallOrder: string[] = []
     
     // API 호출 순서 추적을 위한 MSW 핸들러
     server.use(
