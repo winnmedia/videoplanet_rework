@@ -1,5 +1,5 @@
 /**
- * PerformanceDashboard widget exports
+ * Performance Dashboard Widget - FSD Public API
  */
 
-export { default } from './PerformanceDashboard';
+export { PerformanceDashboard, default } from './PerformanceDashboard';

@@ -1,0 +1,40 @@
+# Railway-specific files
+railway.json
+nixpacks.toml
+Dockerfile
+
+# Railway environment configuration
+.railway
+
+# Development and testing files
+*.test.ts
+*.test.tsx
+*.test.js
+*.spec.ts
+*.spec.tsx
+__tests__/
+__snapshots__/
+test/
+tests/
+coverage/
+
+# Documentation files
+docs/
+*.md
+!README.md
+
+# CI/CD files
+.github/
+playwright-report/
+e2e/
+scripts/docker-healthcheck.sh
+
+# Local development files
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Node modules and build artifacts
+node_modules/
+.turbo/

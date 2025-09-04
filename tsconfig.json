@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
+    "target": "ES2022",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
@@ -13,15 +13,39 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
+    "tsBuildInfoFile": "./tsconfig.tsbuildinfo",
     "plugins": [
       {
         "name": "next"
       }
     ],
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["./src/*"]
+      // Legacy compatibility (maintain for existing imports)
+      "@/*": ["./*"],
+      "@/lib/*": ["./lib/*"],
+      "@/components/*": ["./components/*"],
+      "@/styles/*": ["./styles/*"],
+      "@/public/*": ["./public/*"],
+      "@/shared/*": ["./shared/*"],
+      
+      // FSD Layer aliases (parallel import system)
+      "@app/*": ["./app/*"],
+      "@processes/*": ["./processes/*"],
+      
+      // Dual path support for gradual migration
+      "@widgets/*": ["./widgets/*", "./src/widgets/*"],
+      "@features/*": ["./features/*", "./src/features/*"], 
+      "@entities/*": ["./entities/*", "./src/entities/*"],
+      "@shared/*": ["./shared/*", "./src/shared/*"],
+      
+      // Layer root imports (for Public API)
+      "@widgets": ["./widgets/index.ts", "./src/widgets/index.ts"],
+      "@features": ["./features/index.ts", "./src/features/index.ts"],
+      "@entities": ["./entities/index.ts", "./src/entities/index.ts"],
+      "@shared": ["./shared/index.ts", "./src/shared/index.ts"]
     }
   },
-  "include": ["next-env.d.ts", "global.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/types/**/*.d.ts", "types/**/*.d.ts"],
-  "exclude": ["node_modules"]
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules", "test/**/*", "**/*.test.*", "**/*.spec.*", "vitest.config.ts", "playwright.config.ts", "cypress/**/*", "dist/**/*"]
 }

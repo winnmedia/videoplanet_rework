@@ -1,0 +1,118 @@
+{
+  "timestamp": "2025-09-04T10:35:18.940Z",
+  "analysis": {
+    "circularDependencies": [],
+    "bundleAnalysis": {},
+    "optimizationOpportunities": [
+      {
+        "priority": "MEDIUM",
+        "category": "CSS 아키텍처",
+        "issue": "26개 파일에서 스타일링 혼재",
+        "solution": "SCSS → Tailwind 점진적 마이그레이션, CSS 격리 전략 적용",
+        "impact": "번들 크기 감소, 스타일링 일관성 개선"
+      }
+    ],
+    "importViolations": [
+      {
+        "file": "/home/winnmedia/VLANET/vridge-web/app/store/store.ts",
+        "violations": [
+          "from '@reduxjs/toolkit/query'"
+        ],
+        "type": "direct-internal-import"
+      },
+      {
+        "file": "/home/winnmedia/VLANET/vridge-web/features/calendar/ui/CalendarFilters.tsx",
+        "violations": [
+          "from '@heroicons/react/24/outline'"
+        ],
+        "type": "direct-internal-import"
+      },
+      {
+        "file": "/home/winnmedia/VLANET/vridge-web/features/calendar/ui/CalendarView.tsx",
+        "violations": [
+          "from '@heroicons/react/24/outline'"
+        ],
+        "type": "direct-internal-import"
+      },
+      {
+        "file": "/home/winnmedia/VLANET/vridge-web/features/calendar/ui/ConflictAlert.tsx",
+        "violations": [
+          "from '@heroicons/react/24/outline'"
+        ],
+        "type": "direct-internal-import"
+      },
+      {
+        "file": "/home/winnmedia/VLANET/vridge-web/features/calendar/ui/GanttView.tsx",
+        "violations": [
+          "from '@heroicons/react/24/outline'"
+        ],
+        "type": "direct-internal-import"
+      },
+      {
+        "file": "/home/winnmedia/VLANET/vridge-web/features/calendar/ui/ProjectLegend.tsx",
+        "violations": [
+          "from '@heroicons/react/24/outline'"
+        ],
+        "type": "direct-internal-import"
+      },
+      {
+        "file": "/home/winnmedia/VLANET/vridge-web/features/calendar/ui/WeekView.tsx",
+        "violations": [
+          "from '@heroicons/react/24/outline'"
+        ],
+        "type": "direct-internal-import"
+      },
+      {
+        "file": "/home/winnmedia/VLANET/vridge-web/shared/api/apiSlice.ts",
+        "violations": [
+          "from '@reduxjs/toolkit/query/react'"
+        ],
+        "type": "direct-internal-import"
+      },
+      {
+        "file": "/home/winnmedia/VLANET/vridge-web/src/shared/api/apiSlice.ts",
+        "violations": [
+          "from '@reduxjs/toolkit/query/react'"
+        ],
+        "type": "direct-internal-import"
+      },
+      {
+        "file": "/home/winnmedia/VLANET/vridge-web/src/widgets/PerformanceDashboard/PerformanceDashboard.tsx",
+        "violations": [
+          "from '@shared/lib/performance/web-vitals'"
+        ],
+        "type": "direct-internal-import"
+      },
+      {
+        "file": "/home/winnmedia/VLANET/vridge-web/tests/complexity-reduction/tdd-fsd-compliance.test.tsx",
+        "violations": [
+          "from '@shared/ui/Button'",
+          "from '@shared/ui/Button'",
+          "from '@shared/ui/Input'"
+        ],
+        "type": "direct-internal-import"
+      },
+      {
+        "file": "/home/winnmedia/VLANET/vridge-web/widgets/ProjectCreation/ui/ProjectForm.tsx",
+        "violations": [
+          "from '@shared/lib/formatDuration'"
+        ],
+        "type": "direct-internal-import"
+      }
+    ],
+    "cssAnalysis": {
+      "scssFiles": 42,
+      "tailwindFiles": 83,
+      "mixedStyleFiles": 26
+    }
+  },
+  "recommendations": [
+    {
+      "priority": "MEDIUM",
+      "category": "CSS 아키텍처",
+      "issue": "26개 파일에서 스타일링 혼재",
+      "solution": "SCSS → Tailwind 점진적 마이그레이션, CSS 격리 전략 적용",
+      "impact": "번들 크기 감소, 스타일링 일관성 개선"
+    }
+  ]
+}

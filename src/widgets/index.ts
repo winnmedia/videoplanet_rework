@@ -1,20 +1,24 @@
-// Widgets Layer Public API
-// Widget components will be exported here
+/**
+ * widgets Public API
+ * FSD 경계: 조합된 UI 블록과 독립적인 위젯의 Public 인터페이스
+ * 여러 features를 조합하여 완전한 UI 위젯을 구성
+ */
 
-// Layout Widgets
-export * from './Header'
-export * from './SideBar'
-export * from './PageLayout'
-export * from './GlobalSubmenu'
+// Header 위젯
+export {
+  Header,
+  type HeaderItem
+} from './Header'
 
-// Performance Widgets
-export { default as PerformanceDashboard } from './PerformanceDashboard'
+// 향후 추가될 위젯들을 위한 Public API 준비:
+// export { VideoPlayer } from './VideoPlayer'
+// export { ProjectDashboard } from './ProjectDashboard'
+// export { UserProfile } from './UserProfile'
+// export { NavigationSidebar } from './NavigationSidebar'
 
-// Admin Dashboard Widget
-export * from './admin-dashboard'
-
-// Security Monitoring Widget
-export * from './SecurityDashboard'
-
-// Planning Wizard Widget
-export * from './planning-wizard'
+// 위젯 관련 공통 타입들
+// export type {
+//   WidgetProps,
+//   WidgetSize,
+//   WidgetTheme
+// } from './types'

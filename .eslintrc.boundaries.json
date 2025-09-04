@@ -1,0 +1,148 @@
+{
+  "extends": [
+    "next/core-web-vitals",
+    "@feature-sliced/eslint-config"
+  ],
+  "plugins": [
+    "boundaries"
+  ],
+  "settings": {
+    "boundaries/elements": [
+      {
+        "type": "app",
+        "pattern": "app/**/*"
+      },
+      {
+        "type": "processes",
+        "pattern": "processes/**/*"
+      },
+      {
+        "type": "pages", 
+        "pattern": "pages/**/*"
+      },
+      {
+        "type": "widgets",
+        "pattern": "widgets/**/*"
+      },
+      {
+        "type": "features",
+        "pattern": "features/**/*"
+      },
+      {
+        "type": "entities",
+        "pattern": "entities/**/*"
+      },
+      {
+        "type": "shared",
+        "pattern": "shared/**/*"
+      }
+    ],
+    "boundaries/include": [
+      "app/**/*",
+      "processes/**/*", 
+      "pages/**/*",
+      "widgets/**/*",
+      "features/**/*",
+      "entities/**/*",
+      "shared/**/*"
+    ]
+  },
+  "rules": {
+    "boundaries/element-types": [
+      "error",
+      {
+        "default": "disallow",
+        "rules": [
+          {
+            "from": "app",
+            "allow": ["processes", "pages", "widgets", "features", "entities", "shared"]
+          },
+          {
+            "from": "processes", 
+            "allow": ["widgets", "features", "entities", "shared"]
+          },
+          {
+            "from": "pages",
+            "allow": ["widgets", "features", "entities", "shared"]
+          },
+          {
+            "from": "widgets",
+            "allow": ["features", "entities", "shared"]
+          },
+          {
+            "from": "features",
+            "allow": ["entities", "shared"]
+          },
+          {
+            "from": "entities",
+            "allow": ["shared"]
+          },
+          {
+            "from": "shared",
+            "allow": []
+          }
+        ]
+      }
+    ],
+    "boundaries/no-cross-feature": [
+      "error",
+      {
+        "from": "features/**/*",
+        "to": "features/**/*",
+        "except": [
+          "features/*/index.{js,ts,jsx,tsx}",
+          "features/shared/**/*"
+        ]
+      }
+    ],
+    "boundaries/no-private": [
+      "error",
+      {
+        "default": "allow",
+        "rules": [
+          {
+            "from": "**/*",
+            "to": "**/lib/**/*",
+            "disallow": "**/lib/**/private/**/*"
+          },
+          {
+            "from": "**/*",
+            "to": "**/model/**/*", 
+            "disallow": "**/model/**/private/**/*"
+          },
+          {
+            "from": "**/*",
+            "to": "**/api/**/*",
+            "disallow": "**/api/**/internal/**/*"
+          }
+        ]
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": [
+        "**/*.test.{js,ts,jsx,tsx}",
+        "**/*.spec.{js,ts,jsx,tsx}",
+        "**/test/**/*",
+        "**/tests/**/*",
+        "**/__tests__/**/*"
+      ],
+      "rules": {
+        "boundaries/element-types": "off",
+        "boundaries/no-cross-feature": "off",
+        "boundaries/no-private": "off"
+      }
+    },
+    {
+      "files": [
+        "**/*.stories.{js,ts,jsx,tsx}",
+        "**/*.config.{js,ts}",
+        "**/scripts/**/*"
+      ],
+      "rules": {
+        "boundaries/element-types": "off"
+      }
+    }
+  ]
+}

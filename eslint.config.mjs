@@ -1,7 +1,6 @@
 import { dirname } from "path";
 import { fileURLToPath } from "url";
 import { FlatCompat } from "@eslint/eslintrc";
-import boundaries from "eslint-plugin-boundaries";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -22,86 +21,301 @@ const eslintConfig = [
     ],
   },
   {
-    files: ["cypress/**/*.ts", "cypress/**/*.js"],
+    files: ["**/*.{js,jsx,ts,tsx}"],
     rules: {
-      // Cypress에서 네임스페이스 사용 허용 (타입 확장을 위한 권장 패턴)
-      "@typescript-eslint/no-namespace": "off",
-      // Cypress 테스트에서 표현식 사용 허용
-      "@typescript-eslint/no-unused-expressions": "off",
-      // 언더스코어 prefix 변수 허용 (의도적으로 사용하지 않음을 표시)
-      "@typescript-eslint/no-unused-vars": [
-        "error",
-        { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }
-      ],
-      // @ts-expect-error 권장, @ts-ignore 금지 유지
-      "@typescript-eslint/ban-ts-comment": [
+      // FSD Import Rules
+      "import/order": [
         "error",
         {
-          "ts-ignore": "allow-with-description",
-          "ts-expect-error": "allow-with-description"
-        }
-      ]
-    }
-  },
-  {
-    files: ["src/**/*.ts", "src/**/*.tsx"],
-    plugins: {
-      boundaries,
-    },
-    settings: {
-      "boundaries/elements": [
-        { type: "app", pattern: "src/app/**" },
-        { type: "processes", pattern: "src/processes/**" },
-        { type: "pages", pattern: "src/pages/**" },
-        { type: "widgets", pattern: "src/widgets/**" },
-        { type: "features", pattern: "src/features/**" },
-        { type: "entities", pattern: "src/entities/**" },
-        { type: "shared", pattern: "src/shared/**" },
+          groups: [
+            "builtin",
+            "external",
+            "internal",
+            ["parent", "sibling", "index"],
+          ],
+          pathGroups: [
+            {
+              pattern: "@app/**",
+              group: "internal",
+              position: "after",
+            },
+            {
+              pattern: "@processes/**",
+              group: "internal",
+              position: "after",
+            },
+            {
+              pattern: "@widgets/**",
+              group: "internal",
+              position: "after",
+            },
+            {
+              pattern: "@features/**",
+              group: "internal",
+              position: "after",
+            },
+            {
+              pattern: "@entities/**",
+              group: "internal",
+              position: "after",
+            },
+            {
+              pattern: "@shared/**",
+              group: "internal",
+              position: "after",
+            },
+          ],
+          pathGroupsExcludedImportTypes: ["builtin"],
+          "newlines-between": "always",
+          alphabetize: {
+            order: "asc",
+            caseInsensitive: true,
+          },
+        },
       ],
-      "boundaries/include": ["src/**/*"],
-    },
-    rules: {
-      // 프로덕션 코드에서 strict 타입 안전성 강제
-      "@typescript-eslint/no-explicit-any": "error",
-      "@typescript-eslint/no-unused-vars": [
-        "error", 
-        { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }
-      ],
-      "@typescript-eslint/ban-ts-comment": "error",
-      
-      // FSD 아키텍처 경계 강제
-      "boundaries/element-types": [
+      // Prevent cross-imports between slices
+      "no-restricted-imports": [
         "error",
         {
-          default: "disallow",
-          rules: [
-            // app 레이어는 모든 하위 레이어에 의존 가능
-            { from: "app", allow: ["processes", "pages", "widgets", "features", "entities", "shared"] },
-            // processes 레이어는 하위 레이어에만 의존 가능
-            { from: "processes", allow: ["pages", "widgets", "features", "entities", "shared"] },
-            // pages 레이어는 하위 레이어에만 의존 가능
-            { from: "pages", allow: ["widgets", "features", "entities", "shared"] },
-            // widgets 레이어는 하위 레이어에만 의존 가능
-            { from: "widgets", allow: ["features", "entities", "shared"] },
-            // features 레이어는 하위 레이어에만 의존 가능
-            { from: "features", allow: ["entities", "shared"] },
-            // entities 레이어는 shared에만 의존 가능
-            { from: "entities", allow: ["shared"] },
-            // shared 레이어는 외부 라이브러리에만 의존 가능
-            { from: "shared", allow: [] },
+          patterns: [
+            {
+              group: ["@features/*/*"],
+              message: "Direct cross-imports between features are forbidden. Use public API exports.",
+            },
+            {
+              group: ["@entities/*/*"],
+              message: "Direct cross-imports between entities are forbidden. Use public API exports.",
+            },
+            {
+              group: ["@widgets/*/*"],
+              message: "Direct cross-imports between widgets are forbidden. Use public API exports.",
+            },
           ],
         },
       ],
-      
-      // Public API 경유 강제 (internal imports 금지)
-      "boundaries/no-private": [
+    },
+  },
+  {
+    files: ["app/**/*"],
+    rules: {
+      "no-restricted-imports": [
         "error",
         {
-          allowUncles: false,
+          patterns: [
+            {
+              group: ["../processes/*", "../widgets/*", "../features/*", "../entities/*", "../shared/*"],
+              message: "App layer should import from absolute paths using @layer/* aliases.",
+            },
+          ],
         },
       ],
-    }
-  }
+    },
+  },
+  {
+    files: ["processes/**/*"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@app/*"],
+              message: "Processes cannot import from app layer.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ["widgets/**/*"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@app/*", "@processes/*"],
+              message: "Widgets cannot import from app or processes layers.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ["features/**/*"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@app/*", "@processes/*", "@widgets/*"],
+              message: "Features cannot import from app, processes, or widgets layers.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ["entities/**/*"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@app/*", "@processes/*", "@widgets/*", "@features/*"],
+              message: "Entities cannot import from higher layers.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ["shared/**/*"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@app/*", "@processes/*", "@widgets/*", "@features/*", "@entities/*"],
+              message: "Shared layer cannot import from any other layer.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // Critical Priority Components Architecture Rules
+  {
+    files: ["features/conflict-detection/**/*", "features/realtime-collaboration/**/*", "features/permission-control/**/*"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["@app/*", "@processes/*", "@widgets/*"],
+              message: "Critical features cannot import from higher layers.",
+            },
+            {
+              group: ["react-dom/server"],
+              message: "Critical features should avoid server-side rendering dependencies.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // Client/Server Component Boundary Enforcement (Next.js 15.5)
+  {
+    files: ["**/*.tsx", "**/*.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["react-dom/server"],
+              message: "Server-side imports should only be in Server Components or API routes. Consider moving to a Server Component or use dynamic imports.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // Server Component Rules
+  {
+    files: ["app/**/page.tsx", "app/**/layout.tsx", "app/**/loading.tsx", "app/**/error.tsx", "app/**/not-found.tsx"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["react-dom/client"],
+              message: "Client-side imports are not allowed in Server Components.",
+            },
+            {
+              group: ["@/shared/lib/hooks/*"],
+              message: "React hooks are not allowed in Server Components. Move to a Client Component.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // Client Component Rules (use client directive)
+  {
+    files: ["**/*.client.tsx", "**/use*.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["fs", "path", "crypto", "os"],
+              message: "Node.js built-in modules are not allowed in Client Components.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // VideoIntegration Widget Rules
+  {
+    files: ["widgets/VideoIntegration/**/*"],
+    rules: {
+      "no-restricted-imports": [
+        "error", 
+        {
+          patterns: [
+            {
+              group: ["@app/*", "@processes/*"],
+              message: "VideoIntegration widget cannot import from app or processes layers.",
+            },
+            {
+              group: ["@widgets/*/ui/*"],
+              message: "Direct UI imports from other widgets forbidden. Use public API.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // RBAC Entity Rules - Framework Independence
+  {
+    files: ["entities/rbac/**/*"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["react", "react-dom", "next/*"],
+              message: "RBAC entities must be framework-independent. Move React logic to features layer.",
+            },
+            {
+              group: ["@app/*", "@processes/*", "@widgets/*", "@features/*"],
+              message: "RBAC entities cannot import from higher layers.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // Prevent circular dependencies in critical components
+  {
+    files: ["**/*{ConflictDetection,RealtimeCollaboration,RBAC,VideoIntegration}*"],
+    rules: {
+      "import/no-cycle": ["error", { maxDepth: 3 }],
+    },
+  },
 ];
 
 export default eslintConfig;

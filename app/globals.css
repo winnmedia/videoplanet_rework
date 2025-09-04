@@ -1,0 +1,168 @@
+@import "tailwindcss";
+
+:root {
+  /* 레이아웃 변수 */
+  --sidebar-width: 300px;
+  --sidebar-collapsed-width: 80px;
+  --header-height: 80px;
+  --transition-duration: 300ms;
+  
+  /* Z-index 관리 */
+  --z-sidebar: 10;
+  --z-submenu: 20;
+  --z-modal: 100;
+
+  /* 디자인 토큰 - Primary Colors */
+  --primary: #0031ff;
+  --primary-dark: #0059db;
+  --primary-light: #006ae8;
+
+  /* 상태별 색상 */
+  --success: #28a745;
+  --warning: #ffc107;
+  --error: #d93a3a;
+  --info: #17a2b8;
+
+  /* 뉴트럴 색상 */
+  --dark: #25282f;
+  --gray: #919191;
+  --gray-light: #e4e4e4;
+  --gray-lighter: #eeeeee;
+  --background: #ffffff;
+  --foreground: #25282f;
+  --border: #eeeeee;
+}
+
+@media (max-width: 768px) {
+  :root {
+    --sidebar-width: 85vw;
+    --sidebar-collapsed-width: 0px;
+  }
+}
+
+/* 메인 콘텐츠 레이아웃 */
+.main-content {
+  margin-left: var(--sidebar-width);
+  padding-top: var(--header-height);
+  padding-left: 1rem;
+  padding-right: 1rem;
+  min-height: calc(100vh - var(--header-height));
+  transition: all var(--transition-duration) ease;
+}
+
+.main-content.sidebar-collapsed {
+  margin-left: var(--sidebar-collapsed-width);
+}
+
+@media (max-width: 768px) {
+  .main-content,
+  .main-content.sidebar-collapsed {
+    margin-left: 0;
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+    padding-top: calc(var(--header-height) + 1rem);
+  }
+  
+  body.sidebar-open {
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+  }
+}
+
+/* 사이드바 관련 유틸리티 클래스 */
+.ml-sidebar {
+  margin-left: var(--sidebar-width);
+}
+
+.ml-sidebar-collapsed {
+  margin-left: var(--sidebar-collapsed-width);
+}
+
+@media (max-width: 768px) {
+  .ml-sidebar,
+  .ml-sidebar-collapsed {
+    margin-left: 0;
+  }
+}
+
+/* 서브메뉴 포지셔닝 */
+.left-sidebar {
+  left: var(--sidebar-width);
+}
+
+@media (max-width: 768px) {
+  .left-sidebar {
+    left: 0;
+  }
+}
+
+/* 접근성 유틸리티 */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* 랜딩 페이지 특별 처리 */
+body.landing-page {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+/* 글로벌 스타일 초기화 */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  margin: 0;
+  padding: 0;
+}
+
+/* 폼 요소 기본 스타일 정리 */
+input,
+select,
+button,
+textarea {
+  border: none;
+  outline: none;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+}
+
+input {
+  appearance: none;
+  -webkit-appearance: none;
+  -webkit-border-radius: 0;
+}
+
+/* VRidge 브랜드 색상 유틸리티 */
+.bg-vridge-primary {
+  background-color: var(--primary);
+}
+
+.bg-vridge-primary-dark {
+  background-color: var(--primary-dark);
+}
+
+.text-vridge-primary {
+  color: var(--primary);
+}
+
+.border-vridge-primary {
+  border-color: var(--primary);
+}
+

@@ -1,0 +1,29 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "outDir": "../../dist/app",
+    "rootDir": ".",
+    "declaration": true,
+    "declarationMap": true,
+    "incremental": true,
+    "tsBuildInfoFile": "../../dist/app/.tsbuildinfo"
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx"
+  ],
+  "exclude": [
+    "**/*.test.*",
+    "**/*.spec.*",
+    "**/__tests__/**/*",
+    "**/__mocks__/**/*"
+  ],
+  "references": [
+    { "path": "../shared" },
+    { "path": "../entities" },
+    { "path": "../features" },
+    { "path": "../widgets" },
+    { "path": "../processes" }
+  ]
+}

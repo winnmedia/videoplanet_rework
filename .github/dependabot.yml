@@ -1,0 +1,72 @@
+version: 2
+updates:
+  # Frontend dependencies
+  - package-ecosystem: "npm"
+    directory: "/vridge-web"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+    open-pull-requests-limit: 10
+    groups:
+      development:
+        patterns:
+          - "@types/*"
+          - "eslint*"
+          - "prettier*"
+          - "vitest*"
+          - "@testing-library/*"
+      production:
+        patterns:
+          - "next"
+          - "react"
+          - "react-dom"
+          - "@reduxjs/toolkit"
+          - "tailwindcss"
+    commit-message:
+      prefix: "deps"
+      prefix-development: "deps-dev"
+    labels:
+      - "dependencies"
+      - "frontend"
+    reviewers:
+      - "winnmedia"
+
+  # Backend dependencies
+  - package-ecosystem: "pip"
+    directory: "/vridge_back"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "03:00"
+    open-pull-requests-limit: 10
+    groups:
+      django:
+        patterns:
+          - "django*"
+          - "djangorestframework*"
+      testing:
+        patterns:
+          - "pytest*"
+          - "black"
+          - "flake8"
+    commit-message:
+      prefix: "deps"
+      prefix-development: "deps-dev"
+    labels:
+      - "dependencies"
+      - "backend"
+    reviewers:
+      - "winnmedia"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    commit-message:
+      prefix: "ci"
+    labels:
+      - "ci/cd"
+    reviewers:
+      - "winnmedia"

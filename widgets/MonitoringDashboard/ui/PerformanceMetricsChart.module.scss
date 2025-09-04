@@ -1,0 +1,362 @@
+@import '@/shared/config/design-tokens.scss';
+
+// Performance Metrics Chart Styles
+.chart {
+  @include card;
+  padding: $spacing-lg;
+  background: $color-white;
+  border-radius: $radius-2xl;
+  box-shadow: $shadow-md;
+  transition: $transition-shadow;
+  position: relative;
+  
+  &:hover {
+    box-shadow: $shadow-lg;
+  }
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-lg;
+  flex-wrap: wrap;
+  gap: $spacing-md;
+  
+  @include mobile {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+.title {
+  font-size: $font-size-xl;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  
+  &::before {
+    content: '📈';
+    font-size: $font-size-lg;
+  }
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: $spacing-md;
+  align-items: center;
+  
+  @include mobile {
+    width: 100%;
+    justify-content: flex-start;
+  }
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  cursor: help;
+  
+  &:hover {
+    color: $color-text-primary;
+  }
+}
+
+.legendColor {
+  width: 12px;
+  height: 12px;
+  border-radius: $radius-sm;
+  flex-shrink: 0;
+}
+
+.legendLabel {
+  white-space: nowrap;
+  font-weight: $font-weight-medium;
+}
+
+.canvasContainer {
+  position: relative;
+  width: 100%;
+  height: 300px;
+  margin-bottom: $spacing-lg;
+  border: 1px solid $color-border-light;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  background: linear-gradient(135deg, #f8f9ff 0%, #ffffff 100%);
+}
+
+.canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+  cursor: crosshair;
+}
+
+// Empty State
+.empty {
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.emptyState {
+  text-align: center;
+  color: $color-text-secondary;
+  
+  h3 {
+    font-size: $font-size-lg;
+    font-weight: $font-weight-medium;
+    color: $color-text-primary;
+    margin: $spacing-sm 0;
+  }
+  
+  p {
+    font-size: $font-size-base;
+    margin: 0;
+  }
+}
+
+.emptyIcon {
+  font-size: $font-size-4xl;
+  opacity: 0.5;
+  margin-bottom: $spacing-sm;
+}
+
+// Metrics Grid
+.metricsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: $spacing-md;
+  margin-bottom: $spacing-lg;
+  
+  @include mobile {
+    grid-template-columns: repeat(2, 1fr);
+    gap: $spacing-sm;
+  }
+}
+
+.metricCard {
+  padding: $spacing-md;
+  border-radius: $radius-lg;
+  border: 2px solid $color-border-light;
+  background: $color-white;
+  transition: $transition-all;
+  position: relative;
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $shadow-md;
+  }
+  
+  &.statusOk {
+    border-color: $color-success;
+    background: linear-gradient(135deg, $color-success-lighter 0%, $color-white 100%);
+  }
+  
+  &.statusError {
+    border-color: $color-error;
+    background: linear-gradient(135deg, $color-error-lighter 0%, $color-white 100%);
+    animation: pulse 2s infinite;
+  }
+}
+
+.metricName {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-text-secondary;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: $spacing-xs;
+}
+
+.metricValue {
+  font-size: $font-size-2xl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  font-family: $font-mono;
+  margin-bottom: $spacing-xs;
+}
+
+.metricBudget {
+  font-size: $font-size-xs;
+  color: $color-text-secondary;
+  font-weight: $font-weight-medium;
+}
+
+.budgetViolation {
+  position: absolute;
+  top: $spacing-sm;
+  right: $spacing-sm;
+  font-size: $font-size-lg;
+  animation: bounce 1s infinite;
+}
+
+// Violations Alert
+.violations {
+  padding: $spacing-md;
+  background: linear-gradient(135deg, $color-error-lighter 0%, $color-white 100%);
+  border: 1px solid $color-error;
+  border-radius: $radius-lg;
+  margin-top: $spacing-md;
+  
+  h3 {
+    font-size: $font-size-md;
+    font-weight: $font-weight-semibold;
+    color: $color-error-dark;
+    margin: 0 0 $spacing-sm 0;
+    display: flex;
+    align-items: center;
+    gap: $spacing-xs;
+    
+    &::before {
+      content: '⚠️';
+    }
+  }
+}
+
+.violationList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.violationItem {
+  padding: $spacing-xs 0;
+  color: $color-error-text;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  
+  &:not(:last-child) {
+    border-bottom: 1px solid rgba($color-error, 0.2);
+  }
+  
+  strong {
+    font-weight: $font-weight-bold;
+    color: $color-error-dark;
+  }
+}
+
+// Animations
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-3px);
+  }
+  60% {
+    transform: translateY(-2px);
+  }
+}
+
+// Accessibility
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+// Responsive Design
+@include mobile {
+  .chart {
+    padding: $spacing-md;
+  }
+  
+  .canvasContainer {
+    height: 250px;
+  }
+  
+  .metricCard {
+    padding: $spacing-sm;
+  }
+  
+  .metricValue {
+    font-size: $font-size-xl;
+  }
+}
+
+@include tablet {
+  .canvasContainer {
+    height: 280px;
+  }
+}
+
+// High Contrast Mode
+@media (prefers-contrast: high) {
+  .chart {
+    border: 2px solid $color-text-primary;
+  }
+  
+  .metricCard {
+    border-width: 3px;
+  }
+  
+  .canvas {
+    filter: contrast(150%);
+  }
+}
+
+// Reduced Motion
+@media (prefers-reduced-motion: reduce) {
+  .chart,
+  .metricCard {
+    transition: none;
+  }
+  
+  .budgetViolation {
+    animation: none;
+  }
+  
+  .metricCard.statusError {
+    animation: none;
+  }
+}
+
+// Dark Mode Support (if needed in the future)
+@media (prefers-color-scheme: dark) {
+  .chart {
+    background: $bg-dark;
+    color: $color-white;
+  }
+  
+  .canvasContainer {
+    background: linear-gradient(135deg, #2a2d36 0%, #25282f 100%);
+    border-color: $color-gray-600;
+  }
+  
+  .metricCard {
+    background: $bg-dark;
+    border-color: $color-gray-600;
+    
+    &.statusOk {
+      background: linear-gradient(135deg, rgba($color-success, 0.2) 0%, $bg-dark 100%);
+    }
+    
+    &.statusError {
+      background: linear-gradient(135deg, rgba($color-error, 0.2) 0%, $bg-dark 100%);
+    }
+  }
+}

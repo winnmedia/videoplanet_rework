@@ -1,0 +1,26 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "incremental": true,
+    "tsBuildInfoFile": ".tsbuildinfo",
+    "composite": true
+  },
+  "references": [
+    { "path": "./src/shared" },
+    { "path": "./src/entities" },
+    { "path": "./src/features" },
+    { "path": "./src/widgets" },
+    { "path": "./src/processes" },
+    { "path": "./src/app" }
+  ],
+  "exclude": [
+    "node_modules",
+    ".next",
+    "out",
+    "test",
+    "cypress",
+    "**/*.test.*",
+    "**/*.spec.*",
+    "**/*.stories.*"
+  ]
+}

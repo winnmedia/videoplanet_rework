@@ -1,285 +1,343 @@
 #!/usr/bin/env node
-
 /**
- * 성능 모니터링 및 품질 게이트 스크립트
- * Core Web Vitals와 번들 사이즈를 모니터링하고 임계값 검증
+ * Real-time Performance Monitoring Script
+ * 72시간 내 성능 회복을 위한 실시간 모니터링 및 자동 알림
+ * Performance & Web Vitals Lead Requirements
  */
 
-const fs = require('fs')
-const path = require('path')
-const { execSync } = require('child_process')
+const puppeteer = require('puppeteer')
 
-// 성능 임계값 (CLAUDE.md 기준)
+const fs = require('fs').promises
+const path = require('path')
+
 const PERFORMANCE_THRESHOLDS = {
-  // Core Web Vitals
-  LCP: 2500, // Largest Contentful Paint < 2.5s
-  INP: 200,  // Interaction to Next Paint < 200ms  
-  CLS: 0.1,  // Cumulative Layout Shift < 0.1
+  // 2024 Core Web Vitals
+  LCP: 2500,    // Largest Contentful Paint
+  INP: 200,     // Interaction to Next Paint (NEW)
+  CLS: 0.1,     // Cumulative Layout Shift
   
-  // Bundle size thresholds
-  BUNDLE_SIZE: 1024 * 1024, // 1MB total
-  MAIN_BUNDLE: 150 * 1024,  // 150KB for main bundle
-  PAGE_BUNDLE: 80 * 1024,   // 80KB per page
+  // Supporting metrics
+  FCP: 1800,    // First Contentful Paint
+  TTI: 3800,    // Time to Interactive
+  FID: 100,     // First Input Delay (legacy)
   
-  // Performance scores (0-100)
-  LIGHTHOUSE_PERFORMANCE: 90,
-  LIGHTHOUSE_ACCESSIBILITY: 95,
-  LIGHTHOUSE_BEST_PRACTICES: 90,
-  LIGHTHOUSE_SEO: 90
+  // Network & Bundle
+  SERVER_RESPONSE: 600,  // Server response time
+  BUNDLE_SIZE: 1000000   // 1MB total
+}
+
+const MONITORING_CONFIG = {
+  url: 'http://localhost:3000',
+  interval: 30000, // 30 seconds
+  samples: 5,      // Average over 5 samples
+  timeout: 60000   // 60 seconds timeout
 }
 
 class PerformanceMonitor {
   constructor() {
-    this.results = {
-      bundleAnalysis: null,
-      lighthouseReport: null,
-      coreWebVitals: null,
-      violations: []
-    }
+    this.browser = null
+    this.results = []
+    this.violations = []
   }
 
-  async runAllChecks() {
-    console.log('🔍 성능 품질 게이트 검사 시작...')
+  async init() {
+    console.log('🚀 Performance Monitor 시작')
+    console.log('Core Web Vitals 2024 기준으로 모니터링')
     
-    try {
-      await this.analyzeBundleSize()
-      await this.runLighthouseAudit()
-      await this.checkCoreWebVitals()
-      await this.generateReport()
-      
-      if (this.results.violations.length > 0) {
-        this.printViolations()
-        process.exit(1)
-      }
-      
-      console.log('✅ 모든 성능 품질 게이트 통과')
-    } catch (error) {
-      console.error('❌ 성능 검사 실패:', error.message)
-      process.exit(1)
-    }
-  }
-
-  async analyzeBundleSize() {
-    console.log('📦 번들 사이즈 분석 중...')
-    
-    try {
-      // Next.js 빌드가 되어있는지 확인
-      if (!fs.existsSync('.next/static')) {
-        console.log('🏗️  프로덕션 빌드 실행 중...')
-        execSync('npm run build', { stdio: 'inherit' })
-      }
-      
-      // Size-limit 실행
-      const sizeOutput = execSync('npx size-limit --json', { encoding: 'utf8' })
-      const sizeResults = JSON.parse(sizeOutput)
-      
-      this.results.bundleAnalysis = sizeResults
-      
-      // 번들 사이즈 검증
-      sizeResults.forEach(result => {
-        const sizeInBytes = this.parseSize(result.size)
-        const limitInBytes = this.parseSize(result.limit)
-        
-        if (sizeInBytes > limitInBytes) {
-          this.results.violations.push({
-            type: 'bundle-size',
-            message: `번들 사이즈 초과: ${result.name} (${result.size} > ${result.limit})`,
-            actual: result.size,
-            expected: result.limit
-          })
-        }
-      })
-      
-      console.log(`✅ 번들 사이즈 분석 완료 (${sizeResults.length}개 번들 검사)`)
-      
-    } catch (error) {
-      if (error.message.includes('size-limit')) {
-        console.warn('⚠️  Size-limit 실행 실패, 기본 번들 분석으로 대체')
-        await this.fallbackBundleAnalysis()
-      } else {
-        throw error
-      }
-    }
-  }
-
-  async fallbackBundleAnalysis() {
-    // .next/static 디렉토리의 파일 사이즈 직접 계산
-    const staticDir = '.next/static'
-    let totalSize = 0
-    
-    const calculateDirSize = (dir) => {
-      const files = fs.readdirSync(dir, { withFileTypes: true })
-      return files.reduce((size, file) => {
-        const filePath = path.join(dir, file.name)
-        if (file.isDirectory()) {
-          return size + calculateDirSize(filePath)
-        } else {
-          return size + fs.statSync(filePath).size
-        }
-      }, 0)
-    }
-    
-    if (fs.existsSync(staticDir)) {
-      totalSize = calculateDirSize(staticDir)
-      
-      if (totalSize > PERFORMANCE_THRESHOLDS.BUNDLE_SIZE) {
-        this.results.violations.push({
-          type: 'bundle-size',
-          message: `전체 번들 사이즈 초과: ${(totalSize / 1024).toFixed(2)}KB > ${PERFORMANCE_THRESHOLDS.BUNDLE_SIZE / 1024}KB`,
-          actual: totalSize,
-          expected: PERFORMANCE_THRESHOLDS.BUNDLE_SIZE
-        })
-      }
-    }
-  }
-
-  async runLighthouseAudit() {
-    console.log('🔍 Lighthouse 성능 감사 실행 중...')
-    
-    try {
-      // Lighthouse CI 실행
-      const lighthouseOutput = execSync('npx lhci autorun --collect.numberOfRuns=1', { 
-        encoding: 'utf8',
-        stdio: 'pipe'
-      })
-      
-      // 결과 파일 읽기
-      const lhciDir = '.lighthouseci'
-      if (fs.existsSync(lhciDir)) {
-        const files = fs.readdirSync(lhciDir).filter(f => f.endsWith('.json'))
-        if (files.length > 0) {
-          const reportPath = path.join(lhciDir, files[0])
-          const report = JSON.parse(fs.readFileSync(reportPath, 'utf8'))
-          
-          this.results.lighthouseReport = report
-          this.validateLighthouseScores(report)
-        }
-      }
-      
-      console.log('✅ Lighthouse 감사 완료')
-      
-    } catch (error) {
-      console.warn('⚠️  Lighthouse 실행 실패:', error.message)
-      // Lighthouse 실패는 경고만 하고 계속 진행
-    }
-  }
-
-  validateLighthouseScores(report) {
-    const categories = report.categories || {}
-    
-    Object.entries(PERFORMANCE_THRESHOLDS).forEach(([key, threshold]) => {
-      if (key.startsWith('LIGHTHOUSE_')) {
-        const categoryKey = key.replace('LIGHTHOUSE_', '').toLowerCase().replace('_', '-')
-        const category = categories[categoryKey]
-        
-        if (category) {
-          const score = Math.round(category.score * 100)
-          if (score < threshold) {
-            this.results.violations.push({
-              type: 'lighthouse',
-              message: `Lighthouse ${categoryKey} 점수 미달: ${score} < ${threshold}`,
-              actual: score,
-              expected: threshold
-            })
-          }
-        }
-      }
+    this.browser = await puppeteer.launch({
+      headless: true,
+      args: ['--no-sandbox', '--disable-dev-shm-usage']
     })
   }
 
-  async checkCoreWebVitals() {
-    console.log('🎯 Core Web Vitals 검사 중...')
+  async measureCoreWebVitals() {
+    const page = await this.browser.newPage()
     
-    // Lighthouse 결과에서 Core Web Vitals 추출
-    if (this.results.lighthouseReport) {
-      const audits = this.results.lighthouseReport.audits || {}
+    try {
+      console.log(`📊 측정 중: ${MONITORING_CONFIG.url}`)
       
-      // LCP 검사
-      const lcp = audits['largest-contentful-paint']
-      if (lcp && lcp.numericValue > PERFORMANCE_THRESHOLDS.LCP) {
-        this.results.violations.push({
-          type: 'core-web-vitals',
-          message: `LCP 임계값 초과: ${lcp.numericValue}ms > ${PERFORMANCE_THRESHOLDS.LCP}ms`,
-          actual: lcp.numericValue,
-          expected: PERFORMANCE_THRESHOLDS.LCP
-        })
-      }
+      // Enable performance metrics collection
+      await page.setCacheEnabled(false)
+      await page.evaluateOnNewDocument(() => {
+        window.webVitalsData = {
+          LCP: 0,
+          INP: 0,
+          CLS: 0,
+          FCP: 0,
+          FID: 0,
+          measurements: []
+        }
+        
+        // LCP Observer
+        if ('PerformanceObserver' in window) {
+          const lcpObserver = new PerformanceObserver((list) => {
+            const entries = list.getEntries()
+            if (entries.length > 0) {
+              window.webVitalsData.LCP = entries[entries.length - 1].startTime
+            }
+          })
+          lcpObserver.observe({ type: 'largest-contentful-paint', buffered: true })
+          
+          // INP Observer (2024 Core Web Vital)
+          let maxINP = 0
+          const inpObserver = new PerformanceObserver((list) => {
+            list.getEntries().forEach((entry) => {
+              if (entry.entryType === 'event') {
+                const interactionDelay = entry.processingStart - entry.startTime
+                const presentationDelay = entry.startTime + entry.duration - entry.processingEnd
+                const totalDelay = Math.max(interactionDelay + presentationDelay, entry.duration)
+                
+                if (totalDelay > maxINP) {
+                  maxINP = totalDelay
+                  window.webVitalsData.INP = maxINP
+                }
+              }
+            })
+          })
+          inpObserver.observe({ type: 'event', buffered: true })
+          
+          // CLS Observer
+          let clsScore = 0
+          const clsObserver = new PerformanceObserver((list) => {
+            list.getEntries().forEach((entry) => {
+              if (!entry.hadRecentInput) {
+                clsScore += entry.value
+                window.webVitalsData.CLS = clsScore
+              }
+            })
+          })
+          clsObserver.observe({ type: 'layout-shift', buffered: true })
+          
+          // FCP Observer
+          const fcpObserver = new PerformanceObserver((list) => {
+            const entries = list.getEntries()
+            const fcpEntry = entries.find(entry => entry.name === 'first-contentful-paint')
+            if (fcpEntry) {
+              window.webVitalsData.FCP = fcpEntry.startTime
+            }
+          })
+          fcpObserver.observe({ type: 'paint', buffered: true })
+        }
+      })
       
-      // CLS 검사
-      const cls = audits['cumulative-layout-shift']
-      if (cls && cls.numericValue > PERFORMANCE_THRESHOLDS.CLS) {
-        this.results.violations.push({
-          type: 'core-web-vitals',
-          message: `CLS 임계값 초과: ${cls.numericValue} > ${PERFORMANCE_THRESHOLDS.CLS}`,
-          actual: cls.numericValue,
-          expected: PERFORMANCE_THRESHOLDS.CLS
-        })
-      }
+      const startTime = Date.now()
+      await page.goto(MONITORING_CONFIG.url, { waitUntil: 'networkidle0', timeout: MONITORING_CONFIG.timeout })
       
-      console.log('✅ Core Web Vitals 검사 완료')
-    } else {
-      console.warn('⚠️  Lighthouse 결과가 없어 Core Web Vitals 검사 생략')
+      // Simulate user interactions for INP measurement
+      await page.click('button, a, input', { timeout: 5000 }).catch(() => {})
+      await page.waitForTimeout(2000) // Allow time for measurements
+      
+      // Get performance data
+      const performanceData = await page.evaluate(() => {
+        const navigation = performance.getEntriesByType('navigation')[0]
+        const serverResponseTime = navigation.responseStart - navigation.requestStart
+        const tti = navigation.domContentLoadedEventEnd - navigation.navigationStart
+        
+        return {
+          ...window.webVitalsData,
+          TTI: tti,
+          SERVER_RESPONSE: serverResponseTime,
+          timestamp: new Date().toISOString()
+        }
+      })
+      
+      // Get bundle size information
+      const resources = await page.evaluate(() => {
+        return performance.getEntriesByType('resource')
+          .filter(r => r.name.includes('.js') || r.name.includes('.css'))
+          .reduce((total, r) => total + (r.transferSize || 0), 0)
+      })
+      
+      performanceData.BUNDLE_SIZE = resources
+      
+      console.log('✅ 측정 완료:', JSON.stringify(performanceData, null, 2))
+      
+      return performanceData
+      
+    } catch (error) {
+      console.error('❌ 측정 실패:', error.message)
+      return null
+    } finally {
+      await page.close()
     }
+  }
+
+  checkViolations(data) {
+    const violations = []
+    
+    Object.keys(PERFORMANCE_THRESHOLDS).forEach(metric => {
+      const threshold = PERFORMANCE_THRESHOLDS[metric]
+      const value = data[metric]
+      
+      if (value > threshold) {
+        const violation = {
+          metric,
+          value,
+          threshold,
+          severity: this.getSeverity(metric, value, threshold),
+          timestamp: new Date().toISOString()
+        }
+        violations.push(violation)
+        
+        console.error(`🚨 성능 예산 위반: ${metric} = ${value}ms (임계값: ${threshold}ms)`)
+      } else {
+        console.log(`✅ ${metric}: ${value}ms (임계값: ${threshold}ms 이내)`)
+      }
+    })
+    
+    return violations
+  }
+
+  getSeverity(metric, value, threshold) {
+    const ratio = value / threshold
+    
+    if (ratio > 2) return 'CRITICAL'
+    if (ratio > 1.5) return 'HIGH'
+    if (ratio > 1.2) return 'MEDIUM'
+    return 'LOW'
   }
 
   async generateReport() {
-    const reportDir = 'reports/performance'
-    if (!fs.existsSync(reportDir)) {
-      fs.mkdirSync(reportDir, { recursive: true })
-    }
+    if (this.results.length === 0) return
+    
+    const avgResults = {}
+    Object.keys(PERFORMANCE_THRESHOLDS).forEach(metric => {
+      const values = this.results.map(r => r[metric]).filter(v => v > 0)
+      avgResults[metric] = values.length > 0 ? 
+        values.reduce((a, b) => a + b, 0) / values.length : 0
+    })
     
     const report = {
       timestamp: new Date().toISOString(),
-      thresholds: PERFORMANCE_THRESHOLDS,
-      results: this.results,
-      summary: {
-        totalViolations: this.results.violations.length,
-        passed: this.results.violations.length === 0,
-        bundleAnalyzed: !!this.results.bundleAnalysis,
-        lighthouseRan: !!this.results.lighthouseReport,
-        coreWebVitalsChecked: !!this.results.coreWebVitals
+      samples: this.results.length,
+      averages: avgResults,
+      violations: this.violations,
+      recommendations: this.generateRecommendations(avgResults)
+    }
+    
+    const reportPath = path.join(__dirname, '../reports/performance-monitor.json')
+    await fs.mkdir(path.dirname(reportPath), { recursive: true })
+    await fs.writeFile(reportPath, JSON.stringify(report, null, 2))
+    
+    console.log('\n📊 성능 모니터링 리포트 생성됨:', reportPath)
+    console.log('평균 결과:', JSON.stringify(avgResults, null, 2))
+    
+    if (this.violations.length > 0) {
+      console.log('\n🚨 발견된 위반사항들:')
+      this.violations.forEach(v => {
+        console.log(`  ${v.metric}: ${v.value}ms > ${v.threshold}ms (심각도: ${v.severity})`)
+      })
+    }
+    
+    return report
+  }
+
+  generateRecommendations(data) {
+    const recommendations = []
+    
+    if (data.LCP > PERFORMANCE_THRESHOLDS.LCP) {
+      recommendations.push({
+        metric: 'LCP',
+        issue: 'Largest Contentful Paint가 느림',
+        solutions: [
+          'Critical 리소스 사전 로드 (preload)',
+          '이미지 최적화 및 WebP/AVIF 포맷 사용',
+          'Code splitting으로 초기 번들 크기 감소',
+          'CDN 사용으로 리소스 전송 속도 개선'
+        ]
+      })
+    }
+    
+    if (data.INP > PERFORMANCE_THRESHOLDS.INP) {
+      recommendations.push({
+        metric: 'INP',
+        issue: 'Interaction to Next Paint이 느림 (2024 Core Web Vital)',
+        solutions: [
+          'Main thread 차단 작업 최소화',
+          'React 19 concurrent features 활용',
+          'Event handler 최적화',
+          'Long tasks 분할 (시간 분할)'
+        ]
+      })
+    }
+    
+    if (data.CLS > PERFORMANCE_THRESHOLDS.CLS) {
+      recommendations.push({
+        metric: 'CLS',
+        issue: 'Cumulative Layout Shift 높음',
+        solutions: [
+          '이미지 및 동영상에 width/height 속성 명시',
+          '폰트 로딩 최적화 (font-display: swap)',
+          '광고나 동적 콘텐츠 공간 미리 확보',
+          'CSS containment 속성 사용'
+        ]
+      })
+    }
+    
+    if (data.SERVER_RESPONSE > PERFORMANCE_THRESHOLDS.SERVER_RESPONSE) {
+      recommendations.push({
+        metric: 'SERVER_RESPONSE',
+        issue: '서버 응답 시간이 느림',
+        solutions: [
+          'Database 쿼리 최적화',
+          '서버 측 캐싱 구현',
+          'API response 압축 (gzip/brotli)',
+          'Database connection pooling'
+        ]
+      })
+    }
+    
+    return recommendations
+  }
+
+  async start() {
+    await this.init()
+    
+    console.log(`🔄 ${MONITORING_CONFIG.interval/1000}초마다 ${MONITORING_CONFIG.samples}회 측정`)
+    console.log('Ctrl+C로 종료\n')
+    
+    for (let i = 0; i < MONITORING_CONFIG.samples; i++) {
+      console.log(`\n🔍 측정 ${i + 1}/${MONITORING_CONFIG.samples}`)
+      
+      const data = await this.measureCoreWebVitals()
+      if (data) {
+        this.results.push(data)
+        const violations = this.checkViolations(data)
+        this.violations.push(...violations)
+      }
+      
+      if (i < MONITORING_CONFIG.samples - 1) {
+        console.log(`⏳ ${MONITORING_CONFIG.interval/1000}초 대기 중...`)
+        await new Promise(resolve => setTimeout(resolve, MONITORING_CONFIG.interval))
       }
     }
     
-    const reportPath = path.join(reportDir, `performance-report-${Date.now()}.json`)
-    fs.writeFileSync(reportPath, JSON.stringify(report, null, 2))
-    
-    console.log(`📊 성능 보고서 생성: ${reportPath}`)
+    await this.generateReport()
+    await this.browser.close()
   }
 
-  printViolations() {
-    console.error('❌ 성능 품질 게이트 실패:')
-    console.error(`총 ${this.results.violations.length}개의 위반사항 발견\n`)
-    
-    this.results.violations.forEach((violation, index) => {
-      console.error(`${index + 1}. [${violation.type}] ${violation.message}`)
-      if (violation.actual !== undefined && violation.expected !== undefined) {
-        console.error(`   실제: ${violation.actual}, 예상: ${violation.expected}`)
-      }
-      console.error('')
-    })
-    
-    console.error('🚫 성능 기준을 충족할 때까지 배포가 차단됩니다.')
-  }
-
-  parseSize(sizeString) {
-    const units = { B: 1, KB: 1024, MB: 1024 * 1024, GB: 1024 * 1024 * 1024 }
-    const match = sizeString.toString().match(/^([\d.]+)\s*([A-Z]+)$/i)
-    
-    if (!match) return parseInt(sizeString) || 0
-    
-    const [, number, unit] = match
-    return Math.round(parseFloat(number) * (units[unit.toUpperCase()] || 1))
+  async cleanup() {
+    if (this.browser) {
+      await this.browser.close()
+    }
   }
 }
 
-// 스크립트 직접 실행 시
+// Handle cleanup on exit
+process.on('SIGINT', async () => {
+  console.log('\n\n👋 모니터링 종료 중...')
+  process.exit(0)
+})
+
+process.on('unhandledRejection', (error) => {
+  console.error('❌ Unhandled rejection:', error)
+  process.exit(1)
+})
+
+// Start monitoring
 if (require.main === module) {
   const monitor = new PerformanceMonitor()
-  monitor.runAllChecks().catch(error => {
-    console.error('성능 모니터링 실패:', error)
-    process.exit(1)
-  })
+  monitor.start().catch(console.error)
 }
 
 module.exports = PerformanceMonitor

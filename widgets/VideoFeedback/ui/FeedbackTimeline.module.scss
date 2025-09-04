@@ -1,0 +1,427 @@
+/**
+ * @description FeedbackTimeline 컴포넌트 스타일
+ * @design-system 비디오 타임라인 전용 UI, 댓글 마커 시스템
+ */
+
+@use '@/shared/config/design-tokens.scss' as *;
+
+.feedbackTimeline {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+  padding: $spacing-md;
+  background: $color-white;
+  border: $border-1 solid $color-gray-200;
+  border-radius: $radius-lg;
+  box-shadow: $shadow-sm;
+}
+
+.timelineHeader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: $spacing-sm;
+  font-family: $font-mono;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+
+  .currentTime {
+    color: $color-primary;
+  }
+
+  .separator {
+    color: $color-text-secondary;
+  }
+
+  .totalTime {
+    color: $color-text-secondary;
+  }
+}
+
+// ===========================
+// 타임라인 트랙
+// ===========================
+
+.timelineTrack {
+  position: relative;
+  height: 32px;
+  cursor: pointer;
+  border-radius: $radius-full;
+  background: $color-gray-100;
+  margin: $spacing-sm 0;
+  padding: $spacing-xs 0;
+
+  &:focus {
+    outline: 2px solid $color-primary;
+    outline-offset: 2px;
+  }
+
+  &:hover {
+    background: $color-gray-200;
+  }
+}
+
+.progressBar {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: $color-gray-300;
+  border-radius: $radius-full;
+  transform: translateY(-50%);
+  overflow: hidden;
+}
+
+.progress {
+  height: 100%;
+  background: linear-gradient(90deg, $color-primary 0%, $color-primary-light 100%);
+  border-radius: $radius-full;
+  transition: width 0.1s linear;
+}
+
+.playhead {
+  position: absolute;
+  top: 50%;
+  width: 16px;
+  height: 16px;
+  background: $color-primary;
+  border: 2px solid $color-white;
+  border-radius: $radius-full;
+  transform: translate(-50%, -50%);
+  cursor: grab;
+  box-shadow: $shadow-md;
+  z-index: $z-index-20;
+  transition: transform 0.1s ease;
+
+  &:hover {
+    transform: translate(-50%, -50%) scale(1.2);
+    box-shadow: $shadow-lg;
+  }
+
+  &:active {
+    cursor: grabbing;
+    transform: translate(-50%, -50%) scale(1.3);
+  }
+}
+
+// ===========================
+// 댓글 마커들
+// ===========================
+
+.commentMarker {
+  position: absolute;
+  top: 2px;
+  width: 8px;
+  height: 28px;
+  cursor: pointer;
+  transform: translateX(-50%);
+  transition: $transition-all;
+  z-index: $z-index-10;
+  border-radius: $radius-sm;
+
+  &:hover {
+    transform: translateX(-50%) scaleY(1.1);
+    z-index: $z-index-30;
+  }
+
+  &:focus {
+    outline: 2px solid $color-white;
+    outline-offset: 2px;
+    z-index: $z-index-30;
+  }
+
+  // 우선순위별 색상
+  &.priority-urgent {
+    background: $color-error;
+    animation: urgentPulse 2s infinite;
+  }
+
+  &.priority-high {
+    background: $color-warning;
+  }
+
+  &.priority-medium {
+    background: $color-info;
+  }
+
+  &.priority-low {
+    background: $color-gray-500;
+  }
+
+  // 상태별 스타일
+  &.status-resolved {
+    opacity: 0.6;
+    
+    &::after {
+      content: '✓';
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      width: 12px;
+      height: 12px;
+      background: $color-success;
+      color: $color-white;
+      border-radius: $radius-full;
+      font-size: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: $font-weight-bold;
+    }
+  }
+
+  &.status-archived {
+    opacity: 0.3;
+  }
+}
+
+.timelineMarker {
+  position: absolute;
+  top: 8px;
+  width: 6px;
+  height: 16px;
+  background: $color-accent;
+  cursor: pointer;
+  transform: translateX(-50%);
+  transition: $transition-all;
+  z-index: $z-index-10;
+  border-radius: $radius-sm;
+
+  &:hover {
+    transform: translateX(-50%) scaleY(1.2);
+    background: $color-accent-dark;
+  }
+}
+
+// ===========================
+// 시간 눈금
+// ===========================
+
+.timeScale {
+  position: relative;
+  height: 20px;
+  margin-top: $spacing-xs;
+}
+
+.timeTick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 1px;
+    height: 6px;
+    background: $color-gray-400;
+    transform: translateX(-50%);
+  }
+}
+
+.timeLabel {
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: $font-size-xs;
+  font-family: $font-mono;
+  color: $color-text-secondary;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+// ===========================
+// 반응형 디자인
+// ===========================
+
+@include mobile {
+  .feedbackTimeline {
+    padding: $spacing-sm;
+  }
+
+  .timelineTrack {
+    height: 40px;
+    margin: $spacing-md 0;
+  }
+
+  .playhead {
+    width: 20px;
+    height: 20px;
+  }
+
+  .commentMarker {
+    width: 10px;
+    height: 36px;
+  }
+
+  .timeLabel {
+    font-size: 10px;
+  }
+}
+
+@include tablet {
+  .timelineHeader {
+    font-size: $font-size-md;
+  }
+}
+
+// ===========================
+// 애니메이션
+// ===========================
+
+@keyframes urgentPulse {
+  0%, 100% {
+    opacity: 1;
+    transform: translateX(-50%) scaleY(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: translateX(-50%) scaleY(1.15);
+  }
+}
+
+// ===========================
+// 접근성 개선
+// ===========================
+
+// 고대비 모드 지원
+@media (prefers-contrast: high) {
+  .progressBar {
+    border: $border-1 solid $color-gray-700;
+  }
+
+  .playhead {
+    border-width: 3px;
+  }
+
+  .commentMarker {
+    border: $border-1 solid $color-white;
+    
+    &.priority-urgent,
+    &.priority-high,
+    &.priority-medium,
+    &.priority-low {
+      border-width: 2px;
+    }
+  }
+
+  .timelineMarker {
+    border: $border-1 solid $color-white;
+  }
+}
+
+// 모션 감소 설정 사용자 지원
+@media (prefers-reduced-motion: reduce) {
+  .progress {
+    transition: none;
+  }
+
+  .playhead {
+    transition: none;
+  }
+
+  .commentMarker {
+    transition: none;
+    
+    &.priority-urgent {
+      animation: none;
+    }
+  }
+
+  .timelineMarker {
+    transition: none;
+  }
+}
+
+// ===========================
+// 키보드 네비게이션
+// ===========================
+
+.timelineTrack {
+  &:focus-visible {
+    .playhead {
+      box-shadow: $shadow-lg, 0 0 0 3px rgba($color-primary, 0.3);
+    }
+  }
+}
+
+// 마커들 키보드 포커스
+.commentMarker,
+.timelineMarker {
+  &:focus-visible {
+    outline: 2px solid $color-primary;
+    outline-offset: 2px;
+    z-index: $z-index-40;
+  }
+}
+
+// ===========================
+// 툴팁 스타일
+// ===========================
+
+.commentMarker,
+.timelineMarker {
+  &::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba($color-black, 0.8);
+    color: $color-white;
+    padding: $spacing-xs $spacing-sm;
+    border-radius: $radius-sm;
+    font-size: $font-size-xs;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+    z-index: $z-index-tooltip;
+    margin-bottom: $spacing-xs;
+  }
+
+  &:hover::after {
+    opacity: 1;
+  }
+
+  @include mobile {
+    &::after {
+      display: none; // 모바일에서는 툴팁 숨김
+    }
+  }
+}
+
+// ===========================
+// 로딩 상태
+// ===========================
+
+.feedbackTimeline {
+  &.loading {
+    opacity: 0.6;
+    pointer-events: none;
+    
+    .timelineTrack {
+      background: linear-gradient(
+        90deg,
+        $color-gray-100 25%,
+        $color-gray-200 50%,
+        $color-gray-100 75%
+      );
+      background-size: 200% 100%;
+      animation: shimmer 2s infinite;
+    }
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}

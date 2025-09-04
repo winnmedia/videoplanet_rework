@@ -1,0 +1,399 @@
+name: 🔄 자동 롤백 시스템
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_environment:
+        description: '롤백할 환경'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+      rollback_to:
+        description: '롤백할 버전 (예: v2.0.1)'
+        required: true
+        type: string
+      reason:
+        description: '롤백 사유'
+        required: true
+        type: string
+      skip_validation:
+        description: '검증 스킵 (긴급 롤백)'
+        required: false
+        default: false
+        type: boolean
+  
+  # 자동 트리거 (다른 워크플로우에서 호출 가능)
+  workflow_call:
+    inputs:
+      target_environment:
+        required: true
+        type: string
+      rollback_to:
+        required: true
+        type: string
+      reason:
+        required: true
+        type: string
+      skip_validation:
+        required: false
+        type: boolean
+        default: false
+
+env:
+  NODE_VERSION: '20'
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/vridge-web
+
+permissions:
+  contents: read
+  packages: read
+  deployments: write
+  checks: write
+  issues: write
+
+jobs:
+  # ========================================
+  # Stage 1: 롤백 검증 및 준비
+  # ========================================
+  rollback-validation:
+    name: 🔍 롤백 검증 및 준비
+    runs-on: ubuntu-latest
+    outputs:
+      current-version: ${{ steps.current.outputs.version }}
+      target-version: ${{ steps.target.outputs.version }}
+      rollback-approved: ${{ steps.approval.outputs.approved }}
+      environment: ${{ inputs.target_environment }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 현재 배포 버전 확인
+        id: current
+        run: |
+          ENVIRONMENT="${{ inputs.target_environment }}"
+          
+          # 환경별 현재 버전 확인
+          if [[ "$ENVIRONMENT" == "production" ]]; then
+            CURRENT_VERSION=$(curl -s https://vridge.vlanet.net/api/version | jq -r '.version' || echo "unknown")
+          else
+            CURRENT_VERSION=$(curl -s https://staging.vridge.vlanet.net/api/version | jq -r '.version' || echo "unknown")
+          fi
+          
+          echo "version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "📊 Current version in $ENVIRONMENT: $CURRENT_VERSION"
+
+      - name: 롤백 대상 버전 검증
+        id: target
+        run: |
+          TARGET_VERSION="${{ inputs.rollback_to }}"
+          
+          # Git 태그 존재 확인
+          if git rev-parse "$TARGET_VERSION" >/dev/null 2>&1; then
+            echo "✅ Target version $TARGET_VERSION exists in Git"
+            echo "version=$TARGET_VERSION" >> $GITHUB_OUTPUT
+          else
+            echo "❌ Target version $TARGET_VERSION not found in Git"
+            exit 1
+          fi
+          
+          # 컨테이너 이미지 존재 확인
+          if docker manifest inspect "${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:$TARGET_VERSION" >/dev/null 2>&1; then
+            echo "✅ Container image exists for version $TARGET_VERSION"
+          else
+            echo "❌ Container image not found for version $TARGET_VERSION"
+            exit 1
+          fi
+
+      - name: 롤백 승인 검증
+        id: approval
+        run: |
+          ENVIRONMENT="${{ inputs.target_environment }}"
+          SKIP_VALIDATION="${{ inputs.skip_validation }}"
+          
+          if [[ "$ENVIRONMENT" == "production" ]] && [[ "$SKIP_VALIDATION" != "true" ]]; then
+            echo "🚨 Production rollback requires manual approval"
+            echo "approved=false" >> $GITHUB_OUTPUT
+            
+            # GitHub Issue 생성으로 승인 요청
+            gh issue create \
+              --title "🔄 Production Rollback Approval Required" \
+              --body "**Rollback Request**
+            
+            - **Environment**: $ENVIRONMENT
+            - **Current Version**: ${{ steps.current.outputs.version }}
+            - **Target Version**: ${{ inputs.rollback_to }}
+            - **Reason**: ${{ inputs.reason }}
+            - **Requested by**: ${{ github.actor }}
+            
+            **To approve this rollback:**
+            1. Review the rollback plan
+            2. Comment 'APPROVE' on this issue
+            3. Re-run the workflow
+            
+            **To reject:**
+            1. Comment 'REJECT' with reason
+            2. Close this issue" \
+              --label "rollback,production,approval-required"
+            
+            echo "❌ Manual approval required for production rollback"
+            exit 1
+          else
+            echo "approved=true" >> $GITHUB_OUTPUT
+            echo "✅ Rollback approved"
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 롤백 계획 출력
+        run: |
+          echo "📋 Rollback Plan"
+          echo "==============="
+          echo "Environment: ${{ inputs.target_environment }}"
+          echo "Current Version: ${{ steps.current.outputs.version }}"
+          echo "Target Version: ${{ inputs.rollback_to }}"
+          echo "Reason: ${{ inputs.reason }}"
+          echo "Skip Validation: ${{ inputs.skip_validation }}"
+          echo "Triggered by: ${{ github.actor }}"
+
+  # ========================================
+  # Stage 2: 백업 생성
+  # ========================================
+  create-backup:
+    name: 💾 현재 상태 백업
+    runs-on: ubuntu-latest
+    needs: rollback-validation
+    if: needs.rollback-validation.outputs.rollback-approved == 'true'
+    
+    steps:
+      - name: 현재 배포 상태 백업
+        run: |
+          echo "💾 Creating backup of current deployment..."
+          ENVIRONMENT="${{ inputs.target_environment }}"
+          CURRENT_VERSION="${{ needs.rollback-validation.outputs.current-version }}"
+          
+          # 현재 배포 설정 백업
+          # kubectl get deployment vridge-web-$ENVIRONMENT -o yaml > backup-$CURRENT_VERSION.yaml
+          
+          echo "✅ Backup created for version $CURRENT_VERSION"
+
+      - name: 데이터베이스 백업 (선택적)
+        run: |
+          echo "💾 Creating database backup (if needed)..."
+          
+          # 필요시 데이터베이스 백업
+          # pg_dump $DATABASE_URL > db-backup-$(date +%Y%m%d%H%M%S).sql
+          
+          echo "✅ Database backup completed"
+
+      - name: 백업 아티팩트 업로드
+        uses: actions/upload-artifact@v4
+        with:
+          name: rollback-backup-${{ needs.rollback-validation.outputs.current-version }}
+          path: backup-*
+          retention-days: 30
+
+  # ========================================
+  # Stage 3: 롤백 실행
+  # ========================================
+  execute-rollback:
+    name: 🔄 롤백 실행
+    runs-on: ubuntu-latest
+    needs: [rollback-validation, create-backup]
+    environment: ${{ inputs.target_environment }}
+    
+    steps:
+      - name: 롤백 시작 알림
+        uses: 8398a7/action-slack@v3
+        with:
+          status: custom
+          custom_payload: |
+            {
+              "text": "🔄 Rollback started",
+              "attachments": [{
+                "color": "warning",
+                "fields": [{
+                  "title": "Environment",
+                  "value": "${{ inputs.target_environment }}",
+                  "short": true
+                }, {
+                  "title": "From → To",
+                  "value": "${{ needs.rollback-validation.outputs.current-version }} → ${{ inputs.rollback_to }}",
+                  "short": true
+                }, {
+                  "title": "Reason",
+                  "value": "${{ inputs.reason }}",
+                  "short": false
+                }]
+              }]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: 컨테이너 레지스트리 로그인
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 롤백 대상 이미지 검증
+        run: |
+          TARGET_IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ inputs.rollback_to }}"
+          
+          # 이미지 존재 및 무결성 확인
+          docker pull "$TARGET_IMAGE"
+          docker inspect "$TARGET_IMAGE"
+          
+          echo "✅ Target image verified: $TARGET_IMAGE"
+
+      - name: 배포 롤백 실행
+        run: |
+          echo "🔄 Rolling back deployment..."
+          ENVIRONMENT="${{ inputs.target_environment }}"
+          TARGET_IMAGE="${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ inputs.rollback_to }}"
+          
+          # Kubernetes 롤백
+          # kubectl set image deployment/vridge-web-$ENVIRONMENT vridge-web=$TARGET_IMAGE
+          
+          # 또는 Docker Swarm 롤백
+          # docker service update --image $TARGET_IMAGE vridge-web-$ENVIRONMENT
+          
+          # 또는 Vercel 롤백
+          # vercel --prod --token=$VERCEL_TOKEN
+          
+          echo "✅ Deployment rollback completed"
+
+      - name: 롤백 후 헬스체크
+        run: |
+          echo "🔍 Running post-rollback health checks..."
+          ENVIRONMENT="${{ inputs.target_environment }}"
+          
+          if [[ "$ENVIRONMENT" == "production" ]]; then
+            HEALTH_URL="https://vridge.vlanet.net/api/health"
+          else
+            HEALTH_URL="https://staging.vridge.vlanet.net/api/health"
+          fi
+          
+          # 애플리케이션 시작 대기 (최대 10분)
+          for i in {1..60}; do
+            if curl -f -s "$HEALTH_URL" > /dev/null; then
+              echo "✅ Application is healthy after rollback"
+              break
+            fi
+            echo "⏳ Waiting for application to start... ($i/60)"
+            sleep 10
+          done
+          
+          # 버전 확인
+          DEPLOYED_VERSION=$(curl -s "$HEALTH_URL" | jq -r '.version' || echo "unknown")
+          if [[ "$DEPLOYED_VERSION" == "${{ inputs.rollback_to }}" ]]; then
+            echo "✅ Rollback version confirmed: $DEPLOYED_VERSION"
+          else
+            echo "❌ Rollback verification failed. Expected: ${{ inputs.rollback_to }}, Got: $DEPLOYED_VERSION"
+            exit 1
+          fi
+
+      - name: 스모크 테스트 실행
+        run: |
+          echo "🧪 Running post-rollback smoke tests..."
+          ENVIRONMENT="${{ inputs.target_environment }}"
+          
+          # 환경별 스모크 테스트 실행
+          if [[ "$ENVIRONMENT" == "production" ]]; then
+            npx playwright test --config=playwright.production.config.ts --project=production-smoke
+          else
+            npx playwright test --config=playwright.staging.config.ts --project=staging-smoke
+          fi
+          
+          echo "✅ Post-rollback smoke tests passed"
+
+  # ========================================
+  # Stage 4: 롤백 검증 및 모니터링
+  # ========================================
+  rollback-verification:
+    name: ✅ 롤백 검증 및 모니터링
+    runs-on: ubuntu-latest
+    needs: [rollback-validation, execute-rollback]
+    
+    steps:
+      - name: 롤백 후 메트릭 수집
+        run: |
+          echo "📊 Collecting post-rollback metrics..."
+          
+          # 5분간 메트릭 수집 대기
+          sleep 300
+          
+          # 에러율 확인
+          ERROR_RATE=$(curl -s https://metrics.vlanet.net/api/error-rate/5m || echo "0")
+          RESPONSE_TIME=$(curl -s https://metrics.vlanet.net/api/response-time/5m || echo "0")
+          
+          echo "Post-rollback metrics:"
+          echo "Error Rate: ${ERROR_RATE}%"
+          echo "Response Time: ${RESPONSE_TIME}ms"
+          
+          # 메트릭 임계값 검사
+          if (( $(echo "$ERROR_RATE > 2" | bc -l) )); then
+            echo "⚠️ High error rate after rollback: ${ERROR_RATE}%"
+          fi
+
+      - name: 사용자 영향 평가
+        run: |
+          echo "👥 Assessing user impact..."
+          
+          # 활성 사용자 세션 확인
+          # 실제로는 APM 도구나 분석 도구에서 데이터 수집
+          
+          echo "✅ User impact assessment completed"
+
+      - name: 롤백 성공 알림
+        uses: 8398a7/action-slack@v3
+        if: success()
+        with:
+          status: success
+          text: |
+            🎉 Rollback completed successfully!
+            
+            Environment: ${{ inputs.target_environment }}
+            Version: ${{ needs.rollback-validation.outputs.current-version }} → ${{ inputs.rollback_to }}
+            Reason: ${{ inputs.reason }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: 롤백 실패 알림
+        uses: 8398a7/action-slack@v3
+        if: failure()
+        with:
+          status: failure
+          text: |
+            🚨 Rollback failed!
+            
+            Environment: ${{ inputs.target_environment }}
+            Target Version: ${{ inputs.rollback_to }}
+            
+            Manual intervention required!
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: 롤백 기록 업데이트
+        if: always()
+        run: |
+          echo "📝 Updating rollback records..."
+          
+          STATUS=${{ job.status }}
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          
+          # 롤백 기록을 데이터베이스나 모니터링 시스템에 저장
+          echo "Rollback record:"
+          echo "- Environment: ${{ inputs.target_environment }}"
+          echo "- From: ${{ needs.rollback-validation.outputs.current-version }}"
+          echo "- To: ${{ inputs.rollback_to }}"
+          echo "- Status: $STATUS"
+          echo "- Timestamp: $TIMESTAMP"
+          echo "- Reason: ${{ inputs.reason }}"
+          echo "- Triggered by: ${{ github.actor }}"

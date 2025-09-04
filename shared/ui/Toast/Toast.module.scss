@@ -1,0 +1,193 @@
+@use '@/shared/config/design-tokens.scss' as *;
+
+.container {
+  position: fixed;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+  max-width: 420px;
+  pointer-events: none;
+}
+
+// 위치별 스타일 - 테스트에서 기대하는 클래스명
+.topright {
+  top: $spacing-lg;
+  right: $spacing-lg;
+}
+
+.topleft {
+  top: $spacing-lg;
+  left: $spacing-lg;
+}
+
+.bottomright {
+  bottom: $spacing-lg;
+  right: $spacing-lg;
+  flex-direction: column-reverse;
+}
+
+.bottomleft {
+  bottom: $spacing-lg;
+  left: $spacing-lg;
+  flex-direction: column-reverse;
+}
+
+.toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  padding: $spacing-md;
+  border-radius: 8px;
+  box-shadow: $shadow-lg;
+  min-width: 300px;
+  max-width: 420px;
+  word-wrap: break-word;
+  border: 1px solid transparent;
+  background: white;
+  
+  &:focus-visible {
+    outline: 2px solid $color-primary;
+    outline-offset: 2px;
+  }
+  
+  // 애니메이션 클래스
+  &.entering {
+    animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  &.reducedMotion {
+    animation: none !important;
+  }
+  
+  // 타입별 스타일
+  &.success {
+    background: $color-success-lighter;
+    border-color: $color-success-light;
+    color: $color-success-text;
+  }
+  
+  &.error {
+    background: $color-error-lighter;
+    border-color: $color-error-light;
+    color: $color-error-text;
+  }
+  
+  &.warning {
+    background: $color-warning-lighter;
+    border-color: $color-warning-light;
+    color: $color-warning-text;
+  }
+  
+  &.info {
+    background: $color-info-lighter;
+    border-color: $color-info-light;
+    color: $color-info-text;
+  }
+}
+
+.icon {
+  font-size: 16px;
+  font-weight: bold;
+  margin-right: $spacing-sm;
+  margin-top: 2px;
+  flex-shrink: 0;
+  
+  // 타입별 아이콘 색상
+  .success & {
+    color: $color-success-light;
+  }
+  
+  .error & {
+    color: $color-error-light;
+  }
+  
+  .warning & {
+    color: $color-warning-light;
+  }
+  
+  .info & {
+    color: $color-info-light;
+  }
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+}
+
+.message {
+  font-size: 14px;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+  margin-left: $spacing-sm;
+}
+
+.actionButton {
+  background: transparent;
+  border: 1px solid currentColor;
+  color: currentColor;
+  padding: $spacing-xs $spacing-sm;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  &:hover {
+    background: currentColor;
+    color: white;
+  }
+
+  &:focus {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+  }
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  line-height: 1;
+  transition: background-color 0.2s ease;
+  color: inherit;
+  
+  &:hover {
+    background: rgba(0, 0, 0, 0.1);
+  }
+  
+  &:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 1px;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+// 반응형 미디어 쿼리
+@media (prefers-reduced-motion: reduce) {
+  .toast {
+    &.entering {
+      animation: none !important;
+    }
+  }
+}

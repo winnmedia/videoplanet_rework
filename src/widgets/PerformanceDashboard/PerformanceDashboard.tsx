@@ -1,565 +1,253 @@
 /**
  * Performance Dashboard Widget
- * Real-time monitoring of Core Web Vitals and performance metrics
+ * Performance Lead 요구사항: 실시간 성능 모니터링 대시보드
  */
-
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { clsx } from 'clsx';
-import { cva } from 'class-variance-authority';
-import usePerformance from '../../shared/lib/performance/usePerformance';
-import type { WebVitalMetric } from '../../shared/lib/performance/webVitals';
+import React, { useState, useEffect } from 'react';
 
-// Metric card variants
-const metricCardVariants = cva(
-  'rounded-lg p-4 shadow-sm border transition-all duration-200',
-  {
-    variants: {
-      status: {
-        good: 'bg-green-50 border-green-200 text-green-800',
-        'needs-improvement': 'bg-yellow-50 border-yellow-200 text-yellow-800',
-        poor: 'bg-red-50 border-red-200 text-red-800',
-        loading: 'bg-gray-50 border-gray-200 text-gray-600 animate-pulse',
-      },
-    },
-    defaultVariants: {
-      status: 'loading',
-    },
-  }
-);
-
-// Score gauge variants
-const scoreGaugeVariants = cva(
-  'inline-flex items-center justify-center w-16 h-16 rounded-full text-lg font-bold',
-  {
-    variants: {
-      score: {
-        excellent: 'bg-green-100 text-green-800',
-        good: 'bg-lime-100 text-lime-800',
-        fair: 'bg-yellow-100 text-yellow-800',
-        poor: 'bg-red-100 text-red-800',
-      },
-    },
-    defaultVariants: {
-      score: 'good',
-    },
-  }
-);
+import { 
+  initWebVitals, 
+  getPerformanceDiagnostics, 
+  PERFORMANCE_THRESHOLDS,
+  type PerformanceMetricData 
+} from '@shared/lib/performance/web-vitals';
 
 interface MetricCardProps {
   name: string;
-  metric?: WebVitalMetric;
-  target: number;
+  value: number;
   unit: string;
-  description: string;
+  rating: 'good' | 'needs-improvement' | 'poor';
+  threshold: { good: number; poor: number };
 }
 
-const MetricCard: React.FC<MetricCardProps> = ({
-  name,
-  metric,
-  target,
-  unit,
-  description,
-}) => {
-  const status = metric?.rating || 'loading';
-  const value = metric?.value;
-  
-  const displayValue = useMemo(() => {
-    if (!value) return '측정 중...';
-    
-    if (unit === 'ms') {
-      return `${Math.round(value)}ms`;
-    } else if (unit === 's') {
-      return `${(value / 1000).toFixed(2)}s`;
-    } else {
-      return `${value.toFixed(3)}`;
+function MetricCard({ name, value, unit, rating, threshold }: MetricCardProps) {
+  const getRatingColor = (rating: string) => {
+    switch (rating) {
+      case 'good': return 'text-green-600 border-green-200 bg-green-50';
+      case 'needs-improvement': return 'text-orange-600 border-orange-200 bg-orange-50';
+      case 'poor': return 'text-red-600 border-red-200 bg-red-50';
+      default: return 'text-gray-600 border-gray-200 bg-gray-50';
     }
-  }, [value, unit]);
+  };
 
-  const targetText = useMemo(() => {
-    if (unit === 'ms') {
-      return `목표: ${target}ms`;
-    } else if (unit === 's') {
-      return `목표: ${(target / 1000).toFixed(1)}s`;
-    } else {
-      return `목표: ${target}`;
+  const formatValue = (value: number, unit: string) => {
+    if (unit === 'ms' && value > 1000) {
+      return `${(value / 1000).toFixed(2)}s`;
     }
-  }, [target, unit]);
+    return `${value.toFixed(unit === 'ms' ? 0 : 3)}${unit}`;
+  };
 
   return (
-    <div className={metricCardVariants({ status })}>
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="text-sm font-semibold">{name}</h3>
-        <div className="text-xs opacity-75">{targetText}</div>
+    <div className={`p-4 rounded-lg border-2 ${getRatingColor(rating)}`}>
+      <div className="flex justify-between items-start mb-2">
+        <h3 className="font-semibold text-sm">{name}</h3>
+        <span className={`text-xs px-2 py-1 rounded-full ${getRatingColor(rating)}`}>
+          {rating}
+        </span>
       </div>
       
-      <div className="flex items-end justify-between">
-        <div>
-          <div className="text-2xl font-bold">{displayValue}</div>
-          <div className="text-xs opacity-75 mt-1">{description}</div>
-        </div>
-        
-        {metric && (
-          <div className={clsx(
-            'w-3 h-3 rounded-full',
-            status === 'good' && 'bg-green-500',
-            status === 'needs-improvement' && 'bg-yellow-500',
-            status === 'poor' && 'bg-red-500'
-          )} />
-        )}
+      <div className="text-2xl font-bold mb-1">
+        {formatValue(value, unit)}
+      </div>
+      
+      <div className="text-xs opacity-75">
+        Good: ≤{formatValue(threshold.good, unit)} | 
+        Poor: &gt;{formatValue(threshold.poor, unit)}
+      </div>
+      
+      {/* Visual indicator */}
+      <div className="mt-3 h-2 bg-gray-200 rounded-full overflow-hidden">
+        <div 
+          className={`h-full transition-all duration-300 ${
+            rating === 'good' ? 'bg-green-500' : 
+            rating === 'needs-improvement' ? 'bg-orange-500' : 'bg-red-500'
+          }`}
+          style={{ 
+            width: `${Math.min((value / threshold.poor) * 100, 100)}%` 
+          }}
+        />
       </div>
     </div>
   );
-};
-
-interface PerformanceScoreProps {
-  score: number;
 }
 
-const PerformanceScore: React.FC<PerformanceScoreProps> = ({ score }) => {
-  const getScoreVariant = (score: number) => {
-    if (score >= 90) return 'excellent';
-    if (score >= 70) return 'good';
-    if (score >= 50) return 'fair';
+interface PerformanceData {
+  LCP: number;
+  INP: number;
+  CLS: number;
+  FCP: number;
+  TTFB: number;
+  [key: string]: number;
+}
+
+export function PerformanceDashboard() {
+  const [metrics, setMetrics] = useState<PerformanceData>({
+    LCP: 0,
+    INP: 0,
+    CLS: 0,
+    FCP: 0,
+    TTFB: 0,
+  });
+  
+  const [diagnostics, setDiagnostics] = useState<ReturnType<typeof getPerformanceDiagnostics>>(null);
+  const [isMonitoring, setIsMonitoring] = useState(false);
+
+  // Rating calculation
+  const getRating = (value: number, thresholds: { good: number; poor: number }) => {
+    if (value <= thresholds.good) return 'good';
+    if (value <= thresholds.poor) return 'needs-improvement';
     return 'poor';
   };
 
-  const getScoreDescription = (score: number) => {
-    if (score >= 90) return '우수';
-    if (score >= 70) return '양호';
-    if (score >= 50) return '보통';
-    return '개선 필요';
-  };
+  useEffect(() => {
+    // Initialize Web Vitals monitoring
+    initWebVitals();
+    setIsMonitoring(true);
 
-  return (
-    <div className="text-center">
-      <div className={scoreGaugeVariants({ score: getScoreVariant(score) })}>
-        {score || '?'}
-      </div>
-      <div className="mt-2 text-sm font-medium">
-        전체 성능 점수
-      </div>
-      <div className="text-xs text-gray-600">
-        {getScoreDescription(score)}
-      </div>
-    </div>
-  );
-};
+    // Get initial diagnostics
+    const initialDiagnostics = getPerformanceDiagnostics();
+    setDiagnostics(initialDiagnostics);
 
-interface RecommendationsPanelProps {
-  recommendations: string[];
-  onDismiss?: (index: number) => void;
-}
+    // Listen for performance metrics updates
+    const handlePerformanceUpdate = (event: CustomEvent<PerformanceMetricData>) => {
+      const { name, value } = event.detail;
+      
+      setMetrics(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    };
 
-const RecommendationsPanel: React.FC<RecommendationsPanelProps> = ({
-  recommendations,
-  onDismiss,
-}) => {
-  if (recommendations.length === 0) {
-    return (
-      <div className="text-center py-8 text-gray-500">
-        <div className="text-lg mb-2">🎉</div>
-        <div>모든 성능 지표가 양호합니다!</div>
-      </div>
-    );
+    // Custom event listener for performance updates
+    window.addEventListener('performance-metric', handlePerformanceUpdate as EventListener);
+
+    // Periodic diagnostics update
+    const diagnosticsInterval = setInterval(() => {
+      const newDiagnostics = getPerformanceDiagnostics();
+      setDiagnostics(newDiagnostics);
+    }, 5000);
+
+    return () => {
+      window.removeEventListener('performance-metric', handlePerformanceUpdate as EventListener);
+      clearInterval(diagnosticsInterval);
+    };
+  }, []);
+
+  // Core Web Vitals metrics
+  const coreWebVitals = [
+    {
+      name: 'LCP',
+      fullName: 'Largest Contentful Paint',
+      value: metrics.LCP,
+      unit: 'ms',
+      threshold: PERFORMANCE_THRESHOLDS.LCP,
+    },
+    {
+      name: 'INP',
+      fullName: 'Interaction to Next Paint', 
+      value: metrics.INP,
+      unit: 'ms',
+      threshold: PERFORMANCE_THRESHOLDS.INP,
+    },
+    {
+      name: 'CLS',
+      fullName: 'Cumulative Layout Shift',
+      value: metrics.CLS,
+      unit: '',
+      threshold: PERFORMANCE_THRESHOLDS.CLS,
+    },
+  ];
+
+  // Supporting metrics
+  const supportingMetrics = [
+    {
+      name: 'FCP',
+      fullName: 'First Contentful Paint',
+      value: metrics.FCP,
+      unit: 'ms',
+      threshold: PERFORMANCE_THRESHOLDS.FCP,
+    },
+    {
+      name: 'TTFB',
+      fullName: 'Time to First Byte',
+      value: metrics.TTFB,
+      unit: 'ms',
+      threshold: PERFORMANCE_THRESHOLDS.TTFB,
+    },
+  ];
+
+  if (process.env.NODE_ENV === 'production') {
+    return null; // Only show in development
   }
 
   return (
-    <div className="space-y-3">
-      <h4 className="text-sm font-semibold text-gray-900 mb-3">성능 개선 권장사항</h4>
-      {recommendations.map((recommendation, index) => (
-        <div
-          key={index}
-          className="flex items-start gap-3 p-3 bg-blue-50 border border-blue-200 rounded-lg"
-        >
-          <div className="flex-shrink-0 w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs font-bold">
-            {index + 1}
-          </div>
-          <div className="flex-1 text-sm text-blue-800">
-            {recommendation}
-          </div>
-          {onDismiss && (
-            <button
-              onClick={() => onDismiss(index)}
-              className="flex-shrink-0 text-blue-600 hover:text-blue-800 text-xs"
-              aria-label="권장사항 닫기"
-            >
-              ✕
-            </button>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-};
+    <div className="fixed top-4 right-4 w-80 bg-white rounded-lg shadow-lg border p-4 z-50 max-h-96 overflow-y-auto">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="font-bold text-lg">Performance Monitor</h2>
+        <div className={`w-3 h-3 rounded-full ${isMonitoring ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`} />
+      </div>
 
-interface PerformanceDashboardProps {
-  className?: string;
-  showRecommendations?: boolean;
-  refreshInterval?: number;
-  onPerformanceIssue?: (issue: { type: string; message: string; data: any }) => void;
-}
-
-const PerformanceDashboard: React.FC<PerformanceDashboardProps> = ({
-  className,
-  showRecommendations = true,
-  refreshInterval = 5000,
-  onPerformanceIssue,
-}) => {
-  const {
-    metrics,
-    allMetrics,
-    isMonitoring,
-    hasPerformanceIssues,
-    performanceScore,
-    getRecommendations,
-    flushMetrics,
-  } = usePerformance();
-
-  const [dismissedRecommendations, setDismissedRecommendations] = useState<number[]>([]);
-  const [lastUpdate, setLastUpdate] = useState(Date.now());
-
-  // Auto-refresh metrics
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      setLastUpdate(Date.now());
-    }, refreshInterval);
-
-    return () => clearInterval(intervalId);
-  }, [refreshInterval]);
-
-  // Handle performance issues
-  useEffect(() => {
-    if (hasPerformanceIssues && onPerformanceIssue) {
-      const poorMetrics = allMetrics.filter(metric => metric.rating === 'poor');
-      poorMetrics.forEach(metric => {
-        onPerformanceIssue({
-          type: 'poor_performance',
-          message: `Poor ${metric.name} performance: ${metric.value}ms`,
-          data: metric,
-        });
-      });
-    }
-  }, [hasPerformanceIssues, allMetrics, onPerformanceIssue]);
-
-  const recommendations = useMemo(() => {
-    const allRecommendations = getRecommendations();
-    return allRecommendations.filter((_, index) => 
-      !dismissedRecommendations.includes(index)
-    );
-  }, [getRecommendations, dismissedRecommendations]);
-
-  const handleDismissRecommendation = (index: number) => {
-    setDismissedRecommendations(prev => [...prev, index]);
-  };
-
-  const handleRefreshMetrics = async () => {
-    await flushMetrics();
-    setLastUpdate(Date.now());
-  };
-
-  if (!isMonitoring) {
-    return (
-      <div className={clsx('p-6 bg-gray-50 rounded-lg', className)}>
-        <div className="text-center text-gray-500">
-          성능 모니터링이 비활성화되어 있습니다.
+      {/* Core Web Vitals */}
+      <div className="mb-6">
+        <h3 className="font-semibold text-sm mb-3 text-gray-700">Core Web Vitals (2024)</h3>
+        <div className="space-y-3">
+          {coreWebVitals.map((metric) => (
+            <MetricCard
+              key={metric.name}
+              name={metric.fullName}
+              value={metric.value}
+              unit={metric.unit}
+              rating={getRating(metric.value, metric.threshold)}
+              threshold={metric.threshold}
+            />
+          ))}
         </div>
       </div>
-    );
-  }
 
-  return (
-    <div className={clsx('space-y-6', className)}>
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      {/* Supporting Metrics */}
+      <div className="mb-6">
+        <h3 className="font-semibold text-sm mb-3 text-gray-700">Supporting Metrics</h3>
+        <div className="space-y-3">
+          {supportingMetrics.map((metric) => (
+            <MetricCard
+              key={metric.name}
+              name={metric.fullName}
+              value={metric.value}
+              unit={metric.unit}
+              rating={getRating(metric.value, metric.threshold)}
+              threshold={metric.threshold}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Diagnostics */}
+      {diagnostics && (
         <div>
-          <h2 className="text-xl font-bold text-gray-900">성능 대시보드</h2>
-          <p className="text-sm text-gray-600 mt-1">
-            실시간 Core Web Vitals 모니터링
-          </p>
-        </div>
-        
-        <div className="flex items-center gap-4">
-          {/* Performance Score */}
-          <PerformanceScore score={performanceScore} />
-          
-          {/* Refresh Button */}
-          <button
-            onClick={handleRefreshMetrics}
-            className="px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-          >
-            새로고침
-          </button>
-        </div>
-      </div>
-
-      {/* Status Indicators */}
-      <div className="flex items-center gap-4 text-sm">
-        <div className="flex items-center gap-2">
-          <div className={clsx(
-            'w-2 h-2 rounded-full',
-            isMonitoring ? 'bg-green-500' : 'bg-gray-400'
-          )} />
-          <span className="text-gray-600">
-            {isMonitoring ? '모니터링 활성' : '모니터링 비활성'}
-          </span>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <div className={clsx(
-            'w-2 h-2 rounded-full',
-            hasPerformanceIssues ? 'bg-red-500' : 'bg-green-500'
-          )} />
-          <span className="text-gray-600">
-            {hasPerformanceIssues ? '성능 이슈 감지' : '성능 양호'}
-          </span>
-        </div>
-        
-        <div className="text-xs text-gray-500">
-          마지막 업데이트: {new Date(lastUpdate).toLocaleTimeString()}
-        </div>
-      </div>
-
-      {/* Core Web Vitals Metrics */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        <MetricCard
-          name="LCP"
-          metric={metrics.lcp}
-          target={2500}
-          unit="ms"
-          description="최대 콘텐츠 페인트"
-        />
-        
-        <MetricCard
-          name="INP"
-          metric={metrics.inp}
-          target={200}
-          unit="ms"
-          description="다음 페인트까지의 상호작용"
-        />
-        
-        <MetricCard
-          name="CLS"
-          metric={metrics.cls}
-          target={0.1}
-          unit=""
-          description="누적 레이아웃 이동"
-        />
-        
-        <MetricCard
-          name="FCP"
-          metric={metrics.fcp}
-          target={1800}
-          unit="ms"
-          description="첫 콘텐츠 페인트"
-        />
-        
-        <MetricCard
-          name="FID"
-          metric={metrics.fid}
-          target={100}
-          unit="ms"
-          description="첫 입력 지연"
-        />
-        
-        <MetricCard
-          name="TTFB"
-          metric={metrics.ttfb}
-          target={800}
-          unit="ms"
-          description="첫 바이트까지의 시간"
-        />
-      </div>
-
-      {/* Performance Trends */}
-      {allMetrics.length > 0 && (
-        <div className="bg-white p-6 rounded-lg border">
-          <h3 className="text-lg font-semibold mb-4">성능 트렌드</h3>
-          
-          <div className="space-y-4">
-            {/* Metrics summary */}
-            <div className="grid grid-cols-3 gap-4 text-center">
-              <div>
-                <div className="text-2xl font-bold text-green-600">
-                  {allMetrics.filter(m => m.rating === 'good').length}
-                </div>
-                <div className="text-xs text-gray-600">양호</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-yellow-600">
-                  {allMetrics.filter(m => m.rating === 'needs-improvement').length}
-                </div>
-                <div className="text-xs text-gray-600">개선 필요</div>
-              </div>
-              <div>
-                <div className="text-2xl font-bold text-red-600">
-                  {allMetrics.filter(m => m.rating === 'poor').length}
-                </div>
-                <div className="text-xs text-gray-600">불량</div>
-              </div>
-            </div>
-
-            {/* Recent metrics */}
-            <div className="mt-4">
-              <h4 className="text-sm font-medium text-gray-700 mb-2">최근 측정값</h4>
-              <div className="max-h-40 overflow-y-auto space-y-1">
-                {allMetrics.slice(-10).reverse().map((metric, index) => (
-                  <div
-                    key={`${metric.id}-${index}`}
-                    className="flex items-center justify-between py-1 px-2 rounded text-xs"
-                  >
-                    <div className="flex items-center gap-2">
-                      <div className={clsx(
-                        'w-2 h-2 rounded-full',
-                        metric.rating === 'good' && 'bg-green-500',
-                        metric.rating === 'needs-improvement' && 'bg-yellow-500',
-                        metric.rating === 'poor' && 'bg-red-500'
-                      )} />
-                      <span className="font-medium">{metric.name}</span>
-                    </div>
-                    <div className="text-gray-600">
-                      {metric.name === 'CLS' 
-                        ? metric.value.toFixed(3)
-                        : `${Math.round(metric.value)}ms`
-                      }
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+          <h3 className="font-semibold text-sm mb-3 text-gray-700">Diagnostics</h3>
+          <div className="text-xs space-y-1 text-gray-600">
+            <div>DOM Ready: {diagnostics.domContentLoaded.toFixed(0)}ms</div>
+            <div>Load Complete: {diagnostics.loadComplete.toFixed(0)}ms</div>
+            <div>Resources: {diagnostics.resourceCount}</div>
+            {diagnostics.usedJSHeapSize && (
+              <div>JS Heap: {(diagnostics.usedJSHeapSize / 1024 / 1024).toFixed(1)}MB</div>
+            )}
           </div>
         </div>
       )}
 
-      {/* Recommendations */}
-      {showRecommendations && (
-        <div className="bg-white p-6 rounded-lg border">
-          <RecommendationsPanel
-            recommendations={recommendations}
-            onDismiss={handleDismissRecommendation}
-          />
-        </div>
-      )}
-
-      {/* Component Performance Tracking */}
-      <div className="bg-white p-6 rounded-lg border">
-        <h3 className="text-lg font-semibold mb-4">신규 컴포넌트 성능 추적</h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Global Submenu Metrics */}
-          <div className="p-4 bg-gray-50 rounded-lg">
-            <h4 className="text-sm font-medium text-gray-700 mb-2">Global Submenu</h4>
-            <div className="space-y-2 text-xs">
-              <div className="flex justify-between">
-                <span>렌더링 시간:</span>
-                <span className="font-mono">~15ms</span>
-              </div>
-              <div className="flex justify-between">
-                <span>메모리 사용량:</span>
-                <span className="font-mono">~1MB</span>
-              </div>
-              <div className="flex justify-between">
-                <span>INP 영향:</span>
-                <span className="text-yellow-600 font-mono">+15ms</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Notification Center Metrics */}
-          <div className="p-4 bg-gray-50 rounded-lg">
-            <h4 className="text-sm font-medium text-gray-700 mb-2">Notification Center</h4>
-            <div className="space-y-2 text-xs">
-              <div className="flex justify-between">
-                <span>폴링 지연:</span>
-                <span className="font-mono">~5s</span>
-              </div>
-              <div className="flex justify-between">
-                <span>캐시 크기:</span>
-                <span className="font-mono">~2MB</span>
-              </div>
-              <div className="flex justify-between">
-                <span>INP 영향:</span>
-                <span className="text-yellow-600 font-mono">+25ms</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Planning Wizard Metrics */}
-          <div className="p-4 bg-gray-50 rounded-lg">
-            <h4 className="text-sm font-medium text-gray-700 mb-2">Planning Wizard</h4>
-            <div className="space-y-2 text-xs">
-              <div className="flex justify-between">
-                <span>초기 로딩:</span>
-                <span className="text-red-600 font-mono">~100ms</span>
-              </div>
-              <div className="flex justify-between">
-                <span>메모리 사용량:</span>
-                <span className="text-orange-600 font-mono">~8MB</span>
-              </div>
-              <div className="flex justify-between">
-                <span>INP 영향:</span>
-                <span className="text-red-600 font-mono">+40ms</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Bundle Size Impact */}
-        <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-          <h4 className="text-sm font-semibold text-blue-800 mb-2">번들 크기 영향</h4>
-          <div className="flex items-center justify-between text-sm">
-            <div>
-              <span className="text-blue-700">현재 번들 크기:</span>
-              <span className="ml-2 font-mono text-blue-900">1.21 MB</span>
-            </div>
-            <div>
-              <span className="text-blue-700">목표 예산:</span>
-              <span className="ml-2 font-mono text-blue-900">800 KB</span>
-            </div>
-            <div className="text-red-600 font-semibold">
-              +51% 초과
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Performance Alerts */}
-      {hasPerformanceIssues && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs">
-              !
-            </div>
-            <h4 className="text-sm font-semibold text-red-800">
-              성능 이슈 감지됨
-            </h4>
-          </div>
-          <p className="text-sm text-red-700">
-            하나 이상의 Core Web Vitals 지표가 목표를 달성하지 못했습니다. 
-            사용자 경험 개선을 위해 권장사항을 확인해주세요.
-          </p>
-        </div>
-      )}
-
-      {/* Component-specific Performance Warnings */}
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-        <div className="flex items-center gap-2 mb-2">
-          <div className="w-5 h-5 bg-yellow-500 text-white rounded-full flex items-center justify-center text-xs">
-            ⚠
-          </div>
-          <h4 className="text-sm font-semibold text-yellow-800">
-            신규 컴포넌트 성능 주의사항
-          </h4>
-        </div>
-        <div className="space-y-2 text-sm text-yellow-700">
-          <p><strong>INP 예산 초과:</strong> 230ms > 200ms (30ms 초과)</p>
-          <p><strong>Bundle 크기 초과:</strong> Planning Wizard 복잡도로 인한 번들 증가</p>
-          <p><strong>메모리 사용량:</strong> 알림 데이터 캐싱 및 AI 응답 데이터 누적</p>
-        </div>
+      {/* Performance Tips */}
+      <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+        <h4 className="font-semibold text-sm text-blue-800 mb-2">Performance Tips</h4>
+        <ul className="text-xs text-blue-700 space-y-1">
+          <li>• LCP: Optimize images and server response time</li>
+          <li>• INP: Reduce JavaScript execution time</li>
+          <li>• CLS: Set dimensions for images/videos</li>
+        </ul>
       </div>
     </div>
   );
-};
+}
 
 export default PerformanceDashboard;

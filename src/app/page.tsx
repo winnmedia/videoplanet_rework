@@ -1,273 +1,260 @@
 'use client'
 
-import { Typography } from "@/shared/ui/Typography/Typography"
-import { Button } from "@/shared/ui/Button/Button"
-import { useGetDashboardSummaryQuery } from "@/shared/api/dashboard"
-import { 
-  selectCurrentData, 
-  selectUIState, 
-  selectViewModelCache,
-  updateViewModelCache
-} from "@/entities/dashboard"
-import { useAppSelector, useAppDispatch } from "@/app/store"
-import { transformDashboardToViewModel } from "@/shared/lib/dashboard-mappers"
-import { useEffect } from "react"
+import React, { useState, Component, ReactNode, ErrorInfo } from 'react'
 
-export default function Dashboard() {
-  const dispatch = useAppDispatch()
-  
-  // RTK Query로 데이터 fetching
-  const {
-    data: dashboardData,
-    error,
-    isLoading,
-    isError,
-    refetch
-  } = useGetDashboardSummaryQuery()
-  
-  // Redux 상태 조회
-  const currentData = useAppSelector(selectCurrentData)
-  const uiState = useAppSelector(selectUIState)
-  const viewModelCache = useAppSelector(selectViewModelCache)
-  
-  // 데이터 변환 및 캐싱 로직
-  useEffect(() => {
-    if (dashboardData && !isLoading && !isError) {
-      const transformedData = transformDashboardToViewModel(dashboardData)
-      
-      // 캐시가 없거나 데이터가 변경된 경우에만 업데이트
-      if (!viewModelCache || viewModelCache.lastUpdated < Date.now() - 30000) {
-        dispatch(updateViewModelCache({
-          data: transformedData,
-          lastUpdated: Date.now()
-        }))
-      }
-    }
-  }, [dashboardData, isLoading, isError, viewModelCache, dispatch])
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-96">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        <span className="ml-3 text-neutral-600">대시보드 로딩 중...</span>
-      </div>
-    )
+// 간단한 ErrorBoundary 구현 (의존성 없이)
+class SimpleErrorBoundary extends Component<
+  { children: ReactNode },
+  { hasError: boolean; error: Error | null }
+> {
+  constructor(props: { children: ReactNode }) {
+    super(props)
+    this.state = { hasError: false, error: null }
   }
 
-  if (isError || !dashboardData) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-96 text-center">
-        <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mb-4">
-          <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+  static getDerivedStateFromError(error: Error) {
+    return { hasError: true, error }
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('ErrorBoundary caught an error:', error, errorInfo)
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen bg-red-50 p-8 flex items-center justify-center">
+          <div className="bg-white rounded-lg shadow p-6 max-w-md w-full">
+            <div className="text-red-600 text-center">
+              <h2 className="text-xl font-bold mb-4">오류가 발생했습니다</h2>
+              <p className="mb-4">{this.state.error?.message}</p>
+              <button
+                onClick={() => this.setState({ hasError: false, error: null })}
+                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+              >
+                다시 시도
+              </button>
+            </div>
+          </div>
         </div>
-        <Typography variant="h3" className="mb-2">
-          데이터를 불러올 수 없습니다
-        </Typography>
-        <Typography variant="body" className="text-neutral-600 mb-4">
-          대시보드 정보를 가져오는 중 문제가 발생했습니다.
-        </Typography>
-        <Button variant="primary" onClick={() => refetch()}>
-          다시 시도
-        </Button>
-      </div>
-    )
+      )
+    }
+
+    return this.props.children
+  }
+}
+
+export default function HomePage() {
+  const [projects, setProjects] = useState<any[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const loadProjects = async () => {
+    setLoading(true)
+    setError(null)
+    
+    try {
+      const response = await fetch('http://127.0.0.1:8001/api/v1/projects/')
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+      
+      const data = await response.json()
+      setProjects(Array.isArray(data) ? data : [])
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '알 수 없는 오류가 발생했습니다')
+    } finally {
+      setLoading(false)
+    }
   }
 
-  // 캐시된 데이터가 있으면 사용, 없으면 실시간 변환
-  const displayData = viewModelCache?.data || transformDashboardToViewModel(dashboardData)
+  const triggerError = () => {
+    throw new Error('의도적인 테스트 에러입니다')
+  }
 
   return (
-    <div className="min-h-screen bg-background-primary">
-      <div className="max-w-screen-2xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <Typography 
-            variant="h1" 
-            className="text-neutral-900 mb-2"
-          >
-            VideoPlanet 대시보드
-          </Typography>
-          <Typography 
-            variant="body" 
-            className="text-neutral-600"
-          >
-            프로젝트와 콘텐츠를 한눈에 관리하세요
-          </Typography>
-        </div>
+    <SimpleErrorBoundary>
+      <div className="min-h-screen bg-gray-50 p-8">
+        <div className="mx-auto max-w-4xl">
+          <header className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              VLANET - AI 영상 플랫폼
+            </h1>
+            <p className="text-gray-600">
+              AI 시나리오 · 프롬프트 · 영상 생성 · 피드백 파이프라인
+            </p>
+          </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {/* 활성 프로젝트 카드 */}
-          <div className="bg-background-card rounded-admin-lg p-6 border border-border-light">
-            <div className="flex items-center justify-between mb-4">
-              <Typography variant="h3" className="text-neutral-800">
-                활성 프로젝트
-              </Typography>
-              <div className="w-10 h-10 bg-primary-100 rounded-admin flex items-center justify-center">
-                <svg className="w-5 h-5 text-primary-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
-                </svg>
+          <nav className="mb-8">
+            <a 
+              href="#main" 
+              className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-blue-600 text-white px-4 py-2 rounded"
+              data-testid="skip-link"
+            >
+              메인 콘텐츠로 건너뛰기
+            </a>
+            <ul className="flex space-x-4">
+              <li>
+                <a href="/" className="text-blue-600 hover:text-blue-800" data-cy="nav-home">
+                  홈
+                </a>
+              </li>
+              <li>
+                <a href="/projects" className="text-blue-600 hover:text-blue-800">
+                  프로젝트
+                </a>
+              </li>
+              <li>
+                <a href="/feedback" className="text-blue-600 hover:text-blue-800">
+                  피드백
+                </a>
+              </li>
+            </ul>
+          </nav>
+
+          <main id="main" role="main">
+            <div className="bg-white rounded-lg shadow p-6 mb-8">
+              <h2 className="text-2xl font-semibold mb-4">프로젝트 관리</h2>
+              
+              <div className="flex gap-4 mb-6">
+                <button
+                  onClick={loadProjects}
+                  disabled={loading}
+                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                  data-testid="load-projects"
+                  data-cy="load-projects"
+                >
+                  {loading ? '로딩 중...' : '프로젝트 불러오기'}
+                </button>
+
+                <button
+                  onClick={triggerError}
+                  className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                  data-testid="trigger-error"
+                  data-cy="trigger-error"
+                >
+                  에러 테스트
+                </button>
               </div>
-            </div>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-2xl font-semibold text-neutral-900">
-                  {displayData.activeProjects}
-                </span>
-                <span className="text-sm text-admin-success font-medium">
-                  +{displayData.newProjectsThisMonth} 이번 달
-                </span>
-              </div>
-              <div className="w-full bg-neutral-200 rounded-full h-2">
+
+              {loading && (
                 <div 
-                  className="bg-primary-500 h-2 rounded-full transition-all duration-300" 
-                  style={{ width: `${Math.min(100, (displayData.activeProjects / 20) * 100)}%` }}
+                  className="flex items-center space-x-2 text-blue-600"
+                  data-testid="loading-indicator"
+                  aria-live="polite"
+                >
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent"></div>
+                  <span>프로젝트를 불러오는 중...</span>
+                </div>
+              )}
+
+              {error && (
+                <div 
+                  className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4"
+                  role="alert"
+                  data-testid="error-display"
+                  data-cy="error-display"
+                >
+                  <div className="flex items-center">
+                    <span className="text-red-500 mr-2">❌</span>
+                    <div>
+                      <strong>오류가 발생했습니다</strong>
+                      <p>{error}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setError(null)}
+                    className="mt-2 bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                    data-testid="retry-button"
+                    data-cy="retry-button"
+                  >
+                    다시 시도
+                  </button>
+                </div>
+              )}
+
+              {projects.length > 0 && (
+                <div data-testid="projects-list" data-cy="projects-list">
+                  <h3 className="text-lg font-medium mb-3">프로젝트 목록</h3>
+                  <ul className="space-y-2">
+                    {projects.map((project, index) => (
+                      <li key={index} className="border border-gray-200 rounded p-3">
+                        <pre className="text-sm">{JSON.stringify(project, null, 2)}</pre>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+
+            <div className="bg-white rounded-lg shadow p-6">
+              <h2 className="text-2xl font-semibold mb-4">접근성 테스트 요소</h2>
+              
+              <form className="space-y-4">
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                    이메일 주소
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    required
+                    className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    data-testid="email-input"
+                    placeholder="예: user@example.com"
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                    비밀번호
+                  </label>
+                  <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    required
+                    className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    data-testid="password-input"
+                    placeholder="8자 이상"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+                  data-testid="login-submit"
+                >
+                  로그인
+                </button>
+              </form>
+
+              <div className="mt-8">
+                <h3 className="text-lg font-medium mb-3">이미지 테스트</h3>
+                <img 
+                  src="/placeholder-image.jpg" 
+                  alt="테스트 이미지 - VideoPlanet 플랫폼 스크린샷"
+                  className="w-64 h-48 object-cover border border-gray-200 rounded"
+                  loading="lazy"
+                />
+                
+                <img 
+                  src="/decorative-pattern.svg" 
+                  alt=""
+                  role="presentation" 
+                  className="w-32 h-16 mt-4"
                 />
               </div>
             </div>
-          </div>
+          </main>
 
-          {/* 총 사용자 카드 */}
-          <div className="bg-background-card rounded-admin-lg p-6 border border-border-light">
-            <div className="flex items-center justify-between mb-4">
-              <Typography variant="h3" className="text-neutral-800">
-                총 사용자
-              </Typography>
-              <div className="w-10 h-10 bg-blue-100 rounded-admin flex items-center justify-center">
-                <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
-                </svg>
-              </div>
-            </div>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-2xl font-semibold text-neutral-900">
-                  {displayData.totalUsers}
-                </span>
-                <span className="text-sm text-admin-success font-medium">
-                  +{displayData.newUsersThisWeek} 이번 주
-                </span>
-              </div>
-              <div className="text-sm text-neutral-600">
-                활성 사용자: {displayData.activeUsers}
-              </div>
-            </div>
-          </div>
-
-          {/* 완료된 비디오 카드 */}
-          <div className="bg-background-card rounded-admin-lg p-6 border border-border-light">
-            <div className="flex items-center justify-between mb-4">
-              <Typography variant="h3" className="text-neutral-800">
-                완료된 비디오
-              </Typography>
-              <div className="w-10 h-10 bg-green-100 rounded-admin flex items-center justify-center">
-                <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
-                </svg>
-              </div>
-            </div>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-2xl font-semibold text-neutral-900">
-                  {displayData.completedVideos}
-                </span>
-                <span className="text-sm text-admin-success font-medium">
-                  +{displayData.videosCompletedToday} 오늘
-                </span>
-              </div>
-              <div className="text-sm text-neutral-600">
-                처리 중: {displayData.videosInProgress}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 최근 활동 섹션 */}
-        <div className="bg-background-card rounded-admin-lg p-6 border border-border-light mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <Typography variant="h2" className="text-neutral-800">
-              최근 활동
-            </Typography>
-            <Button variant="outline" size="sm">
-              전체 보기
-            </Button>
-          </div>
-          
-          <div className="space-y-4">
-            {displayData.recentActivities && displayData.recentActivities.map((activity, index) => (
-              <div key={index} className="flex items-start space-x-4 p-4 bg-background-secondary rounded-admin">
-                <div className="w-8 h-8 bg-primary-100 rounded-full flex items-center justify-center flex-shrink-0">
-                  <span className="text-xs font-medium text-primary-600">
-                    {activity.type === 'project' ? 'P' : activity.type === 'user' ? 'U' : 'V'}
-                  </span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-neutral-900 truncate">
-                    {activity.title}
-                  </p>
-                  <p className="text-sm text-neutral-600 truncate">
-                    {activity.description}
-                  </p>
-                  <p className="text-xs text-neutral-500 mt-1">
-                    {activity.timestamp}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* 시스템 상태 */}
-        <div className="bg-background-card rounded-admin-lg p-6 border border-border-light">
-          <Typography variant="h2" className="text-neutral-800 mb-6">
-            시스템 상태
-          </Typography>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-admin-success bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-3">
-                <svg className="w-8 h-8 text-admin-success" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <Typography variant="h4" className="mb-1">
-                API 서버
-              </Typography>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-admin-success bg-opacity-10 text-admin-success">
-                정상 운영 ✓
-              </span>
-            </div>
-            
-            <div className="text-center">
-              <div className="w-16 h-16 bg-admin-success bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-3">
-                <svg className="w-8 h-8 text-admin-success" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <Typography variant="h4" className="mb-1">
-                데이터베이스
-              </Typography>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-admin-success bg-opacity-10 text-admin-success">
-                연결됨 ✓
-              </span>
-            </div>
-            
-            <div className="text-center">
-              <div className="w-16 h-16 bg-admin-success bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-3">
-                <svg className="w-8 h-8 text-admin-success" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
-                </svg>
-              </div>
-              <Typography variant="h4" className="mb-1">
-                실시간 데이터
-              </Typography>
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-admin-success bg-opacity-10 text-admin-success">
-                실시간 데이터 ✓
-              </span>
-            </div>
-          </div>
+          <footer className="mt-16 pt-8 border-t border-gray-200 text-center text-gray-500">
+            <p>&copy; 2025 VLANET. All rights reserved.</p>
+          </footer>
         </div>
       </div>
-    </div>
+    </SimpleErrorBoundary>
   )
 }

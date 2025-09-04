@@ -1,0 +1,28 @@
+# VRidge PNPM 설정 파일
+# CLAUDE.md에 따른 PNPM 전용 프로젝트 설정
+
+# 성능 최적화
+strict-peer-dependencies=false
+auto-install-peers=true
+prefer-frozen-lockfile=true
+
+# 보안 설정
+verify-store-integrity=true
+audit-level=moderate
+
+# 공간 효율성
+shared-workspace-lockfile=true
+link-workspace-packages=true
+
+# 호이스팅 설정 (Next.js 호환성)
+hoist-pattern=["*eslint*", "*prettier*"]
+public-hoist-pattern=["*types*", "@types/*"]
+
+# 패키지 관리자 강제
+engine-strict=true
+
+# 로깅
+log-level=info
+
+# 캐시 설정
+store-dir=/home/winnmedia/.pnpm-store

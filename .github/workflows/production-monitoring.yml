@@ -1,0 +1,537 @@
+name: Production Monitoring & Alerting
+
+on:
+  schedule:
+    # 5분마다 헬스 체크 실행
+    - cron: '*/5 * * * *'
+    # 15분마다 smoke 테스트 실행
+    - cron: '*/15 * * * *'
+    # 1시간마다 성능 분석 실행
+    - cron: '0 * * * *'
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: 'Test type to run'
+        required: true
+        default: 'health_check'
+        type: choice
+        options:
+          - health_check
+          - smoke_test
+          - performance_test
+          - full_monitoring
+
+env:
+  NODE_VERSION: '20'
+  PRODUCTION_URL: 'https://vridge.app'
+  STAGING_URL: 'https://staging.vridge.app'
+
+jobs:
+  # 헬스 체크 모니터링
+  health-monitoring:
+    name: Health Check Monitoring
+    runs-on: ubuntu-latest
+    if: ${{ github.event.schedule == '*/5 * * * *' || github.event.inputs.test_type == 'health_check' || github.event.inputs.test_type == 'full_monitoring' }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Production Health Check
+        id: prod_health
+        run: |
+          echo "🏥 Checking production health..."
+          
+          # Health check API 호출
+          response=$(curl -s -w "%{http_code}" -o health_response.json "${{ env.PRODUCTION_URL }}/api/health")
+          
+          echo "health_status_code=$response" >> $GITHUB_OUTPUT
+          
+          if [ "$response" = "200" ]; then
+            echo "✅ Production health check passed"
+            cat health_response.json | jq '.'
+            
+            # 주요 메트릭 추출
+            status=$(cat health_response.json | jq -r '.status')
+            memory_usage=$(cat health_response.json | jq -r '.metrics.memoryUsage // 0')
+            response_time=$(cat health_response.json | jq -r '.metrics.responseTime // 0')
+            
+            echo "status=$status" >> $GITHUB_OUTPUT
+            echo "memory_usage=$memory_usage" >> $GITHUB_OUTPUT
+            echo "response_time=$response_time" >> $GITHUB_OUTPUT
+            
+            # 임계값 체크
+            if [ "$status" != "healthy" ]; then
+              echo "⚠️  System status is not healthy: $status"
+              echo "health_alert=true" >> $GITHUB_OUTPUT
+            fi
+            
+            if (( $(echo "$memory_usage > 85" | bc -l) )); then
+              echo "⚠️  High memory usage: $memory_usage%"
+              echo "memory_alert=true" >> $GITHUB_OUTPUT
+            fi
+            
+            if (( $(echo "$response_time > 1000" | bc -l) )); then
+              echo "⚠️  High response time: ${response_time}ms"
+              echo "response_alert=true" >> $GITHUB_OUTPUT
+            fi
+            
+          else
+            echo "❌ Production health check failed with status $response"
+            echo "health_alert=critical" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Staging Health Check
+        id: staging_health
+        continue-on-error: true
+        run: |
+          echo "🏥 Checking staging health..."
+          
+          response=$(curl -s -w "%{http_code}" -o staging_health.json "${{ env.STAGING_URL }}/api/health" || echo "000")
+          
+          echo "staging_status_code=$response" >> $GITHUB_OUTPUT
+          
+          if [ "$response" = "200" ]; then
+            echo "✅ Staging health check passed"
+          else
+            echo "⚠️  Staging health check failed with status $response"
+          fi
+
+      - name: Send Health Alert to Slack
+        if: ${{ steps.prod_health.outputs.health_alert == 'critical' || steps.prod_health.outputs.health_alert == 'true' }}
+        uses: 8398a7/action-slack@v3
+        with:
+          status: custom
+          custom_payload: |
+            {
+              "channel": "#alerts",
+              "username": "Health Monitor",
+              "icon_emoji": ":hospital:",
+              "attachments": [
+                {
+                  "color": "${{ steps.prod_health.outputs.health_alert == 'critical' && 'danger' || 'warning' }}",
+                  "title": "🚨 Production Health Alert",
+                  "fields": [
+                    {
+                      "title": "Status",
+                      "value": "${{ steps.prod_health.outputs.status || 'DOWN' }}",
+                      "short": true
+                    },
+                    {
+                      "title": "Response Code", 
+                      "value": "${{ steps.prod_health.outputs.health_status_code }}",
+                      "short": true
+                    },
+                    {
+                      "title": "Memory Usage",
+                      "value": "${{ steps.prod_health.outputs.memory_usage }}%",
+                      "short": true
+                    },
+                    {
+                      "title": "Response Time",
+                      "value": "${{ steps.prod_health.outputs.response_time }}ms",
+                      "short": true
+                    }
+                  ],
+                  "footer": "Production Health Monitor",
+                  "ts": ${{ github.event.head_commit.timestamp && fromJSON(github.event.head_commit.timestamp) || github.run_number }}
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # Smoke 테스트 모니터링
+  smoke-test-monitoring:
+    name: Smoke Test Monitoring
+    runs-on: ubuntu-latest
+    if: ${{ github.event.schedule == '*/15 * * * *' || github.event.inputs.test_type == 'smoke_test' || github.event.inputs.test_type == 'full_monitoring' }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Run Critical Smoke Tests
+        id: smoke_tests
+        run: |
+          echo "🧪 Running critical smoke tests..."
+          
+          # Smoke 테스트 실행
+          npx playwright test e2e/smoke-tests/critical-flows.spec.ts --reporter=json --output-dir=smoke-results
+          
+          # 결과 분석
+          if [ -f "test-results.json" ]; then
+            passed=$(cat test-results.json | jq '.suites[0].tests | map(select(.outcome == "passed")) | length')
+            failed=$(cat test-results.json | jq '.suites[0].tests | map(select(.outcome == "failed")) | length')
+            total=$(cat test-results.json | jq '.suites[0].tests | length')
+            
+            echo "smoke_passed=$passed" >> $GITHUB_OUTPUT
+            echo "smoke_failed=$failed" >> $GITHUB_OUTPUT
+            echo "smoke_total=$total" >> $GITHUB_OUTPUT
+            
+            success_rate=$((passed * 100 / total))
+            echo "success_rate=$success_rate" >> $GITHUB_OUTPUT
+            
+            if [ $success_rate -lt 80 ]; then
+              echo "❌ Smoke test success rate too low: $success_rate%"
+              echo "smoke_alert=true" >> $GITHUB_OUTPUT
+            else
+              echo "✅ Smoke tests passed: $success_rate%"
+            fi
+          else
+            echo "❌ Smoke test results not found"
+            echo "smoke_alert=critical" >> $GITHUB_OUTPUT
+          fi
+        env:
+          BASE_URL: ${{ env.PRODUCTION_URL }}
+
+      - name: Upload Smoke Test Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-test-results
+          path: smoke-results/
+          retention-days: 7
+
+      - name: Send Smoke Test Alert
+        if: ${{ steps.smoke_tests.outputs.smoke_alert }}
+        uses: 8398a7/action-slack@v3
+        with:
+          status: custom
+          custom_payload: |
+            {
+              "channel": "#alerts",
+              "username": "Smoke Test Monitor",
+              "icon_emoji": ":test_tube:",
+              "attachments": [
+                {
+                  "color": "${{ steps.smoke_tests.outputs.smoke_alert == 'critical' && 'danger' || 'warning' }}",
+                  "title": "🧪 Smoke Test Alert",
+                  "fields": [
+                    {
+                      "title": "Passed",
+                      "value": "${{ steps.smoke_tests.outputs.smoke_passed || 0 }}",
+                      "short": true
+                    },
+                    {
+                      "title": "Failed",
+                      "value": "${{ steps.smoke_tests.outputs.smoke_failed || '?' }}",
+                      "short": true
+                    },
+                    {
+                      "title": "Success Rate",
+                      "value": "${{ steps.smoke_tests.outputs.success_rate || 0 }}%",
+                      "short": true
+                    },
+                    {
+                      "title": "Total Tests",
+                      "value": "${{ steps.smoke_tests.outputs.smoke_total || '?' }}",
+                      "short": true
+                    }
+                  ],
+                  "footer": "Smoke Test Monitor",
+                  "ts": ${{ github.run_number }}
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # 성능 모니터링
+  performance-monitoring:
+    name: Performance Monitoring
+    runs-on: ubuntu-latest
+    if: ${{ github.event.schedule == '0 * * * *' || github.event.inputs.test_type == 'performance_test' || github.event.inputs.test_type == 'full_monitoring' }}
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Lighthouse CI
+        run: npm install -g @lhci/cli
+
+      - name: Run Lighthouse Performance Audit
+        id: lighthouse
+        run: |
+          echo "🚀 Running Lighthouse performance audit..."
+          
+          # Lighthouse 실행
+          lhci autorun --upload.target=temporary-public-storage || echo "Lighthouse failed"
+          
+          # 결과 파일 찾기
+          if [ -f ".lighthouseci/lhr-*.json" ]; then
+            # 성능 메트릭 추출
+            performance_score=$(cat .lighthouseci/lhr-*.json | jq '.categories.performance.score * 100' | head -n1)
+            lcp=$(cat .lighthouseci/lhr-*.json | jq '.audits["largest-contentful-paint"].numericValue' | head -n1)
+            fid=$(cat .lighthouseci/lhr-*.json | jq '.audits["max-potential-fid"].numericValue' | head -n1)
+            cls=$(cat .lighthouseci/lhr-*.json | jq '.audits["cumulative-layout-shift"].numericValue' | head -n1)
+            
+            echo "performance_score=$performance_score" >> $GITHUB_OUTPUT
+            echo "lcp=$lcp" >> $GITHUB_OUTPUT
+            echo "fid=$fid" >> $GITHUB_OUTPUT
+            echo "cls=$cls" >> $GITHUB_OUTPUT
+            
+            echo "📊 Performance Results:"
+            echo "Performance Score: $performance_score"
+            echo "LCP: ${lcp}ms"
+            echo "FID: ${fid}ms" 
+            echo "CLS: $cls"
+            
+            # 임계값 체크
+            if (( $(echo "$performance_score < 70" | bc -l) )); then
+              echo "⚠️  Low performance score: $performance_score"
+              echo "performance_alert=true" >> $GITHUB_OUTPUT
+            fi
+            
+            if (( $(echo "$lcp > 2500" | bc -l) )); then
+              echo "⚠️  LCP exceeds threshold: ${lcp}ms"
+              echo "lcp_alert=true" >> $GITHUB_OUTPUT
+            fi
+            
+            if (( $(echo "$cls > 0.1" | bc -l) )); then
+              echo "⚠️  CLS exceeds threshold: $cls"
+              echo "cls_alert=true" >> $GITHUB_OUTPUT
+            fi
+            
+          else
+            echo "❌ Lighthouse results not found"
+            echo "lighthouse_failed=true" >> $GITHUB_OUTPUT
+          fi
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+
+      - name: Performance Budget Check
+        id: budget_check
+        run: |
+          echo "💰 Checking performance budgets..."
+          
+          # 성능 예산 확인 (예시)
+          curl -s "${{ env.PRODUCTION_URL }}" -w "@curl-format.txt" -o /dev/null > perf_metrics.txt || true
+          
+          if [ -f "perf_metrics.txt" ]; then
+            total_time=$(cat perf_metrics.txt | grep "time_total" | awk '{print $2}')
+            echo "Total load time: ${total_time}s"
+            
+            if (( $(echo "$total_time > 3" | bc -l) )); then
+              echo "⚠️  Page load time exceeds budget: ${total_time}s"
+              echo "load_time_alert=true" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+      - name: Create curl format file
+        run: |
+          cat > curl-format.txt << EOF
+          time_namelookup:  %{time_namelookup}\n
+          time_connect:     %{time_connect}\n
+          time_pretransfer: %{time_pretransfer}\n
+          time_redirect:    %{time_redirect}\n
+          time_starttransfer: %{time_starttransfer}\n
+          time_total:       %{time_total}\n
+          EOF
+
+      - name: Send Performance Alert
+        if: ${{ steps.lighthouse.outputs.performance_alert || steps.lighthouse.outputs.lcp_alert || steps.lighthouse.outputs.cls_alert || steps.budget_check.outputs.load_time_alert }}
+        uses: 8398a7/action-slack@v3
+        with:
+          status: custom
+          custom_payload: |
+            {
+              "channel": "#alerts",
+              "username": "Performance Monitor",
+              "icon_emoji": ":chart_with_upwards_trend:",
+              "attachments": [
+                {
+                  "color": "warning",
+                  "title": "⚡ Performance Alert",
+                  "fields": [
+                    {
+                      "title": "Performance Score",
+                      "value": "${{ steps.lighthouse.outputs.performance_score || 'N/A' }}",
+                      "short": true
+                    },
+                    {
+                      "title": "LCP",
+                      "value": "${{ steps.lighthouse.outputs.lcp || 'N/A' }}ms",
+                      "short": true
+                    },
+                    {
+                      "title": "FID",
+                      "value": "${{ steps.lighthouse.outputs.fid || 'N/A' }}ms", 
+                      "short": true
+                    },
+                    {
+                      "title": "CLS",
+                      "value": "${{ steps.lighthouse.outputs.cls || 'N/A' }}",
+                      "short": true
+                    }
+                  ],
+                  "footer": "Performance Monitor",
+                  "ts": ${{ github.run_number }}
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+  # 종합 모니터링 리포트
+  monitoring-summary:
+    name: Monitoring Summary Report
+    runs-on: ubuntu-latest
+    needs: [health-monitoring, smoke-test-monitoring, performance-monitoring]
+    if: always()
+    
+    steps:
+      - name: Generate Summary Report
+        run: |
+          echo "📋 Generating monitoring summary report..."
+          
+          # 각 작업의 결과 수집
+          health_status="${{ needs.health-monitoring.result }}"
+          smoke_status="${{ needs.smoke-test-monitoring.result }}"
+          performance_status="${{ needs.performance-monitoring.result }}"
+          
+          echo "Health Monitoring: $health_status"
+          echo "Smoke Testing: $smoke_status"
+          echo "Performance Monitoring: $performance_status"
+          
+          # 전체 시스템 상태 결정
+          if [ "$health_status" = "failure" ]; then
+            overall_status="🔴 CRITICAL"
+          elif [ "$smoke_status" = "failure" ] || [ "$performance_status" = "failure" ]; then
+            overall_status="🟡 DEGRADED"
+          elif [ "$health_status" = "success" ] && [ "$smoke_status" = "success" ] && [ "$performance_status" = "success" ]; then
+            overall_status="🟢 HEALTHY"
+          else
+            overall_status="🟡 PARTIAL"
+          fi
+          
+          echo "overall_status=$overall_status" >> $GITHUB_ENV
+          
+          # 요약 보고서 생성
+          cat > monitoring_summary.md << EOF
+          # 🏥 Production Monitoring Report
+          
+          **Generated:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')
+          **Overall Status:** $overall_status
+          
+          ## Service Status
+          
+          | Component | Status | Details |
+          |-----------|--------|---------|
+          | Health Check | $health_status | System health verification |
+          | Smoke Tests | $smoke_status | Critical functionality tests |
+          | Performance | $performance_status | Core Web Vitals monitoring |
+          
+          ## Quick Actions
+          
+          - 🏥 [Health Dashboard](https://vridge.app/api/health)
+          - 📊 [Performance Metrics](https://pagespeed.web.dev/analysis/https-vridge-app)
+          - 🧪 [Test Results](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          
+          EOF
+          
+          cat monitoring_summary.md
+
+      - name: Send Summary to Slack
+        if: ${{ env.overall_status != '🟢 HEALTHY' }}
+        uses: 8398a7/action-slack@v3
+        with:
+          status: custom
+          custom_payload: |
+            {
+              "channel": "#monitoring",
+              "username": "Monitoring Bot",
+              "icon_emoji": ":clipboard:",
+              "attachments": [
+                {
+                  "color": "${{ contains(env.overall_status, 'CRITICAL') && 'danger' || contains(env.overall_status, 'DEGRADED') && 'warning' || 'good' }}",
+                  "title": "📊 Production Monitoring Summary",
+                  "fields": [
+                    {
+                      "title": "Overall Status",
+                      "value": "${{ env.overall_status }}",
+                      "short": true
+                    },
+                    {
+                      "title": "Health Check",
+                      "value": "${{ needs.health-monitoring.result }}",
+                      "short": true
+                    },
+                    {
+                      "title": "Smoke Tests", 
+                      "value": "${{ needs.smoke-test-monitoring.result }}",
+                      "short": true
+                    },
+                    {
+                      "title": "Performance",
+                      "value": "${{ needs.performance-monitoring.result }}",
+                      "short": true
+                    }
+                  ],
+                  "actions": [
+                    {
+                      "type": "button",
+                      "text": "View Details",
+                      "url": "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                    }
+                  ],
+                  "footer": "Production Monitoring",
+                  "ts": ${{ github.run_number }}
+                }
+              ]
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Create Incident (Critical Status)
+        if: ${{ contains(env.overall_status, 'CRITICAL') }}
+        run: |
+          echo "🚨 Creating critical incident..."
+          
+          # 실제 구현에서는 PagerDuty API나 JIRA API를 호출하여 인시던트 생성
+          incident_id="INC-$(date +%Y%m%d%H%M%S)"
+          
+          echo "Critical incident created: $incident_id"
+          echo "Incident details:"
+          echo "- Health: ${{ needs.health-monitoring.result }}"
+          echo "- Smoke: ${{ needs.smoke-test-monitoring.result }}" 
+          echo "- Performance: ${{ needs.performance-monitoring.result }}"
+          
+          # GitHub Issue 생성 (예시)
+          curl -X POST \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/${{ github.repository }}/issues \
+            -d '{
+              "title": "🚨 CRITICAL: Production System Alert",
+              "body": "Automated incident created due to critical monitoring failures.\n\n**Incident ID:** '$incident_id'\n**Status:** ${{ env.overall_status }}\n**Time:** $(date -u)\n\n**Component Status:**\n- Health Check: ${{ needs.health-monitoring.result }}\n- Smoke Tests: ${{ needs.smoke-test-monitoring.result }}\n- Performance: ${{ needs.performance-monitoring.result }}\n\n**Actions Required:**\n- [ ] Investigate failed components\n- [ ] Apply emergency fixes\n- [ ] Verify system recovery\n- [ ] Conduct post-mortem\n\n*This issue was automatically created by the production monitoring system.*",
+              "labels": ["incident", "critical", "production"]
+            }'
+
+      - name: Upload Monitoring Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: monitoring-report
+          path: monitoring_summary.md
+          retention-days: 30

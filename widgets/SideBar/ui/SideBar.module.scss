@@ -1,0 +1,54 @@
+@use '@/shared/config/design-tokens.scss' as *;
+
+.sideBar {
+  width: var(--sidebar-width);
+  padding: 24px 16px;
+  position: fixed;
+  left: 0;
+  top: var(--header-height);
+  bottom: 0;
+  background: $color-white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-radius: 0 16px 16px 0;
+  z-index: var(--z-sidebar);
+  transition: transform var(--transition-duration) ease;
+
+  &.collapsed {
+    transform: translateX(calc(-1 * var(--sidebar-width) + var(--sidebar-collapsed-width)));
+  }
+
+  @media (max-width: 768px) {
+    &.collapsed {
+      transform: translateX(-100%);
+    }
+    
+    &:not(.collapsed) {
+      box-shadow: 0 0 0 100vmax rgba(0, 0, 0, 0.5);
+    }
+  }
+}
+
+.nav {
+  flex: 1;
+  padding-top: 32px;
+}
+
+.menuProject {
+  margin-bottom: 8px;
+}
+
+.logout {
+  margin-top: auto;
+  padding: 12px;
+  background: transparent;
+  border: none;
+  color: $color-gray-500;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background: $color-gray-100;
+    color: $color-primary;
+  }
+}

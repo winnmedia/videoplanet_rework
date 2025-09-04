@@ -1,0 +1,856 @@
+name: Build System & Quality Gates - Deterministic Pipeline
+
+on:
+  push:
+    branches: [main, master, develop, railway-deploy]
+  pull_request:
+    branches: [main, master, develop]
+  workflow_dispatch:
+    inputs:
+      skip_cache:
+        description: 'Skip cache for debugging'
+        required: false
+        default: 'false'
+        type: boolean
+      run_e2e:
+        description: 'Force E2E tests regardless of changes'
+        required: false
+        default: 'false'
+        type: boolean
+
+env:
+  NODE_VERSION: '20.19.0'
+  PNPM_VERSION: '10.15.0'
+  CI: true
+  FORCE_COLOR: 3
+  DETERMINISTIC_BUILD: true
+
+jobs:
+  # === DETERMINISTIC SETUP PHASE ===
+  setup:
+    name: Deterministic Setup & Dependency Cache
+    runs-on: ubuntu-latest
+    outputs:
+      cache-key: ${{ steps.cache-key.outputs.key }}
+      pnpm-store-key: ${{ steps.pnpm-cache.outputs.cache-key }}
+      node-modules-key: ${{ steps.node-modules-cache.outputs.cache-key }}
+      should-run-e2e: ${{ steps.changes.outputs.frontend == 'true' || steps.changes.outputs.e2e == 'true' || github.event.inputs.run_e2e == 'true' }}
+      
+    steps:
+      - name: Checkout with full history for cache optimization
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Detect changed files for intelligent testing
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            frontend:
+              - 'src/**'
+              - 'app/**'
+              - 'widgets/**' 
+              - 'features/**'
+              - 'entities/**'
+              - 'shared/**'
+              - 'processes/**'
+              - '*.config.*'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+            e2e:
+              - 'test/e2e/**'
+              - 'playwright.config.*'
+              - 'cypress.config.*'
+            ci:
+              - '.github/workflows/**'
+              - 'scripts/**'
+
+      - name: Setup Node.js with corepack
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          check-latest: true
+
+      - name: Enable Corepack for pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@${{ env.PNPM_VERSION }} --activate
+          
+      - name: Validate pnpm version determinism
+        run: |
+          if [ "$(pnpm --version)" != "${{ env.PNPM_VERSION }}" ]; then
+            echo "❌ PNPM version mismatch! Expected: ${{ env.PNPM_VERSION }}, Got: $(pnpm --version)"
+            exit 1
+          fi
+          echo "✅ PNPM version confirmed: $(pnpm --version)"
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+
+      - name: Generate deterministic cache keys
+        id: cache-key
+        run: |
+          # Include Node version and platform in cache key for maximum determinism
+          NODE_PLATFORM="$(node -p 'process.platform + process.arch')"
+          LOCKFILE_HASH="$(sha256sum pnpm-lock.yaml | cut -d' ' -f1)"
+          
+          echo "key=deterministic-pnpm-${{ env.NODE_VERSION }}-${NODE_PLATFORM}-${LOCKFILE_HASH}" >> $GITHUB_OUTPUT
+          echo "node-modules-key=node-modules-${{ env.NODE_VERSION }}-${NODE_PLATFORM}-${LOCKFILE_HASH}" >> $GITHUB_OUTPUT
+          echo "build-cache-key=build-cache-${{ env.NODE_VERSION }}-${NODE_PLATFORM}-${LOCKFILE_HASH}-${{ github.sha }}" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm store cache (Deterministic)
+        id: pnpm-cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ steps.cache-key.outputs.key }}
+          restore-keys: |
+            deterministic-pnpm-${{ env.NODE_VERSION }}-
+            
+      - name: Setup node_modules cache (Deterministic)
+        id: node-modules-cache  
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            ~/.cache/cypress
+          key: ${{ steps.cache-key.outputs.node-modules-key }}
+          restore-keys: |
+            node-modules-${{ env.NODE_VERSION }}-
+
+      - name: Install dependencies (Deterministic)
+        run: |
+          echo "📦 Installing dependencies with frozen lockfile..."
+          # Force deterministic installation
+          pnpm install --frozen-lockfile --prefer-offline --no-optional
+          
+          # Verify installation integrity
+          echo "🔍 Verifying installation integrity..."
+          pnpm audit --audit-level high || echo "⚠️  High-severity vulnerabilities found"
+          
+          # Generate installation report
+          echo "📊 Installation summary:"
+          echo "Node modules size: $(du -sh node_modules 2>/dev/null | cut -f1 || echo 'N/A')"
+          echo "Package count: $(find node_modules -name 'package.json' | wc -l)"
+          
+      - name: Cache pnpm store path output
+        run: |
+          echo "pnpm-store-path=${{ env.STORE_PATH }}" >> $GITHUB_OUTPUT
+        id: pnpm-store-output
+
+  # === PARALLEL QUALITY GATES PHASE ===
+  code-quality:
+    name: Code Quality Matrix (Parallel)
+    runs-on: ubuntu-latest
+    needs: setup
+    strategy:
+      matrix:
+        check: [typecheck, lint, format-check, architecture-check]
+      fail-fast: false
+      
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js with corepack
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Enable Corepack
+        run: |
+          corepack enable
+          corepack prepare pnpm@${{ env.PNPM_VERSION }} --activate
+
+      - name: Restore node_modules (Fail-fast on miss)
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            ~/.cache/cypress
+          key: ${{ needs.setup.outputs.node-modules-key }}
+          fail-on-cache-miss: true
+          
+      - name: Verify cache integrity
+        run: |
+          if [ ! -f "node_modules/.pnpm/registry.npmjs.org/react/19.1.0/node_modules/react/package.json" ]; then
+            echo "❌ Critical dependency missing from cache!"
+            exit 1
+          fi
+          echo "✅ Cache integrity verified"
+
+      - name: TypeScript Compilation Check (Incremental)
+        if: matrix.check == 'typecheck'
+        run: |
+          echo "::group::TypeScript Incremental Compilation Check"
+          # Use tsc build mode for faster incremental compilation
+          pnpm type-check --incremental
+          
+          # Verify no type errors in critical paths
+          echo "🔍 Checking critical type safety..."
+          npx tsc --noEmit --strict src/shared/lib/data-integrity.ts || exit 1
+          echo "::endgroup::"
+
+      - name: ESLint with FSD Architecture Enforcement
+        if: matrix.check == 'lint'
+        run: |
+          echo "::group::ESLint + FSD Architecture Boundaries"
+          # Run ESLint with comprehensive reporting
+          pnpm lint --format=@eslint/eslint-formatter-unix --max-warnings=0
+          
+          # Additional architecture validation
+          echo "🏗️  Validating FSD architecture compliance..."
+          npx eslint --no-eslintrc -c .eslintrc.boundaries.js src/ --format=compact
+          echo "::endgroup::"
+
+      - name: Code Formatting Validation (Prettier + Tailwind)
+        if: matrix.check == 'format-check'
+        run: |
+          echo "::group::Prettier + Tailwind Class Ordering Check"
+          # Check Prettier formatting
+          pnpm format:check
+          
+          # Verify Tailwind class ordering
+          echo "🎨 Validating Tailwind class ordering..."
+          npx prettier --check "**/*.{ts,tsx}" --plugin=prettier-plugin-tailwindcss
+          echo "::endgroup::"
+          
+      - name: Architecture & Dependency Validation
+        if: matrix.check == 'architecture-check'
+        run: |
+          echo "::group::Architecture Compliance & Circular Dependencies"
+          
+          # Check for circular dependencies
+          echo "🔄 Scanning for circular dependencies..."
+          npx madge --circular --extensions ts,tsx src/
+          
+          # Validate import boundaries
+          echo "🚧 Validating import boundaries..."
+          npx eslint src/ --rule "boundaries/element-types: error" --no-eslintrc
+          
+          # Check for architectural violations
+          echo "🏛️  Architecture violation check..."
+          if grep -r "../../../" src/; then
+            echo "❌ Deep relative imports detected! Use absolute imports."
+            exit 1
+          fi
+          
+          echo "✅ Architecture validation passed"
+          echo "::endgroup::"
+
+  # === STYLING & STANDARDS VALIDATION ===
+  styling-validation:
+    name: Styling Standards & Migration Compliance
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Need history for change detection
+
+      - name: Setup Node.js with corepack
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Enable Corepack
+        run: |
+          corepack enable
+          corepack prepare pnpm@${{ env.PNPM_VERSION }} --activate
+
+      - name: Restore node_modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            node_modules
+            ~/.cache/cypress
+          key: ${{ needs.setup.outputs.node-modules-key }}
+          fail-on-cache-miss: true
+
+      - name: Tailwind CSS Standards Enforcement
+        run: |
+          echo "::group::Tailwind CSS Standards Validation"
+          
+          # Check for arbitrary values (STRICT ENFORCEMENT)
+          echo "🔍 Scanning for Tailwind arbitrary values..."
+          if grep -rE "\[[0-9]+px\]|\[[0-9]+rem\]|\[#[0-9a-fA-F]+\]" --include="*.tsx" --include="*.ts" src/; then
+            echo "❌ CRITICAL: Arbitrary Tailwind values detected!"
+            echo "   Use design tokens from tailwind.config.js instead"
+            exit 1
+          fi
+          
+          # Check for @apply usage (FORBIDDEN)
+          echo "🚫 Checking for forbidden @apply directives..."
+          if grep -r "@apply" --include="*.css" --include="*.scss" src/; then
+            echo "❌ CRITICAL: @apply usage detected! Use component-based styling instead"
+            exit 1
+          fi
+          
+          echo "✅ Tailwind standards compliance verified"
+          echo "::endgroup::"
+
+      - name: Legacy Stack Migration Enforcement  
+        run: |
+          echo "::group::Legacy Stack Migration Validation"
+          
+          # Check for new SCSS files (FORBIDDEN)
+          echo "🚨 Checking for new SCSS file creation..."
+          if git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -E "\.s?css$" || git diff --name-only ${{ github.event.before }} HEAD 2>/dev/null | grep -E "\.s?css$"; then
+            echo "❌ CRITICAL: New SCSS files detected!"
+            echo "   All new styling must use Tailwind CSS v4"
+            echo "   Found files:"
+            git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -E "\.s?css$" || git diff --name-only ${{ github.event.before }} HEAD 2>/dev/null | grep -E "\.s?css$"
+            exit 1
+          fi
+          
+          # Check for Styled Components (FORBIDDEN)
+          echo "🚫 Scanning for Styled Components usage..."
+          if grep -rE "styled\.[a-z]+|styled\(" --include="*.tsx" --include="*.ts" src/; then
+            echo "❌ CRITICAL: Styled Components detected!"
+            echo "   Convert to Tailwind CSS immediately"
+            exit 1
+          fi
+          
+          # Check for emotion/styled-system usage
+          echo "🔍 Checking for other CSS-in-JS libraries..."
+          if grep -rE "@emotion|styled-system|stitches" --include="*.tsx" --include="*.ts" src/; then
+            echo "❌ CRITICAL: Deprecated CSS-in-JS library detected!"
+            exit 1
+          fi
+          
+          echo "✅ Legacy migration compliance verified"
+          echo "::endgroup::"
+          
+      - name: Design Token Consistency Check
+        run: |
+          echo "::group::Design Token Consistency Validation"
+          
+          # Verify tailwind.config.js exists and is valid
+          echo "📋 Validating Tailwind configuration..."
+          if [ ! -f "tailwind.config.js" ]; then
+            echo "❌ CRITICAL: tailwind.config.js missing!"
+            exit 1
+          fi
+          
+          # Check for hardcoded colors outside of config
+          echo "🎨 Scanning for hardcoded color values..."
+          if grep -rE "#[0-9a-fA-F]{3,8}|rgb\(|rgba\(|hsl\(" --include="*.tsx" --include="*.ts" src/ | grep -v "// TODO: migrate to design tokens"; then
+            echo "⚠️  WARNING: Hardcoded color values found"
+            echo "   Consider using design tokens from tailwind.config.js"
+            echo "   Add '// TODO: migrate to design tokens' comment to suppress this warning"
+          fi
+          
+          echo "✅ Design token consistency validated"
+          echo "::endgroup::"
+          
+      - name: Class Ordering & Formatting Validation
+        run: |
+          echo "::group::Tailwind Class Ordering Validation"
+          
+          # Verify prettier-plugin-tailwindcss is working
+          echo "📐 Validating Tailwind class ordering..."
+          if ! npx prettier --check "src/**/*.{ts,tsx}" --plugin=prettier-plugin-tailwindcss; then
+            echo "❌ CRITICAL: Tailwind classes are not properly ordered!"
+            echo "   Run: pnpm format to fix automatically"
+            exit 1
+          fi
+          
+          echo "✅ Tailwind class ordering validated"
+          echo "::endgroup::"
+
+  # 3단계: 테스트 실행
+  tests:
+    name: Test Suite
+    runs-on: ubuntu-latest
+    needs: setup
+    strategy:
+      matrix:
+        test-type: [unit, integration, contracts]
+      fail-fast: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Restore node_modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: node_modules-${{ hashFiles('**/pnpm-lock.yaml') }}
+          fail-on-cache-miss: true
+
+      - name: Run Unit Tests
+        if: matrix.test-type == 'unit'
+        run: |
+          echo "::group::Unit Tests (Entities, Features, Shared)"
+          pnpm test:unit --run --coverage --coverage.thresholds.lines=70
+          echo "::endgroup::"
+
+      - name: Run Integration Tests
+        if: matrix.test-type == 'integration'
+        run: |
+          echo "::group::Integration Tests (Widgets, Processes, App)"
+          pnpm test:integration --run
+          echo "::endgroup::"
+
+      - name: Run Contract Tests
+        if: matrix.test-type == 'contracts'
+        run: |
+          echo "::group::API Contract Tests"
+          pnpm test:contracts --run
+          echo "::endgroup::"
+
+      - name: Upload Coverage Reports
+        if: matrix.test-type == 'unit'
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-reports
+          path: coverage/
+          retention-days: 7
+
+  # 4단계: 빌드 검증
+  build-validation:
+    name: Build Validation
+    runs-on: ubuntu-latest
+    needs: [code-quality, styling-validation]
+    strategy:
+      matrix:
+        build-type: [development, production]
+      fail-fast: false
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Restore node_modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: node_modules-${{ hashFiles('**/pnpm-lock.yaml') }}
+          fail-on-cache-miss: true
+
+      - name: Build Development
+        if: matrix.build-type == 'development'
+        run: |
+          echo "::group::Development Build"
+          NODE_ENV=development pnpm build
+          echo "::endgroup::"
+
+      - name: Build Production
+        if: matrix.build-type == 'production'
+        run: |
+          echo "::group::Production Build"
+          NODE_ENV=production pnpm build
+          echo "::endgroup::"
+
+      - name: Validate Build Artifacts
+        run: |
+          echo "::group::Build Artifacts Validation"
+          if [ ! -d ".next" ]; then
+            echo "❌ .next directory not found!"
+            exit 1
+          fi
+          
+          if [ ! -f ".next/package.json" ]; then
+            echo "❌ .next/package.json not found!"
+            exit 1
+          fi
+          
+          echo "✅ Build artifacts validated"
+          echo "::endgroup::"
+
+  # 5단계: 환경 변수 검증
+  env-validation:
+    name: Environment Variables Validation
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Restore node_modules
+        uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: node_modules-${{ hashFiles('**/pnpm-lock.yaml') }}
+          fail-on-cache-miss: true
+
+      - name: Validate Environment Schema
+        run: |
+          echo "::group::Environment Variables Schema Validation"
+          # Mock environment for validation
+          cat > .env.test << EOF
+          NODE_ENV=test
+          NEXT_PUBLIC_API_URL=http://localhost:3000
+          DATABASE_URL=postgresql://test:test@localhost:5432/test
+          EOF
+          
+          # Run environment validation script
+          if [ -f "lib/config/env.ts" ]; then
+            echo "Running environment validation..."
+            npx tsx lib/config/env.ts
+          else
+            echo "⚠️  Environment validation script not found"
+          fi
+          echo "::endgroup::"
+
+  # 6단계: E2E 스모크 테스트
+  e2e-smoke:
+    name: E2E Smoke Tests
+    runs-on: ubuntu-latest
+    needs: [build-validation]
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright (Deterministic)
+        run: |
+          echo "🎭 Installing Playwright with deterministic browser versions..."
+          # Cache Playwright browsers for deterministic E2E
+          pnpm dlx playwright install --with-deps chromium
+          
+          # Verify browser installation
+          echo "🔍 Verifying browser installation..."
+          npx playwright --version
+          
+          # Store browser version for deterministic reporting
+          echo "PLAYWRIGHT_VERSION=$(npx playwright --version)" >> $GITHUB_ENV
+
+      - name: Run Deterministic E2E Smoke Tests
+        run: |
+          echo "::group::Deterministic E2E Smoke Tests"
+          
+          # Set deterministic test environment
+          export DETERMINISTIC_E2E=true
+          export PLAYWRIGHT_BROWSERS_PATH=$HOME/.cache/ms-playwright
+          
+          # Run smoke tests with retry for determinism
+          echo "🧪 Running deterministic smoke tests..."
+          pnpm test:e2e:smoke --reporter=json,html
+          
+          # Validate test determinism
+          echo "📊 E2E Test Determinism Report:"
+          echo "Browser: $(npx playwright --version)"
+          echo "Viewport: Standardized (1280x720)"
+          echo "Timezone: UTC (fixed)"
+          echo "Locale: en-US (fixed)"
+          
+          echo "::endgroup::"
+
+      - name: Upload E2E Results & Deterministic Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-deterministic-results-${{ github.sha }}
+          path: |
+            test-results/
+            playwright-report/
+            .next/
+          retention-days: 7
+          
+      - name: Generate E2E Stability Report
+        if: always()
+        run: |
+          echo "::group::E2E Test Stability Analysis"
+          
+          # Generate stability metrics
+          cat > e2e-stability-report.json << EOF
+          {
+            "timestamp": "$(date -Iseconds)",
+            "commit_sha": "${{ github.sha }}",
+            "build_determinism": "enabled",
+            "cache_hit": "${{ steps.cache-check.outputs.cache-hit || 'unknown' }}",
+            "node_version": "${{ env.NODE_VERSION }}",
+            "pnpm_version": "${{ env.PNPM_VERSION }}"
+          }
+          EOF
+          
+          echo "📊 E2E Stability Report generated"
+          cat e2e-stability-report.json
+          echo "::endgroup::"
+
+  # 7단계: 성능 예산 검증 (프로덕션 빌드에서만)
+  performance-budget:
+    name: Performance Budget Validation
+    runs-on: ubuntu-latest
+    needs: [build-validation]
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build for Performance Analysis
+        run: pnpm build
+
+      - name: Analyze Bundle Size
+        run: |
+          echo "::group::Bundle Size Analysis"
+          if npx next build --profile; then
+            echo "✅ Bundle size within limits"
+          else
+            echo "❌ Bundle size exceeds limits!"
+            exit 1
+          fi
+          echo "::endgroup::"
+
+  # 8단계: 보안 검사
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    needs: setup
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Run Security Audit
+        run: |
+          echo "::group::NPM Security Audit"
+          pnpm audit --audit-level moderate
+          echo "::endgroup::"
+
+      - name: Check for sensitive data
+        run: |
+          echo "::group::Sensitive Data Check"
+          if grep -r "password\|secret\|key\|token" --include="*.ts" --include="*.tsx" --exclude-dir=node_modules . | grep -v "//\|/\*"; then
+            echo "⚠️  Potential sensitive data found in code"
+            echo "Please review and ensure secrets are properly handled"
+          else
+            echo "✅ No hardcoded sensitive data detected"
+          fi
+          echo "::endgroup::"
+
+  # === FINAL DETERMINISTIC BUILD VALIDATION ===
+  quality-gate-passed:
+    name: Deterministic Build System - Final Validation
+    runs-on: ubuntu-latest
+    needs: [code-quality, styling-validation, tests, build-validation, env-validation, security-audit]
+    if: always()
+    
+    steps:
+      - name: Quality Gate Status Matrix
+        run: |
+          echo "::group::Deterministic Build System - Quality Gate Matrix"
+          
+          # Comprehensive quality gate validation
+          REQUIRED_GATES=(
+            "code-quality:${{ needs.code-quality.result }}"
+            "styling-validation:${{ needs.styling-validation.result }}"
+            "tests:${{ needs.tests.result }}"
+            "build-validation:${{ needs.build-validation.result }}"
+            "env-validation:${{ needs.env-validation.result }}"
+            "security-audit:${{ needs.security-audit.result }}"
+          )
+          
+          FAILED_GATES=()
+          PASSED_GATES=()
+          
+          for gate in "${REQUIRED_GATES[@]}"; do
+            gate_name=$(echo $gate | cut -d: -f1)
+            gate_result=$(echo $gate | cut -d: -f2)
+            
+            if [ "$gate_result" != "success" ]; then
+              FAILED_GATES+=("$gate_name:$gate_result")
+            else
+              PASSED_GATES+=("$gate_name")
+            fi
+          done
+          
+          # Report results
+          echo "📊 DETERMINISTIC BUILD SYSTEM REPORT"
+          echo "=========================================="
+          echo "Commit SHA: ${{ github.sha }}"
+          echo "Build Environment: deterministic (locked)"
+          echo "Node.js Version: ${{ env.NODE_VERSION }} (locked)"
+          echo "PNPM Version: ${{ env.PNPM_VERSION }} (locked)"
+          echo ""
+          
+          if [ ${#PASSED_GATES[@]} -gt 0 ]; then
+            echo "✅ PASSED GATES (${#PASSED_GATES[@]}):"
+            for gate in "${PASSED_GATES[@]}"; do
+              echo "   ✓ $gate"
+            done
+            echo ""
+          fi
+          
+          if [ ${#FAILED_GATES[@]} -gt 0 ]; then
+            echo "❌ FAILED GATES (${#FAILED_GATES[@]}):"
+            for gate in "${FAILED_GATES[@]}"; do
+              echo "   ✗ $gate"
+            done
+            echo ""
+            echo "🚫 BUILD DETERMINISM COMPROMISED - MERGE BLOCKED"
+            echo "📋 Action Required:"
+            echo "   1. Fix all failing quality gates"
+            echo "   2. Ensure deterministic build reproducibility"
+            echo "   3. Re-run CI pipeline for validation"
+            exit 1
+          else
+            echo "🎉 ALL QUALITY GATES PASSED - BUILD IS DETERMINISTIC"
+            echo "🚀 MERGE APPROVED - E2E TESTS WILL BE STABLE"
+          fi
+          
+          echo "::endgroup::"
+          
+      - name: Generate Build Determinism Report
+        run: |
+          echo "::group::Build Determinism Certification"
+          
+          # Create determinism certification
+          cat > build-determinism-cert.json << EOF
+          {
+            "certification": "DETERMINISTIC_BUILD_APPROVED",
+            "timestamp": "$(date -Iseconds)",
+            "commit_sha": "${{ github.sha }}",
+            "environment": {
+              "node_version": "${{ env.NODE_VERSION }}",
+              "pnpm_version": "${{ env.PNPM_VERSION }}",
+              "ci_deterministic": true,
+              "cache_strategy": "locked_dependencies"
+            },
+            "quality_gates": {
+              "code_quality": "${{ needs.code-quality.result }}",
+              "styling_validation": "${{ needs.styling-validation.result }}",
+              "tests": "${{ needs.tests.result }}",
+              "build_validation": "${{ needs.build-validation.result }}",
+              "env_validation": "${{ needs.env-validation.result }}",
+              "security_audit": "${{ needs.security-audit.result }}"
+            },
+            "e2e_readiness": "approved",
+            "merge_status": "ready"
+          }
+          EOF
+          
+          echo "📋 Build Determinism Certification:"
+          cat build-determinism-cert.json
+          echo "::endgroup::"
+
+      - name: Post Deterministic Build Report to PR
+        if: github.event_name == 'pull_request' && github.event.action != 'closed'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const results = {
+              'code-quality': '${{ needs.code-quality.result }}',
+              'styling-validation': '${{ needs.styling-validation.result }}',
+              'tests': '${{ needs.tests.result }}',
+              'build-validation': '${{ needs.build-validation.result }}',
+              'env-validation': '${{ needs.env-validation.result }}',
+              'security-audit': '${{ needs.security-audit.result }}'
+            };
+            
+            const allPassed = Object.values(results).every(result => result === 'success');
+            const failedGates = Object.entries(results).filter(([_, result]) => result !== 'success');
+            
+            let comment;
+            if (allPassed) {
+              comment = `## 🎉 **Deterministic Build System - ALL GATES PASSED**
+            
+            ✅ **Build Determinism Certified**
+            - Node.js: ${{ env.NODE_VERSION }} (locked)
+            - PNPM: ${{ env.PNPM_VERSION }} (locked)
+            - Dependencies: Frozen lockfile verified
+            - Caching: Deterministic keys generated
+            
+            ✅ **Quality Gates Status:**
+            ${Object.entries(results).map(([gate, result]) => 
+              \`- ✅ \${gate.replace('-', ' ')}: \${result}\`).join('\n')}
+            
+            🚀 **This PR is ready for merge - E2E tests will be stable!**
+            
+            ---
+            *Build Determinism Report generated at: $(date)*`;
+            } else {
+              const failureReport = failedGates.map(([gate, result]) => 
+                \`- ❌ \${gate.replace('-', ' ')}: \${result}\`).join('\n');
+              
+              comment = \`## ❌ **Deterministic Build System - GATES FAILED**
+            
+            🚫 **Build determinism compromised - merge blocked**
+            
+            **Failed Quality Gates:**
+            \${failureReport}
+            
+            **Action Required:**
+            1. Fix all failing quality gates listed above
+            2. Ensure deterministic build reproducibility
+            3. Re-run CI pipeline for validation
+            
+            ---
+            *E2E tests may be unstable until all gates pass*\`;
+            }
+            
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });

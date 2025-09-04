@@ -1,25 +1,49 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "git": {
+    "deploymentEnabled": {
+      "railway-deploy": false,
+      "railway": false,
+      "railway-staging": false,
+      "deploy-railway": false,
+      "staging": false
+    }
+  },
+  "github": {
+    "silent": true,
+    "autoAlias": false
+  },
   "buildCommand": "pnpm run build",
   "outputDirectory": ".next",
-  "framework": "nextjs",
+  "devCommand": "pnpm run dev",
   "installCommand": "pnpm install --frozen-lockfile",
+  "regions": ["icn1"],
   "env": {
-    "PNPM_VERSION": "9.15.0",
-    "NEXT_PUBLIC_APP_NAME": "Video Planet, VLANET",
-    "NEXT_PUBLIC_APP": "VideoPlanet",
+    "NODE_ENV": "production",
     "NEXT_PUBLIC_APP_ENV": "production",
-    "NEXT_PUBLIC_PRODUCTION_DOMAIN": "vlanet.net",
-    "NEXT_PUBLIC_APP_URL": "https://vlanet.net",
-    "NEXT_PUBLIC_API_BASE": "https://api.vlanet.net",
-    "NEXT_PUBLIC_BACKEND_API": "https://videoplanet.up.railway.app",
-    "NEXT_PUBLIC_WS_URL": "wss://videoplanet.up.railway.app",
-    "NEXT_PUBLIC_WS_RECONNECT_INTERVAL": "5000",
-    "NEXT_PUBLIC_WS_HEARTBEAT_INTERVAL": "30000",
-    "NEXT_PUBLIC_WS_MAX_RECONNECT_ATTEMPTS": "10",
-    "NEXT_PUBLIC_WS_MESSAGE_QUEUE_SIZE": "1000",
-    "NODE_ENV": "production"
+    "NEXT_PUBLIC_API_URL": "https://api.vlanet.net",
+    "NEXT_PUBLIC_BACKEND_URL": "https://api.vlanet.net",
+    "NEXTAUTH_SECRET": "vridge-nextauth-secret-production-2025-very-secure-key-for-deployment"
+  },
+  "build": {
+    "env": {
+      "NODE_ENV": "production",
+      "NEXT_PUBLIC_APP_ENV": "production",
+      "NEXT_PUBLIC_API_URL": "https://api.vlanet.net",
+      "NEXT_PUBLIC_BACKEND_URL": "https://api.vlanet.net"
+    }
   },
   "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store, max-age=0"
+        }
+      ]
+    },
     {
       "source": "/(.*)",
       "headers": [
@@ -46,34 +70,40 @@
       ]
     },
     {
-      "source": "/api/(.*)",
+      "source": "/_next/static/(.*)",
       "headers": [
         {
-          "key": "Access-Control-Allow-Origin",
-          "value": "https://vlanet.net"
-        },
-        {
-          "key": "Access-Control-Allow-Methods",
-          "value": "GET,OPTIONS,PATCH,DELETE,POST,PUT"
-        },
-        {
-          "key": "Access-Control-Allow-Headers",
-          "value": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization"
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
         }
       ]
     }
   ],
   "rewrites": [
     {
-      "source": "/api/:path*",
-      "destination": "https://videoplanet.up.railway.app/api/:path*"
+      "source": "/api/proxy/:path*",
+      "destination": "https://api.vlanet.net/:path*"
     }
   ],
   "redirects": [
     {
-      "source": "/admin",
-      "destination": "https://videoplanet.up.railway.app/admin",
-      "permanent": false
+      "source": "/home",
+      "destination": "/",
+      "permanent": true
+    }
+  ],
+  "functions": {
+    "app/api/auth/[...nextauth]/route.ts": {
+      "maxDuration": 10
+    },
+    "app/api/*": {
+      "maxDuration": 30
+    }
+  },
+  "crons": [
+    {
+      "path": "/api/cron/health-check",
+      "schedule": "0 */6 * * *"
     }
   ]
 }

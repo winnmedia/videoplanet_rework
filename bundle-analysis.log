@@ -1,0 +1,441 @@
+
+> vridge-web@2.1.0 prebuild /home/winnmedia/VLANET/vridge-web
+> pnpm clean:build && pnpm type-check:incremental
+
+
+> vridge-web@2.1.0 clean:build /home/winnmedia/VLANET/vridge-web
+> rm -rf .next dist coverage .tsbuildinfo
+
+
+> vridge-web@2.1.0 type-check:incremental /home/winnmedia/VLANET/vridge-web
+> pnpm exec tsc --build --verbose
+
+12:42:48 PM - Projects in this build: 
+    * tsconfig.json
+
+12:42:48 PM - Project 'tsconfig.json' is out of date because buildinfo file 'tsconfig.tsbuildinfo' indicates that program needs to report errors.
+
+12:42:48 PM - Building project '/home/winnmedia/VLANET/vridge-web/tsconfig.json'...
+
+app/api/analytics/dashboard/route.ts(179,7): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+app/api/analytics/dashboard/route.ts(185,20): error TS18048: 'performanceData.lcp' is possibly 'undefined'.
+app/api/analytics/dashboard/route.ts(186,18): error TS18048: 'performanceData.lcp' is possibly 'undefined'.
+app/api/analytics/dashboard/route.ts(187,45): error TS18048: 'performanceData.lcp' is possibly 'undefined'.
+app/api/analytics/dashboard/route.ts(190,20): error TS18048: 'performanceData.fid' is possibly 'undefined'.
+app/api/analytics/dashboard/route.ts(191,18): error TS18048: 'performanceData.fid' is possibly 'undefined'.
+app/api/analytics/dashboard/route.ts(192,45): error TS18048: 'performanceData.fid' is possibly 'undefined'.
+app/api/analytics/dashboard/route.ts(195,20): error TS18048: 'performanceData.cls' is possibly 'undefined'.
+app/api/analytics/dashboard/route.ts(196,18): error TS18048: 'performanceData.cls' is possibly 'undefined'.
+app/api/analytics/dashboard/route.ts(197,45): error TS18048: 'performanceData.cls' is possibly 'undefined'.
+app/api/analytics/dashboard/route.ts(200,7): error TS2322: Type '{ current: number; trend: number; } | undefined' is not assignable to type '{ current: number; trend: number; }'.
+  Type 'undefined' is not assignable to type '{ current: number; trend: number; }'.
+app/api/analytics/dashboard/route.ts(201,7): error TS2322: Type '{ current: number; trend: number; } | undefined' is not assignable to type '{ current: number; trend: number; }'.
+  Type 'undefined' is not assignable to type '{ current: number; trend: number; }'.
+app/api/analytics/dashboard/route.ts(202,7): error TS2322: Type 'number | { current: number; trend: number; }' is not assignable to type '{ current: number; trend: number; }'.
+  Type 'number' is not assignable to type '{ current: number; trend: number; }'.
+app/api/analytics/dashboard/route.ts(205,7): error TS2322: Type '{ name: string; completionRate: any; avgDuration: any; dropOffPoint: string; trend: number; }[] | undefined' is not assignable to type '{ name: string; completionRate: number; avgDuration: number; dropOffPoint: string; trend: number; }[]'.
+  Type 'undefined' is not assignable to type '{ name: string; completionRate: number; avgDuration: number; dropOffPoint: string; trend: number; }[]'.
+app/api/analytics/dashboard/route.ts(206,7): error TS2322: Type '{ step: string; users: number; dropOff: number; conversionRate: number; }[] | undefined' is not assignable to type '{ step: string; users: number; dropOff: number; conversionRate: number; }[]'.
+  Type 'undefined' is not assignable to type '{ step: string; users: number; dropOff: number; conversionRate: number; }[]'.
+app/api/auth/send-verification/route.ts(3,30): error TS2307: Cannot find module '@/shared/services/emailService' or its corresponding type declarations.
+app/api/feedback/[id]/route.ts(15,8): error TS2307: Cannot find module '@/shared/api/schemas' or its corresponding type declarations.
+app/api/feedback/[id]/route.ts(52,37): error TS2344: Type '{ id: string; }' does not satisfy the constraint 'NextApiHandler'.
+  Type '{ id: string; }' provides no match for the signature '(request: NextRequest, context?: { params: Promise<Record<string, string>>; } | undefined): Promise<Response | NextResponse<unknown>>'.
+app/api/feedback/[id]/route.ts(111,37): error TS2344: Type '{ id: string; }' does not satisfy the constraint 'NextApiHandler'.
+  Type '{ id: string; }' provides no match for the signature '(request: NextRequest, context?: { params: Promise<Record<string, string>>; } | undefined): Promise<Response | NextResponse<unknown>>'.
+app/api/feedback/[id]/route.ts(175,40): error TS2344: Type '{ id: string; }' does not satisfy the constraint 'NextApiHandler'.
+  Type '{ id: string; }' provides no match for the signature '(request: NextRequest, context?: { params: Promise<Record<string, string>>; } | undefined): Promise<Response | NextResponse<unknown>>'.
+app/api/feedback/route.ts(17,8): error TS2307: Cannot find module '@/shared/api/schemas' or its corresponding type declarations.
+app/api/feedback/route.ts(151,28): error TS7006: Parameter 'tag' implicitly has an 'any' type.
+app/api/feedback/route.ts(171,18): error TS7053: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type '{ low: number; medium: number; high: number; urgent: number; }'.
+app/api/feedback/route.ts(172,18): error TS7053: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type '{ low: number; medium: number; high: number; urgent: number; }'.
+app/api/health/route.ts(10,36): error TS2307: Cannot find module '@/shared/lib/performance-monitor' or its corresponding type declarations.
+app/api/health/route.ts(321,54): error TS7006: Parameter 'v' implicitly has an 'any' type.
+app/api/health/route.ts(356,73): error TS7006: Parameter 'v' implicitly has an 'any' type.
+app/api/menu/items/route.ts(10,80): error TS2307: Cannot find module '@/shared/api/schemas' or its corresponding type declarations.
+app/api/menu/submenu/route.ts(15,8): error TS2307: Cannot find module '@/shared/api/schemas' or its corresponding type declarations.
+app/api/monitoring/route.ts(10,38): error TS2307: Cannot find module '@/shared/api/schemas' or its corresponding type declarations.
+app/api/projects/[id]/route.ts(15,8): error TS2307: Cannot find module '@/shared/api/schemas' or its corresponding type declarations.
+app/api/projects/[id]/route.ts(35,37): error TS2344: Type '{ id: string; }' does not satisfy the constraint 'NextApiHandler'.
+  Type '{ id: string; }' provides no match for the signature '(request: NextRequest, context?: { params: Promise<Record<string, string>>; } | undefined): Promise<Response | NextResponse<unknown>>'.
+app/api/projects/[id]/route.ts(87,37): error TS2344: Type '{ id: string; }' does not satisfy the constraint 'NextApiHandler'.
+  Type '{ id: string; }' provides no match for the signature '(request: NextRequest, context?: { params: Promise<Record<string, string>>; } | undefined): Promise<Response | NextResponse<unknown>>'.
+app/api/projects/[id]/route.ts(141,40): error TS2344: Type '{ id: string; }' does not satisfy the constraint 'NextApiHandler'.
+  Type '{ id: string; }' provides no match for the signature '(request: NextRequest, context?: { params: Promise<Record<string, string>>; } | undefined): Promise<Response | NextResponse<unknown>>'.
+app/api/projects/route.ts(17,8): error TS2307: Cannot find module '@/shared/api/schemas' or its corresponding type declarations.
+app/api/projects/route.ts(126,27): error TS7006: Parameter 'tag' implicitly has an 'any' type.
+app/api/projects/route.ts(146,18): error TS7053: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type '{ low: number; medium: number; high: number; }'.
+app/api/projects/route.ts(147,18): error TS7053: Element implicitly has an 'any' type because expression of type 'any' can't be used to index type '{ low: number; medium: number; high: number; }'.
+app/dashboard/page.tsx(256,18): error TS18048: 'dashboardData.feedbackSummary.totalUnread' is possibly 'undefined'.
+app/dashboard/page.tsx(259,30): error TS18047: 'dashboardData' is possibly 'null'.
+app/feedback/[id]/page.tsx(105,18): error TS7022: 'minutes' implicitly has type 'any' because it does not have a type annotation and is referenced directly or indirectly in its own initializer.
+app/feedback/[id]/page.tsx(105,58): error TS7024: Function implicitly has return type 'any' because it does not have a return type annotation and is referenced directly or indirectly in one of its return expressions.
+app/layout.tsx(74,34): error TS2322: Type '{ type: "img"; src: string; className: string; }[]' is not assignable to type 'HeaderItem[]'.
+  Type '{ type: "img"; src: string; className: string; }' is missing the following properties from type 'HeaderItem': id, label
+app/layout.tsx(74,56): error TS2322: Type '{ type: "string"; text: string; className: string; }[]' is not assignable to type 'HeaderItem[]'.
+  Type '{ type: "string"; text: string; className: string; }' is missing the following properties from type 'HeaderItem': id, label
+app/projects/create/page.tsx(6,10): error TS2305: Module '"@/shared/ui"' has no exported member 'Button'.
+app/projects/create/page.tsx(6,18): error TS2305: Module '"@/shared/ui"' has no exported member 'Input'.
+app/projects/create/page.tsx(6,25): error TS2305: Module '"@/shared/ui"' has no exported member 'Card'.
+app/projects/create/page.tsx(106,30): error TS7006: Parameter 'e' implicitly has an 'any' type.
+app/projects/create/page.tsx(152,30): error TS7006: Parameter 'e' implicitly has an 'any' type.
+app/projects/manage/page.tsx(16,10): error TS2305: Module '"@/shared/ui"' has no exported member 'Button'.
+app/projects/manage/page.tsx(16,18): error TS2305: Module '"@/shared/ui"' has no exported member 'Card'.
+cypress.config.ts(87,17): error TS7006: Parameter 'res' implicitly has an 'any' type.
+entities/menu/api/menuApi.ts(6,8): error TS2307: Cannot find module '@/shared/api/schemas' or its corresponding type declarations.
+entities/menu/api/menuApi.ts(168,19): error TS2339: Property 'invalidateCache' does not exist on type '{ get: <T = unknown>(endpoint: string, config?: ApiRequestConfig | undefined) => Promise<ApiResponse<T>>; post: <T = unknown>(endpoint: string, data?: unknown, config?: ApiRequestConfig | undefined) => Promise<...>; put: <T = unknown>(endpoint: string, data?: unknown, config?: ApiRequestConfig | undefined) => Promis...'.
+entities/menu/api/menuApi.ts(171,19): error TS2339: Property 'invalidateCache' does not exist on type '{ get: <T = unknown>(endpoint: string, config?: ApiRequestConfig | undefined) => Promise<ApiResponse<T>>; post: <T = unknown>(endpoint: string, data?: unknown, config?: ApiRequestConfig | undefined) => Promise<...>; put: <T = unknown>(endpoint: string, data?: unknown, config?: ApiRequestConfig | undefined) => Promis...'.
+entities/menu/api/menuApi.ts(186,14): error TS18046: 'response.data' is of type 'unknown'.
+entities/menu/api/menuApi.ts(200,14): error TS18046: 'response.data' is of type 'unknown'.
+entities/project/api/projectApi.ts(3,26): error TS2307: Cannot find module '@/shared/api' or its corresponding type declarations.
+entities/project/api/projectApi.ts(51,15): error TS7006: Parameter 'builder' implicitly has an 'any' type.
+entities/project/api/projectApi.ts(52,20): error TS2347: Untyped function calls may not accept type arguments.
+entities/project/api/projectApi.ts(53,15): error TS7006: Parameter 'data' implicitly has an 'any' type.
+entities/project/api/projectApi.ts(61,30): error TS2347: Untyped function calls may not accept type arguments.
+entities/project/api/projectApi.ts(75,24): error TS2347: Untyped function calls may not accept type arguments.
+entities/project/api/projectApi.ts(76,15): error TS7006: Parameter 'data' implicitly has an 'any' type.
+entities/project/api/projectApi.ts(93,21): error TS2347: Untyped function calls may not accept type arguments.
+entities/project/api/projectApi.ts(94,15): error TS7006: Parameter 'projectId' implicitly has an 'any' type.
+entities/project/api/projectApi.ts(99,19): error TS2347: Untyped function calls may not accept type arguments.
+entities/project/api/projectApi.ts(100,15): error TS7006: Parameter 'inviteId' implicitly has an 'any' type.
+entities/project/api/projectApi.ts(108,19): error TS2347: Untyped function calls may not accept type arguments.
+entities/project/api/projectApi.ts(109,15): error TS7006: Parameter 'inviteId' implicitly has an 'any' type.
+entities/project/api/projectApi.ts(117,19): error TS2347: Untyped function calls may not accept type arguments.
+entities/project/api/projectApi.ts(118,17): error TS7031: Binding element 'inviteId' implicitly has an 'any' type.
+entities/project/api/projectApi.ts(118,27): error TS7031: Binding element 'token' implicitly has an 'any' type.
+entities/project/api/projectApi.ts(127,20): error TS2347: Untyped function calls may not accept type arguments.
+entities/project/api/projectApi.ts(128,17): error TS7031: Binding element 'inviteId' implicitly has an 'any' type.
+entities/project/api/projectApi.ts(128,27): error TS7031: Binding element 'token' implicitly has an 'any' type.
+entities/project/api/projectApi.ts(137,19): error TS2347: Untyped function calls may not accept type arguments.
+entities/project/api/projectApi.ts(138,17): error TS7031: Binding element 'projectId' implicitly has an 'any' type.
+entities/project/api/projectApi.ts(138,28): error TS7031: Binding element 'memberId' implicitly has an 'any' type.
+entities/project/api/projectApi.ts(146,25): error TS2347: Untyped function calls may not accept type arguments.
+entities/project/api/projectApi.ts(147,17): error TS7031: Binding element 'projectId' implicitly has an 'any' type.
+entities/project/api/projectApi.ts(147,28): error TS7031: Binding element 'role' implicitly has an 'any' type.
+features/auth/model/useAuth.ts(3,48): error TS2307: Cannot find module '@/shared/lib/hooks' or its corresponding type declarations.
+features/auth/model/useAuth.ts(10,31): error TS7006: Parameter 'state' implicitly has an 'any' type.
+features/auth/model/useAuth.ts(11,42): error TS7006: Parameter 'state' implicitly has an 'any' type.
+features/feedback/ui/FeedbackFilter.tsx(3,10): error TS2305: Module '"@/shared/ui"' has no exported member 'Select'.
+features/notification/ui/NotificationBell.tsx(5,10): error TS2305: Module '"@/shared/ui"' has no exported member 'NotificationCenter'.
+features/notification/ui/NotificationBell.tsx(5,35): error TS2305: Module '"@/shared/ui"' has no exported member 'Notification'.
+features/project/ui/CreateProjectButton.tsx(5,10): error TS2305: Module '"@/shared/ui"' has no exported member 'Button'.
+features/project/ui/CreateProjectForm.tsx(6,10): error TS2305: Module '"@/shared/ui"' has no exported member 'Button'.
+features/project/ui/CreateProjectForm.tsx(7,23): error TS2307: Cannot find module '@/shared/ui/Input/Input.modern' or its corresponding type declarations.
+features/project/ui/CreateProjectForm.tsx(8,32): error TS2307: Cannot find module '@/shared/ui/LoadingSpinner/LoadingSpinner.modern' or its corresponding type declarations.
+features/project/ui/CreateProjectForm.tsx(9,24): error TS2307: Cannot find module '@/shared/ui/Select/Select.modern' or its corresponding type declarations.
+features/project/ui/CreateProjectForm.tsx(133,22): error TS7006: Parameter 'e' implicitly has an 'any' type.
+features/project/ui/CreateProjectForm.tsx(183,22): error TS7006: Parameter 'value' implicitly has an 'any' type.
+features/project/ui/CreateProjectForm.tsx(203,24): error TS7006: Parameter 'value' implicitly has an 'any' type.
+features/project/ui/CreateProjectForm.tsx(219,24): error TS7006: Parameter 'e' implicitly has an 'any' type.
+features/project/ui/ProjectFilter.tsx(5,10): error TS2305: Module '"@/shared/ui"' has no exported member 'Select'.
+features/project/ui/ProjectFilter.tsx(14,20): error TS7006: Parameter 'e' implicitly has an 'any' type.
+features/project/ui/QuickActions.tsx(5,10): error TS2305: Module '"@/shared/ui"' has no exported member 'Button'.
+features/project/ui/QuickActions.tsx(6,57): error TS2307: Cannot find module '@/shared/ui/icons' or its corresponding type declarations.
+features/project/ui/TeamInviteForm.tsx(5,10): error TS2305: Module '"@/shared/ui"' has no exported member 'Button'.
+features/project/ui/TeamMemberTable.tsx(5,10): error TS2305: Module '"@/shared/ui"' has no exported member 'Button'.
+features/video-planning-wizard/api/videoPlanningApi.ts(6,27): error TS2307: Cannot find module '@/shared/api/client' or its corresponding type declarations.
+features/video-planning-wizard/ui/FourStagesReview.tsx(10,20): error TS2307: Cannot find module '@/shared/lib/utils' or its corresponding type declarations.
+features/video-planning-wizard/ui/FourStagesReview.tsx(11,37): error TS2307: Cannot find module '@/shared/ui/index.modern' or its corresponding type declarations.
+features/video-planning-wizard/ui/FourStagesReview.tsx(105,25): error TS7006: Parameter 'e' implicitly has an 'any' type.
+features/video-planning-wizard/ui/PlanningInputForm.tsx(10,20): error TS2307: Cannot find module '@/shared/lib/utils' or its corresponding type declarations.
+features/video-planning-wizard/ui/PlanningInputForm.tsx(11,45): error TS2307: Cannot find module '@/shared/ui/index.modern' or its corresponding type declarations.
+features/video-planning-wizard/ui/PlanningInputForm.tsx(164,28): error TS7006: Parameter 'e' implicitly has an 'any' type.
+features/video-planning-wizard/ui/PlanningInputForm.tsx(176,28): error TS7006: Parameter 'e' implicitly has an 'any' type.
+features/video-planning-wizard/ui/PlanningInputForm.tsx(195,33): error TS7006: Parameter 'value' implicitly has an 'any' type.
+features/video-planning-wizard/ui/PlanningInputForm.tsx(207,33): error TS7006: Parameter 'value' implicitly has an 'any' type.
+features/video-planning-wizard/ui/PlanningInputForm.tsx(219,33): error TS7006: Parameter 'value' implicitly has an 'any' type.
+features/video-planning-wizard/ui/PlanningInputForm.tsx(231,33): error TS7006: Parameter 'value' implicitly has an 'any' type.
+features/video-planning-wizard/ui/PlanningInputForm.tsx(243,33): error TS7006: Parameter 'value' implicitly has an 'any' type.
+features/video-planning-wizard/ui/PlanningInputForm.tsx(255,33): error TS7006: Parameter 'value' implicitly has an 'any' type.
+features/video-planning-wizard/ui/TwelveShotsEditor.tsx(10,20): error TS2307: Cannot find module '@/shared/lib/utils' or its corresponding type declarations.
+features/video-planning-wizard/ui/TwelveShotsEditor.tsx(11,45): error TS2307: Cannot find module '@/shared/ui/index.modern' or its corresponding type declarations.
+features/video-planning-wizard/ui/TwelveShotsEditor.tsx(200,24): error TS7006: Parameter 'e' implicitly has an 'any' type.
+features/video-planning-wizard/ui/TwelveShotsEditor.tsx(209,29): error TS7006: Parameter 'value' implicitly has an 'any' type.
+features/video-planning-wizard/ui/TwelveShotsEditor.tsx(214,29): error TS7006: Parameter 'value' implicitly has an 'any' type.
+features/video-planning-wizard/ui/TwelveShotsEditor.tsx(219,29): error TS7006: Parameter 'value' implicitly has an 'any' type.
+features/video-planning-wizard/ui/TwelveShotsEditor.tsx(230,26): error TS7006: Parameter 'e' implicitly has an 'any' type.
+features/video-planning-wizard/ui/TwelveShotsEditor.tsx(239,31): error TS7006: Parameter 'value' implicitly has an 'any' type.
+features/video-planning-wizard/ui/TwelveShotsEditor.tsx(249,24): error TS7006: Parameter 'e' implicitly has an 'any' type.
+features/video-planning-wizard/ui/TwelveShotsEditor.tsx(282,24): error TS7006: Parameter 'e' implicitly has an 'any' type.
+features/video-planning-wizard/ui/TwelveShotsEditor.tsx(290,24): error TS7006: Parameter 'e' implicitly has an 'any' type.
+features/video-planning-wizard/ui/TwelveShotsEditor.tsx(298,24): error TS7006: Parameter 'e' implicitly has an 'any' type.
+features/video-planning-wizard/ui/VideoPlanningWizard.tsx(10,20): error TS2307: Cannot find module '@/shared/lib/utils' or its corresponding type declarations.
+features/video-planning-wizard/ui/VideoPlanningWizard.tsx(11,22): error TS2307: Cannot find module '@/shared/ui/index.modern' or its corresponding type declarations.
+features/video-planning-wizard/ui/VideoPlanningWizard.tsx(343,13): error TS2322: Type 'string | null' is not assignable to type 'string | undefined'.
+  Type 'null' is not assignable to type 'string | undefined'.
+lib/analytics/ab-test-framework.ts(176,21): error TS2341: Property 'track' is private and only accessible within class 'BehaviorTracker'.
+lib/analytics/ab-test-framework.ts(218,25): error TS2341: Property 'track' is private and only accessible within class 'BehaviorTracker'.
+lib/analytics/ab-test-framework.ts(245,21): error TS2341: Property 'track' is private and only accessible within class 'BehaviorTracker'.
+lib/analytics/ab-test-framework.ts(399,7): error TS2322: Type '({ name: string; type: "custom"; } | { name: string; type: "bounce_rate"; })[] | ({ name: string; type: "custom"; } | { name: string; type: "bounce_rate"; })[] | ({ name: string; type: "click_rate"; } | { ...; })[]' is not assignable to type '{ type: "bounce_rate" | "session_duration" | "page_views" | "error_rate" | "satisfaction_score"; name: string; weight?: number | undefined; }[]'.
+  Type '({ name: string; type: "custom"; } | { name: string; type: "bounce_rate"; })[]' is not assignable to type '{ type: "bounce_rate" | "session_duration" | "page_views" | "error_rate" | "satisfaction_score"; name: string; weight?: number | undefined; }[]'.
+    Type '{ name: string; type: "custom"; } | { name: string; type: "bounce_rate"; }' is not assignable to type '{ type: "bounce_rate" | "session_duration" | "page_views" | "error_rate" | "satisfaction_score"; name: string; weight?: number | undefined; }'.
+      Type '{ name: string; type: "custom"; }' is not assignable to type '{ type: "bounce_rate" | "session_duration" | "page_views" | "error_rate" | "satisfaction_score"; name: string; weight?: number | undefined; }'.
+        Types of property 'type' are incompatible.
+          Type '"custom"' is not assignable to type '"bounce_rate" | "session_duration" | "page_views" | "error_rate" | "satisfaction_score"'.
+lib/analytics/ab-test-framework.ts(555,9): error TS1355: A 'const' assertions can only be applied to references to enum members, or string, number, boolean, array, or object literals.
+lib/analytics/alert-system.ts(13,8): error TS2307: Cannot find module '@/shared/api/monitoring-schemas' or its corresponding type declarations.
+lib/analytics/behavior-tracker.ts(8,88): error TS2307: Cannot find module '@/shared/api/schemas' or its corresponding type declarations.
+lib/analytics/behavior-tracker.ts(54,10): error TS2339: Property 'trackClickEvents' does not exist on type 'BehaviorTracker'.
+lib/analytics/behavior-tracker.ts(57,10): error TS2339: Property 'trackScrollEvents' does not exist on type 'BehaviorTracker'.
+lib/analytics/behavior-tracker.ts(60,10): error TS2551: Property 'trackFormInteractions' does not exist on type 'BehaviorTracker'. Did you mean 'trackVideoInteractions'?
+lib/analytics/data-quality-monitor.ts(11,8): error TS2307: Cannot find module '@/shared/api/monitoring-schemas' or its corresponding type declarations.
+lib/analytics/feature-usage-tracker.ts(99,21): error TS2341: Property 'track' is private and only accessible within class 'BehaviorTracker'.
+lib/analytics/feature-usage-tracker.ts(123,21): error TS2341: Property 'track' is private and only accessible within class 'BehaviorTracker'.
+lib/analytics/feature-usage-tracker.ts(158,23): error TS2341: Property 'track' is private and only accessible within class 'BehaviorTracker'.
+lib/analytics/feature-usage-tracker.ts(191,21): error TS2341: Property 'track' is private and only accessible within class 'BehaviorTracker'.
+lib/analytics/kpi-management.ts(455,21): error TS2341: Property 'track' is private and only accessible within class 'BehaviorTracker'.
+lib/analytics/kpi-management.ts(602,21): error TS2341: Property 'track' is private and only accessible within class 'BehaviorTracker'.
+lib/analytics/monitoring-system.ts(250,41): error TS7006: Parameter 'alert' implicitly has an 'any' type.
+lib/analytics/monitoring-system.ts(699,86): error TS2341: Property 'config' is private and only accessible within class 'MonitoringSystem'.
+lib/analytics/real-time-data-collector.ts(15,8): error TS2307: Cannot find module '@/shared/api/monitoring-schemas' or its corresponding type declarations.
+lib/analytics/submenu-analytics.ts(62,21): error TS2341: Property 'track' is private and only accessible within class 'BehaviorTracker'.
+lib/analytics/submenu-analytics.ts(140,21): error TS2341: Property 'track' is private and only accessible within class 'BehaviorTracker'.
+lib/analytics/user-journey-monitor.ts(12,8): error TS2307: Cannot find module '@/shared/api/monitoring-schemas' or its corresponding type declarations.
+lib/analytics/web-vitals-monitor.ts(7,54): error TS2307: Cannot find module '@/shared/api/monitoring-schemas' or its corresponding type declarations.
+lib/analytics/web-vitals-monitor.ts(205,78): error TS2551: Property 'navigationStart' does not exist on type 'PerformanceNavigationTiming'. Did you mean 'activationStart'?
+lib/analytics/web-vitals-monitor.ts(206,62): error TS2551: Property 'navigationStart' does not exist on type 'PerformanceNavigationTiming'. Did you mean 'activationStart'?
+lib/analytics/web-vitals-monitor.ts(208,39): error TS2551: Property 'navigationStart' does not exist on type 'PerformanceNavigationTiming'. Did you mean 'activationStart'?
+lib/analytics/web-vitals-monitor.ts(209,64): error TS2551: Property 'navigationStart' does not exist on type 'PerformanceNavigationTiming'. Did you mean 'activationStart'?
+lib/analytics/web-vitals-monitor.ts(210,66): error TS2551: Property 'navigationStart' does not exist on type 'PerformanceNavigationTiming'. Did you mean 'activationStart'?
+lib/api/monitoring.ts(258,21): error TS2339: Property 'stack' does not exist on type 'Error | ApiError'.
+  Property 'stack' does not exist on type 'ApiError'.
+lib/api/msw-browser.ts(56,20): error TS2532: Object is possibly 'undefined'.
+lib/api/msw-handlers.ts(13,8): error TS2307: Cannot find module '@/shared/api/schemas' or its corresponding type declarations.
+lib/api/stability-enhancer.ts(206,40): error TS2341: Property 'request' is private and only accessible within class 'ApiClient'.
+lib/config/env-schema.ts(47,59): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(def: string): ZodDefault<ZodPipeline<ZodEffects<ZodOptional<ZodString>, boolean, string | undefined>, ZodBoolean>>', gave the following error.
+    Argument of type 'boolean' is not assignable to parameter of type 'string'.
+  Overload 2 of 2, '(def: () => string): ZodDefault<ZodPipeline<ZodEffects<ZodOptional<ZodString>, boolean, string | undefined>, ZodBoolean>>', gave the following error.
+    Argument of type 'boolean' is not assignable to parameter of type '() => string'.
+lib/config/env-schema.ts(48,55): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(def: string): ZodDefault<ZodPipeline<ZodEffects<ZodOptional<ZodString>, boolean, string | undefined>, ZodBoolean>>', gave the following error.
+    Argument of type 'boolean' is not assignable to parameter of type 'string'.
+  Overload 2 of 2, '(def: () => string): ZodDefault<ZodPipeline<ZodEffects<ZodOptional<ZodString>, boolean, string | undefined>, ZodBoolean>>', gave the following error.
+    Argument of type 'boolean' is not assignable to parameter of type '() => string'.
+lib/config/env-schema.ts(49,61): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(def: string): ZodDefault<ZodPipeline<ZodEffects<ZodOptional<ZodString>, boolean, string | undefined>, ZodBoolean>>', gave the following error.
+    Argument of type 'boolean' is not assignable to parameter of type 'string'.
+  Overload 2 of 2, '(def: () => string): ZodDefault<ZodPipeline<ZodEffects<ZodOptional<ZodString>, boolean, string | undefined>, ZodBoolean>>', gave the following error.
+    Argument of type 'boolean' is not assignable to parameter of type '() => string'.
+lib/config/env-schema.ts(50,72): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(def: string): ZodDefault<ZodPipeline<ZodEffects<ZodOptional<ZodString>, boolean, string | undefined>, ZodBoolean>>', gave the following error.
+    Argument of type 'boolean' is not assignable to parameter of type 'string'.
+  Overload 2 of 2, '(def: () => string): ZodDefault<ZodPipeline<ZodEffects<ZodOptional<ZodString>, boolean, string | undefined>, ZodBoolean>>', gave the following error.
+    Argument of type 'boolean' is not assignable to parameter of type '() => string'.
+lib/config/env-schema.ts(100,50): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(def: string): ZodDefault<ZodPipeline<ZodEffects<ZodOptional<ZodString>, boolean, string | undefined>, ZodBoolean>>', gave the following error.
+    Argument of type 'boolean' is not assignable to parameter of type 'string'.
+  Overload 2 of 2, '(def: () => string): ZodDefault<ZodPipeline<ZodEffects<ZodOptional<ZodString>, boolean, string | undefined>, ZodBoolean>>', gave the following error.
+    Argument of type 'boolean' is not assignable to parameter of type '() => string'.
+lib/config/env-schema.ts(258,15): error TS2484: Export declaration conflicts with exported declaration of 'Environment'.
+lib/config/env.ts(183,7): error TS2322: Type '"development" | "production" | "test" | "staging" | undefined' is not assignable to type '"development" | "production" | "test" | "staging"'.
+  Type 'undefined' is not assignable to type '"development" | "production" | "test" | "staging"'.
+lib/config/env.ts(184,7): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+lib/config/env.ts(185,7): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+lib/config/env.ts(186,7): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+lib/config/env.ts(189,7): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+lib/config/env.ts(191,7): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+lib/config/env.ts(192,7): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+lib/config/env.ts(196,7): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+lib/config/env.ts(198,7): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+lib/config/env.ts(210,7): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+lib/config/env.ts(211,25): error TS18048: 'env.NEXT_PUBLIC_ALLOWED_FILE_TYPES' is possibly 'undefined'.
+lib/config/env.ts(214,7): error TS2322: Type 'boolean | undefined' is not assignable to type 'boolean'.
+  Type 'undefined' is not assignable to type 'boolean'.
+lib/config/env.ts(215,7): error TS2322: Type 'boolean | undefined' is not assignable to type 'boolean'.
+  Type 'undefined' is not assignable to type 'boolean'.
+lib/config/env.ts(216,7): error TS2322: Type 'boolean | undefined' is not assignable to type 'boolean'.
+  Type 'undefined' is not assignable to type 'boolean'.
+lib/config/env.ts(217,7): error TS2322: Type 'boolean | undefined' is not assignable to type 'boolean'.
+  Type 'undefined' is not assignable to type 'boolean'.
+lib/config/env.ts(226,21): error TS18048: 'env.NEXT_PUBLIC_IMAGE_DOMAINS' is possibly 'undefined'.
+lib/config/env.ts(229,7): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+lib/config/env.ts(230,7): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+lib/config/env.ts(233,7): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+lib/config/env.ts(234,7): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+lib/config/env.ts(237,7): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+lib/config/env.ts(238,7): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+lib/config/env.ts(241,7): error TS2322: Type 'number | undefined' is not assignable to type 'number'.
+  Type 'undefined' is not assignable to type 'number'.
+playwright.local.config.ts(30,5): error TS2769: No overload matches this call.
+  The last overload gave the following error.
+    Object literal may only specify known properties, and 'slowMo' does not exist in type 'UseOptions<PlaywrightTestOptions & CustomProperties<unknown>, PlaywrightWorkerOptions & CustomProperties<unknown>>'.
+processes/feedback-collection/model/useFeedbackNotifications.ts(36,27): error TS2554: Expected 1 arguments, but got 0.
+shared/api/__tests__/setup/msw-setup.ts(29,3): error TS2552: Cannot find name 'beforeAll'. Did you mean 'before'?
+shared/api/__tests__/setup/msw-setup.ts(42,3): error TS2304: Cannot find name 'afterAll'.
+shared/api/__tests__/setup/msw-setup.ts(222,7): error TS2502: 'MSWTestUtils' is referenced directly or indirectly in its own type annotation.
+shared/api/mockSystem.ts(472,5): error TS2739: Type '{}' is missing the following properties from type 'ApiResponse<T>': data, status, message, timestamp
+shared/lib/hooks/usePerformanceMetrics.ts(29,23): error TS2554: Expected 1 arguments, but got 0.
+shared/lib/incident-management.ts(483,45): error TS2339: Property 'category' does not exist on type '{ category: "application" | "external" | "infrastructure" | "human_error" | "process"; description: string; contributingFactors: string[]; } | undefined'.
+shared/lib/performance-monitor.ts(141,80): error TS2551: Property 'navigationStart' does not exist on type 'PerformanceNavigationTiming'. Did you mean 'activationStart'?
+shared/lib/production-monitor.ts(390,51): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Error | undefined'.
+shared/lib/production-monitor.ts(513,55): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'Error | undefined'.
+shared/lib/production-monitor.ts(608,9): error TS18046: 'event.data.loadTime' is of type 'unknown'.
+shared/lib/production-monitor.ts(627,9): error TS2322: Type '"engagement"' is not assignable to type '"error" | "click" | "performance" | "page_view" | "form_submit"'.
+shared/lib/production-monitor.ts(647,7): error TS2322: Type '"ab_test"' is not assignable to type '"error" | "click" | "performance" | "page_view" | "form_submit"'.
+shared/lib/utils.ts(372,42): error TS2339: Property 'length' does not exist on type '{}'.
+shared/lib/utils.ts(377,42): error TS2339: Property 'length' does not exist on type '{}'.
+shared/lib/utils.ts(382,53): error TS2345: Argument of type '{}' is not assignable to parameter of type 'string'.
+shared/lib/utils.ts(456,29): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(o: {}): string[]', gave the following error.
+    Argument of type '{} | undefined' is not assignable to parameter of type '{}'.
+      Type 'undefined' is not assignable to type '{}'.
+  Overload 2 of 2, '(o: object): string[]', gave the following error.
+    Argument of type '{} | undefined' is not assignable to parameter of type 'object'.
+      Type 'undefined' is not assignable to type 'object'.
+shared/lib/utils.ts(467,20): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{}'.
+  No index signature with a parameter of type 'string' was found on type '{}'.
+shared/lib/utils.ts(467,31): error TS18048: 'obj2' is possibly 'undefined'.
+shared/lib/utils.ts(467,31): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{}'.
+  No index signature with a parameter of type 'string' was found on type '{}'.
+shared/ui/Card/Card.modern.tsx(192,7): error TS7053: Element implicitly has an 'any' type because expression of type '"aria-disabled"' can't be used to index type '{ role: string; tabIndex: number; onKeyDown: (e: KeyboardEvent<HTMLDivElement>) => void; onClick: () => void; } | { role?: undefined; tabIndex?: undefined; onKeyDown?: undefined; onClick?: undefined; }'.
+  Property 'aria-disabled' does not exist on type '{ role: string; tabIndex: number; onKeyDown: (e: KeyboardEvent<HTMLDivElement>) => void; onClick: () => void; } | { role?: undefined; tabIndex?: undefined; onKeyDown?: undefined; onClick?: undefined; }'.
+shared/ui/Card/Card.modern.tsx(197,7): error TS7053: Element implicitly has an 'any' type because expression of type '"aria-busy"' can't be used to index type '{ role: string; tabIndex: number; onKeyDown: (e: KeyboardEvent<HTMLDivElement>) => void; onClick: () => void; } | { role?: undefined; tabIndex?: undefined; onKeyDown?: undefined; onClick?: undefined; }'.
+  Property 'aria-busy' does not exist on type '{ role: string; tabIndex: number; onKeyDown: (e: KeyboardEvent<HTMLDivElement>) => void; onClick: () => void; } | { role?: undefined; tabIndex?: undefined; onKeyDown?: undefined; onClick?: undefined; }'.
+shared/ui/GlobalSubMenu/hooks/useGlobalSubMenuKeyboard.ts(85,41): error TS2339: Property 'focus' does not exist on type 'Element'.
+shared/ui/GlobalSubMenu/hooks/useGlobalSubMenuKeyboard.ts(90,41): error TS2339: Property 'focus' does not exist on type 'Element'.
+shared/ui/Input/Input.tsx(5,20): error TS2307: Cannot find module '@/shared/lib/utils' or its corresponding type declarations.
+shared/ui/Select/Select.tsx(5,20): error TS2307: Cannot find module '@/shared/lib/utils' or its corresponding type declarations.
+shared/ui/SubMenu/SubMenu.improved.tsx(429,35): error TS2339: Property 'description' does not exist on type 'SubMenuItem'.
+shared/ui/SubMenu/SubMenu.improved.tsx(431,39): error TS2339: Property 'description' does not exist on type 'SubMenuItem'.
+shared/ui/index.ts(27,15): error TS2724: '"./ErrorBoundary/ErrorBoundary"' has no exported member named 'ErrorBoundaryProps'. Did you mean 'ErrorBoundary'?
+src/shared/api/error-interceptor.ts(6,63): error TS2307: Cannot find module 'axios' or its corresponding type declarations.
+src/shared/api/error-interceptor.ts(211,7): error TS2322: Type 'any' is not assignable to type 'never'.
+src/shared/api/error-interceptor.ts(253,36): error TS2341: Property 'defaultErrorTransformer' is private and only accessible within class 'ApiErrorInterceptor'.
+src/shared/api/error-interceptor.ts(281,36): error TS2341: Property 'defaultErrorTransformer' is private and only accessible within class 'ApiErrorInterceptor'.
+src/shared/lib/error-handling.ts(117,51): error TS18046: 'parseError' is of type 'unknown'.
+src/shared/lib/hooks/useNetworkStatus.ts(55,30): error TS2554: Expected 1 arguments, but got 0.
+src/shared/lib/hooks/useNetworkStatus.ts(56,27): error TS2554: Expected 1 arguments, but got 0.
+src/shared/lib/performance/web-vitals.ts(8,3): error TS2305: Module '"web-vitals/attribution"' has no exported member 'getCLS'.
+src/shared/lib/performance/web-vitals.ts(9,3): error TS2305: Module '"web-vitals/attribution"' has no exported member 'getFCP'.
+src/shared/lib/performance/web-vitals.ts(10,3): error TS2305: Module '"web-vitals/attribution"' has no exported member 'getFID'.
+src/shared/lib/performance/web-vitals.ts(11,3): error TS2305: Module '"web-vitals/attribution"' has no exported member 'getINP'.
+src/shared/lib/performance/web-vitals.ts(12,3): error TS2305: Module '"web-vitals/attribution"' has no exported member 'getLCP'.
+src/shared/lib/performance/web-vitals.ts(13,3): error TS2305: Module '"web-vitals/attribution"' has no exported member 'getTTFB'.
+src/shared/lib/performance/web-vitals.ts(17,8): error TS2724: '"web-vitals/attribution"' has no exported member named 'FIDMetric'. Did you mean 'Metric'?
+src/shared/ui/ErrorBoundary.tsx(176,19): error TS18049: 'errorInfo.componentStack' is possibly 'null' or 'undefined'.
+src/widgets/PerformanceDashboard/PerformanceDashboard.tsx(13,8): error TS2307: Cannot find module '@shared/lib/performance/web-vitals' or its corresponding type declarations.
+widgets/Calendar/api/calendarApi.ts(6,27): error TS2307: Cannot find module '@/shared/api/client' or its corresponding type declarations.
+widgets/Dashboard/ui/DashboardWidget.modern.tsx(398,21): error TS2741: Property 'deadline' is missing in type 'ProjectStatus' but required in type '{ id: string; title: string; status: string; progress: number; deadline: string; teamMembers: string[]; priority: "high" | "low" | "medium"; }'.
+widgets/Dashboard/ui/DashboardWidget.modern.tsx(423,19): error TS2322: Type 'ActivityItem[]' is not assignable to type '{ id: string; type: string; message: string; timestamp: string; user: string; }[]'.
+  Type 'ActivityItem' is missing the following properties from type '{ id: string; type: string; message: string; timestamp: string; user: string; }': message, user
+widgets/Dashboard/ui/RecentActivityFeed.modern.tsx(5,28): error TS2307: Cannot find module '@/shared/ui/EmptyState/EmptyState.modern' or its corresponding type declarations.
+widgets/MonitoringDashboard/api/monitoringApi.ts(8,36): error TS2307: Cannot find module '@/shared/lib/performance-monitor' or its corresponding type declarations.
+widgets/MonitoringDashboard/api/monitoringApi.ts(31,65): error TS7006: Parameter 'metric' implicitly has an 'any' type.
+widgets/MonitoringDashboard/api/monitoringApi.ts(77,44): error TS7006: Parameter 'm' implicitly has an 'any' type.
+widgets/MonitoringDashboard/api/monitoringApi.ts(86,9): error TS7006: Parameter 'm' implicitly has an 'any' type.
+widgets/MonitoringDashboard/api/monitoringApi.ts(156,7): error TS2322: Type '{ projectId: string; title: string; completedStages: string[]; currentProgress: number; estimatedCompletionDays: number; stageMetadata: {}; connectedWidgets: string[]; widgetData: {}; }[]' is not assignable to type 'WorkflowContext[]'.
+  Type '{ projectId: string; title: string; completedStages: string[]; currentProgress: number; estimatedCompletionDays: number; stageMetadata: {}; connectedWidgets: string[]; widgetData: {}; }' is not assignable to type 'WorkflowContext'.
+    Types of property 'completedStages' are incompatible.
+      Type 'string[]' is not assignable to type 'WorkflowStage[]'.
+        Type 'string' is not assignable to type 'WorkflowStage'.
+widgets/MonitoringDashboard/api/monitoringApi.ts(161,7): error TS2322: Type '{ id: string; type: string; projectId: string; timestamp: Date; data: Record<string, unknown> | undefined; }[]' is not assignable to type 'FeedbackEvent[]'.
+  Type '{ id: string; type: string; projectId: string; timestamp: Date; data: Record<string, unknown> | undefined; }' is not assignable to type 'FeedbackEvent'.
+    Types of property 'type' are incompatible.
+      Type 'string' is not assignable to type '"feedback_added" | "feedback_updated" | "feedback_resolved" | "stage_completed" | "user_online"'.
+widgets/MonitoringDashboard/model/types.ts(8,65): error TS2307: Cannot find module '@/shared/lib/performance-monitor' or its corresponding type declarations.
+widgets/MonitoringDashboard/ui/MonitoringDashboardWidget.tsx(273,13): error TS2322: Type '(event: { id: string; type: string; message: string; }) => void' is not assignable to type '(event: FeedbackEvent) => void'.
+  Types of parameters 'event' and 'event' are incompatible.
+    Property 'message' is missing in type 'FeedbackEvent' but required in type '{ id: string; type: string; message: string; }'.
+widgets/MonitoringDashboard/ui/PerformanceMetricsChart.tsx(120,31): error TS2339: Property 'lines' does not exist on type 'never[] | { lines: ChartLine[]; width: number; height: number; padding: { top: number; right: number; bottom: number; left: number; }; timeRange: { min: number; max: number; }; }'.
+  Property 'lines' does not exist on type 'never[]'.
+widgets/MonitoringDashboard/ui/PerformanceMetricsChart.tsx(144,27): error TS2339: Property 'padding' does not exist on type 'never[] | { lines: ChartLine[]; width: number; height: number; padding: { top: number; right: number; bottom: number; left: number; }; timeRange: { min: number; max: number; }; }'.
+  Property 'padding' does not exist on type 'never[]'.
+widgets/MonitoringDashboard/ui/PerformanceMetricsChart.tsx(144,76): error TS2339: Property 'padding' does not exist on type 'never[] | { lines: ChartLine[]; width: number; height: number; padding: { top: number; right: number; bottom: number; left: number; }; timeRange: { min: number; max: number; }; }'.
+  Property 'padding' does not exist on type 'never[]'.
+widgets/MonitoringDashboard/ui/PerformanceMetricsChart.tsx(144,100): error TS2339: Property 'padding' does not exist on type 'never[] | { lines: ChartLine[]; width: number; height: number; padding: { top: number; right: number; bottom: number; left: number; }; timeRange: { min: number; max: number; }; }'.
+  Property 'padding' does not exist on type 'never[]'.
+widgets/MonitoringDashboard/ui/PerformanceMetricsChart.tsx(146,28): error TS2339: Property 'padding' does not exist on type 'never[] | { lines: ChartLine[]; width: number; height: number; padding: { top: number; right: number; bottom: number; left: number; }; timeRange: { min: number; max: number; }; }'.
+  Property 'padding' does not exist on type 'never[]'.
+widgets/MonitoringDashboard/ui/PerformanceMetricsChart.tsx(147,41): error TS2339: Property 'padding' does not exist on type 'never[] | { lines: ChartLine[]; width: number; height: number; padding: { top: number; right: number; bottom: number; left: number; }; timeRange: { min: number; max: number; }; }'.
+  Property 'padding' does not exist on type 'never[]'.
+widgets/MonitoringDashboard/ui/PerformanceMetricsChart.tsx(153,27): error TS2339: Property 'padding' does not exist on type 'never[] | { lines: ChartLine[]; width: number; height: number; padding: { top: number; right: number; bottom: number; left: number; }; timeRange: { min: number; max: number; }; }'.
+  Property 'padding' does not exist on type 'never[]'.
+widgets/MonitoringDashboard/ui/PerformanceMetricsChart.tsx(153,76): error TS2339: Property 'padding' does not exist on type 'never[] | { lines: ChartLine[]; width: number; height: number; padding: { top: number; right: number; bottom: number; left: number; }; timeRange: { min: number; max: number; }; }'.
+  Property 'padding' does not exist on type 'never[]'.
+widgets/MonitoringDashboard/ui/PerformanceMetricsChart.tsx(153,101): error TS2339: Property 'padding' does not exist on type 'never[] | { lines: ChartLine[]; width: number; height: number; padding: { top: number; right: number; bottom: number; left: number; }; timeRange: { min: number; max: number; }; }'.
+  Property 'padding' does not exist on type 'never[]'.
+widgets/MonitoringDashboard/ui/PerformanceMetricsChart.tsx(155,31): error TS2339: Property 'padding' does not exist on type 'never[] | { lines: ChartLine[]; width: number; height: number; padding: { top: number; right: number; bottom: number; left: number; }; timeRange: { min: number; max: number; }; }'.
+  Property 'padding' does not exist on type 'never[]'.
+widgets/MonitoringDashboard/ui/PerformanceMetricsChart.tsx(156,45): error TS2339: Property 'padding' does not exist on type 'never[] | { lines: ChartLine[]; width: number; height: number; padding: { top: number; right: number; bottom: number; left: number; }; timeRange: { min: number; max: number; }; }'.
+  Property 'padding' does not exist on type 'never[]'.
+widgets/MonitoringDashboard/ui/PerformanceMetricsChart.tsx(163,15): error TS2339: Property 'lines' does not exist on type 'never[] | { lines: ChartLine[]; width: number; height: number; padding: { top: number; right: number; bottom: number; left: number; }; timeRange: { min: number; max: number; }; }'.
+  Property 'lines' does not exist on type 'never[]'.
+widgets/MonitoringDashboard/ui/PerformanceMetricsChart.tsx(163,30): error TS7006: Parameter 'line' implicitly has an 'any' type.
+widgets/MonitoringDashboard/ui/PerformanceMetricsChart.tsx(163,36): error TS7006: Parameter 'index' implicitly has an 'any' type.
+widgets/MonitoringDashboard/ui/PerformanceMetricsChart.tsx(171,28): error TS7006: Parameter 'point' implicitly has an 'any' type.
+widgets/MonitoringDashboard/ui/PerformanceMetricsChart.tsx(171,35): error TS7006: Parameter 'i' implicitly has an 'any' type.
+widgets/MonitoringDashboard/ui/PerformanceMetricsChart.tsx(183,27): error TS7006: Parameter 'point' implicitly has an 'any' type.
+widgets/MonitoringDashboard/ui/PerformanceMetricsChart.tsx(191,35): error TS2339: Property 'padding' does not exist on type 'never[] | { lines: ChartLine[]; width: number; height: number; padding: { top: number; right: number; bottom: number; left: number; }; timeRange: { min: number; max: number; }; }'.
+  Property 'padding' does not exist on type 'never[]'.
+widgets/MonitoringDashboard/ui/PerformanceMetricsChart.tsx(191,74): error TS2339: Property 'padding' does not exist on type 'never[] | { lines: ChartLine[]; width: number; height: number; padding: { top: number; right: number; bottom: number; left: number; }; timeRange: { min: number; max: number; }; }'.
+  Property 'padding' does not exist on type 'never[]'.
+widgets/MonitoringDashboard/ui/PerformanceMetricsChart.tsx(191,98): error TS2339: Property 'padding' does not exist on type 'never[] | { lines: ChartLine[]; width: number; height: number; padding: { top: number; right: number; bottom: number; left: number; }; timeRange: { min: number; max: number; }; }'.
+  Property 'padding' does not exist on type 'never[]'.
+widgets/MonitoringDashboard/ui/PerformanceMetricsChart.tsx(196,30): error TS2339: Property 'padding' does not exist on type 'never[] | { lines: ChartLine[]; width: number; height: number; padding: { top: number; right: number; bottom: number; left: number; }; timeRange: { min: number; max: number; }; }'.
+  Property 'padding' does not exist on type 'never[]'.
+widgets/MonitoringDashboard/ui/PerformanceMetricsChart.tsx(197,43): error TS2339: Property 'padding' does not exist on type 'never[] | { lines: ChartLine[]; width: number; height: number; padding: { top: number; right: number; bottom: number; left: number; }; timeRange: { min: number; max: number; }; }'.
+  Property 'padding' does not exist on type 'never[]'.
+widgets/MonitoringDashboard/ui/PerformanceMetricsChart.tsx(210,27): error TS2339: Property 'padding' does not exist on type 'never[] | { lines: ChartLine[]; width: number; height: number; padding: { top: number; right: number; bottom: number; left: number; }; timeRange: { min: number; max: number; }; }'.
+  Property 'padding' does not exist on type 'never[]'.
+widgets/MonitoringDashboard/ui/PerformanceMetricsChart.tsx(210,76): error TS2339: Property 'padding' does not exist on type 'never[] | { lines: ChartLine[]; width: number; height: number; padding: { top: number; right: number; bottom: number; left: number; }; timeRange: { min: number; max: number; }; }'.
+  Property 'padding' does not exist on type 'never[]'.
+widgets/MonitoringDashboard/ui/PerformanceMetricsChart.tsx(210,101): error TS2339: Property 'padding' does not exist on type 'never[] | { lines: ChartLine[]; width: number; height: number; padding: { top: number; right: number; bottom: number; left: number; }; timeRange: { min: number; max: number; }; }'.
+  Property 'padding' does not exist on type 'never[]'.
+widgets/MonitoringDashboard/ui/PerformanceMetricsChart.tsx(211,39): error TS2339: Property 'timeRange' does not exist on type 'never[] | { lines: ChartLine[]; width: number; height: number; padding: { top: number; right: number; bottom: number; left: number; }; timeRange: { min: number; max: number; }; }'.
+  Property 'timeRange' does not exist on type 'never[]'.
+widgets/MonitoringDashboard/ui/PerformanceMetricsChart.tsx(211,76): error TS2339: Property 'timeRange' does not exist on type 'never[] | { lines: ChartLine[]; width: number; height: number; padding: { top: number; right: number; bottom: number; left: number; }; timeRange: { min: number; max: number; }; }'.
+  Property 'timeRange' does not exist on type 'never[]'.
+widgets/MonitoringDashboard/ui/PerformanceMetricsChart.tsx(211,102): error TS2339: Property 'timeRange' does not exist on type 'never[] | { lines: ChartLine[]; width: number; height: number; padding: { top: number; right: number; bottom: number; left: number; }; timeRange: { min: number; max: number; }; }'.
+  Property 'timeRange' does not exist on type 'never[]'.
+widgets/MonitoringDashboard/ui/PerformanceMetricsChart.tsx(219,27): error TS2339: Property 'padding' does not exist on type 'never[] | { lines: ChartLine[]; width: number; height: number; padding: { top: number; right: number; bottom: number; left: number; }; timeRange: { min: number; max: number; }; }'.
+  Property 'padding' does not exist on type 'never[]'.
+widgets/MonitoringDashboard/ui/PerformanceMetricsChart.tsx(219,76): error TS2339: Property 'padding' does not exist on type 'never[] | { lines: ChartLine[]; width: number; height: number; padding: { top: number; right: number; bottom: number; left: number; }; timeRange: { min: number; max: number; }; }'.
+  Property 'padding' does not exist on type 'never[]'.
+widgets/MonitoringDashboard/ui/PerformanceMetricsChart.tsx(219,100): error TS2339: Property 'padding' does not exist on type 'never[] | { lines: ChartLine[]; width: number; height: number; padding: { top: number; right: number; bottom: number; left: number; }; timeRange: { min: number; max: number; }; }'.
+  Property 'padding' does not exist on type 'never[]'.
+widgets/MonitoringDashboard/ui/PerformanceMetricsChart.tsx(221,44): error TS2339: Property 'padding' does not exist on type 'never[] | { lines: ChartLine[]; width: number; height: number; padding: { top: number; right: number; bottom: number; left: number; }; timeRange: { min: number; max: number; }; }'.
+  Property 'padding' does not exist on type 'never[]'.
+widgets/MonitoringDashboard/ui/PerformanceMetricsChart.tsx(265,22): error TS2339: Property 'lines' does not exist on type 'never[] | { lines: ChartLine[]; width: number; height: number; padding: { top: number; right: number; bottom: number; left: number; }; timeRange: { min: number; max: number; }; }'.
+  Property 'lines' does not exist on type 'never[]'.
+widgets/MonitoringDashboard/ui/PerformanceMetricsChart.tsx(265,33): error TS7006: Parameter 'line' implicitly has an 'any' type.
+widgets/MonitoringDashboard/ui/PerformanceMetricsChart.tsx(265,39): error TS7006: Parameter 'index' implicitly has an 'any' type.
+widgets/MonitoringDashboard/ui/RealTimeMonitoringDashboard.tsx(30,22): error TS2307: Cannot find module '@/shared/ui/Card/Card' or its corresponding type declarations.
+widgets/MonitoringDashboard/ui/RealTimeMonitoringDashboard.tsx(31,32): error TS2307: Cannot find module '@/shared/ui/LoadingSpinner/LoadingSpinner' or its corresponding type declarations.
+widgets/MonitoringDashboard/ui/RealTimeMonitoringDashboard.tsx(32,23): error TS2307: Cannot find module '@/shared/ui/Toast/Toast' or its corresponding type declarations.
+widgets/MonitoringDashboard/ui/WorkflowProgressVisualization.tsx(93,24): error TS2532: Object is possibly 'undefined'.
+widgets/MonitoringDashboard/ui/WorkflowProgressVisualization.tsx(281,21): error TS2322: Type 'unknown' is not assignable to type 'ReactNode'.
+widgets/MonitoringDashboard/ui/WorkflowProgressVisualization.tsx(282,36): error TS2322: Type '{}' is not assignable to type 'ReactNode'.
+widgets/MonitoringDashboard/ui/WorkflowProgressVisualization.tsx(284,21): error TS2322: Type 'unknown' is not assignable to type 'ReactNode'.
+widgets/MonitoringDashboard/ui/WorkflowProgressVisualization.tsx(285,36): error TS2322: Type '{}' is not assignable to type 'ReactNode'.
+widgets/MonitoringDashboard/ui/WorkflowProgressVisualization.tsx(287,21): error TS2322: Type 'unknown' is not assignable to type 'ReactNode'.
+widgets/MonitoringDashboard/ui/WorkflowProgressVisualization.tsx(288,34): error TS2322: Type '{}' is not assignable to type 'ReactNode'.
+widgets/ProjectCreation/ui/ProjectForm.tsx(4,32): error TS2307: Cannot find module '@shared/lib/formatDuration' or its corresponding type declarations.
+widgets/ProjectCreation/ui/ProjectForm.tsx(63,9): error TS2353: Object literal may only specify known properties, and 'autoSchedule' does not exist in type '{ title: string; description: string; }'.
+widgets/SideBar/ui/SideBar.fsd-compliant.tsx(10,10): error TS2305: Module '"@/shared/ui"' has no exported member 'MenuButton'.
+widgets/SideBar/ui/SideBar.fsd-compliant.tsx(10,22): error TS2305: Module '"@/shared/ui"' has no exported member 'SubMenu'.
+widgets/SideBar/ui/SideBar.tsx(8,10): error TS2305: Module '"@/shared/ui"' has no exported member 'SubMenu'.
+widgets/SideBar/ui/SideBar.tsx(8,19): error TS2305: Module '"@/shared/ui"' has no exported member 'MenuButton'.
+widgets/SideBar/ui/SideBar.tsx(183,35): error TS7006: Parameter 'subItem' implicitly has an 'any' type.
+widgets/VideoPlanning/ui/VideoPlanningWidget.modern.tsx(11,20): error TS2307: Cannot find module '@/shared/lib/utils' or its corresponding type declarations.
+widgets/VideoPlanning/ui/VideoPlanningWidget.modern.tsx(12,30): error TS2307: Cannot find module '@/shared/ui/index.modern' or its corresponding type declarations.
+widgets/VideoPlanning/ui/VideoPlanningWidget.modern.tsx(133,19): error TS7006: Parameter 'e' implicitly has an 'any' type.
+widgets/VideoPlanning/ui/VideoPlanningWidget.modern.tsx(205,23): error TS7006: Parameter 'e' implicitly has an 'any' type.
+ ELIFECYCLE  Command failed with exit code 1.
+ ELIFECYCLE  Command failed with exit code 1.
