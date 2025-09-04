@@ -1,11 +1,12 @@
 /**
  * @fileoverview 메인 영상 기획 위저드 컴포넌트
- * @description 3단계 위저드 통합 컴포넌트 - TDD 구현
+ * @description 3단계 위저드 통합 컴포넌트 - Redux 연동 및 TDD 구현
  */
 
 'use client'
 
-import { useState, useCallback, useReducer } from 'react'
+import React, { useCallback } from 'react'
+import { useAppDispatch, useAppSelector } from '@/app/store/store'
 
 import { cn } from '@/shared/lib/utils'
 import { Card } from '@/shared/ui/index.modern'
@@ -13,11 +14,23 @@ import { Card } from '@/shared/ui/index.modern'
 import { FourStagesReview } from './FourStagesReview'
 import { PlanningInputForm } from './PlanningInputForm'
 import { TwelveShotsEditor } from './TwelveShotsEditor'
-import { VideoPlanningWizardApi } from '../api/videoPlanningApi'
+import {
+  generateFourStages,
+  generateFourStagesWithAI,
+  generateTwelveShots,
+  generateStoryboard,
+  exportPlan,
+  setStep,
+  updateStage,
+  updateShot,
+  updateInsertShot,
+  reset,
+  selectWizardState,
+  selectCurrentStep,
+  selectProgressPercentage,
+} from '../model/videoPlanningSlice'
 import type {
   VideoPlanningWizardProps,
-  WizardState,
-  WizardStep,
   PlanningInput,
   PresetConfig,
   PlanningStage,
@@ -26,220 +39,129 @@ import type {
   ExportOptions
 } from '../model/types'
 
-// 위저드 상태 관리를 위한 리듀서
-type WizardAction =
-  | { type: 'SET_STEP'; payload: WizardStep }
-  | { type: 'SET_INPUT'; payload: Partial<PlanningInput> }
-  | { type: 'SET_STAGES'; payload: PlanningStage[] }
-  | { type: 'SET_SHOTS'; payload: VideoShot[] }
-  | { type: 'SET_INSERT_SHOTS'; payload: InsertShot[] }
-  | { type: 'SET_LOADING'; payload: boolean }
-  | { type: 'SET_ERROR'; payload: string | null }
-  | { type: 'UPDATE_STAGE'; payload: { stageId: string; updates: Partial<PlanningStage> } }
-  | { type: 'UPDATE_SHOT'; payload: { shotId: string; updates: Partial<VideoShot> } }
-  | { type: 'UPDATE_INSERT'; payload: { insertId: string; updates: Partial<InsertShot> } }
-  | { type: 'RESET' }
-
-const initialState: WizardState = {
-  currentStep: 1,
-  input: {},
-  stages: [],
-  shots: [],
-  insertShots: [],
-  isLoading: false,
-  error: null
-}
-
-const wizardReducer = (state: WizardState, action: WizardAction): WizardState => {
-  switch (action.type) {
-    case 'SET_STEP':
-      return { ...state, currentStep: action.payload }
-    case 'SET_INPUT':
-      return { ...state, input: { ...state.input, ...action.payload } }
-    case 'SET_STAGES':
-      return { ...state, stages: action.payload }
-    case 'SET_SHOTS':
-      return { ...state, shots: action.payload }
-    case 'SET_INSERT_SHOTS':
-      return { ...state, insertShots: action.payload }
-    case 'SET_LOADING':
-      return { ...state, isLoading: action.payload }
-    case 'SET_ERROR':
-      return { ...state, error: action.payload }
-    case 'UPDATE_STAGE':
-      return {
-        ...state,
-        stages: state.stages.map(stage =>
-          stage.id === action.payload.stageId 
-            ? { ...stage, ...action.payload.updates }
-            : stage
-        )
-      }
-    case 'UPDATE_SHOT':
-      return {
-        ...state,
-        shots: state.shots.map(shot =>
-          shot.id === action.payload.shotId
-            ? { ...shot, ...action.payload.updates }
-            : shot
-        )
-      }
-    case 'UPDATE_INSERT':
-      return {
-        ...state,
-        insertShots: state.insertShots.map(insert =>
-          insert.id === action.payload.insertId
-            ? { ...insert, ...action.payload.updates }
-            : insert
-        )
-      }
-    case 'RESET':
-      return initialState
-    default:
-      return state
-  }
-}
 
 export const VideoPlanningWizard = ({
   className,
   onComplete,
   onError
 }: VideoPlanningWizardProps = {}) => {
-  const [state, dispatch] = useReducer(wizardReducer, initialState)
+  const dispatch = useAppDispatch()
+  const wizardState = useAppSelector(selectWizardState)
+  const currentStep = useAppSelector(selectCurrentStep)
+  const progressPercentage = useAppSelector(selectProgressPercentage)
 
-  // STEP 1: 기본 정보 제출 핸들러
+  // STEP 1: 기본 정보 제출 핸들러 (일반 생성)
   const handleInputSubmit = useCallback(async (input: PlanningInput) => {
-    dispatch({ type: 'SET_INPUT', payload: input })
-    dispatch({ type: 'SET_LOADING', payload: true })
-    dispatch({ type: 'SET_ERROR', payload: null })
-
     try {
-      const stages = await VideoPlanningWizardApi.generateFourStages(input)
-      dispatch({ type: 'SET_STAGES', payload: stages })
-      dispatch({ type: 'SET_STEP', payload: 2 })
+      const result = await dispatch(generateFourStages(input)).unwrap()
+      // 자동으로 STEP 2로 이동 (slice에서 처리됨)
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : '4단계 기획 생성에 실패했습니다.'
-      dispatch({ type: 'SET_ERROR', payload: errorMessage })
-      onError?.(errorMessage)
-    } finally {
-      dispatch({ type: 'SET_LOADING', payload: false })
+      onError?.(error as string)
     }
-  }, [onError])
+  }, [dispatch, onError])
+
+  // STEP 1: AI 기반 제출 핸들러 (신규)
+  const handleInputSubmitWithAI = useCallback(async (input: PlanningInput) => {
+    try {
+      const result = await dispatch(generateFourStagesWithAI(input)).unwrap()
+      // 자동으로 STEP 2로 이동 (slice에서 처리됨)
+    } catch (error) {
+      onError?.(error as string)
+    }
+  }, [dispatch, onError])
 
   // 프리셋 선택 핸들러
   const handlePresetSelect = useCallback((preset: PresetConfig) => {
-    dispatch({ type: 'SET_INPUT', payload: preset.data })
+    // 프리셋 선택은 현재 입력 폼에서 직접 처리
+    // Redux에 저장하지 않고 컴포넌트에서 바로 적용
   }, [])
 
   // STEP 2: 4단계 수정 핸들러
   const handleStageUpdate = useCallback((stageId: string, updates: Partial<PlanningStage>) => {
-    dispatch({ type: 'UPDATE_STAGE', payload: { stageId, updates } })
-  }, [])
+    dispatch(updateStage({ stageId, updates }))
+  }, [dispatch])
 
   // STEP 2: 초기화 핸들러
   const handleStagesReset = useCallback(async () => {
-    if (!state.input.title || !state.input.logline) return
-
-    dispatch({ type: 'SET_LOADING', payload: true })
-    dispatch({ type: 'SET_ERROR', payload: null })
+    if (!wizardState.input.title || !wizardState.input.logline) return
 
     try {
-      const stages = await VideoPlanningWizardApi.generateFourStages(state.input as PlanningInput)
-      dispatch({ type: 'SET_STAGES', payload: stages })
+      await dispatch(generateFourStages(wizardState.input as PlanningInput)).unwrap()
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : '4단계 기획 재생성에 실패했습니다.'
-      dispatch({ type: 'SET_ERROR', payload: errorMessage })
-      onError?.(errorMessage)
-    } finally {
-      dispatch({ type: 'SET_LOADING', payload: false })
+      onError?.(error as string)
     }
-  }, [state.input, onError])
+  }, [dispatch, wizardState.input, onError])
 
   // STEP 2 → STEP 3: 숏 생성 핸들러
   const handleGenerateShots = useCallback(async () => {
-    dispatch({ type: 'SET_LOADING', payload: true })
-    dispatch({ type: 'SET_ERROR', payload: null })
-
     try {
-      const { shots, insertShots } = await VideoPlanningWizardApi.generateTwelveShots(
-        state.stages,
-        state.input as PlanningInput
-      )
-      dispatch({ type: 'SET_SHOTS', payload: shots })
-      dispatch({ type: 'SET_INSERT_SHOTS', payload: insertShots })
-      dispatch({ type: 'SET_STEP', payload: 3 })
+      await dispatch(generateTwelveShots({
+        stages: wizardState.stages,
+        originalInput: wizardState.input as PlanningInput
+      })).unwrap()
+      // 자동으로 STEP 3으로 이동 (slice에서 처리됨)
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : '12개 숏 생성에 실패했습니다.'
-      dispatch({ type: 'SET_ERROR', payload: errorMessage })
-      onError?.(errorMessage)
-    } finally {
-      dispatch({ type: 'SET_LOADING', payload: false })
+      onError?.(error as string)
     }
-  }, [state.stages, state.input, onError])
+  }, [dispatch, wizardState.stages, wizardState.input, onError])
 
   // STEP 3: 숏 수정 핸들러
   const handleShotUpdate = useCallback((shotId: string, updates: Partial<VideoShot>) => {
-    dispatch({ type: 'UPDATE_SHOT', payload: { shotId, updates } })
-  }, [])
+    dispatch(updateShot({ shotId, updates }))
+  }, [dispatch])
 
   // STEP 3: 인서트 수정 핸들러
   const handleInsertUpdate = useCallback((insertId: string, updates: Partial<InsertShot>) => {
-    dispatch({ type: 'UPDATE_INSERT', payload: { insertId, updates } })
-  }, [])
+    dispatch(updateInsertShot({ insertId, updates }))
+  }, [dispatch])
 
   // STEP 3: 스토리보드 생성 핸들러
   const handleGenerateStoryboard = useCallback(async (shotId: string) => {
-    const shot = state.shots.find(s => s.id === shotId)
+    const shot = wizardState.shots.find(s => s.id === shotId)
     if (!shot) return
 
     try {
-      const storyboardUrl = await VideoPlanningWizardApi.generateStoryboard(shot)
-      dispatch({ type: 'UPDATE_SHOT', payload: { 
-        shotId, 
-        updates: { storyboardUrl } 
-      }})
+      await dispatch(generateStoryboard({ shotId, shot })).unwrap()
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : '스토리보드 생성에 실패했습니다.'
-      dispatch({ type: 'SET_ERROR', payload: errorMessage })
-      onError?.(errorMessage)
+      onError?.(error as string)
     }
-  }, [state.shots, onError])
+  }, [dispatch, wizardState.shots, onError])
 
   // STEP 3: 내보내기 핸들러
   const handleExport = useCallback(async (options: ExportOptions) => {
+    const fourStagesPlan = {
+      id: `plan-${Date.now()}`,
+      projectTitle: wizardState.input.title || '제목 없음',
+      stages: wizardState.stages,
+      totalDuration: `${wizardState.stages.reduce((total, stage) => {
+        const duration = stage.duration.match(/\d+/)?.[0] || '0'
+        return total + parseInt(duration)
+      }, 0)}초`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+
+    const twelveShotsPlan = {
+      id: `shots-${Date.now()}`,
+      projectTitle: wizardState.input.title || '제목 없음',
+      shots: wizardState.shots,
+      insertShots: wizardState.insertShots,
+      totalDuration: wizardState.shots.reduce((total, shot) => total + shot.duration, 0),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+
     try {
-      const fourStagesPlan = {
-        id: `plan-${Date.now()}`,
-        projectTitle: state.input.title || '제목 없음',
-        stages: state.stages,
-        totalDuration: `${state.stages.reduce((total, stage) => {
-          const duration = stage.duration.match(/\d+/)?.[0] || '0'
-          return total + parseInt(duration)
-        }, 0)}초`,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      }
-
-      const twelveShotsPlan = {
-        id: `shots-${Date.now()}`,
-        projectTitle: state.input.title || '제목 없음',
-        shots: state.shots,
-        insertShots: state.insertShots,
-        totalDuration: state.shots.reduce((total, shot) => total + shot.duration, 0),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      }
-
-      const downloadUrl = await VideoPlanningWizardApi.exportPlan(
+      const result = await dispatch(exportPlan({
         fourStagesPlan,
         twelveShotsPlan,
         options
-      )
-
+      })).unwrap()
+      
       // 자동 다운로드 트리거 (실제 구현에서는 브라우저가 처리)
       const link = document.createElement('a')
-      link.href = downloadUrl
-      link.download = `영상기획서-${state.input.title || 'untitled'}.${options.format === 'pdf' ? 'pdf' : 'json'}`
+      link.href = result.downloadUrl
+      link.download = `영상기획서-${wizardState.input.title || 'untitled'}.${options.format === 'pdf' ? 'pdf' : 'json'}`
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
@@ -250,21 +172,18 @@ export const VideoPlanningWizard = ({
         shots: twelveShotsPlan
       })
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : '내보내기에 실패했습니다.'
-      dispatch({ type: 'SET_ERROR', payload: errorMessage })
-      onError?.(errorMessage)
+      onError?.(error as string)
     }
-  }, [state.input, state.stages, state.shots, state.insertShots, onComplete, onError])
+  }, [dispatch, wizardState, onComplete, onError])
 
   // 이전 단계로 이동
   const handleBackStep = useCallback(() => {
-    if (state.currentStep > 1) {
-      dispatch({ type: 'SET_STEP', payload: (state.currentStep - 1) as WizardStep })
+    if (currentStep > 1) {
+      dispatch(setStep((currentStep - 1) as WizardStep))
     }
-  }, [state.currentStep])
+  }, [dispatch, currentStep])
 
-  // 진행률 계산
-  const progressPercentage = (state.currentStep / 3) * 100
+  // 진행률은 selector에서 계산됨
 
   return (
     <div className={cn('max-w-7xl mx-auto p-6', className)}>
@@ -281,7 +200,7 @@ export const VideoPlanningWizard = ({
           </div>
           <div className="text-right">
             <div className="text-sm text-gray-600">
-              진행률: {state.currentStep}/3
+              진행률: {currentStep}/3
             </div>
             <div className="w-32 h-2 bg-gray-200 rounded-full mt-1">
               <div 
@@ -303,19 +222,19 @@ export const VideoPlanningWizard = ({
               <div
                 className={cn(
                   'w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium',
-                  state.currentStep === step
+                  currentStep === step
                     ? 'bg-blue-500 text-white'
-                    : state.currentStep > step
+                    : currentStep > step
                     ? 'bg-green-500 text-white'
                     : 'bg-gray-200 text-gray-600'
                 )}
               >
-                {state.currentStep > step ? '✓' : step}
+                {currentStep > step ? '✓' : step}
               </div>
               <div className="ml-3">
                 <div className={cn(
                   'text-sm font-medium',
-                  state.currentStep === step ? 'text-blue-500' : 'text-gray-600'
+                  currentStep === step ? 'text-blue-500' : 'text-gray-600'
                 )}>
                   STEP {step}
                 </div>
@@ -335,36 +254,37 @@ export const VideoPlanningWizard = ({
 
       {/* 단계별 컨텐츠 */}
       <div className="min-h-[600px]">
-        {state.currentStep === 1 && (
+        {currentStep === 1 && (
           <PlanningInputForm
             onSubmit={handleInputSubmit}
+            onSubmitWithAI={handleInputSubmitWithAI}
             onPresetSelect={handlePresetSelect}
-            isLoading={state.isLoading}
-            error={state.error}
+            isLoading={wizardState.isLoading}
+            error={wizardState.error}
           />
         )}
 
-        {state.currentStep === 2 && (
+        {currentStep === 2 && (
           <FourStagesReview
-            stages={state.stages}
+            stages={wizardState.stages}
             onStageUpdate={handleStageUpdate}
             onReset={handleStagesReset}
             onNext={handleGenerateShots}
             onBack={handleBackStep}
-            isLoading={state.isLoading}
+            isLoading={wizardState.isLoading}
           />
         )}
 
-        {state.currentStep === 3 && (
+        {currentStep === 3 && (
           <TwelveShotsEditor
-            shots={state.shots}
-            insertShots={state.insertShots}
+            shots={wizardState.shots}
+            insertShots={wizardState.insertShots}
             onShotUpdate={handleShotUpdate}
             onInsertUpdate={handleInsertUpdate}
             onGenerateStoryboard={handleGenerateStoryboard}
             onExport={handleExport}
             onBack={handleBackStep}
-            isLoading={state.isLoading}
+            isLoading={wizardState.isLoading}
           />
         )}
       </div>

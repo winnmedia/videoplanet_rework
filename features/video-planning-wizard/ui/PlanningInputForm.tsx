@@ -74,6 +74,7 @@ const PRESET_BUTTONS: { type: PresetType; label: string; description: string }[]
 
 export const PlanningInputForm = ({
   onSubmit,
+  onSubmitWithAI,
   onPresetSelect,
   isLoading = false,
   error
@@ -119,7 +120,7 @@ export const PlanningInputForm = ({
     })
   }, [onPresetSelect])
 
-  // 폼 제출 핸들러
+  // 폼 제출 핸들러 (일반 생성)
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault()
     
@@ -127,6 +128,13 @@ export const PlanningInputForm = ({
     
     onSubmit(formData as PlanningInput)
   }, [formData, isFormValid, onSubmit])
+
+  // AI 생성 핸들러
+  const handleSubmitWithAI = useCallback(() => {
+    if (!isFormValid) return
+    
+    onSubmitWithAI?.(formData as PlanningInput)
+  }, [formData, isFormValid, onSubmitWithAI])
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -343,22 +351,80 @@ export const PlanningInputForm = ({
         </Card>
 
         {/* 제출 버튼 */}
-        <div className="flex justify-center">
-          <Button
-            type="submit"
-            disabled={!isFormValid || isLoading}
-            size="lg"
-            className="min-w-32"
-          >
-            {isLoading ? (
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                <span>생성 중...</span>
+        <div className="space-y-6">
+          {/* AI 생성 섹션 (신규) */}
+          {onSubmitWithAI && (
+            <Card className="p-6 bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
+              <div className="text-center space-y-4">
+                <div className="flex justify-center">
+                  <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                </div>
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-2">AI로 스마트하게 생성</h4>
+                  <p className="text-sm text-gray-600">
+                    Gemini AI가 장르별 최적화된 4단계 스토리 구조를 자동으로 생성합니다
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  onClick={handleSubmitWithAI}
+                  disabled={!isFormValid || isLoading}
+                  size="lg"
+                  className="min-w-40 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white border-0"
+                >
+                  {isLoading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>AI 생성 중...</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+                      </svg>
+                      <span>AI로 생성</span>
+                    </div>
+                  )}
+                </Button>
               </div>
-            ) : (
-              '생성'
-            )}
-          </Button>
+            </Card>
+          )}
+
+          {/* 구분선 */}
+          {onSubmitWithAI && (
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">또는</span>
+              </div>
+            </div>
+          )}
+
+          {/* 기존 생성 버튼 */}
+          <div className="flex justify-center">
+            <Button
+              type="submit"
+              disabled={!isFormValid || isLoading}
+              size="lg"
+              className="min-w-32"
+              variant={onSubmitWithAI ? "outline" : "default"}
+            >
+              {isLoading ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                  <span>생성 중...</span>
+                </div>
+              ) : (
+                '일반 생성'
+              )}
+            </Button>
+          </div>
         </div>
       </form>
 
