@@ -1,4 +1,4 @@
-# VLANET 프로젝트 최근 작업 내역 요약 (2025-09-05 AI 스토리 시스템 완성 - 프리미엄 서비스 준비 완료)
+# VLANET 프로젝트 최근 작업 내역 요약 (2025-09-05 Railway Django 배포 완전 해결 - Backend 안정화)
 
 ## 🏗️ 프로젝트 구조 현황
 
@@ -25,9 +25,12 @@ VLANET/
 - **아키텍처**: Feature-Sliced Design (FSD) 6계층 구조
 - **배포**: Vercel (프론트엔드), Railway (백엔드)
 
-## ⚡ 현재 운영 상태 (AI 스토리 시스템 완성 - 프리미엄 서비스 준비)
+## ⚡ 현재 운영 상태 (Railway Django 백엔드 완전 안정화)
 - **프론트엔드**: Vercel 정상 배포 (`https://videoplanet-vlanets-projects.vercel.app`)
-- **백엔드**: Railway 정상 운영 (`https://api.vlanet.net`) + AI API 엔드포인트 완전 통합
+- **백엔드**: Railway Docker 배포 완전 해결 (`https://api.vlanet.net`)
+  - **배포 방식**: Dockerfile 기반 명시적 Django 빌드
+  - **웹서버**: Daphne ASGI 서버로 안정적 운영
+  - **브랜치**: `security-fix-clean` 브랜치 통합 배포
 - **AI 서비스**: Google Gemini + Imagen API 실제 연동 완료
 - **이메일**: SendGrid 100% 작동 (`service@vlanet.net`)
 - **실시간 협업**: 단순 폴링 시스템 (WebSocket 대신 85% 경험 제공)
@@ -69,7 +72,50 @@ VLANET/
 - **협업 시스템**: 폴링 응답시간 60% 단축, 캐시 히트율 70% 달성
 - **코드 품질**: FSD 경계 위반 0건, 순환 의존성 0건, ESLint 100% 통과
 
-## 2025-09-05 (최신): AI 스토리 시스템 완성 - 프리미엄 서비스 런칭 준비! 🚀
+## 2025-09-05 (최신): Railway Django 배포 문제 완전 해결 - 백엔드 안정화 달성! 🚀
+
+### 🔧 Railway Django 배포 이슈 해결 과정
+**문제 원인: 프론트엔드/백엔드 브랜치 혼선 및 프로젝트 타입 감지 오류**
+
+#### **발견된 핵심 문제들**
+1. **브랜치 혼선 문제**
+   - `security-fix-clean` 브랜치를 백엔드에 사용 (프론트엔드 브랜치)
+   - `railway-deploy` 브랜치는 프론트엔드 전용이었음
+   - 백엔드는 별도 브랜치 또는 master 사용 필요했으나 혼재
+
+2. **Railway 프로젝트 타입 감지 오류**
+   - 루트의 `package.json`으로 인해 Node.js 프로젝트로 인식
+   - `.railwayignore`가 `vridge_back/` 디렉토리를 제외시킴
+   - Python 파일들이 루트에 없어 Django 인식 실패
+
+3. **환경 변수 불일치**
+   - Vercel: `GEMINI_API_KEY` vs `GOOGLE_GEMINI_API_KEY` 혼재
+   - 통일된 `GOOGLE_GEMINI_API_KEY`로 표준화 필요
+
+#### **최종 해결책: Dockerfile 기반 명시적 배포**
+```dockerfile
+# Django Backend for Railway
+FROM python:3.11-slim
+WORKDIR /app
+COPY vridge_back/requirements.txt .
+RUN pip install -r requirements.txt
+COPY vridge_back/ .
+CMD ["daphne", "-b", "0.0.0.0", "-p", "${PORT:-8000}", "config.asgi:application"]
+```
+
+#### **구성 파일 리셋**
+- **Dockerfile**: Django 전용 빌드 환경 구성
+- **railway.toml**: Dockerfile 빌드 명시 (`builder = "DOCKERFILE"`)
+- **.railwayignore**: 프론트엔드 파일 제외 (vridge-web/, package.json 등)
+- **불필요 파일 제거**: Procfile, runtime.txt, 루트 Python 파일들
+
+#### **배포 성과**
+- ✅ Railway가 Django 프로젝트로 정확히 인식
+- ✅ Docker 컨테이너로 안정적 배포
+- ✅ Daphne ASGI 서버로 WebSocket 지원 준비
+- ✅ 환경 변수 통일로 Vercel/Railway 모두 정상 작동
+
+## 2025-09-05 (이전): AI 스토리 시스템 완성 - 프리미엄 서비스 런칭 준비!
 
 ### 🤖 AI 스토리 개발 시스템 완전 구현 - Google API 실제 연동 완료
 **핵심 성과: 프롬프트 엔지니어링 + Google Gemini/Imagen API 실제 연동으로 프리미엄 서비스 준비 완료**
