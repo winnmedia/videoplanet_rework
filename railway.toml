@@ -1,7 +1,10 @@
-# Railway 자동 배포 설정 파일
+# Railway 자동 배포 설정 파일 - Django 백엔드 전용
 
 [build]
 builder = "nixpacks"
+nixpacksVersion = "1.13.0"
+# Python 프로젝트임을 명시
+nixpacksPlan = "python"
 buildCommand = "cd vridge_back && pip install -r requirements.txt"
 
 [deploy]
