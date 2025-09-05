@@ -6,10 +6,9 @@
 
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, it, expect, beforeEach, afterEach, vi, beforeAll } from 'vitest'
 import { axe, toHaveNoViolations } from 'jest-axe'
+import { describe, it, expect, beforeEach, afterEach, vi, beforeAll } from 'vitest'
 
-import { VideoPlayer } from '../VideoPlayer'
 import type { 
   VideoPlayerProps, 
   VideoMetadata, 
@@ -17,6 +16,7 @@ import type {
   TimestampComment,
   VideoMarker 
 } from '../../model/types'
+import { VideoPlayer } from '../VideoPlayer'
 
 // Jest-axe 매처 확장
 expect.extend(toHaveNoViolations)

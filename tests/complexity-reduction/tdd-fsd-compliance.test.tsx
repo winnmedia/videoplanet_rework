@@ -4,14 +4,16 @@
  * @description Red-Green-Refactor 사이클을 통한 FSD 경계 위반 해결 및 복잡도 감소 검증
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import path from 'path';
+
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { setupServer } from 'msw/node';
+import { eslint } from 'eslint';
 import { http, HttpResponse } from 'msw';
+import { setupServer } from 'msw/node';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 // Import violation detector utility
-import { eslint } from 'eslint';
-import path from 'path';
+
 
 /**
  * FSD Boundary Violation Detection

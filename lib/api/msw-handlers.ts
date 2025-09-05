@@ -6,12 +6,6 @@
 import { http, HttpResponse } from 'msw'
 
 import type {
-  SubMenuItemType,
-  ProjectType,
-  FeedbackType,
-  MenuItemType
-} from '@/shared/api/schemas'
-import type {
   PlanningInput,
   PlanningStage,
   VideoShot,
@@ -21,6 +15,13 @@ import type {
   GenerateStoryboardResponse,
   ExportPlanResponse
 } from '@/features/video-planning-wizard/model/types'
+import type {
+  SubMenuItemType,
+  ProjectType,
+  FeedbackType,
+  MenuItemType
+} from '@/shared/api/schemas'
+import { collaborationHandlers } from '@/shared/lib/collaboration/__tests__/collaboration-handlers'
 import type {
   VideoFeedbackSession,
   VideoFeedbackResponse,
@@ -33,7 +34,6 @@ import type {
 } from '@/widgets/VideoFeedback/model/types'
 
 // 협업 시스템 핸들러 임포트
-import { collaborationHandlers } from '@/shared/lib/collaboration/__tests__/collaboration-handlers'
 
 // 모킹 데이터
 const MOCK_SUBMENU_DATA: Record<string, SubMenuItemType[]> = {

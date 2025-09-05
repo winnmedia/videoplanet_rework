@@ -319,7 +319,7 @@ test.describe('배포 환경 사용자 여정 테스트', () => {
       console.log(`[DATA] 네비게이션 링크 수: ${navLinks.length}`)
       
       const expectedNavItems = ['dashboard', 'project', 'calendar', 'feedback']
-      let foundNavItems = []
+      const foundNavItems = []
       
       for (const link of navLinks) {
         const href = await link.getAttribute('href')

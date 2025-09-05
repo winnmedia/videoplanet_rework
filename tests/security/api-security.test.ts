@@ -3,9 +3,9 @@
  * SQL Injection, XSS, UUID 검증 등 주요 보안 취약점 테스트
  */
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest'
-import { setupServer } from 'msw/node'
 import { http, HttpResponse } from 'msw'
+import { setupServer } from 'msw/node'
+import { describe, it, expect, beforeAll, afterAll } from 'vitest'
 
 // 보안 테스트용 악의적인 페이로드
 const MALICIOUS_PAYLOADS = {

@@ -3,10 +3,12 @@
  * @description useCollaboration 훅의 단위 테스트 및 통합 테스트
  */
 
+import { configureStore } from '@reduxjs/toolkit'
 import { act, renderHook, waitFor } from '@testing-library/react'
 import React from 'react'
 import { Provider } from 'react-redux'
-import { configureStore } from '@reduxjs/toolkit'
+
+import { server } from '@/shared/api/__tests__/setup/msw-setup'
 
 import { useVideoPlanningCollaboration, useCalendarCollaboration } from '../hooks/useCollaboration'
 import collaborationSlice, { 
@@ -17,7 +19,6 @@ import collaborationSlice, {
 } from '../slice'
 
 // MSW 설정
-import { server } from '@/shared/api/__tests__/setup/msw-setup'
 import { collaborationHandlers } from './collaboration-handlers'
 
 // 테스트용 스토어 생성

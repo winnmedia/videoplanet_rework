@@ -4,6 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest'
+
 import { ConflictDetectionService } from '../lib/conflictDetection'
 import type { ProjectCalendarEvent, Project, ProjectPhase } from '../model/types'
 

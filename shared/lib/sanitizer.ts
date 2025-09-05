@@ -169,7 +169,7 @@ export function markdownToSafeHtml(markdown: string): string {
   const escaped = escapeHtml(markdown)
   
   // Simple markdown to HTML conversion (very basic)
-  let html = escaped
+  const html = escaped
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
     .replace(/\[(.+?)\]\((.+?)\)/g, (match, text, url) => {

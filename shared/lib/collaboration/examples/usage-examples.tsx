@@ -18,7 +18,6 @@ import {
   forceConflict,
   simulateUser
 } from '../index'
-
 import type { CollaborationInjectedProps } from '../index'
 
 // ===========================

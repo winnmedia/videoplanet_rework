@@ -4,6 +4,8 @@
  * POST /api/feedback - 새 피드백 생성
  */
 
+import { randomUUID } from 'crypto'
+
 import { NextRequest, NextResponse } from 'next/server'
 
 import { withErrorHandler } from '@/lib/api/error-handler'
@@ -15,7 +17,6 @@ import {
   parseUrlSearchParams,
   FeedbackType 
 } from '@/shared/api/schemas'
-import { randomUUID } from 'crypto'
 
 // UUID 생성 함수 (브라우저 환경 호환)
 function generateUUID(): string {

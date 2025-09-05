@@ -13,6 +13,7 @@ import type {
   EnhancedCalendarConflict,
   ProjectPhaseType 
 } from '@/entities/calendar/model/types'
+
 import { 
   calculateAutoSchedule,
   type AutoScheduleConfig,

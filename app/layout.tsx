@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
 import { NavigationProvider } from "@/features/navigation";
+import { AuthProvider } from "@/shared/lib/auth";
 
 import { ConditionalHeader } from "./components/ConditionalHeader";
 import { StoreProvider } from "../shared/ui/StoreProvider/StoreProvider";
@@ -90,16 +91,18 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <StoreProvider>
-          <NavigationProvider>
-            <div className="min-h-screen flex flex-col">
-              <ConditionalHeader leftItems={leftItems} rightItems={rightItems} />
-              <main className="flex-1">
-                {children}
-              </main>
-            </div>
-          </NavigationProvider>
-        </StoreProvider>
+        <AuthProvider>
+          <StoreProvider>
+            <NavigationProvider>
+              <div className="min-h-screen flex flex-col">
+                <ConditionalHeader leftItems={leftItems} rightItems={rightItems} />
+                <main className="flex-1">
+                  {children}
+                </main>
+              </div>
+            </NavigationProvider>
+          </StoreProvider>
+        </AuthProvider>
       </body>
     </html>
   );

@@ -1,6 +1,7 @@
-import { ReactNode } from 'react'
-import { AdminCard } from 'shared/ui'
 import { clsx } from 'clsx'
+import { ReactNode } from 'react'
+
+import { AdminCard } from 'shared/ui'
 
 export interface SearchResultsProps<T = any> {
   /** 검색 결과 데이터 */

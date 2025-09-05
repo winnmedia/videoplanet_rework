@@ -10,6 +10,7 @@
 
 const fs = require('fs');
 const path = require('path');
+
 const sass = require('sass');
 
 class CSSMigrationAnalyzer {

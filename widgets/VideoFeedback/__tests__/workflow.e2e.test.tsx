@@ -8,22 +8,24 @@
  * @requires VideoFeedbackWidget, VideoPlayer, FeedbackTimeline, VideoUpload APIs
  * @coverage End-to-end workflow testing for Phase 2 production readiness
  */
+import { configureStore } from '@reduxjs/toolkit'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { axe, toHaveNoViolations } from 'jest-axe'
 import WS from 'jest-websocket-mock'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Provider } from 'react-redux'
-import { configureStore } from '@reduxjs/toolkit'
 
 // FSD imports
-import { VideoFeedbackWidget } from '../VideoFeedbackWidget'
+import { mockVideoFeedbackSession, mockComments } from '@/lib/api/msw-handlers'
+
 import { videoFeedbackApi } from '../api/videoFeedbackApi'
 import { videoFeedbackSlice } from '../model/videoFeedbackSlice'
+import { VideoFeedbackWidget } from '../VideoFeedbackWidget'
 
 // Shared utilities
 import { createTestWrapper } from '@/shared/lib/test-utils'
-import { mockVideoFeedbackSession, mockComments } from '@/lib/api/msw-handlers'
+
 
 // Accessibility matcher 등록
 expect.extend(toHaveNoViolations)

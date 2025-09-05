@@ -6,9 +6,9 @@
  * Target: Minimize impact on initial bundle, lazy load collaboration features
  */
 
+const { execSync } = require('child_process')
 const fs = require('fs')
 const path = require('path')
-const { execSync } = require('child_process')
 
 // Performance targets for collaboration features
 const COLLABORATION_BUNDLE_LIMITS = {

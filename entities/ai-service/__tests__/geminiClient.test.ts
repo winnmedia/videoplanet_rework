@@ -4,6 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
+
 import { GeminiClient } from '../api/geminiClient'
 import type { StoryGenerationRequest, StoryGenerationResponse } from '../model/types'
 

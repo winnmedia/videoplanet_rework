@@ -4,6 +4,7 @@
  */
 
 import { http, HttpResponse } from 'msw'
+
 import type {
   CollaborationUser,
   CollaborationChange,

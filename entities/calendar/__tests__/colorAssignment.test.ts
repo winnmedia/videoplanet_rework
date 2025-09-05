@@ -4,6 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest'
+
 import { ColorAssignmentService } from '../lib/colorAssignment'
 import type { Project, ProjectColorPalette } from '../model/types'
 

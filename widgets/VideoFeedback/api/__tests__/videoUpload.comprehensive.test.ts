@@ -5,13 +5,14 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
-import { VideoUploadApi } from '../videoUploadApi'
+
 import type { 
   VideoUploadProgress, 
   VideoUploadOptions,
   VideoStreamingOptions,
   VideoMetadata 
 } from '../../model/types'
+import { VideoUploadApi } from '../videoUploadApi'
 
 // Mock 파일 생성 유틸리티
 const createMockFile = (

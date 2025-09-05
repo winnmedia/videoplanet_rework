@@ -4,8 +4,9 @@
  */
 
 import { render } from '@testing-library/react'
-import { server } from '@/lib/api/msw-server'
 import { http, HttpResponse } from 'msw'
+
+import { server } from '@/lib/api/msw-server'
 
 import { VideoPlanningWizardApi } from '../api/videoPlanningApi'
 import type {

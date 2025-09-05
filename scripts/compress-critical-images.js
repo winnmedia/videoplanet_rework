@@ -6,9 +6,9 @@
  * Performance Lead 긴급 요구사항: 24시간 내 해결
  */
 
+const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
 
 // Colors for console output
 const colors = {

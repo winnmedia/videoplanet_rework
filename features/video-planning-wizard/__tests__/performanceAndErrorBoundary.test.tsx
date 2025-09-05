@@ -3,16 +3,17 @@
  * @description React Error Boundary, 성능 최적화, 메모리 누수 방지 등 고급 테스트
  */
 
-import React, { ErrorInfo, ReactNode } from 'react'
 import { render, screen, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { server } from '@/lib/api/msw-server'
 import { http, HttpResponse } from 'msw'
+import React, { ErrorInfo, ReactNode } from 'react'
 
-import { VideoPlanningWizard } from '../ui/VideoPlanningWizard'
-import { TwelveShotsEditor } from '../ui/TwelveShotsEditor'
+import { server } from '@/lib/api/msw-server'
+
 import { VideoPlanningWizardApi } from '../api/videoPlanningApi'
 import type { VideoShot, InsertShot, TwelveShotsEditorProps } from '../model/types'
+import { TwelveShotsEditor } from '../ui/TwelveShotsEditor'
+import { VideoPlanningWizard } from '../ui/VideoPlanningWizard'
 
 // 테스트용 에러 바운더리
 interface TestErrorBoundaryState {

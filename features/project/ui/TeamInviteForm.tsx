@@ -1,10 +1,9 @@
 'use client'
 
-import { useState, KeyboardEvent, useEffect } from 'react'
-import { useAppDispatch, useAppSelector } from '@/app/store/store'
 import { Clock, Mail, Shield, AlertCircle, CheckCircle } from 'lucide-react'
+import { useState, KeyboardEvent, useEffect } from 'react'
 
-import { Button } from '@/shared/ui'
+import { useAppDispatch, useAppSelector } from '@/app/store/store'
 import { 
   inviteTeamMember,
   selectIsInviting,
@@ -19,6 +18,7 @@ import {
   type ProjectRole
 } from '@/shared/lib/rbac'
 import { SendGridService } from '@/shared/lib/sendgrid-service'
+import { Button } from '@/shared/ui'
 
 // RBAC 기반 역할 정의
 const AVAILABLE_ROLES: Array<{ value: ProjectRole; label: string; description: string }> = [

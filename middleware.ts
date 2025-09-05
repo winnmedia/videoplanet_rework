@@ -1,10 +1,11 @@
 /**
- * Next.js Middleware for Security and Performance
- * Implements rate limiting, security headers, and request validation
+ * Next.js Middleware for Security, Performance and Authentication
+ * Implements rate limiting, security headers, request validation, and NextAuth protection
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { headers } from 'next/headers'
+import { withAuth } from 'next-auth/middleware'
+import type { NextAuthRequest } from 'next-auth/middleware'
 
 // Rate limiting configuration
 const RATE_LIMIT_WINDOW = 60 * 1000 // 1 minute
@@ -117,7 +118,10 @@ function addSecurityHeaders(response: NextResponse): NextResponse {
   return response
 }
 
-export function middleware(request: NextRequest) {
+/**
+ * Core middleware function with security features
+ */
+function coreMiddleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   
   // Skip middleware for static assets and images
@@ -156,6 +160,11 @@ export function middleware(request: NextRequest) {
   
   // Special handling for API routes
   if (isApiRoute) {
+    // Skip NextAuth API routes from content-type validation
+    if (pathname.startsWith('/api/auth/')) {
+      return NextResponse.next()
+    }
+    
     // Validate Content-Type for POST/PUT/PATCH requests
     if (['POST', 'PUT', 'PATCH'].includes(request.method)) {
       const contentType = request.headers.get('content-type')
@@ -178,25 +187,6 @@ export function middleware(request: NextRequest) {
     }
   }
   
-  // Authentication check for protected routes
-  const protectedRoutes = ['/dashboard', '/projects', '/admin']
-  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
-  
-  if (isProtectedRoute) {
-    const token = request.cookies.get('auth-token')
-    
-    if (!token) {
-      // Redirect to login
-      const url = request.nextUrl.clone()
-      url.pathname = '/login'
-      url.searchParams.set('from', pathname)
-      return NextResponse.redirect(url)
-    }
-    
-    // TODO: Validate JWT token properly
-    // For now, we just check if it exists
-  }
-  
   // Continue with request
   const response = NextResponse.next()
   
@@ -213,6 +203,38 @@ export function middleware(request: NextRequest) {
   // Add additional security headers
   return addSecurityHeaders(response)
 }
+
+// Protected routes that require authentication
+const protectedRoutes = ['/dashboard', '/projects', '/admin', '/settings']
+
+// NextAuth middleware wrapper
+const authMiddleware = withAuth(
+  function middleware(req: NextAuthRequest) {
+    // Run core security middleware first
+    return coreMiddleware(req)
+  },
+  {
+    callbacks: {
+      authorized: ({ token, req }) => {
+        const { pathname } = req.nextUrl
+        
+        // Allow access to public routes
+        if (!protectedRoutes.some(route => pathname.startsWith(route))) {
+          return true
+        }
+        
+        // Check if user has valid token for protected routes
+        return !!token
+      },
+    },
+    pages: {
+      signIn: '/login',
+    },
+  }
+)
+
+export default authMiddleware
+export { authMiddleware as middleware }
 
 // Configure which routes use middleware
 export const config = {

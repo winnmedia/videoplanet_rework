@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { CheckCircle, Users, Calendar, ArrowRight } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 
-import { Button } from '@/shared/ui'
 import { useAppSelector } from '@/app/store/store'
 import { selectCurrentProject } from '@/entities/project'
+import { Button } from '@/shared/ui'
 
 import { TeamInviteForm } from './TeamInviteForm'
 

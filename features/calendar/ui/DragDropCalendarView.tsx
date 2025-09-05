@@ -1,6 +1,5 @@
 'use client'
 
-import { useState, useMemo, useCallback } from 'react'
 import {
   DndContext,
   closestCenter,
@@ -18,6 +17,8 @@ import {
   restrictToFirstScrollableAncestor
 } from '@dnd-kit/modifiers'
 import { sortableKeyboardCoordinates } from '@dnd-kit/sortable'
+import { clsx } from 'clsx'
+import { useState, useMemo, useCallback } from 'react'
 
 import type { 
   ProjectCalendarEvent, 
@@ -26,7 +27,6 @@ import type {
   EnhancedCalendarConflict
 } from '@/entities/calendar'
 import { ConflictDetectionService, ColorAssignmentService } from '@/entities/calendar'
-import { clsx } from 'clsx'
 
 interface DragDropCalendarViewProps {
   events: ProjectCalendarEvent[]

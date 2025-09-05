@@ -28,7 +28,6 @@ import {
   selectShowActivityFeed,
   selectPendingChangesCount
 } from '../slice'
-
 import type {
   UseCollaborationOptions,
   UseCollaborationReturn,

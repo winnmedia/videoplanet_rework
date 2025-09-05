@@ -11,9 +11,9 @@
 import { performance, PerformanceObserver } from 'perf_hooks'
 
 // FSD imports  
-import { VideoFeedbackWidget } from '../VideoFeedbackWidget'
-import { videoUploadService } from '../api/videoUploadService'
 import { videoStreamingService } from '../api/videoStreamingService'
+import { videoUploadService } from '../api/videoUploadService'
+import { VideoFeedbackWidget } from '../VideoFeedbackWidget'
 
 // Test utilities
 import { createMockVideoFile, createPerformanceMetrics } from '@/shared/lib/test-utils/performance'

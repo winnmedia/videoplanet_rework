@@ -3,8 +3,9 @@
  * 실시간 협업 테스트를 위한 WebSocket 관련 태스크들
  */
 
-import { WebSocketServer } from 'ws'
 import { createServer } from 'http'
+
+import { WebSocketServer } from 'ws'
 
 interface WebSocketTask {
   setupWebSocketServer: (config: { port: number; endpoint: string }) => Promise<void>

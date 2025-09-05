@@ -7,8 +7,8 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { act } from 'react'
 
-import { TwelveShotsEditor } from '../TwelveShotsEditor'
 import type { TwelveShotsEditorProps, VideoShot, InsertShot } from '../../model/types'
+import { TwelveShotsEditor } from '../TwelveShotsEditor'
 
 // 테스트용 Mock 데이터
 const mockShots: VideoShot[] = [

@@ -1,10 +1,11 @@
 import { screen, waitFor } from '@testing-library/react'
-import { axe, toHaveNoViolations } from 'jest-axe'
 import userEvent from '@testing-library/user-event'
+import { axe, toHaveNoViolations } from 'jest-axe'
 import { http, HttpResponse } from 'msw'
+
+import { PlanningWizard } from './PlanningWizard'
 import { server } from '../../shared/api/mocks/server'
 import { render, setupMSW, cleanupRTKQuery } from '../../shared/lib/test-utils'
-import { PlanningWizard } from './PlanningWizard'
 
 // Extend Jest matchers for accessibility testing
 expect.extend(toHaveNoViolations)

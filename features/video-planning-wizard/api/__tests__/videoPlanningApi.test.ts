@@ -3,17 +3,18 @@
  * @description LLM API 통합, 에러 처리, 타임아웃 처리 등 API 레이어 테스트 (TDD)
  */
 
-import { server } from '@/test/mocks/server'
 import { http, HttpResponse } from 'msw'
 import { beforeEach, afterEach, describe, it, expect, vi } from 'vitest'
 
-import { VideoPlanningWizardApi, videoPlanningUtils } from '../videoPlanningApi'
+import { server } from '@/test/mocks/server'
+
 import type {
   PlanningInput,
   PlanningStage,
   VideoShot,
   InsertShot
 } from '../../model/types'
+import { VideoPlanningWizardApi, videoPlanningUtils } from '../videoPlanningApi'
 
 // 테스트용 Mock 데이터
 const mockPlanningInput: PlanningInput = {

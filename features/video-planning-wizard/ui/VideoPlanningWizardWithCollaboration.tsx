@@ -6,16 +6,25 @@
 'use client'
 
 import React, { useCallback, useEffect } from 'react'
-import { useAppDispatch, useAppSelector } from '@/app/store/store'
 
-import { cn } from '@/shared/lib/utils'
-import { Card } from '@/shared/ui/index.modern'
+import { useAppDispatch, useAppSelector } from '@/app/store/store'
 import { withVideoPlanningCollaboration } from '@/shared/lib/collaboration/hocs/withCollaboration'
 import type { CollaborationInjectedProps } from '@/shared/lib/collaboration/hocs/withCollaboration'
+import { cn } from '@/shared/lib/utils'
+import { Card } from '@/shared/ui/index.modern'
 
 import { FourStagesReview } from './FourStagesReview'
 import { PlanningInputForm } from './PlanningInputForm'
 import { TwelveShotsEditor } from './TwelveShotsEditor'
+import type {
+  VideoPlanningWizardProps,
+  PlanningInput,
+  PresetConfig,
+  PlanningStage,
+  VideoShot,
+  InsertShot,
+  ExportOptions
+} from '../model/types'
 import {
   generateFourStages,
   generateTwelveShots,
@@ -30,15 +39,6 @@ import {
   selectCurrentStep,
   selectProgressPercentage,
 } from '../model/videoPlanningSlice'
-import type {
-  VideoPlanningWizardProps,
-  PlanningInput,
-  PresetConfig,
-  PlanningStage,
-  VideoShot,
-  InsertShot,
-  ExportOptions
-} from '../model/types'
 
 // ===========================
 // 협업 인디케이터 컴포넌트

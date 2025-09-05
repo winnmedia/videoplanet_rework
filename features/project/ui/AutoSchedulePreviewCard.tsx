@@ -1,10 +1,17 @@
 'use client'
 
-import { Calendar, Edit3, AlertTriangle, CheckCircle } from 'lucide-react'
-import React, { useState, useEffect } from 'react'
 import { format } from 'date-fns'
 import { ko } from 'date-fns/locale'
+import { Calendar, Edit3, AlertTriangle, CheckCircle } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
 
+import { 
+  AutoScheduleService,
+  generateConflictSummaryText,
+  calculateConflictSeverity,
+  type ConflictAwareScheduleResult,
+  type AutoScheduleOptions
+} from '@/shared/lib/auto-schedule-service'
 import { 
   calculateAutoSchedule, 
   formatSchedulePhase, 
@@ -13,13 +20,6 @@ import {
   DEFAULT_AUTO_SCHEDULE,
   AutoScheduleResult
 } from '@/shared/lib/project-scheduler'
-import { 
-  AutoScheduleService,
-  generateConflictSummaryText,
-  calculateConflictSeverity,
-  type ConflictAwareScheduleResult,
-  type AutoScheduleOptions
-} from '@/shared/lib/auto-schedule-service'
 import { Button } from '@/shared/ui'
 
 interface AutoSchedulePreviewCardProps {
