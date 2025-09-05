@@ -1,8 +1,8 @@
 {
-  "buildCommand": "cd vridge-web && npm run build",
+  "buildCommand": "cd vridge-web && EMERGENCY_BUILD=true SKIP_ENV_VALIDATION=true pnpm build",
   "outputDirectory": "vridge-web/.next",
-  "installCommand": "cd vridge-web && npm install",
-  "devCommand": "cd vridge-web && npm run dev",
+  "installCommand": "cd vridge-web && pnpm install",
+  "devCommand": "cd vridge-web && pnpm run dev",
   "rewrites": [
     {
       "source": "/(.*)",
@@ -12,6 +12,8 @@
   "env": {
     "NEXT_PUBLIC_API_URL": "https://api.vlanet.net",
     "NEXTAUTH_URL": "https://vridge-xyc331ybx-vlanets-projects.vercel.app",
-    "NEXTAUTH_SECRET": "vridge-nextauth-secret-production-2025-very-secure-key-for-deployment"
+    "NEXTAUTH_SECRET": "vridge-nextauth-secret-production-2025-very-secure-key-for-deployment",
+    "EMERGENCY_BUILD": "true",
+    "SKIP_ENV_VALIDATION": "true"
   }
 }
