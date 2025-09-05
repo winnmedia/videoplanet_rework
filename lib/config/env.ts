@@ -180,22 +180,22 @@ class ConfigManager {
     
     return {
       // Application
-      env: env.NEXT_PUBLIC_APP_ENV,
-      appName: env.NEXT_PUBLIC_APP_NAME,
-      appUrl: env.NEXT_PUBLIC_APP_URL,
-      appVersion: env.NEXT_PUBLIC_APP_VERSION,
+      env: env.NEXT_PUBLIC_APP_ENV || 'development' as any,
+      appName: env.NEXT_PUBLIC_APP_NAME || 'Video Planet',
+      appUrl: env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
+      appVersion: env.NEXT_PUBLIC_APP_VERSION || '2.1.0',
       
       // API Configuration - Railway 통합 백엔드
-      apiUrl: env.NEXT_PUBLIC_API_URL,
+      apiUrl: env.NEXT_PUBLIC_API_URL || 'https://api.vlanet.net',
       apiVersion: env.NEXT_PUBLIC_API_VERSION || '',
-      apiTimeout: env.NEXT_PUBLIC_API_TIMEOUT,
-      backendUrl: env.NEXT_PUBLIC_BACKEND_URL,
+      apiTimeout: env.NEXT_PUBLIC_API_TIMEOUT || 30000,
+      backendUrl: env.NEXT_PUBLIC_BACKEND_URL || 'https://api.vlanet.net',
       backendApiKey: env.NEXT_PUBLIC_BACKEND_API_KEY,
       
       // Authentication
-      nextAuthUrl: env.NEXTAUTH_URL || env.NEXT_PUBLIC_APP_URL,
+      nextAuthUrl: env.NEXTAUTH_URL || env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
       nextAuthSecret: env.NEXTAUTH_SECRET,
-      authProvider: env.NEXT_PUBLIC_AUTH_PROVIDER,
+      authProvider: env.NEXT_PUBLIC_AUTH_PROVIDER || 'credentials',
       
       // OAuth
       googleClientId: env.GOOGLE_CLIENT_ID,
@@ -207,14 +207,14 @@ class ConfigManager {
       redisToken: env.REDIS_TOKEN,
       
       // File Upload
-      maxFileSize: env.NEXT_PUBLIC_MAX_FILE_SIZE,
-      allowedFileTypes: env.NEXT_PUBLIC_ALLOWED_FILE_TYPES.split(','),
+      maxFileSize: env.NEXT_PUBLIC_MAX_FILE_SIZE || 10485760,
+      allowedFileTypes: (env.NEXT_PUBLIC_ALLOWED_FILE_TYPES || 'image/jpeg,image/png,image/gif,video/mp4').split(','),
       
       // Feature Flags
-      enableAnalytics: env.NEXT_PUBLIC_ENABLE_ANALYTICS,
-      enableDebug: env.NEXT_PUBLIC_ENABLE_DEBUG,
-      enableMaintenance: env.NEXT_PUBLIC_ENABLE_MAINTENANCE,
-      enablePerformanceMonitoring: env.NEXT_PUBLIC_ENABLE_PERFORMANCE_MONITORING,
+      enableAnalytics: env.NEXT_PUBLIC_ENABLE_ANALYTICS || false,
+      enableDebug: env.NEXT_PUBLIC_ENABLE_DEBUG || false,
+      enableMaintenance: env.NEXT_PUBLIC_ENABLE_MAINTENANCE || false,
+      enablePerformanceMonitoring: env.NEXT_PUBLIC_ENABLE_PERFORMANCE_MONITORING || false,
       
       // Third-party Services
       gaTrackingId: env.NEXT_PUBLIC_GA_TRACKING_ID,
@@ -223,22 +223,22 @@ class ConfigManager {
       
       // CDN & Images
       cdnUrl: env.NEXT_PUBLIC_CDN_URL,
-      imageDomains: env.NEXT_PUBLIC_IMAGE_DOMAINS.split(','),
+      imageDomains: (env.NEXT_PUBLIC_IMAGE_DOMAINS || 'localhost').split(','),
       
       // WebSocket - Railway 통합 백엔드
-      wsUrl: env.NEXT_PUBLIC_WS_URL,
-      wsReconnectInterval: env.NEXT_PUBLIC_WS_RECONNECT_INTERVAL,
+      wsUrl: env.NEXT_PUBLIC_WS_URL || 'wss://api.vlanet.net/ws',
+      wsReconnectInterval: env.NEXT_PUBLIC_WS_RECONNECT_INTERVAL || 5000,
       
       // Rate Limiting
-      apiRateLimit: env.NEXT_PUBLIC_API_RATE_LIMIT,
-      apiRateWindow: env.NEXT_PUBLIC_API_RATE_WINDOW,
+      apiRateLimit: env.NEXT_PUBLIC_API_RATE_LIMIT || 1000,
+      apiRateWindow: env.NEXT_PUBLIC_API_RATE_WINDOW || 60000,
       
       // Logging
-      logLevel: env.LOG_LEVEL,
-      publicLogLevel: env.NEXT_PUBLIC_LOG_LEVEL,
+      logLevel: env.LOG_LEVEL || 'info',
+      publicLogLevel: env.NEXT_PUBLIC_LOG_LEVEL || 'warn',
       
       // Performance
-      performanceSampleRate: env.NEXT_PUBLIC_PERFORMANCE_SAMPLE_RATE,
+      performanceSampleRate: env.NEXT_PUBLIC_PERFORMANCE_SAMPLE_RATE || 0.1,
     };
   }
   

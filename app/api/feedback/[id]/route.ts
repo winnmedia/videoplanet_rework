@@ -156,8 +156,12 @@ export const PUT = withErrorHandler(async (
     // 스키마 검증
     const validatedFeedback = validateRequest(FeedbackSchema, updateData)
     
-    // 피드백 업데이트
-    FEEDBACK_DATA[feedbackIndex] = validatedFeedback
+    // 피드백 업데이트 (optional 배열 필드들 기본값 설정)
+    FEEDBACK_DATA[feedbackIndex] = {
+      ...validatedFeedback,
+      attachments: validatedFeedback.attachments || [],
+      tags: validatedFeedback.tags || []
+    } as typeof FEEDBACK_DATA[0]
     
     // 응답 데이터 구성
     const responseData = {

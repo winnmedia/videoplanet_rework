@@ -127,7 +127,10 @@ interface UXDashboardData {
   };
 }
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = withErrorHandler(async (
+  request: NextRequest,
+  context: { params: Promise<Record<string, string>> }
+) => {
   try {
     const { searchParams } = new URL(request.url);
     const params = DashboardRequestSchema.parse({

@@ -85,7 +85,7 @@ export const videoProductionMachine = setup({
     }
   },
   actions: {
-    completeStage: assign(({ context }, params: { stage: WorkflowStage; metadata?: any }) => ({
+    completeStage: assign(({ context }, params: { stage: WorkflowStage; metadata?: Record<string, unknown> }) => ({
       completedStages: [...context.completedStages, params.stage],
       currentProgress: ((context.completedStages.length + 1) / 8) * 100,
       stageMetadata: {

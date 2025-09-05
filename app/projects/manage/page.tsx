@@ -31,12 +31,21 @@ interface ProjectSchedule {
 }
 
 /**
- * 프로젝트 관리 페이지 컴포넌트 (내부)
+ * searchParams를 안전하게 처리하는 래퍼 컴포넌트
+ * Next.js 15.5의 useSearchParams() 요구사항을 충족
  */
-function ProjectManageContent() {
-  const router = useRouter()
+function SearchParamsWrapper() {
   const searchParams = useSearchParams()
   const projectId = searchParams.get('id') || ''
+  
+  return <ProjectManageContent projectId={projectId} />
+}
+
+/**
+ * 프로젝트 관리 페이지 컴포넌트 (내부)
+ */
+function ProjectManageContent({ projectId }: { projectId: string }) {
+  const router = useRouter()
   
   // API Hooks
   const [createProject] = useCreateProjectMutation()
@@ -484,7 +493,7 @@ function ProjectManageContent() {
 export default function ProjectManagePage() {
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <ProjectManageContent />
+      <SearchParamsWrapper />
     </Suspense>
   )
 }

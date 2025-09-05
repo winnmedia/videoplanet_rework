@@ -122,8 +122,6 @@
     "clean:build": "rm -rf .next dist coverage .tsbuildinfo",
     "clean:cache": "rm -rf .next/cache node_modules/.cache",
     "clean:all": "pnpm clean:build && pnpm clean:cache",
-    "prebuild": "pnpm clean:build",
-    "postbuild": "pnpm validate:build",
     "_comment_advanced_build": "=== 고급 빌드 최적화 ===",
     "build:optimized": "ANALYZE=true NODE_ENV=production pnpm build",
     "build:check-circular": "CHECK_CIRCULAR=true pnpm build",
