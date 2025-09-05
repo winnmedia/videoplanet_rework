@@ -1,8 +1,8 @@
 {
-  "buildCommand": "cd vridge-web && EMERGENCY_BUILD=true SKIP_ENV_VALIDATION=true pnpm build",
+  "buildCommand": "cd vridge-web && EMERGENCY_BUILD=true SKIP_ENV_VALIDATION=true npm run build",
   "outputDirectory": "vridge-web/.next",
-  "installCommand": "cd vridge-web && pnpm install",
-  "devCommand": "cd vridge-web && pnpm run dev",
+  "installCommand": "cd vridge-web && npm install --legacy-peer-deps",
+  "devCommand": "cd vridge-web && npm run dev",
   "rewrites": [
     {
       "source": "/(.*)",
