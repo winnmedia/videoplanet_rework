@@ -22,10 +22,12 @@ COPY vridge_back/requirements.txt /app/requirements.txt
 # Install Python dependencies
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
-RUN pip install daphne
 
 # Copy project files
 COPY vridge_back /app
+
+# Copy my_settings.py if it exists
+COPY vridge_back/my_settings.py /app/my_settings.py
 
 # Create staticfiles directory
 RUN mkdir -p /app/staticfiles
