@@ -226,25 +226,8 @@ const nextConfig = {
       config.devtool = false;
     }
 
-    // CSS optimization for legacy SCSS + Tailwind coexistence
-    if (!isServer) {
-      config.module.rules.push({
-        test: /\.module\.(scss|sass)$/,
-        use: [
-          defaultLoaders.scss,
-          {
-            loader: 'sass-loader',
-            options: {
-              sassOptions: {
-                // Optimize SCSS compilation
-                outputStyle: 'compressed',
-                sourceMap: dev,
-              },
-            },
-          },
-        ],
-      });
-    }
+    // CSS optimization is handled automatically by Next.js
+    // No custom sass-loader configuration needed
 
     // Performance optimizations
     config.optimization.realContentHash = true;
