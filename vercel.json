@@ -1,5 +1,5 @@
 {
-  "buildCommand": "cd vridge-web && EMERGENCY_BUILD=true SKIP_ENV_VALIDATION=true npm run build",
+  "buildCommand": "cd vridge-web && rm -rf .next && EMERGENCY_BUILD=true SKIP_ENV_VALIDATION=true npm run build",
   "outputDirectory": "vridge-web/.next",
   "installCommand": "cd vridge-web && npm install --legacy-peer-deps",
   "devCommand": "cd vridge-web && npm run dev",
