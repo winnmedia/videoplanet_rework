@@ -238,6 +238,7 @@ export interface ProjectLegendItem {
   project: Project
   palette: ProjectColorPalette
   isVisible: boolean
+  phaseCount?: number
 }
 
 // ===========================

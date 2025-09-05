@@ -93,7 +93,7 @@ export default defineConfig({
             const http = require('http')
             const req = http.request('http://127.0.0.1:8001/api/v1/projects/', {
               method: 'GET'
-            }, (res) => {
+            }, (res: any) => {
               resolve(res.statusCode === 200)
             })
             req.on('error', () => resolve(false))

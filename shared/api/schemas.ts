@@ -168,6 +168,44 @@ export type FeedbackType = z.infer<typeof FeedbackSchema>
 export type FeedbackRequestType = z.infer<typeof FeedbackRequestSchema>
 export type ApiErrorType = z.infer<typeof ApiErrorSchema>
 
+// 행동 분석 이벤트 스키마
+export const UserBehaviorEventSchema = z.object({
+  eventId: z.string().uuid(),
+  sessionId: z.string().uuid(),
+  userId: z.string().optional(),
+  timestamp: z.string().datetime(),
+  category: z.string(),
+  action: z.string(),
+  label: z.string().optional(),
+  value: z.number().optional(),
+  page: z.string(),
+  device: z.object({
+    type: z.enum(['desktop', 'mobile', 'tablet']),
+    os: z.string().optional(),
+    browser: z.string().optional()
+  }).optional(),
+  referrer: z.string().optional(),
+  timeOnPage: z.number().optional(),
+  customProperties: z.record(z.any()).optional()
+})
+
+export const NavigationEventSchema = UserBehaviorEventSchema.extend({
+  category: z.literal('navigation'),
+  previousPage: z.string().optional(),
+  navigationType: z.string().optional()
+})
+
+export const InteractionEventSchema = UserBehaviorEventSchema.extend({
+  category: z.literal('interaction'),
+  elementId: z.string().optional(),
+  elementClass: z.string().optional(),
+  elementText: z.string().optional()
+})
+
+export type UserBehaviorEvent = z.infer<typeof UserBehaviorEventSchema>
+export type NavigationEvent = z.infer<typeof NavigationEventSchema>
+export type InteractionEvent = z.infer<typeof InteractionEventSchema>
+
 // 스키마 검증 유틸리티 함수
 export function validateRequest<T>(schema: z.ZodSchema<T>, data: unknown): T {
   try {

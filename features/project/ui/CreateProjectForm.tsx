@@ -264,10 +264,10 @@ export function CreateProjectForm() {
           id="project-type"
           name="type"
           value={formData.type}
-          onChange={(value) => handleInputChange('type', value)}
+          onChange={(value) => handleInputChange('type', value as string)}
           options={PROJECT_TYPES}
           placeholder="프로젝트 유형을 선택하세요"
-          error={errors.type}
+          error={errors.type ? true : false}
           required
           data-testid="project-type-select"
         />
@@ -284,7 +284,7 @@ export function CreateProjectForm() {
             id="project-priority"
             name="priority"
             value={formData.priority}
-            onChange={(value) => handleInputChange('priority', value)}
+            onChange={(value) => handleInputChange('priority', value as string)}
             options={PRIORITY_OPTIONS}
             data-testid="project-priority-select"
           />

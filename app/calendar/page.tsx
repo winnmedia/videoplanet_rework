@@ -2,8 +2,8 @@
 
 import { useState, useMemo, useCallback } from 'react'
 
-import type { CalendarFilter, CalendarViewSettings, CalendarEvent, ProjectLegendItem } from '@/entities/project'
-import type { Project } from '@/entities/calendar'
+import type { Project, ProjectLegendItem } from '@/entities/calendar'
+import type { CalendarFilter, CalendarViewSettings, CalendarEvent } from '@/entities/project'
 import { CalendarFilters, CalendarView, ConflictAlert, GanttView, ProjectLegend, WeekView } from '@/features/calendar'
 import { SideBar } from '@/widgets'
 
@@ -67,15 +67,20 @@ export default function CalendarPage() {
       title: '프로젝트 킥오프',
       startDate: '2025-08-28',
       endDate: '2025-08-28',
-      project: mockProjects[0],
+      project: {
+        ...mockProjects[0],
+        hue: 210,
+        startDate: '2025-08-28',
+        endDate: '2025-09-28'
+      },
       phase: {
         id: 'phase1',
         projectId: 'proj1',
         name: '프로젝트 킥오프',
-        type: 'pre-production',
+        type: 'pre-production' as const,
         startDate: '2025-08-28',
         endDate: '2025-08-28',
-        status: 'completed',
+        status: 'completed' as const,
         conflictLevel: 'none',
         isEditable: true
       },
@@ -88,7 +93,12 @@ export default function CalendarPage() {
       title: '영상 촬영',
       startDate: '2025-08-29',
       endDate: '2025-08-30',
-      project: mockProjects[1],
+      project: {
+        ...mockProjects[1],
+        hue: 140,
+        startDate: '2025-08-29',
+        endDate: '2025-09-15'
+      },
       phase: {
         id: 'phase2',
         projectId: 'proj2',
@@ -115,7 +125,12 @@ export default function CalendarPage() {
       title: '클라이언트 미팅',
       startDate: '2025-08-30',
       endDate: '2025-08-30',
-      project: mockProjects[2],
+      project: {
+        ...mockProjects[2],
+        hue: 45,
+        startDate: '2025-08-30',
+        endDate: '2025-09-30'
+      },
       phase: {
         id: 'phase3',
         projectId: 'proj3',
@@ -188,7 +203,8 @@ export default function CalendarPage() {
         accent: project.color + 'CC',
         text: '#FFFFFF'
       },
-      isVisible: projectVisibility[project.id] !== false
+      isVisible: projectVisibility[project.id] !== false,
+      phaseCount: project.phases.length
     }))
   }, [mockProjects, projectVisibility])
   

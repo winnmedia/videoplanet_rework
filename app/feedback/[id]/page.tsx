@@ -102,24 +102,26 @@ export default function FeedbackDetailPage() {
     if (isPlaying) {
       interval = setInterval(() => {
         setCurrentTime(prev => {
-          const [minutes, seconds] = prev.split(':').map(part => {
-            const [sec, ms] = part.split('.')
-            return [parseInt(sec) || parseInt(minutes) || 0, parseInt(ms) || 0]
-          }).flat()
+          const parts = prev.split(':')
+          const minPart = parseInt(parts[0]) || 0
+          const secPart = parts[1] ? parts[1].split('.') : ['0', '0']
+          const seconds = parseInt(secPart[0]) || 0
+          const ms = parseInt(secPart[1]) || 0
           
-          let newMs = (seconds || 0) + 100
-          let newSec = minutes || 0
+          let newMs = ms + 100
+          let newSec = seconds
+          let newMin = minPart
           
           if (newMs >= 1000) {
             newMs = 0
             newSec += 1
             if (newSec >= 60) {
               newSec = 0
-              // 분 증가 로직은 단순화
+              newMin += 1
             }
           }
           
-          return `${String(Math.floor(newSec / 60)).padStart(2, '0')}:${String(newSec % 60).padStart(2, '0')}.${String(newMs).padStart(3, '0')}`
+          return `${String(newMin).padStart(2, '0')}:${String(newSec).padStart(2, '0')}.${String(newMs).padStart(3, '0')}`
         })
       }, 100)
     }

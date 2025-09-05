@@ -47,7 +47,8 @@ export class VideoPlanningWizardApi {
       // AI 응답을 PlanningStage[]로 변환
       const stages = aiResponse.stages.map((stage, index) => ({
         ...stage,
-        id: String(index + 1)
+        id: String(index + 1),
+        order: index + 1
       }))
       
       // 사용량 로깅 (비용 모니터링)
@@ -282,14 +283,14 @@ export class VideoPlanningWizardApi {
         }
       )
 
-      if (!response.success) {
-        const errorMessage = typeof response.error === 'string' 
-          ? response.error 
-          : response.message || '프로젝트 저장에 실패했습니다.'
+      if (!response.data.success) {
+        const errorMessage = typeof response.data.error === 'string' 
+          ? response.data.error 
+          : '프로젝트 저장에 실패했습니다.'
         throw new Error(errorMessage)
       }
 
-      return response.projectId
+      return response.data.projectId
     } catch (error) {
       console.error('Save planning project error:', error)
       
@@ -324,11 +325,11 @@ export class VideoPlanningWizardApi {
         error?: string
       }>(`${this.BASE_PATH}/load-project/${projectId}`)
 
-      if (!response.success || !response.project) {
-        throw new Error(response.error || '프로젝트를 찾을 수 없습니다.')
+      if (!response.data.success || !response.data.project) {
+        throw new Error(response.data.error || '프로젝트를 찾을 수 없습니다.')
       }
 
-      return response.project
+      return response.data.project
     } catch (error) {
       console.error('Load planning project error:', error)
       
@@ -363,11 +364,11 @@ export class VideoPlanningWizardApi {
         error?: string
       }>(`${this.BASE_PATH}/user-projects`)
 
-      if (!response.success || !response.projects) {
-        throw new Error(response.error || '프로젝트 목록을 가져올 수 없습니다.')
+      if (!response.data.success || !response.data.projects) {
+        throw new Error(response.data.error || '프로젝트 목록을 가져올 수 없습니다.')
       }
 
-      return response.projects
+      return response.data.projects
     } catch (error) {
       console.error('Get user projects error:', error)
       
