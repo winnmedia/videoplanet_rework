@@ -262,6 +262,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       status: validatedData.status ?? 'open', // status 기본값 보장
+      priority: validatedData.priority ?? 'medium', // priority 기본값 보장
       attachments: validatedData.attachments ?? [], // attachments 기본값 보장
       tags: validatedData.tags ?? [] // tags 기본값 보장
     }
@@ -270,7 +271,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     const validatedFeedback = validateRequest(FeedbackSchema, newFeedback)
     
     // 실제로는 데이터베이스에 저장
-    FEEDBACK_DATA.push(validatedFeedback)
+    FEEDBACK_DATA.push(validatedFeedback as FeedbackType)
     
     // 응답 데이터 구성
     const responseData = {

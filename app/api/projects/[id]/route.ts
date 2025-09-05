@@ -124,8 +124,13 @@ export const PUT = withErrorHandler(async (
     // 스키마 검증
     const validatedProject = validateRequest(ProjectSchema, updateData)
     
-    // 프로젝트 업데이트
-    PROJECTS_DATA[projectIndex] = validatedProject
+    // 프로젝트 업데이트 (optional 필드들 기본값 설정)
+    PROJECTS_DATA[projectIndex] = {
+      ...validatedProject,
+      tags: validatedProject.tags ?? [],
+      priority: validatedProject.priority ?? 'medium',
+      progress: validatedProject.progress ?? 0
+    } as ProjectType
     
     // 응답 데이터 구성
     const responseData = {

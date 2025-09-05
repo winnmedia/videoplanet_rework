@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 
-import type { GenerateStagesRequest, GenerateStagesResponse, PlanningStage } from '@/features/video-planning-wizard'
+import type { GenerateStagesRequest, GenerateStagesResponse, PlanningStage, PlanningInput } from '@/features/video-planning-wizard'
 import { geminiClient } from '@/shared/lib/gemini-client'
 import { getStoryPrompt, createIndirectStoryPrompt } from '@/shared/lib/story-prompts'
 

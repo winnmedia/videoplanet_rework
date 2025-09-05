@@ -117,7 +117,11 @@ function ProjectManageContent({ projectId }: { projectId: string }) {
     try {
       const result = await createProject({
         ...projectFormData,
-        schedule: isCustomSchedule ? schedule : undefined
+        autoSchedule: isCustomSchedule ? {
+          planning: { duration: schedule.planning.duration },
+          shooting: { duration: schedule.filming.duration },
+          editing: { duration: schedule.editing.duration }
+        } : undefined
       }).unwrap()
       
       // 성공 시 팀원 초대 탭으로 이동하고 URL 업데이트
@@ -458,7 +462,11 @@ function ProjectManageContent({ projectId }: { projectId: string }) {
           {activeTab === 'invite' && (
             <div className="space-y-8">
               {/* 팀원 초대 폼 */}
-              <TeamInviteForm onInvite={handleTeamInvite} />
+              <TeamInviteForm 
+                projectId={projectId} 
+                projectTitle={projectFormData.title || '새 프로젝트'}
+                currentUserRole="owner"
+              />
 
               {/* 팀원/초대 목록 */}
               {projectId && (

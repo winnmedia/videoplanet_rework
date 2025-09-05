@@ -9,6 +9,10 @@ export type PhaseType = 'pre-production' | 'production' | 'post-production' | 'r
 
 export type ConflictLevel = 'none' | 'warning' | 'critical'
 
+export type ConflictType = 'overlap' | 'double-booking' | 'resource-conflict'
+
+export type ConflictSeverity = 'low' | 'medium' | 'high'
+
 export interface Project {
   id: string
   name: string

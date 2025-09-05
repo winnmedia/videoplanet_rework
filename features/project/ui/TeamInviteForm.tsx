@@ -66,6 +66,7 @@ export function TeamInviteForm({
   const inviteError = useAppSelector(selectInviteError)
   
   // Local state
+  const [emails, setEmails] = useState<string[]>([])
   const [currentEmail, setCurrentEmail] = useState('')
   const [role, setRole] = useState<ProjectRole>('editor')
   const [message, setMessage] = useState('')

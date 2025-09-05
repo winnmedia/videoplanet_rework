@@ -139,6 +139,7 @@ export const PUT = withErrorHandler(async (
       id: currentFeedback.id, // ID 변경 방지
       createdAt: currentFeedback.createdAt, // 생성일 변경 방지
       updatedAt: new Date().toISOString(), // 수정일 자동 업데이트
+      priority: body.priority ?? currentFeedback.priority ?? 'medium', // priority 필드 보장
       tags: body.tags ?? currentFeedback.tags ?? [], // tags 필드 보장
       attachments: body.attachments ?? currentFeedback.attachments ?? [] // attachments 필드 보장
     }
@@ -156,12 +157,13 @@ export const PUT = withErrorHandler(async (
     // 스키마 검증
     const validatedFeedback = validateRequest(FeedbackSchema, updateData)
     
-    // 피드백 업데이트 (optional 배열 필드들 기본값 설정)
+    // 피드백 업데이트 (optional 필드들 기본값 설정)
     FEEDBACK_DATA[feedbackIndex] = {
       ...validatedFeedback,
-      attachments: validatedFeedback.attachments || [],
-      tags: validatedFeedback.tags || []
-    } as typeof FEEDBACK_DATA[0]
+      priority: validatedFeedback.priority ?? 'medium',
+      attachments: validatedFeedback.attachments ?? [],
+      tags: validatedFeedback.tags ?? []
+    } as FeedbackType
     
     // 응답 데이터 구성
     const responseData = {

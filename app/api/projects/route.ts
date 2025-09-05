@@ -236,8 +236,13 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     // 스키마 최종 검증
     const validatedProject = validateRequest(ProjectSchema, newProject)
     
-    // 실제로는 데이터베이스에 저장
-    PROJECTS_DATA.push(validatedProject)
+    // 실제로는 데이터베이스에 저장 (optional 필드들 기본값 설정)
+    PROJECTS_DATA.push({
+      ...validatedProject,
+      tags: validatedProject.tags ?? [],
+      priority: validatedProject.priority ?? 'medium',
+      progress: validatedProject.progress ?? 0
+    } as ProjectType)
     
     // 응답 데이터 구성
     const responseData = {
