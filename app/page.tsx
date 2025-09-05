@@ -26,7 +26,7 @@ export default function Home() {
         <div className={styles.headerInner}>
           <div className={styles.logo}>
             <Image 
-              src="/images/Common/logo.svg" 
+              src="/images/Common/w_logo02.svg" 
               alt="VLANET" 
               width={140} 
               height={40}
@@ -186,99 +186,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Contents 섹션 */}
-        <section className={styles.feature}>
-          <div className={styles.featureInner}>
-            <h2>Contents</h2>
-            <div className={styles.featureContent}>
-              <div className={styles.featureText}>
-                <h3>
-                  <span className={styles.emphasis}>상세하고 체계적으로</span>
-                  비법으로 학습
-                </h3>
-                <p>
-                  주먹구구식 작업은 이제 그만하세요!<br />
-                  체계적으로 영상을 만드는 방법을 알려드려요.<br />
-                  고수의 제작 방법을 이용해보세요!
-                </p>
-                <button 
-                  onClick={() => router.push('/login')} 
-                  className={styles.ctaButton}
-                  aria-label="콘텐츠 학습 시작하기"
-                >
-                  바로가기
-                </button>
-              </div>
-              <div className={styles.featureImage}>
-                <Image 
-                  src="/images/Home/new/contents-img.png"
-                  alt="콘텐츠 학습 기능 예시"
-                  width={600}
-                  height={400}
-                  sizes="(max-width: 768px) 100vw, 600px"
-                />
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Brand Identity 섹션 */}
-        <section className={styles.identity}>
-          <div className={styles.identityInner}>
-            <h2>Brand Identity</h2>
-            <div className={styles.identityGrid}>
-              <div className={styles.identityItem}>
-                <div className={styles.identityImage}>
-                  <Image 
-                    src="/images/Home/new/identity-img.png"
-                    alt="Easy Management"
-                    width={300}
-                    height={200}
-                    sizes="(max-width: 768px) 50vw, 300px"
-                    loading="lazy"
-                  />
-                </div>
-                <div className={styles.identityText}>Easy Management</div>
-              </div>
-              <div className={styles.identityItem}>
-                <div className={styles.identityImage}>
-                  <Image 
-                    src="/images/Home/new/identity-img02.png" 
-                    alt="Fast and Accurate Feedback" 
-                    width={300} 
-                    height={200}
-                    loading="lazy"
-                  />
-                </div>
-                <div className={styles.identityText}>Fast and Accurate Feedback</div>
-              </div>
-              <div className={styles.identityItem}>
-                <div className={styles.identityImage}>
-                  <Image 
-                    src="/images/Home/new/identity-img03.png" 
-                    alt="Study Together" 
-                    width={300} 
-                    height={200}
-                    loading="lazy"
-                  />
-                </div>
-                <div className={styles.identityText}>Study Together</div>
-              </div>
-              <div className={styles.identityItem}>
-                <div className={styles.identityImage}>
-                  <Image 
-                    src="/images/Home/new/identity-img04.png" 
-                    alt="Convenient Meeting" 
-                    width={300} 
-                    height={200}
-                    loading="lazy"
-                  />
-                </div>
-                <div className={styles.identityText}>Convenient Meeting</div>
-              </div>
-            </div>
-          </div>
-        </section>
 
         {/* Background 섹션 */}
         <section className={styles.background}>

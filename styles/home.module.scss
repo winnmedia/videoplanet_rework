@@ -94,7 +94,7 @@ $black: #25282f;
     // 비주얼 섹션
     .visual {
       background: url('/images/Home/new/visual-bg.png') no-repeat center/cover;
-      padding: 200px 0 100px;
+      padding: 150px 0 80px;
       
       .visualInner {
         max-width: 1300px;
@@ -150,7 +150,7 @@ $black: #25282f;
     .textbox {
       background: #ecefff;
       text-align: center;
-      padding: 150px 20px;
+      padding: 80px 20px;
       
       .toolImage {
         width: 100% !important;
@@ -180,7 +180,7 @@ $black: #25282f;
     
     // 기능 섹션 공통 스타일
     .feature {
-      padding: 150px 0;
+      padding: 80px 0;
       background: url('/images/Home/w_bg.png') no-repeat center/cover;
       
       &:nth-of-type(even) {
@@ -277,7 +277,7 @@ $black: #25282f;
     
     // 배경 섹션
     .background {
-      padding: 150px 0;
+      padding: 80px 0;
       background: #fff;
       
       .backgroundInner {
@@ -387,7 +387,7 @@ $black: #25282f;
     // 비디오 섹션
     .video {
       background: #f8f9ff;
-      padding: 150px 0;
+      padding: 80px 0;
       
       .videoInner {
         max-width: 1300px;
@@ -416,7 +416,7 @@ $black: #25282f;
     // 엔드 섹션
     .end {
       background: url('/images/Home/new/end-bg.png') no-repeat center/cover;
-      padding: 150px 0 0;
+      padding: 80px 0 0;
       
       .endInner {
         max-width: 1300px;
@@ -475,7 +475,7 @@ $black: #25282f;
     // Brand Identity 섹션
     .identity {
       background: #fff;
-      padding: 150px 0;
+      padding: 80px 0;
       
       .identityInner {
         max-width: 1300px;
@@ -722,7 +722,7 @@ $black: #25282f;
     
     .main {
       .visual {
-        padding: 140px 0 60px;
+        padding: 100px 0 50px;
         
         .visualInner {
           .textContent {
@@ -748,7 +748,7 @@ $black: #25282f;
       }
       
       .textbox {
-        padding: 80px 20px;
+        padding: 50px 20px;
         
         h2 {
           font-size: 28px;
@@ -762,7 +762,7 @@ $black: #25282f;
       }
       
       .feature {
-        padding: 60px 0;
+        padding: 40px 0;
         
         .featureInner {
           h2 {
@@ -802,7 +802,7 @@ $black: #25282f;
       }
       
       .background {
-        padding: 60px 0;
+        padding: 40px 0;
         
         .backgroundInner {
           h2 {
@@ -844,7 +844,7 @@ $black: #25282f;
       }
       
       .identity {
-        padding: 60px 0;
+        padding: 40px 0;
         
         .identityInner {
           h2 {
@@ -886,7 +886,7 @@ $black: #25282f;
       }
       
       .video {
-        padding: 60px 0;
+        padding: 40px 0;
         
         .videoInner {
           h2 {
@@ -908,7 +908,7 @@ $black: #25282f;
       }
       
       .end {
-        padding: 60px 0 0;
+        padding: 40px 0 0;
         
         .endInner {
           flex-direction: column;
