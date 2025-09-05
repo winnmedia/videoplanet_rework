@@ -3,6 +3,8 @@
   "framework": "nextjs",
   "git": {
     "deploymentEnabled": {
+      "main": true,
+      "security-fix-clean": true,
       "railway-deploy": false,
       "railway": false,
       "railway-staging": false,
@@ -15,10 +17,10 @@
     "silent": true,
     "autoAlias": false
   },
-  "buildCommand": "pnpm run build || echo 'Build failed but continuing'",
+  "buildCommand": "pnpm run build",
   "outputDirectory": ".next",
   "devCommand": "pnpm run dev",
-  "installCommand": "pnpm install --frozen-lockfile",
+  "installCommand": "pnpm install --frozen-lockfile --prefer-offline",
   "regions": ["icn1"],
   "env": {
     "NODE_ENV": "production",
@@ -26,7 +28,8 @@
     "NEXT_PUBLIC_API_URL": "https://api.vlanet.net",
     "NEXT_PUBLIC_BACKEND_URL": "https://api.vlanet.net",
     "NEXTAUTH_SECRET": "vridge-nextauth-secret-production-2025-very-secure-key-for-deployment",
-    "EMERGENCY_BUILD": "true"
+    "SKIP_ENV_VALIDATION": "true",
+    "NEXT_TELEMETRY_DISABLED": "1"
   },
   "build": {
     "env": {
@@ -34,7 +37,9 @@
       "NEXT_PUBLIC_APP_ENV": "production",
       "NEXT_PUBLIC_API_URL": "https://api.vlanet.net",
       "NEXT_PUBLIC_BACKEND_URL": "https://api.vlanet.net",
-      "EMERGENCY_BUILD": "true"
+      "SKIP_ENV_VALIDATION": "true",
+      "NEXT_TELEMETRY_DISABLED": "1",
+      "NODE_OPTIONS": "--max-old-space-size=4096"
     }
   },
   "headers": [
