@@ -1,0 +1,23 @@
+# Ignore frontend files for backend deployment
+vridge-web/
+package.json
+package-lock.json
+pnpm-lock.yaml
+yarn.lock
+node_modules/
+.next/
+*.jsx
+*.tsx
+tsconfig.json
+next.config.js
+
+# Documentation
+*.md
+docs/
+.github/
+
+# Development files
+.vscode/
+.idea/
+.env.local
+.env.development
