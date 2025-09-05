@@ -176,7 +176,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           
       - name: Comment PR with preview URL
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -276,7 +276,7 @@ jobs:
           
       - name: Format Lighthouse results
         id: lighthouse
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const results = require('./lighthouse-results.json');
@@ -291,7 +291,7 @@ jobs:
             
       - name: Comment PR with Lighthouse scores
         if: github.event_name == 'pull_request'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
