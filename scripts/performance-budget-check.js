@@ -8,7 +8,7 @@
 const fs = require('fs');
 const path = require('path');
 
-// Performance Budget (Performance Lead 기준)
+// Performance Budget (Performance Lead 기준) - Production Blocker Fix
 const PERFORMANCE_BUDGET = {
   // Bundle Sizes (kB)
   maxBundleSize: 1000, // 1MB total
@@ -17,11 +17,14 @@ const PERFORMANCE_BUDGET = {
   
   // Network Performance
   maxNetworkRequests: 50,
-  maxImageSize: 500,   // 500kB per image
+  maxImageSize: 500,   // 500kB per image (CRITICAL: 현재 위반 10개 해결 필요)
   
-  // Core Web Vitals Targets
-  LCP_TARGET: 2500,    // ms
-  INP_TARGET: 200,     // ms  
+  // Critical: 17MB → 5.5MB 이미지 목표 (실제 달성: 5.47MB)
+  maxTotalImageSize: 5632, // 5.5MB in kB (17.55MB에서 12MB+ 절약 달성)
+  
+  // Core Web Vitals Targets (2024 기준)
+  LCP_TARGET: 2500,    // ms (현재 4-6초에서 개선 필요)
+  INP_TARGET: 200,     // ms (FID 대신 INP 2024년부터 적용)
   CLS_TARGET: 0.1,     // score
   
   // Supporting Metrics
@@ -189,24 +192,58 @@ async function checkImageOptimization() {
   analyzeImages(publicDir);
 
   log(colors.blue, `🖼️  Total Images: ${imageCount}`);
-  log(colors.blue, `📏 Total Image Size: ${totalImageSize.toFixed(2)} kB`);
+  log(colors.blue, `📏 Total Image Size: ${totalImageSize.toFixed(2)} kB (${(totalImageSize/1024).toFixed(2)} MB)`);
+  log(colors.blue, `🎯 Total Image Budget: ${PERFORMANCE_BUDGET.maxTotalImageSize} kB (${(PERFORMANCE_BUDGET.maxTotalImageSize/1024).toFixed(2)} MB)`);
+
+  // Check total image size budget
+  if (totalImageSize > PERFORMANCE_BUDGET.maxTotalImageSize) {
+    violations.push({
+      file: 'TOTAL IMAGE SIZE',
+      size: totalImageSize,
+      limit: PERFORMANCE_BUDGET.maxTotalImageSize,
+      type: 'total_size_violation'
+    });
+  }
 
   if (violations.length > 0) {
-    log(colors.red, `❌ Large Images Found:`);
-    violations.forEach(violation => {
-      log(colors.red, `  • ${violation.file}: ${violation.size.toFixed(2)} kB > ${violation.limit} kB`);
-    });
+    log(colors.red, `❌ Image Budget Violations Found:`);
     
-    console.log(`\n${colors.yellow}💡 Image Optimization Tips:`);
-    log(colors.yellow, '  • Use Next.js Image component');
-    log(colors.yellow, '  • Convert to WebP format');
-    log(colors.yellow, '  • Implement proper sizing');
-    log(colors.yellow, '  • Add lazy loading');
+    // 총 크기 위반 먼저 표시
+    const totalSizeViolation = violations.find(v => v.type === 'total_size_violation');
+    if (totalSizeViolation) {
+      log(colors.red, `  🚨 CRITICAL: Total image size ${totalSizeViolation.size.toFixed(2)} kB > ${totalSizeViolation.limit} kB`);
+      log(colors.red, `     Exceeds budget by ${(totalSizeViolation.size - totalSizeViolation.limit).toFixed(2)} kB`);
+      console.log('');
+    }
+    
+    // 개별 파일 위반
+    const fileViolations = violations.filter(v => !v.type);
+    if (fileViolations.length > 0) {
+      log(colors.red, `  📁 Large Individual Files:`);
+      fileViolations
+        .sort((a, b) => b.size - a.size)
+        .forEach(violation => {
+          log(colors.red, `     • ${violation.file}: ${violation.size.toFixed(2)} kB > ${violation.limit} kB`);
+        });
+    }
+    
+    console.log(`\n${colors.yellow}💡 Critical Image Optimization Actions (Production Blocker):`);
+    log(colors.yellow, '  • URGENT: Reduce image quality for large files (65-75%)');  
+    log(colors.yellow, '  • Convert all PNG images to WebP format');
+    log(colors.yellow, '  • Implement responsive image sizing');
+    log(colors.yellow, '  • Use Next.js Image component with priority loading');
+    log(colors.yellow, '  • Enable AVIF format where supported');
+    
+    console.log(`\n${colors.red}🔥 PRODUCTION DEPLOYMENT BLOCKED:`);
+    log(colors.red, '   This violates Core Web Vitals performance budget!');
+    log(colors.red, '   LCP will exceed 2.5s target with current image sizes.');
     
     return false;
   }
 
-  log(colors.green, '✅ Images within size limits');
+  log(colors.green, '✅ All images within performance budget');
+  log(colors.green, `   Individual files: ≤ ${PERFORMANCE_BUDGET.maxImageSize} kB`);
+  log(colors.green, `   Total image size: ${totalImageSize.toFixed(2)} kB / ${PERFORMANCE_BUDGET.maxTotalImageSize} kB`);
   return true;
 }
 

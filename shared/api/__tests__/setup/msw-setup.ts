@@ -6,7 +6,6 @@
  */
 
 import { HttpResponse, http } from 'msw'
-import { setupWorker } from 'msw/browser'
 import { setupServer } from 'msw/node'
 
 import { 
@@ -20,8 +19,9 @@ import {
 // Jest (Node.js) 환경용 MSW 서버
 export const server = setupServer(...navigationSuccessHandlers)
 
-// 브라우저 환경용 MSW 워커 (Cypress에서 사용)
-export const worker = setupWorker(...navigationSuccessHandlers)
+// 브라우저 환경용 MSW 워커 (Cypress에서만 사용)
+// Node.js 환경에서는 사용하지 않음
+export const worker = null
 
 // Jest 환경 설정
 export const setupMSWForJest = () => {
@@ -46,16 +46,22 @@ export const setupMSWForJest = () => {
 
 // Cypress 환경 설정을 위한 태스크들
 export const mswCypressTasks = {
-  // MSW 워커 시작
+  // MSW 워커 시작 (브라우저 환경에서만 사용)
   startMSW: () => {
-    return worker.start({
-      onUnhandledRequest: 'warn'
-    })
+    if (worker) {
+      return worker.start({
+        onUnhandledRequest: 'warn'
+      })
+    }
+    return Promise.resolve()
   },
 
-  // MSW 워커 중지
+  // MSW 워커 중지 (브라우저 환경에서만 사용)
   stopMSW: () => {
-    return worker.stop()
+    if (worker) {
+      return worker.stop()
+    }
+    return Promise.resolve()
   },
 
   // 성공 응답으로 설정

@@ -9,7 +9,8 @@ export type {
   ProjectSettings,
   CreateProjectDto,
   UpdateProjectDto,
-  InviteProjectMemberDto
+  InviteProjectMemberDto,
+  AutoScheduleResult
 } from './model/types'
 
 // Calendar-specific models
@@ -36,3 +37,34 @@ export {
   type TeamInvite,
   type TeamMember
 } from './api/projectApi'
+
+// State Management
+export {
+  default as projectReducer,
+  // Actions
+  setAutoSchedulePreview,
+  clearErrors,
+  clearCreateError,
+  clearInviteError,
+  setCurrentProject,
+  addPendingInvitation,
+  removePendingInvitation,
+  // Async Thunks
+  createProject,
+  inviteTeamMember,
+  fetchProjects,
+  // Selectors
+  selectProjects,
+  selectCurrentProject,
+  selectIsCreating,
+  selectIsInviting,
+  selectCreateError,
+  selectInviteError,
+  selectAutoSchedulePreview,
+  selectCurrentUserRole,
+  selectPermissions,
+  selectPendingInvitations,
+  selectInvitationCooldown,
+  // Types
+  type ProjectState
+} from './model/projectSlice'

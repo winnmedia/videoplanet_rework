@@ -5,7 +5,6 @@
 
 import 'cypress-axe'
 import '@cypress/code-coverage/support'
-import 'cypress-real-events'
 
 // 전역 타입 정의
 declare global {
@@ -141,11 +140,11 @@ Cypress.Commands.add('checkAccessibility', (context?: string, options?: any) => 
 
 Cypress.Commands.add('verifyKeyboardNavigation', () => {
   // 탭 키로 포커스 이동 테스트
-  cy.get('body').tab()
+  cy.get('body').type('{tab}')
   cy.focused().should('exist')
   
   // Shift+Tab으로 역방향 이동 테스트
-  cy.focused().tab({ shift: true })
+  cy.focused().type('{shift}{tab}')
   
   // Enter/Space 키로 활성화 테스트
   cy.get('button, [role="button"]').first().focus()

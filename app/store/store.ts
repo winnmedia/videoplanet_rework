@@ -5,12 +5,16 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import authReducer from '@/features/auth/model/authSlice';
 import uiReducer from '@/features/ui/model/uiSlice';
+import videoPlanningWizardReducer from '@/features/video-planning-wizard/model/videoPlanningSlice';
+import projectReducer from '@/entities/project/model/projectSlice';
 import { apiSlice } from '@/shared/api/apiSlice';
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     ui: uiReducer,
+    videoPlanningWizard: videoPlanningWizardReducer,
+    project: projectReducer,
     [apiSlice.reducerPath]: apiSlice.reducer,
   },
   middleware: (getDefaultMiddleware) =>

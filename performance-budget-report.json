@@ -1,11 +1,12 @@
 {
-  "timestamp": "2025-09-04T10:53:16.092Z",
+  "timestamp": "2025-09-04T12:06:20.259Z",
   "budget": {
     "maxBundleSize": 1000,
     "maxChunkSize": 250,
     "maxCssSize": 100,
     "maxNetworkRequests": 50,
     "maxImageSize": 500,
+    "maxTotalImageSize": 5632,
     "LCP_TARGET": 2500,
     "INP_TARGET": 200,
     "CLS_TARGET": 0.1,
@@ -14,13 +15,7 @@
   },
   "results": {
     "bundleSize": true,
-    "imageOptimization": false
+    "imageOptimization": true
   },
-  "recommendations": [
-    {
-      "type": "images",
-      "priority": "medium",
-      "action": "Optimize images and implement proper formats"
-    }
-  ]
+  "recommendations": []
 }

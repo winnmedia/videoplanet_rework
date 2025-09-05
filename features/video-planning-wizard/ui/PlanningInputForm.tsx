@@ -22,20 +22,28 @@ import type {
   Tempo,
   StoryStructure,
   StoryIntensity,
-  PresetType
+  PresetType,
+  VisualStyle,
+  CameraWork
 } from '../model/types'
 import { PRESETS } from '../model/types'
 
 const TONE_MANNER_OPTIONS: ToneManner[] = [
-  '잔잔', '발랄', '소름', '귀엽', '시크', '감성', '유머', '진지'
+  '잔잔', '발랄', '소름', '귀엽', '시크', '감성', '유머', '진지',
+  '웅장', '몽환', '역동', '차분', '열정', '신비', '따뜻', '차가움',
+  '빈티지', '미래지향', '럭셔리', '미니멀'
 ]
 
 const GENRE_OPTIONS: Genre[] = [
-  '드라마', '공포', 'SF', '액션', '광고', '다큐멘터리', '교육', '뮤직비디오', '예능', '뉴스'
+  '드라마', '공포', 'SF', '액션', '광고', '다큐멘터리', '교육', '뮤직비디오', '예능', '뉴스',
+  '로맨스', '코미디', '판타지', '스릴러', '미스터리', '애니메이션', '전기', '역사',
+  '음식', '여행', '스포츠', '패션', '라이프스타일', '게임', '뷰티'
 ]
 
 const TARGET_OPTIONS: Target[] = [
-  '10대', '20대', '30대', '40대', '50대 이상', '전 연령', '비즈니스 전문가', '일반 소비자'
+  '10대', '20대', '30대', '40대', '50대 이상', '전 연령', '비즈니스 전문가', '일반 소비자',
+  '학생', '직장인', '주부', '시니어', '창업가', '아티스트', '개발자', '마케터',
+  '디자이너', '투자자', '의료진', '교육자'
 ]
 
 const DURATION_OPTIONS: Duration[] = [
@@ -65,6 +73,19 @@ const STORY_INTENSITY_OPTIONS: { value: StoryIntensity; label: string }[] = [
   { value: '풍부하게', label: '풍부하게' }
 ]
 
+// 신규 카테고리 옵션
+const VISUAL_STYLE_OPTIONS: VisualStyle[] = [
+  '시네마틱', '다큐멘터리', '뮤직비디오', '애니메이션', '인포그래픽',
+  '스케치', '일러스트', '픽셀아트', '3D렌더링', '콜라주',
+  '빈티지', '미니멀', '네온', '파스텔', '모노크롬'
+]
+
+const CAMERA_WORK_OPTIONS: CameraWork[] = [
+  '고정샷', '패닝', '틸팅', '줌인', '줌아웃', '돌리인', '돌리아웃',
+  '트래킹샷', '크레인샷', '핸드헬드', '스테디캠', '드론샷',
+  '360도회전', '오비탈', '슬라이더'
+]
+
 const PRESET_BUTTONS: { type: PresetType; label: string; description: string }[] = [
   { type: '광고형', label: '광고형 프리셋', description: '제품/서비스 홍보용 영상' },
   { type: '드라마형', label: '드라마형 프리셋', description: '감동적인 스토리텔링 영상' },
@@ -89,6 +110,12 @@ export const PlanningInputForm = ({
     format: '실사 촬영',
     tempo: '보통',
     storyStructure: '기승전결',
+    // 신규 필드 초기값
+    visualStyle: '시네마틱',
+    cameraWork: '고정샷',
+    keywords: [],
+    mood: '',
+    colorScheme: '',
     storyIntensity: '적당히'
   })
 
@@ -195,7 +222,7 @@ export const PlanningInputForm = ({
         {/* 스타일 설정 섹션 */}
         <Card className="p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">스타일 설정</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div>
               <Select
                 label="톤앤매너"

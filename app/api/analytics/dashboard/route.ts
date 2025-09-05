@@ -8,6 +8,13 @@ import { z } from 'zod';
 
 import { withErrorHandler } from '@/lib/api/error-handler';
 import { apiMonitor } from '@/lib/api/monitoring';
+import type { 
+  MetricData, 
+  ApiSummary, 
+  PerformanceMetrics, 
+  TimeSeriesData,
+  DashboardData 
+} from '@/shared/api/types';
 
 // 대시보드 데이터 요청 스키마
 const DashboardRequestSchema = z.object({
@@ -176,7 +183,7 @@ async function generateUXDashboardData(params: z.infer<typeof DashboardRequestSc
       totalSessions: behaviorData.totalSessions,
       avgSessionDuration: behaviorData.avgSessionDuration,
       bounceRate: behaviorData.bounceRate,
-      conversionRate: journeyData.overallConversionRate,
+      conversionRate: journeyData.overallConversionRate ?? 0,
       userSatisfactionScore: calculateUserSatisfactionScore(performanceData, journeyData, behaviorData)
     },
     performance: {
@@ -197,13 +204,15 @@ async function generateUXDashboardData(params: z.infer<typeof DashboardRequestSc
           grade: getPerformanceGrade('cls', performanceData.cls.current)
         }
       },
-      pageLoadTime: performanceData.pageLoadTime,
-      apiResponseTime: performanceData.apiResponseTime,
-      errorRate: performanceData.errorRate
+      pageLoadTime: performanceData.pageLoadTime || { current: 0, trend: 0 },
+      apiResponseTime: performanceData.apiResponseTime || { current: 0, trend: 0 },
+      errorRate: performanceData.errorRate && typeof performanceData.errorRate === 'object' 
+        ? performanceData.errorRate 
+        : { current: 0, trend: 0 }
     },
     userJourneys: {
-      topJourneys: journeyData.topJourneys,
-      funnelAnalysis: journeyData.funnelAnalysis
+      topJourneys: journeyData.topJourneys || [],
+      funnelAnalysis: journeyData.funnelAnalysis || []
     },
     features: {
       usage: behaviorData.featureUsage,
@@ -232,7 +241,27 @@ async function collectPerformanceMetrics(timeRangeHours: number) {
         uptime: 99.8,
         memoryUsage: 67.3,
         cpuUsage: 23.1,
-        errorRate: 0.02
+        errorRate: 0.02,
+        lcp: {
+          current: 2200,
+          trend: -5.2
+        },
+        fid: {
+          current: 85,
+          trend: -2.1
+        },
+        cls: {
+          current: 0.08,
+          trend: -0.01
+        },
+        pageLoadTime: {
+          current: 1800,
+          trend: -3.5
+        },
+        apiResponseTime: {
+          current: 245,
+          trend: -1.8
+        }
       };
     }
     
@@ -270,8 +299,8 @@ async function collectPerformanceMetrics(timeRangeHours: number) {
       
       if (recent.length === 0 || earlier.length === 0) return 0;
       
-      const recentAvg = recent.reduce((sum: number, m: any) => sum + (m[metricName] || 0), 0) / recent.length;
-      const earlierAvg = earlier.reduce((sum: number, m: any) => sum + (m[metricName] || 0), 0) / earlier.length;
+      const recentAvg = recent.reduce((sum: number, m: any) => sum + ((m[metricName] as number) || 0), 0) / recent.length;
+      const earlierAvg = earlier.reduce((sum: number, m: any) => sum + ((m[metricName] as number) || 0), 0) / earlier.length;
       
       return earlierAvg > 0 ? ((recentAvg - earlierAvg) / earlierAvg) * 100 : 0;
     };

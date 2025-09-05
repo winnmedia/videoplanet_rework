@@ -260,7 +260,10 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
       ...validatedData,
       id: `fb-${Date.now()}`, // 실제로는 UUID 생성
       createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
+      status: validatedData.status ?? 'open', // status 기본값 보장
+      attachments: validatedData.attachments ?? [], // attachments 기본값 보장
+      tags: validatedData.tags ?? [] // tags 기본값 보장
     }
     
     // 스키마 최종 검증

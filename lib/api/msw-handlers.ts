@@ -21,6 +21,19 @@ import type {
   GenerateStoryboardResponse,
   ExportPlanResponse
 } from '@/features/video-planning-wizard/model/types'
+import type {
+  VideoFeedbackSession,
+  VideoFeedbackResponse,
+  VideoFeedbackListResponse,
+  TimestampComment,
+  VideoMarker,
+  FeedbackStatus,
+  FeedbackStats,
+  VideoMetadata
+} from '@/widgets/VideoFeedback/model/types'
+
+// 협업 시스템 핸들러 임포트
+import { collaborationHandlers } from '@/shared/lib/collaboration/__tests__/collaboration-handlers'
 
 // 모킹 데이터
 const MOCK_SUBMENU_DATA: Record<string, SubMenuItemType[]> = {
@@ -172,6 +185,219 @@ const MOCK_MENU_DATA: MenuItemType[] = [
   { id: 'planning', name: '기획', path: '/planning', icon: 'planning', hasSubMenu: true },
   { id: 'calendar', name: '캘린더', path: '/calendar', icon: 'calendar', hasSubMenu: false }
 ]
+
+// Video Feedback API 모킹 데이터
+const MOCK_VIDEO_METADATA: VideoMetadata = {
+  id: 'video-001',
+  filename: 'brand_promotion_v2.mp4',
+  url: '/api/videos/brand_promotion_v2.mp4',
+  thumbnail: '/api/videos/thumbnails/brand_promotion_v2.jpg',
+  duration: 180, // 3분
+  fileSize: 52428800, // 50MB
+  format: 'mp4',
+  resolution: {
+    width: 1920,
+    height: 1080
+  },
+  uploadedAt: '2025-08-25T14:30:00Z',
+  uploadedBy: 'user-editor-001'
+}
+
+const MOCK_COMMENTS: TimestampComment[] = [
+  {
+    id: 'comment-001',
+    videoId: 'video-001',
+    timestamp: 15.5,
+    x: 45.2,
+    y: 32.1,
+    content: '로고 크기가 너무 작아서 브랜드 인지도가 떨어질 것 같습니다. 좀 더 크게 해주세요.',
+    author: {
+      id: 'user-client-001',
+      name: '김클라이언트',
+      avatar: '/avatars/client-001.jpg',
+      role: 'client'
+    },
+    createdAt: '2025-08-26T09:15:00Z',
+    status: 'open',
+    priority: 'high',
+    tags: ['로고', '브랜딩']
+  },
+  {
+    id: 'comment-002',
+    videoId: 'video-001',
+    timestamp: 45.0,
+    content: '배경음악이 너무 커서 내레이션이 잘 들리지 않습니다.',
+    author: {
+      id: 'user-reviewer-001',
+      name: '박검토자',
+      avatar: '/avatars/reviewer-001.jpg',
+      role: 'reviewer'
+    },
+    createdAt: '2025-08-26T09:32:00Z',
+    status: 'open',
+    priority: 'urgent',
+    tags: ['음향', '믹싱']
+  },
+  {
+    id: 'comment-003',
+    videoId: 'video-001',
+    timestamp: 90.5,
+    x: 75.8,
+    y: 20.3,
+    content: '이 장면의 색감이 이전 씬과 달라서 일관성이 떨어져 보입니다.',
+    author: {
+      id: 'user-editor-002',
+      name: '최편집자',
+      avatar: '/avatars/editor-002.jpg',
+      role: 'editor'
+    },
+    createdAt: '2025-08-26T10:45:00Z',
+    status: 'resolved',
+    priority: 'medium',
+    tags: ['색보정', '연출']
+  },
+  {
+    id: 'comment-004',
+    videoId: 'video-001',
+    timestamp: 120.0,
+    content: '마지막 CTA 버튼의 애니메이션이 너무 빨라서 읽기 어렵습니다.',
+    author: {
+      id: 'user-client-002',
+      name: '이담당자',
+      avatar: '/avatars/client-002.jpg',
+      role: 'client'
+    },
+    createdAt: '2025-08-26T11:20:00Z',
+    status: 'open',
+    priority: 'medium',
+    tags: ['애니메이션', 'CTA']
+  },
+  {
+    id: 'comment-005',
+    videoId: 'video-001',
+    timestamp: 165.2,
+    x: 30.5,
+    y: 80.7,
+    content: '엔드 크레딧에 저작권 표시가 빠져있습니다.',
+    author: {
+      id: 'user-admin-001',
+      name: '관리자',
+      avatar: '/avatars/admin-001.jpg',
+      role: 'admin'
+    },
+    createdAt: '2025-08-26T12:00:00Z',
+    status: 'open',
+    priority: 'high',
+    tags: ['법무', '저작권']
+  }
+]
+
+const MOCK_MARKERS: VideoMarker[] = [
+  {
+    id: 'marker-001',
+    videoId: 'video-001',
+    timestamp: 15.5,
+    type: 'rectangle',
+    coordinates: {
+      x: 40.0,
+      y: 25.0,
+      width: 15.0,
+      height: 20.0
+    },
+    style: {
+      color: '#ff4444',
+      strokeWidth: 2,
+      opacity: 0.8
+    },
+    linkedCommentId: 'comment-001',
+    createdBy: 'user-client-001',
+    createdAt: '2025-08-26T09:15:30Z'
+  },
+  {
+    id: 'marker-002',
+    videoId: 'video-001',
+    timestamp: 90.5,
+    type: 'circle',
+    coordinates: {
+      x: 75.8,
+      y: 20.3,
+      radius: 8.0
+    },
+    style: {
+      color: '#ffaa00',
+      strokeWidth: 3,
+      opacity: 0.9
+    },
+    linkedCommentId: 'comment-003',
+    createdBy: 'user-editor-002',
+    createdAt: '2025-08-26T10:45:15Z'
+  }
+]
+
+const MOCK_VIDEO_FEEDBACK_SESSIONS: Record<string, VideoFeedbackSession> = {
+  'session-001': {
+    id: 'session-001',
+    projectId: 'project-brand-promo',
+    videoMetadata: MOCK_VIDEO_METADATA,
+    status: 'in_review',
+    title: '브랜드 홍보 영상 v2.0 피드백',
+    description: '클라이언트 1차 검토 후 수정된 버전입니다. 로고 크기와 음향 밸런스를 조정했습니다.',
+    version: 'v2.0',
+    createdBy: 'user-editor-001',
+    createdAt: '2025-08-25T14:30:00Z',
+    updatedAt: '2025-08-26T12:00:00Z',
+    deadline: '2025-08-28T18:00:00Z',
+    reviewers: ['user-client-001', 'user-client-002', 'user-reviewer-001'],
+    comments: MOCK_COMMENTS,
+    markers: MOCK_MARKERS,
+    totalComments: 5,
+    resolvedComments: 1,
+    pendingComments: 4
+  },
+  'session-002': {
+    id: 'session-002',
+    projectId: 'project-product-demo',
+    videoMetadata: {
+      ...MOCK_VIDEO_METADATA,
+      id: 'video-002',
+      filename: 'product_demo_v1.mp4',
+      url: '/api/videos/product_demo_v1.mp4',
+      duration: 120
+    },
+    status: 'approved',
+    title: '제품 데모 영상 v1.0',
+    description: '신제품 소개 영상 첫 버전',
+    version: 'v1.0',
+    createdBy: 'user-editor-001',
+    createdAt: '2025-08-20T10:00:00Z',
+    updatedAt: '2025-08-24T16:30:00Z',
+    deadline: '2025-08-26T18:00:00Z',
+    reviewers: ['user-client-001'],
+    comments: [],
+    markers: [],
+    totalComments: 0,
+    resolvedComments: 0,
+    pendingComments: 0
+  }
+}
+
+const MOCK_FEEDBACK_STATS: FeedbackStats = {
+  totalSessions: 12,
+  activeSessions: 3,
+  completedSessions: 9,
+  averageResolutionTime: 48, // 48시간
+  commentsByStatus: {
+    open: 15,
+    resolved: 8,
+    archived: 2
+  },
+  commentsByPriority: {
+    low: 3,
+    medium: 12,
+    high: 7,
+    urgent: 3
+  }
+}
 
 // Video Planning API 모킹 데이터
 const MOCK_FOUR_STAGES: PlanningStage[] = [
@@ -325,8 +551,27 @@ const MOCK_PROJECT_DATA = {
 // 응답 지연 시뮬레이션 (개발 환경 리얼리즘)
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
+// 피드백 상태 레이블 유틸리티
+const getStatusLabel = (status: FeedbackStatus): string => {
+  const labels: Record<FeedbackStatus, string> = {
+    draft: '초안',
+    pending: '검토 대기',
+    in_review: '검토중',
+    revision_needed: '수정 필요',
+    approved: '승인됨',
+    rejected: '거절됨',
+    completed: '완료'
+  }
+  return labels[status] || status
+}
+
+// 초대 쿨다운 시뮬레이션용 메모리 스토리지
+const mockInviteCooldowns = new Map<string, number>()
+
 // MSW 핸들러 정의
 export const handlers = [
+  // 협업 시스템 핸들러들 추가
+  ...collaborationHandlers,
   // 서브메뉴 API
   http.get('*/api/menu/submenu', async ({ request }) => {
     await delay(300) // 실제 네트워크 지연 시뮬레이션
@@ -801,6 +1046,489 @@ export const handlers = [
       success: true,
       projects,
       message: '프로젝트 목록이 성공적으로 조회되었습니다.'
+    })
+  }),
+
+  // Video Feedback API 핸들러
+  
+  // 비디오 피드백 세션 조회
+  http.get('*/api/video-feedback/sessions/:sessionId', async ({ params }) => {
+    await delay(process.env.NODE_ENV === 'test' ? 0 : 200)
+    
+    const { sessionId } = params
+    
+    // 특수 테스트 시나리오 처리
+    if (sessionId === 'loading') {
+      if (process.env.NODE_ENV === 'test') {
+        await delay(5000) // 테스트에서는 타임아웃 시뮬레이션
+        return HttpResponse.json({
+          success: false,
+          message: 'Loading timeout',
+          errors: ['TIMEOUT']
+        } as VideoFeedbackResponse, { status: 408 })
+      } else {
+        await new Promise(() => {}) // 개발 환경에서는 무한 로딩
+      }
+    }
+    
+    if (sessionId === 'not-found') {
+      return HttpResponse.json({
+        success: false,
+        message: '세션을 찾을 수 없습니다.',
+        errors: ['SESSION_NOT_FOUND']
+      } as VideoFeedbackResponse, { status: 404 })
+    }
+    
+    if (sessionId === 'network-error') {
+      return HttpResponse.error()
+    }
+    
+    const session = MOCK_VIDEO_FEEDBACK_SESSIONS[sessionId as string]
+    if (!session) {
+      return HttpResponse.json({
+        success: false,
+        message: '세션을 찾을 수 없습니다.',
+        errors: ['SESSION_NOT_FOUND']
+      } as VideoFeedbackResponse, { status: 404 })
+    }
+    
+    return HttpResponse.json({
+      success: true,
+      session,
+      message: '세션 조회 성공'
+    } as VideoFeedbackResponse)
+  }),
+
+  // 피드백 세션 목록 조회
+  http.get('*/api/video-feedback/sessions', async ({ request }) => {
+    await delay(process.env.NODE_ENV === 'test' ? 0 : 300)
+    
+    const url = new URL(request.url)
+    const page = parseInt(url.searchParams.get('page') || '1')
+    const pageSize = parseInt(url.searchParams.get('pageSize') || '10')
+    const status = url.searchParams.get('status') as FeedbackStatus
+    const projectId = url.searchParams.get('projectId')
+    const reviewerId = url.searchParams.get('reviewerId')
+    
+    let sessions = Object.values(MOCK_VIDEO_FEEDBACK_SESSIONS)
+    
+    if (status) {
+      sessions = sessions.filter(s => s.status === status)
+    }
+    
+    if (projectId) {
+      sessions = sessions.filter(s => s.projectId === projectId)
+    }
+    
+    if (reviewerId) {
+      sessions = sessions.filter(s => s.reviewers.includes(reviewerId))
+    }
+    
+    const total = sessions.length
+    const startIndex = (page - 1) * pageSize
+    const paginatedSessions = sessions.slice(startIndex, startIndex + pageSize)
+    
+    return HttpResponse.json({
+      sessions: paginatedSessions,
+      total,
+      page,
+      pageSize,
+      hasMore: startIndex + pageSize < total
+    } as VideoFeedbackListResponse)
+  }),
+
+  // 댓글 추가
+  http.post('*/api/video-feedback/sessions/:sessionId/comments', async ({ params, request }) => {
+    await delay(process.env.NODE_ENV === 'test' ? 0 : 400)
+    
+    const { sessionId } = params
+    const body = await request.json() as Omit<TimestampComment, 'id' | 'createdAt'>
+    
+    const session = MOCK_VIDEO_FEEDBACK_SESSIONS[sessionId as string]
+    if (!session) {
+      return HttpResponse.json({
+        success: false,
+        message: '세션을 찾을 수 없습니다.',
+        errors: ['SESSION_NOT_FOUND']
+      } as VideoFeedbackResponse, { status: 404 })
+    }
+    
+    const newComment: TimestampComment = {
+      ...body,
+      id: `comment-${Date.now()}`,
+      createdAt: new Date().toISOString()
+    }
+    
+    // Mock 데이터 업데이트
+    session.comments.push(newComment)
+    session.totalComments += 1
+    session.pendingComments += 1
+    session.updatedAt = new Date().toISOString()
+    
+    return HttpResponse.json({
+      success: true,
+      session,
+      message: '댓글이 추가되었습니다.'
+    } as VideoFeedbackResponse)
+  }),
+
+  // 댓글 수정
+  http.put('*/api/video-feedback/sessions/:sessionId/comments/:commentId', async ({ params, request }) => {
+    await delay(process.env.NODE_ENV === 'test' ? 0 : 350)
+    
+    const { sessionId, commentId } = params
+    const body = await request.json() as Partial<TimestampComment>
+    
+    const session = MOCK_VIDEO_FEEDBACK_SESSIONS[sessionId as string]
+    if (!session) {
+      return HttpResponse.json({
+        success: false,
+        message: '세션을 찾을 수 없습니다.',
+        errors: ['SESSION_NOT_FOUND']
+      } as VideoFeedbackResponse, { status: 404 })
+    }
+    
+    const commentIndex = session.comments.findIndex(c => c.id === commentId)
+    if (commentIndex === -1) {
+      return HttpResponse.json({
+        success: false,
+        message: '댓글을 찾을 수 없습니다.',
+        errors: ['COMMENT_NOT_FOUND']
+      } as VideoFeedbackResponse, { status: 404 })
+    }
+    
+    // Mock 데이터 업데이트
+    session.comments[commentIndex] = {
+      ...session.comments[commentIndex],
+      ...body,
+      updatedAt: new Date().toISOString()
+    }
+    session.updatedAt = new Date().toISOString()
+    
+    return HttpResponse.json({
+      success: true,
+      session,
+      message: '댓글이 수정되었습니다.'
+    } as VideoFeedbackResponse)
+  }),
+
+  // 댓글 삭제
+  http.delete('*/api/video-feedback/sessions/:sessionId/comments/:commentId', async ({ params }) => {
+    await delay(process.env.NODE_ENV === 'test' ? 0 : 300)
+    
+    const { sessionId, commentId } = params
+    
+    const session = MOCK_VIDEO_FEEDBACK_SESSIONS[sessionId as string]
+    if (!session) {
+      return HttpResponse.json({
+        success: false,
+        message: '세션을 찾을 수 없습니다.',
+        errors: ['SESSION_NOT_FOUND']
+      } as VideoFeedbackResponse, { status: 404 })
+    }
+    
+    const commentIndex = session.comments.findIndex(c => c.id === commentId)
+    if (commentIndex === -1) {
+      return HttpResponse.json({
+        success: false,
+        message: '댓글을 찾을 수 없습니다.',
+        errors: ['COMMENT_NOT_FOUND']
+      } as VideoFeedbackResponse, { status: 404 })
+    }
+    
+    // Mock 데이터에서 삭제
+    const deletedComment = session.comments.splice(commentIndex, 1)[0]
+    session.totalComments -= 1
+    if (deletedComment.status === 'open') {
+      session.pendingComments -= 1
+    } else if (deletedComment.status === 'resolved') {
+      session.resolvedComments -= 1
+    }
+    session.updatedAt = new Date().toISOString()
+    
+    return HttpResponse.json({
+      success: true,
+      session,
+      message: '댓글이 삭제되었습니다.'
+    } as VideoFeedbackResponse)
+  }),
+
+  // 댓글 해결
+  http.patch('*/api/video-feedback/sessions/:sessionId/comments/:commentId/resolve', async ({ params }) => {
+    await delay(process.env.NODE_ENV === 'test' ? 0 : 250)
+    
+    const { sessionId, commentId } = params
+    
+    const session = MOCK_VIDEO_FEEDBACK_SESSIONS[sessionId as string]
+    if (!session) {
+      return HttpResponse.json({
+        success: false,
+        message: '세션을 찾을 수 없습니다.',
+        errors: ['SESSION_NOT_FOUND']
+      } as VideoFeedbackResponse, { status: 404 })
+    }
+    
+    const commentIndex = session.comments.findIndex(c => c.id === commentId)
+    if (commentIndex === -1) {
+      return HttpResponse.json({
+        success: false,
+        message: '댓글을 찾을 수 없습니다.',
+        errors: ['COMMENT_NOT_FOUND']
+      } as VideoFeedbackResponse, { status: 404 })
+    }
+    
+    // Mock 데이터 업데이트
+    const comment = session.comments[commentIndex]
+    if (comment.status !== 'resolved') {
+      comment.status = 'resolved'
+      comment.updatedAt = new Date().toISOString()
+      session.resolvedComments += 1
+      session.pendingComments -= 1
+      session.updatedAt = new Date().toISOString()
+    }
+    
+    return HttpResponse.json({
+      success: true,
+      session,
+      message: '댓글이 해결되었습니다.'
+    } as VideoFeedbackResponse)
+  }),
+
+  // 마커 추가
+  http.post('*/api/video-feedback/sessions/:sessionId/markers', async ({ params, request }) => {
+    await delay(process.env.NODE_ENV === 'test' ? 0 : 350)
+    
+    const { sessionId } = params
+    const body = await request.json() as Omit<VideoMarker, 'id' | 'createdAt'>
+    
+    const session = MOCK_VIDEO_FEEDBACK_SESSIONS[sessionId as string]
+    if (!session) {
+      return HttpResponse.json({
+        success: false,
+        message: '세션을 찾을 수 없습니다.',
+        errors: ['SESSION_NOT_FOUND']
+      } as VideoFeedbackResponse, { status: 404 })
+    }
+    
+    const newMarker: VideoMarker = {
+      ...body,
+      id: `marker-${Date.now()}`,
+      createdAt: new Date().toISOString()
+    }
+    
+    // Mock 데이터 업데이트
+    session.markers.push(newMarker)
+    session.updatedAt = new Date().toISOString()
+    
+    return HttpResponse.json({
+      success: true,
+      session,
+      message: '마커가 추가되었습니다.'
+    } as VideoFeedbackResponse)
+  }),
+
+  // 세션 상태 변경
+  http.patch('*/api/video-feedback/sessions/:sessionId/status', async ({ params, request }) => {
+    await delay(process.env.NODE_ENV === 'test' ? 0 : 300)
+    
+    const { sessionId } = params
+    const body = await request.json() as { status: FeedbackStatus }
+    
+    const session = MOCK_VIDEO_FEEDBACK_SESSIONS[sessionId as string]
+    if (!session) {
+      return HttpResponse.json({
+        success: false,
+        message: '세션을 찾을 수 없습니다.',
+        errors: ['SESSION_NOT_FOUND']
+      } as VideoFeedbackResponse, { status: 404 })
+    }
+    
+    // Mock 데이터 업데이트
+    session.status = body.status
+    session.updatedAt = new Date().toISOString()
+    
+    return HttpResponse.json({
+      success: true,
+      session,
+      message: `상태가 ${getStatusLabel(body.status)}(으)로 변경되었습니다.`
+    } as VideoFeedbackResponse)
+  }),
+
+  // 피드백 통계 조회
+  http.get('*/api/video-feedback/stats', async ({ request }) => {
+    await delay(process.env.NODE_ENV === 'test' ? 0 : 200)
+    
+    const url = new URL(request.url)
+    const projectId = url.searchParams.get('projectId')
+    
+    // 프로젝트별 필터링 (실제로는 다른 통계를 반환할 수 있음)
+    let stats = MOCK_FEEDBACK_STATS
+    
+    if (projectId === 'project-brand-promo') {
+      // 특정 프로젝트의 통계
+      stats = {
+        ...MOCK_FEEDBACK_STATS,
+        totalSessions: 3,
+        activeSessions: 1,
+        completedSessions: 2
+      }
+    }
+    
+    return HttpResponse.json({
+      stats,
+      success: true
+    })
+  }),
+
+  // 프로젝트 생성 API (자동 스케줄링 포함)
+  http.post('*/api/projects', async ({ request }) => {
+    await delay(1000)
+    
+    const body = await request.json() as {
+      title: string
+      description?: string
+      tags?: string[]
+      settings?: any
+      autoSchedule?: {
+        planning: { duration: number }
+        shooting: { duration: number }
+        editing: { duration: number }
+      }
+    }
+    
+    // 입력 검증
+    if (!body.title?.trim()) {
+      return HttpResponse.json({
+        success: false,
+        error: '프로젝트 제목을 입력해주세요.'
+      }, { status: 400 })
+    }
+
+    if (body.title === 'error') {
+      return HttpResponse.json({
+        success: false,
+        error: '프로젝트 생성에 실패했습니다.'
+      }, { status: 500 })
+    }
+    
+    const projectId = `project_${Date.now()}`
+    
+    // 자동 스케줄링이 있으면 캘린더 이벤트 생성
+    const calendarEvents = body.autoSchedule ? [
+      {
+        id: `${projectId}_planning`,
+        title: `${body.title} - 기획`,
+        startDate: new Date().toISOString(),
+        endDate: new Date(Date.now() + body.autoSchedule.planning.duration * 7 * 24 * 60 * 60 * 1000).toISOString(),
+        type: 'planning',
+        projectId
+      },
+      {
+        id: `${projectId}_shooting`,
+        title: `${body.title} - 촬영`,
+        startDate: new Date(Date.now() + body.autoSchedule.planning.duration * 7 * 24 * 60 * 60 * 1000).toISOString(),
+        endDate: new Date(Date.now() + (body.autoSchedule.planning.duration * 7 + body.autoSchedule.shooting.duration) * 24 * 60 * 60 * 1000).toISOString(),
+        type: 'shooting',
+        projectId
+      },
+      {
+        id: `${projectId}_editing`,
+        title: `${body.title} - 편집`,
+        startDate: new Date(Date.now() + (body.autoSchedule.planning.duration * 7 + body.autoSchedule.shooting.duration) * 24 * 60 * 60 * 1000).toISOString(),
+        endDate: new Date(Date.now() + (body.autoSchedule.planning.duration * 7 + body.autoSchedule.shooting.duration + body.autoSchedule.editing.duration * 7) * 24 * 60 * 60 * 1000).toISOString(),
+        type: 'editing',
+        projectId
+      }
+    ] : []
+    
+    const newProject = {
+      id: projectId,
+      title: body.title,
+      description: body.description,
+      status: 'draft',
+      ownerId: 'current_user_id',
+      members: [{
+        userId: 'current_user_id',
+        role: 'owner',
+        joinedAt: new Date().toISOString()
+      }],
+      videos: [],
+      tags: body.tags || [],
+      settings: {
+        isPublic: false,
+        allowComments: true,
+        allowDownload: false,
+        requireApproval: true,
+        watermarkEnabled: true,
+        ...body.settings
+      },
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }
+    
+    return HttpResponse.json({
+      success: true,
+      data: {
+        project: newProject,
+        calendarEvents
+      },
+      message: '프로젝트가 성공적으로 생성되었습니다.'
+    }, { status: 201 })
+  }),
+
+  // 팀원 초대 API (SendGrid 시뮬레이션)
+  http.post('*/api/projects/:projectId/invite', async ({ params, request }) => {
+    await delay(2000) // 이메일 전송 시간 시뮬레이션
+    
+    const { projectId } = params
+    const body = await request.json() as {
+      email: string
+      role: 'editor' | 'viewer'
+      message?: string
+    }
+    
+    // 입력 검증
+    if (!body.email?.trim() || !body.email.includes('@')) {
+      return HttpResponse.json({
+        success: false,
+        error: '유효한 이메일 주소를 입력해주세요.'
+      }, { status: 400 })
+    }
+
+    // 실패 시뮬레이션
+    if (body.email === 'fail@test.com') {
+      return HttpResponse.json({
+        success: false,
+        error: '이메일 전송에 실패했습니다.'
+      }, { status: 500 })
+    }
+    
+    // 쿨다운 시뮬레이션 (60초)
+    const lastInviteTime = mockInviteCooldowns.get(body.email) || 0
+    const now = Date.now()
+    
+    if (now - lastInviteTime < 60000) {
+      const remainingTime = Math.ceil((60000 - (now - lastInviteTime)) / 1000)
+      return HttpResponse.json({
+        success: false,
+        error: `${remainingTime}초 후에 다시 시도할 수 있습니다.`
+      }, { status: 429 })
+    }
+    
+    // 쿨다운 설정
+    mockInviteCooldowns.set(body.email, now)
+    
+    const invitationId = `invite_${Date.now()}`
+    
+    return HttpResponse.json({
+      success: true,
+      data: {
+        invitationId,
+        email: body.email,
+        projectId,
+        expiresAt: new Date(now + 7 * 24 * 60 * 60 * 1000).toISOString() // 7일 후
+      },
+      message: '초대 이메일이 성공적으로 전송되었습니다.'
     })
   }),
 

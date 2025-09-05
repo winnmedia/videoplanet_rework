@@ -1,269 +1,267 @@
 #!/usr/bin/env node
+
 /**
- * 원본 이미지를 WebP 버전으로 교체하는 스크립트
- * 98MB → 10MB 목표 달성을 위한 최종 단계
- * 시각적 충실성을 유지하면서 성능 최적화
+ * Replace Original Images with WebP Versions (Production Blocker Fix)
+ * Performance Lead 요구사항: 원본 PNG 파일들을 WebP로 교체하여 총 크기 감축
  */
 
-const fs = require('fs/promises');
+const fs = require('fs');
 const path = require('path');
 
-// WebP로 교체할 파일들 (큰 파일들 우선)
+// Colors for console output
+const colors = {
+  red: '\x1b[31m',
+  green: '\x1b[32m',
+  yellow: '\x1b[33m',
+  blue: '\x1b[34m',
+  magenta: '\x1b[35m',
+  reset: '\x1b[0m',
+  bold: '\x1b[1m'
+};
+
+function log(color, message) {
+  console.log(`${color}${message}${colors.reset}`);
+}
+
+function logHeader(message) {
+  console.log(`\n${colors.bold}${colors.blue}=== ${message} ===${colors.reset}`);
+}
+
+// Files to replace with WebP versions
 const REPLACEMENTS = [
   {
-    original: 'public/images/Home/gif.gif',
-    webp: 'public/images/Home/gif.webp',
-    backup: 'public/images/Home/gif.gif.bak'
+    original: 'public/images/User/bg.png',
+    webp: 'public/images/User/bg.webp',
+    backup: 'public/images/User/bg.png.bak'
   },
   {
-    original: 'public/images/Home/bg05.png',
-    webp: 'public/images/Home/bg05.webp',
-    backup: 'public/images/Home/bg05.png.bak'
+    original: 'public/images/Home/img02.png', 
+    webp: 'public/images/Home/img02.webp',
+    backup: 'public/images/Home/img02.png.bak'
   },
   {
-    original: 'public/images/Home/bg06.png',
-    webp: 'public/images/Home/bg06.webp',
-    backup: 'public/images/Home/bg06.png.bak'
+    original: 'public/images/Home/img07.png',
+    webp: 'public/images/Home/img07.webp', 
+    backup: 'public/images/Home/img07.png.bak'
   },
   {
-    original: 'public/images/Home/new/visual-bg.png',
-    webp: 'public/images/Home/new/visual-bg.webp',
-    backup: 'public/images/Home/new/visual-bg.png.bak'
+    original: 'public/images/Home/img05.png',
+    webp: 'public/images/Home/img05.webp',
+    backup: 'public/images/Home/img05.png.bak'
   },
   {
-    original: 'public/images/Home/bg01.png',
-    webp: 'public/images/Home/bg01.webp',
-    backup: 'public/images/Home/bg01.png.bak'
+    original: 'public/images/Home/img04.png',
+    webp: 'public/images/Home/img04.webp',
+    backup: 'public/images/Home/img04.png.bak'
   },
   {
-    original: 'public/images/Home/w_bg02.png',
-    webp: 'public/images/Home/w_bg02.webp',
-    backup: 'public/images/Home/w_bg02.png.bak'
+    original: 'public/images/Home/img06.png',
+    webp: 'public/images/Home/img06.webp',
+    backup: 'public/images/Home/img06.png.bak'
   },
   {
-    original: 'public/images/Home/bg03.png',
-    webp: 'public/images/Home/bg03.webp',
-    backup: 'public/images/Home/bg03.png.bak'
+    original: 'public/images/Home/img03.png',
+    webp: 'public/images/Home/img03.webp',
+    backup: 'public/images/Home/img03.png.bak'
   },
   {
-    original: 'public/images/Home/bg04.png',
-    webp: 'public/images/Home/bg04.webp',
-    backup: 'public/images/Home/bg04.png.bak'
-  },
-  {
-    original: 'public/images/Home/new/end-bg.png',
-    webp: 'public/images/Home/new/end-bg.webp',
-    backup: 'public/images/Home/new/end-bg.png.bak'
-  },
-  {
-    original: 'public/images/Home/n_bg.png',
-    webp: 'public/images/Home/n_bg.webp',
-    backup: 'public/images/Home/n_bg.png.bak'
-  },
-  {
-    original: 'public/images/Home/bg08.png',
-    webp: 'public/images/Home/bg08.webp',
-    backup: 'public/images/Home/bg08.png.bak'
-  },
-  {
-    original: 'public/images/Home/w_bg.png',
-    webp: 'public/images/Home/w_bg.webp',
-    backup: 'public/images/Home/w_bg.png.bak'
-  },
-  {
-    original: 'public/images/Home/bg02.png',
-    webp: 'public/images/Home/bg02.webp',
-    backup: 'public/images/Home/bg02.png.bak'
-  },
-  {
-    original: 'public/images/Cms/video_sample.jpg',
-    webp: 'public/images/Cms/video_sample.webp',
-    backup: 'public/images/Cms/video_sample.jpg.bak'
+    original: 'public/images/Cms/thumsample.png', 
+    webp: 'public/images/Cms/thumsample.webp',
+    backup: 'public/images/Cms/thumsample.png.bak'
   }
 ];
 
-async function getFileSize(filePath) {
+// SVG files to compress (they're very large)
+const SVG_COMPRESSIONS = [
+  'public/images/Home/symbol.svg',
+  'public/images/symbol.svg'
+];
+
+function backupAndReplace(original, webp, backup) {
   try {
-    const stats = await fs.stat(filePath);
-    return stats.size;
+    // Check if WebP version exists and is smaller
+    if (!fs.existsSync(webp)) {
+      log(colors.yellow, `⚠️  WebP version not found: ${webp}`);
+      return { success: false, reason: 'WebP not found' };
+    }
+    
+    const originalStats = fs.statSync(original);
+    const webpStats = fs.statSync(webp);
+    
+    const originalSizeKB = originalStats.size / 1024;
+    const webpSizeKB = webpStats.size / 1024;
+    const savings = originalSizeKB - webpSizeKB;
+    
+    if (webpSizeKB >= originalSizeKB) {
+      log(colors.yellow, `⚠️  WebP not smaller: ${path.basename(original)}`);
+      return { 
+        success: false, 
+        reason: 'WebP not smaller',
+        originalSize: originalSizeKB,
+        webpSize: webpSizeKB 
+      };
+    }
+    
+    // Create backup
+    fs.copyFileSync(original, backup);
+    log(colors.blue, `📁 Backed up: ${path.basename(original)} → ${path.basename(backup)}`);
+    
+    // Replace original with WebP
+    fs.copyFileSync(webp, original.replace('.png', '.webp'));
+    fs.unlinkSync(original); // Remove original PNG
+    
+    log(colors.green, `✅ Replaced: ${path.basename(original)}`);
+    log(colors.green, `   ${originalSizeKB.toFixed(2)} KB → ${webpSizeKB.toFixed(2)} KB (saved ${savings.toFixed(2)} KB)`);
+    
+    return {
+      success: true,
+      originalSize: originalSizeKB,
+      webpSize: webpSizeKB,
+      savings: savings
+    };
+    
   } catch (error) {
-    return 0;
+    log(colors.red, `❌ Error replacing ${original}: ${error.message}`);
+    return { success: false, error: error.message };
   }
 }
 
-async function replaceWithWebP(replacement) {
-  const { original, webp, backup } = replacement;
-  
+async function compressSVG(svgPath) {
   try {
-    // WebP 파일이 존재하는지 확인
-    const webpSize = await getFileSize(webp);
-    if (webpSize === 0) {
-      console.log(`⚠️  WebP file not found: ${webp}`);
-      return { success: false, saved: 0 };
+    const content = fs.readFileSync(svgPath, 'utf8');
+    const originalSize = Buffer.byteLength(content, 'utf8') / 1024;
+    
+    // Basic SVG optimization (remove unnecessary whitespace and comments)
+    let optimized = content
+      .replace(/<!--[\s\S]*?-->/g, '') // Remove comments
+      .replace(/>\s+</g, '><') // Remove whitespace between tags
+      .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+      .trim();
+    
+    // Remove unnecessary attributes and optimize paths if possible
+    optimized = optimized
+      .replace(/\s*=\s*"/g, '="') // Normalize attribute spacing
+      .replace(/"\s+/g, '" '); // Normalize attribute ending
+    
+    const optimizedSize = Buffer.byteLength(optimized, 'utf8') / 1024;
+    const savings = originalSize - optimizedSize;
+    
+    if (savings > 1) { // Only save if we save at least 1KB
+      const backupPath = svgPath + '.bak';
+      fs.copyFileSync(svgPath, backupPath);
+      fs.writeFileSync(svgPath, optimized, 'utf8');
+      
+      log(colors.green, `✅ Optimized SVG: ${path.basename(svgPath)}`);
+      log(colors.green, `   ${originalSize.toFixed(2)} KB → ${optimizedSize.toFixed(2)} KB (saved ${savings.toFixed(2)} KB)`);
+      
+      return { success: true, savings };
+    } else {
+      log(colors.yellow, `⚠️  SVG already optimized: ${path.basename(svgPath)}`);
+      return { success: false, reason: 'Already optimized' };
     }
-    
-    // 원본 파일 크기 확인
-    const originalSize = await getFileSize(original);
-    if (originalSize === 0) {
-      console.log(`⚠️  Original file not found: ${original}`);
-      return { success: false, saved: 0 };
-    }
-    
-    const originalSizeMB = (originalSize / 1024 / 1024).toFixed(2);
-    const webpSizeMB = (webpSize / 1024 / 1024).toFixed(2);
-    const savedSize = originalSize - webpSize;
-    const savedPercent = ((savedSize / originalSize) * 100).toFixed(1);
-    
-    console.log(`🔄 Replacing ${path.basename(original)}: ${originalSizeMB}MB → ${webpSizeMB}MB (${savedPercent}% saved)`);
-    
-    // 원본 파일을 백업으로 이동
-    await fs.rename(original, backup);
-    
-    // WebP 파일을 원본 이름으로 복사 (확장자만 변경)
-    const originalExt = path.extname(original);
-    const webpAsOriginal = original.replace(originalExt, '.webp');
-    await fs.copyFile(webp, webpAsOriginal);
-    
-    // 원래 확장자를 가진 WebP 파일 제거
-    if (webp !== webpAsOriginal) {
-      await fs.unlink(webp);
-    }
-    
-    console.log(`✅ Replaced: ${path.basename(original)} → ${path.basename(webpAsOriginal)}`);
-    
-    return { success: true, saved: savedSize };
     
   } catch (error) {
-    console.error(`❌ Error replacing ${original}:`, error.message);
-    return { success: false, saved: 0 };
+    log(colors.red, `❌ Error optimizing SVG ${svgPath}: ${error.message}`);
+    return { success: false, error: error.message };
   }
 }
 
-async function updateImageReferences() {
-  console.log('\n🔄 Updating image references in code...');
+async function replaceWithWebP() {
+  logHeader('Replace Original Images with WebP Versions');
   
-  // 이미지 최적화 유틸리티 업데이트
-  const optimizationUtilPath = 'shared/lib/image-optimization.ts';
-  
-  try {
-    let content = await fs.readFile(optimizationUtilPath, 'utf8');
-    
-    // WebP 매핑을 업데이트 (이제 .webp 확장자를 가진 파일들로)
-    const updatedMapping = `const WEBP_AVAILABLE_IMAGES = new Set([
-  '/images/Home/gif.webp',
-  '/images/Home/bg05.webp',
-  '/images/Home/bg06.webp',
-  '/images/Home/new/visual-bg.webp',
-  '/images/Home/bg01.webp',
-  '/images/Home/w_bg02.webp',
-  '/images/Home/bg03.webp',
-  '/images/Home/bg04.webp',
-  '/images/Home/new/end-bg.webp',
-  '/images/Home/n_bg.webp',
-  '/images/Home/bg08.webp',
-  '/images/Home/w_bg.webp',
-  '/images/Home/bg02.webp',
-  '/images/Cms/video_sample.webp'
-]);`;
-    
-    content = content.replace(
-      /const WEBP_AVAILABLE_IMAGES = new Set\(\[[\s\S]*?\]\);/,
-      updatedMapping
-    );
-    
-    // 이제 모든 이미지가 WebP이므로 함수 로직 단순화
-    content = content.replace(
-      /export function getOptimizedImageSrc\(originalPath: string\): string \{[\s\S]*?\}/,
-      `export function getOptimizedImageSrc(originalPath: string): string {
-  // WebP 버전이 있는지 확인
-  if (WEBP_AVAILABLE_IMAGES.has(originalPath)) {
-    return originalPath; // 이미 WebP 경로
-  }
-  
-  // WebP 버전으로 변환 시도
-  const webpPath = originalPath.replace(/\\.(png|jpg|jpeg|gif)$/i, '.webp');
-  if (WEBP_AVAILABLE_IMAGES.has(webpPath)) {
-    return webpPath;
-  }
-  
-  // WebP 버전이 없으면 원본 반환
-  return originalPath;
-}`
-    );
-    
-    await fs.writeFile(optimizationUtilPath, content);
-    console.log(`✅ Updated: ${optimizationUtilPath}`);
-    
-  } catch (error) {
-    console.error(`❌ Error updating ${optimizationUtilPath}:`, error.message);
-  }
-}
-
-async function main() {
-  console.log('🔄 Starting WebP replacement process...');
-  console.log('📁 This will replace original files with WebP versions');
-  console.log('💾 Original files will be backed up with .bak extension\n');
-  
-  let totalSaved = 0;
+  let totalSavings = 0;
   let successCount = 0;
+  let failedCount = 0;
   
   for (const replacement of REPLACEMENTS) {
-    const result = await replaceWithWebP(replacement);
+    const { original, webp, backup } = replacement;
+    
+    if (!fs.existsSync(original)) {
+      log(colors.yellow, `⚠️  Original file not found: ${original}`);
+      continue;
+    }
+    
+    log(colors.blue, `\n🔄 Processing: ${path.basename(original)}`);
+    
+    const result = backupAndReplace(original, webp, backup);
+    
     if (result.success) {
+      totalSavings += result.savings;
       successCount++;
-      totalSaved += result.saved;
-    }
-  }
-  
-  const totalSavedMB = (totalSaved / 1024 / 1024).toFixed(2);
-  
-  console.log('\n🎯 REPLACEMENT SUMMARY:');
-  console.log(`✅ Files Replaced: ${successCount}/${REPLACEMENTS.length}`);
-  console.log(`💾 Space Saved: ${totalSavedMB}MB`);
-  console.log(`🚀 Expected Performance Improvement: ~${(totalSaved / (98 * 1024 * 1024) * 100).toFixed(1)}%`);
-  
-  // 이미지 참조 업데이트
-  await updateImageReferences();
-  
-  console.log('\n📊 Final size check...');
-  
-  // 최종 크기 확인
-  try {
-    const { exec } = require('child_process');
-    const { promisify } = require('util');
-    const execAsync = promisify(exec);
-    
-    const { stdout } = await execAsync(`find public/images -name "*.bak" -prune -o -type f \\( -name "*.jpg" -o -name "*.jpeg" -o -name "*.png" -o -name "*.gif" -o -name "*.webp" \\) -exec wc -c {} \\; | awk '{total += $1} END {print total}'`);
-    const finalSize = parseInt(stdout.trim()) || 0;
-    const finalSizeMB = (finalSize / 1024 / 1024).toFixed(2);
-    
-    console.log(`📊 Final Image Directory Size: ${finalSizeMB}MB`);
-    
-    const targetAchieved = finalSize <= 15 * 1024 * 1024; // 15MB
-    console.log(`🎯 Target Achievement: ${targetAchieved ? '✅ SUCCESS' : '⚠️ NEEDS MORE WORK'}`);
-    
-    if (targetAchieved) {
-      console.log('\n🎉 OPTIMIZATION COMPLETE!');
-      console.log('✅ Size target achieved (≤15MB)');
-      console.log('🚀 Ready for Core Web Vitals improvement');
-      console.log('📋 Next: Deploy and run Lighthouse tests');
     } else {
-      console.log('\n⚠️  Additional optimization needed');
-      console.log('💡 Consider optimizing remaining large files');
+      failedCount++;
+      log(colors.yellow, `   Reason: ${result.reason}`);
     }
-    
-  } catch (error) {
-    console.error('❌ Error calculating final size:', error.message);
   }
   
-  console.log('\n💡 ROLLBACK INSTRUCTIONS:');
-  console.log('If you need to rollback, run:');
-  console.log('find public/images -name "*.bak" -exec bash -c \'mv "$1" "${1%.bak}"\' _ {} \\;');
+  // Compress SVG files
+  logHeader('SVG Optimization');
+  
+  for (const svgPath of SVG_COMPRESSIONS) {
+    if (!fs.existsSync(svgPath)) {
+      log(colors.yellow, `⚠️  SVG file not found: ${svgPath}`);
+      continue;
+    }
+    
+    log(colors.blue, `\n🔧 Optimizing: ${path.basename(svgPath)}`);
+    const result = await compressSVG(svgPath);
+    
+    if (result.success) {
+      totalSavings += result.savings;
+      successCount++;
+    } else {
+      failedCount++;
+    }
+  }
+  
+  // Summary
+  logHeader('Replacement Summary');
+  log(colors.blue, `✅ Successfully processed: ${successCount} files`);
+  log(colors.blue, `❌ Failed: ${failedCount} files`);
+  log(colors.green, `💾 Total space saved: ${totalSavings.toFixed(2)} KB (${(totalSavings/1024).toFixed(2)} MB)`);
+  
+  if (totalSavings > 1024) {
+    log(colors.green, `🎉 Great! Performance budget should now pass.`);
+  }
+  
+  return successCount > 0;
 }
 
-// 스크립트 실행
+// Main execution
+async function main() {
+  console.log(`${colors.bold}${colors.magenta}🔄 Image Replacement Tool${colors.reset}`);
+  console.log(`${colors.magenta}Production Blocker Fix - Final Step${colors.reset}`);
+  
+  try {
+    const success = await replaceWithWebP();
+    
+    if (success) {
+      logHeader('Next Steps');
+      log(colors.yellow, '1. Run final performance budget check');
+      log(colors.yellow, '2. Test image loading (check for broken images)'); 
+      log(colors.yellow, '3. Update code references from .png to .webp if needed');
+      log(colors.yellow, '4. Commit changes');
+      
+      log(colors.green, '\n🎉 Image replacement completed!');
+      log(colors.green, 'Run: node scripts/performance-budget-check.js');
+    } else {
+      log(colors.red, '\n❌ Image replacement failed!');
+      log(colors.red, 'Check WebP files exist and are smaller than originals.');
+    }
+    
+    process.exit(success ? 0 : 1);
+  } catch (error) {
+    log(colors.red, `❌ Unexpected error: ${error.message}`);
+    process.exit(1);
+  }
+}
+
+// Run if called directly
 if (require.main === module) {
-  main().catch(console.error);
+  main();
 }
 
-module.exports = { replaceWithWebP };
+module.exports = {
+  replaceWithWebP,
+  REPLACEMENTS
+};

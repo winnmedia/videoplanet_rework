@@ -16,10 +16,28 @@ export type {
   RecurrenceType
 } from './model/types'
 
-// Domain Services
+// Enhanced Project Domain Models
+export type {
+  Project,
+  ProjectPhase,
+  ProjectPhaseType,
+  ProjectCalendarEvent,
+  ProjectColorPalette,
+  ProjectLegendItem
+} from './model/types'
+
+// Enhanced Conflict Detection
 export type {
   CalendarConflict,
+  EnhancedCalendarConflict,
+  ConflictDetectionResult,
   TimeSlot
+} from './model/types'
+
+// Calendar State Management
+export type {
+  CalendarFilterOptions,
+  CalendarViewState
 } from './model/types'
 
 // API Contracts
@@ -29,8 +47,12 @@ export type {
   CalendarEventUpdateRequest
 } from './model/types'
 
-// Domain Operations
+// Enhanced Domain Operations
 export type {
   DragEventData,
   DropZoneData
 } from './model/types'
+
+// Domain Services
+export { ConflictDetectionService, CONFLICT_DETECTION_RULES } from './lib/conflictDetection'
+export { ColorAssignmentService, CALENDAR_COLORS } from './lib/colorAssignment'

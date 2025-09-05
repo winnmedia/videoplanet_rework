@@ -1,7 +1,9 @@
 'use client'
 
-import { Calendar, Edit3 } from 'lucide-react'
-import React, { useState } from 'react'
+import { Calendar, Edit3, AlertTriangle, CheckCircle } from 'lucide-react'
+import React, { useState, useEffect } from 'react'
+import { format } from 'date-fns'
+import { ko } from 'date-fns/locale'
 
 import { 
   calculateAutoSchedule, 
@@ -11,34 +13,68 @@ import {
   DEFAULT_AUTO_SCHEDULE,
   AutoScheduleResult
 } from '@/shared/lib/project-scheduler'
+import { 
+  AutoScheduleService,
+  generateConflictSummaryText,
+  calculateConflictSeverity,
+  type ConflictAwareScheduleResult,
+  type AutoScheduleOptions
+} from '@/shared/lib/auto-schedule-service'
 import { Button } from '@/shared/ui'
 
 interface AutoSchedulePreviewCardProps {
   startDate: string
   onScheduleChange?: (schedule: AutoScheduleResult) => void
   className?: string
+  projectTitle?: string
+  existingEvents?: any[] // 기존 캘린더 이벤트들
 }
 
 /**
- * 자동 일정 프리뷰 카드 컴포넌트
- * DEVPLAN.md 요구사항: "자동 일정 프리뷰 카드: 생성 폼 하단에 바 형태(1주/1일/2주), 수동 전환·날짜 수정 시 즉시 반영"
+ * 자동 일정 프리뷰 카드 컴포넌트 (충돌 검지 통합)
+ * DEVPLAN.md 요구사항: "자동 일정 프리뷰 카드: 생성 폼 하단에 바 형태(1주/1일/2주), 수동 전환·날짜 수정 시 즉시 반영 + 충돌 검사"
  */
 export function AutoSchedulePreviewCard({ 
   startDate, 
   onScheduleChange,
-  className = '' 
+  className = '',
+  projectTitle = '새 프로젝트',
+  existingEvents = []
 }: AutoSchedulePreviewCardProps) {
   const [isManualMode, setIsManualMode] = useState(false)
   const [config, setConfig] = useState<AutoScheduleConfig>(DEFAULT_AUTO_SCHEDULE)
+  const [conflictResult, setConflictResult] = useState<ConflictAwareScheduleResult | null>(null)
+  const [showAlternatives, setShowAlternatives] = useState(false)
+  const [selectedAlternative, setSelectedAlternative] = useState<number | null>(null)
   
-  // 시작 날짜를 기준으로 자동 일정 계산
+  // 시작 날짜를 기준으로 자동 일정 계산 (충돌 검지 포함)
   const startDateObj = new Date(startDate || new Date())
-  const schedule = calculateAutoSchedule(startDateObj, config)
   
-  // 상위 컴포넌트에 일정 변경 알림
-  React.useEffect(() => {
-    onScheduleChange?.(schedule)
-  }, [schedule, onScheduleChange])
+  // 충돌을 고려한 스케줄 계산
+  useEffect(() => {
+    if (!startDate) return
+    
+    const options: AutoScheduleOptions = {
+      projectId: `temp_${Date.now()}`,
+      projectTitle,
+      startDate: startDateObj,
+      config,
+      existingEvents: [], // 실제로는 기존 이벤트들을 전달
+      skipWeekends: true
+    }
+    
+    const result = AutoScheduleService.createConflictAwareSchedule(options)
+    setConflictResult(result)
+    
+    // 기본 일정 또는 선택된 대안 일정 반환
+    const finalSchedule = selectedAlternative !== null && result.alternatives 
+      ? result.alternatives[selectedAlternative]
+      : result
+    
+    onScheduleChange?.(finalSchedule)
+  }, [startDate, config, selectedAlternative, projectTitle, onScheduleChange])
+  
+  const schedule = conflictResult || calculateAutoSchedule(startDateObj, config)
   
   const scheduleLabels = getScheduleLabels(config)
   
@@ -64,9 +100,20 @@ export function AutoSchedulePreviewCard({
     )
   }
 
+  // 충돌 정보 및 심각도
+  const hasConflicts = conflictResult?.hasConflicts || false
+  const conflictSeverity = hasConflicts ? calculateConflictSeverity(conflictResult!.conflicts) : 'low'
+  const conflictSummary = hasConflicts ? generateConflictSummaryText(conflictResult!) : ''
+
   return (
     <div 
-      className={`bg-white border border-gray-200 rounded-lg p-6 ${className}`}
+      className={`bg-white border rounded-lg p-6 ${className} ${
+        hasConflicts ? (
+          conflictSeverity === 'high' ? 'border-red-300 bg-red-50' :
+          conflictSeverity === 'medium' ? 'border-orange-300 bg-orange-50' :
+          'border-yellow-300 bg-yellow-50'
+        ) : 'border-gray-200'
+      }`}
       data-testid="auto-schedule-preview-card"
     >
       {/* 헤더 */}
@@ -74,29 +121,83 @@ export function AutoSchedulePreviewCard({
         <div className="flex items-center">
           <Calendar className="w-5 h-5 text-primary mr-2" />
           <h3 className="text-lg font-medium text-gray-900">프로젝트 일정</h3>
+          
+          {/* 충돌 상태 인디케이터 */}
+          {hasConflicts ? (
+            <div className="ml-3 flex items-center">
+              <AlertTriangle className={`w-4 h-4 mr-1 ${
+                conflictSeverity === 'high' ? 'text-red-500' :
+                conflictSeverity === 'medium' ? 'text-orange-500' :
+                'text-yellow-500'
+              }`} />
+              <span className={`text-sm font-medium ${
+                conflictSeverity === 'high' ? 'text-red-700' :
+                conflictSeverity === 'medium' ? 'text-orange-700' :
+                'text-yellow-700'
+              }`}>
+                충돌 발견
+              </span>
+            </div>
+          ) : (
+            <div className="ml-3 flex items-center">
+              <CheckCircle className="w-4 h-4 mr-1 text-green-500" />
+              <span className="text-sm font-medium text-green-700">충돌 없음</span>
+            </div>
+          )}
         </div>
         
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={handleManualToggle}
-          className="text-sm"
-          data-testid="manual-schedule-toggle"
-        >
-          {isManualMode ? (
-            <>
-              <Calendar className="w-4 h-4 mr-1" />
-              자동 설정
-            </>
-          ) : (
-            <>
-              <Edit3 className="w-4 h-4 mr-1" />
-              수동 설정
-            </>
+        <div className="flex items-center space-x-2">
+          {hasConflicts && conflictResult?.alternatives && conflictResult.alternatives.length > 0 && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowAlternatives(!showAlternatives)}
+              className="text-sm"
+            >
+              대안 일정 {showAlternatives ? '숨기기' : '보기'}
+            </Button>
           )}
-        </Button>
+          
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleManualToggle}
+            className="text-sm"
+            data-testid="manual-schedule-toggle"
+          >
+            {isManualMode ? (
+              <>
+                <Calendar className="w-4 h-4 mr-1" />
+                자동 설정
+              </>
+            ) : (
+              <>
+                <Edit3 className="w-4 h-4 mr-1" />
+                수동 설정
+              </>
+            )}
+          </Button>
+        </div>
       </div>
+
+      {/* 충돌 요약 메시지 */}
+      {hasConflicts && conflictSummary && (
+        <div className={`mb-4 p-3 rounded-md border ${
+          conflictSeverity === 'high' ? 'border-red-200 bg-red-50' :
+          conflictSeverity === 'medium' ? 'border-orange-200 bg-orange-50' :
+          'border-yellow-200 bg-yellow-50'
+        }`}>
+          <p className={`text-sm ${
+            conflictSeverity === 'high' ? 'text-red-800' :
+            conflictSeverity === 'medium' ? 'text-orange-800' :
+            'text-yellow-800'
+          }`}>
+            {conflictSummary}
+          </p>
+        </div>
+      )}
       
       {/* 자동 모드: 바 형태 일정 표시 */}
       {!isManualMode && (
@@ -180,6 +281,81 @@ export function AutoSchedulePreviewCard({
                   schedule.editing.unit
                 )}
               </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 대안 일정 섹션 */}
+      {showAlternatives && conflictResult?.alternatives && conflictResult.alternatives.length > 0 && (
+        <div className="mb-6">
+          <h4 className="text-md font-medium text-gray-900 mb-3">대안 일정 선택</h4>
+          <div className="space-y-3">
+            {conflictResult.alternatives.map((alternative, index) => (
+              <div
+                key={index}
+                className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                  selectedAlternative === index
+                    ? 'border-primary bg-primary/5'
+                    : 'border-gray-200 hover:border-gray-300'
+                }`}
+                onClick={() => setSelectedAlternative(selectedAlternative === index ? null : index)}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-sm text-gray-900">
+                      대안 {index + 1}: {alternative.totalDays}일 소요
+                    </p>
+                    <p className="text-xs text-gray-600 mt-1">
+                      시작: {format(alternative.planning.startDate, 'yyyy-MM-dd', { locale: ko })} ~ 
+                      완료: {format(alternative.editing.endDate, 'yyyy-MM-dd', { locale: ko })}
+                    </p>
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {selectedAlternative === index ? '✓ 선택됨' : '선택하기'}
+                  </div>
+                </div>
+                
+                {/* 대안 일정 미니 바 */}
+                <div className="mt-2 flex items-center space-x-2 text-xs">
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 bg-blue-500 rounded-full mr-1" />
+                    <span>기획 {alternative.planning.duration}주</span>
+                  </div>
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 bg-green-500 rounded-full mr-1" />
+                    <span>촬영 {alternative.filming.duration}일</span>
+                  </div>
+                  <div className="flex items-center">
+                    <div className="w-3 h-3 bg-purple-500 rounded-full mr-1" />
+                    <span>편집 {alternative.editing.duration}주</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+            
+            {/* 원래 일정으로 돌아가기 */}
+            <div
+              className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                selectedAlternative === null
+                  ? 'border-primary bg-primary/5'
+                  : 'border-gray-200 hover:border-gray-300'
+              }`}
+              onClick={() => setSelectedAlternative(null)}
+            >
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-sm text-gray-900">
+                    원래 제안 일정 사용 {hasConflicts ? '(충돌 있음)' : ''}
+                  </p>
+                  <p className="text-xs text-gray-600 mt-1">
+                    {conflictResult ? `${conflictResult.totalDays}일 소요` : ''}
+                  </p>
+                </div>
+                <div className="text-xs text-gray-500">
+                  {selectedAlternative === null ? '✓ 선택됨' : '선택하기'}
+                </div>
+              </div>
             </div>
           </div>
         </div>

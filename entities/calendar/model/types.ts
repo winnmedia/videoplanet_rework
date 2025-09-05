@@ -142,20 +142,152 @@ export interface CalendarEventUpdateRequest extends Partial<CalendarEventCreateR
 }
 
 // ===========================
+// Project Domain Models
+// ===========================
+
+/**
+ * Project Phase Types (Video Production Phases)
+ */
+export type ProjectPhaseType = 'planning' | 'filming' | 'editing'
+
+/**
+ * Project Phase Domain Model
+ */
+export interface ProjectPhase {
+  id: string
+  name: string
+  type: ProjectPhaseType
+  projectId: string
+  startDate: string // ISO 8601
+  endDate: string   // ISO 8601
+  duration: number  // days
+  color?: string    // inherited from project
+  isMovable: boolean // drag-drop permission
+  dependencies?: string[] // phase IDs this depends on
+}
+
+/**
+ * Project Domain Model
+ */
+export interface Project {
+  id: string
+  name: string
+  color: string     // unique color per project
+  description?: string
+  status: 'active' | 'completed' | 'on-hold' | 'cancelled'
+  phases: ProjectPhase[]
+  createdAt: string
+  updatedAt: string
+}
+
+/**
+ * Enhanced Calendar Event with Project Context
+ */
+export interface ProjectCalendarEvent extends Omit<CalendarEvent, 'projectId' | 'projectTitle' | 'projectColor'> {
+  project: Project
+  phase: ProjectPhase
+  isConflicting: boolean
+  conflictDetails?: CalendarConflict[]
+}
+
+// ===========================
+// Enhanced Conflict Detection
+// ===========================
+
+/**
+ * Enhanced Calendar Conflict
+ */
+export interface EnhancedCalendarConflict {
+  id: string
+  type: 'filming-overlap' | 'resource-conflict' | 'double-booking' | 'overlap'
+  events: ProjectCalendarEvent[]
+  message: string
+  severity: 'warning' | 'error'
+  suggestedResolution?: string
+  createdAt: string
+}
+
+/**
+ * Conflict Detection Result
+ */
+export interface ConflictDetectionResult {
+  hasConflicts: boolean
+  conflicts: EnhancedCalendarConflict[]
+  affectedEvents: ProjectCalendarEvent[]
+  conflictCount: number
+}
+
+// ===========================
+// Color Assignment Domain
+// ===========================
+
+/**
+ * Project Color Palette
+ */
+export interface ProjectColorPalette {
+  primary: string    // main project color
+  secondary: string  // lighter variant
+  accent: string     // darker variant
+  text: string       // text color for contrast
+}
+
+/**
+ * Project Legend Item
+ */
+export interface ProjectLegendItem {
+  project: Project
+  palette: ProjectColorPalette
+  isVisible: boolean
+}
+
+// ===========================
+// Calendar Filter & View State
+// ===========================
+
+/**
+ * Calendar Filter Options
+ */
+export interface CalendarFilterOptions {
+  showConflictsOnly: boolean
+  selectedProjects: string[]
+  selectedPhaseTypes: ProjectPhaseType[]
+  dateRange: {
+    start: string
+    end: string
+  }
+}
+
+/**
+ * Calendar View State
+ */
+export interface CalendarViewState {
+  mode: CalendarViewMode
+  selectedDate: string
+  filters: CalendarFilterOptions
+  dragState: {
+    isDragging: boolean
+    draggedEvent?: ProjectCalendarEvent
+    previewConflicts?: EnhancedCalendarConflict[]
+  }
+}
+
+// ===========================
 // Domain Value Objects
 // ===========================
 
 /**
- * Drag & Drop Operations
+ * Enhanced Drag & Drop Operations
  */
 export interface DragEventData {
-  event: CalendarEvent
+  event: ProjectCalendarEvent
   sourceDate: string
   sourceTime?: string
+  dragType: 'move' | 'resize'
 }
 
 export interface DropZoneData {
   date: string
   time?: string
   isValidDrop: boolean
+  conflictPreview?: EnhancedCalendarConflict[]
 }

@@ -1,13 +1,18 @@
 /**
  * @fileoverview 영상 기획 위저드 컴포넌트 테스트
- * @description TDD 방식으로 3단계 영상 기획 위저드 컴포넌트 테스트
+ * @description TDD 방식으로 3단계 영상 기획 위저드 컴포넌트 테스트 - Redux 연동
  */
 
+import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { rest } from 'msw'
+import { http, HttpResponse } from 'msw'
+import { Provider } from 'react-redux'
+import { configureStore } from '@reduxjs/toolkit'
+import { vi } from 'vitest'
 
-import { server } from '@/lib/api/msw-server'
+import { setupServer } from 'msw/node'
+import videoPlanningWizardReducer from '../model/videoPlanningSlice'
 
 import { VideoPlanningWizard } from '../ui/VideoPlanningWizard'
 
@@ -23,47 +28,100 @@ const mockApiResponse = {
 }
 
 const mockShotsResponse = {
+  success: true,
   shots: Array.from({ length: 12 }, (_, i) => ({
     id: `shot-${i + 1}`,
+    order: i + 1,
     title: `샷 ${i + 1}`,
     description: `샷 ${i + 1} 설명`,
-    shotType: '미디엄샷',
-    cameraMove: '고정',
-    composition: '정면',
+    shotType: '미디엄샷' as const,
+    cameraMove: '고정' as const,
+    composition: '정면' as const,
     duration: 4,
     dialogue: '',
-    transition: '컷'
-  }))
+    subtitle: '',
+    audio: '',
+    transition: '컷' as const
+  })),
+  insertShots: Array.from({ length: 3 }, (_, i) => ({
+    id: `insert-${i + 1}`,
+    purpose: `인서트 ${i + 1} 목적`,
+    description: `인서트 ${i + 1} 설명`,
+    framing: `인서트 ${i + 1} 프레이밍`
+  })),
+  totalDuration: 48
 }
+
+// 테스트용 Redux store 생성
+const createTestStore = () => {
+  return configureStore({
+    reducer: {
+      videoPlanningWizard: videoPlanningWizardReducer,
+    },
+  })
+}
+
+// React Testing Library wrapper with Redux Provider
+const renderWithRedux = (component: React.ReactElement) => {
+  const store = createTestStore()
+  return {
+    ...render(
+      <Provider store={store}>
+        {component}
+      </Provider>
+    ),
+    store
+  }
+}
+
+// 테스트용 MSW 서버 설정
+const server = setupServer(
+  http.post('/api/video-planning/generate-stages', () => {
+    return HttpResponse.json({
+      success: true,
+      ...mockApiResponse
+    })
+  }),
+  http.post('/api/video-planning/generate-shots', () => {
+    return HttpResponse.json(mockShotsResponse)
+  }),
+  http.post('/api/video-planning/generate-storyboard', () => {
+    return HttpResponse.json({ 
+      success: true,
+      storyboardUrl: '/mock-storyboard.jpg' 
+    })
+  }),
+  http.post('/api/video-planning/export-plan', () => {
+    return HttpResponse.json({ 
+      success: true,
+      downloadUrl: '/mock-planning.pdf' 
+    })
+  })
+)
 
 // API 모킹 설정
 beforeAll(() => {
-  server.use(
-    rest.post('/api/video-planning/generate-stages', (req, res, ctx) => {
-      return res(ctx.json(mockApiResponse))
-    }),
-    rest.post('/api/video-planning/generate-shots', (req, res, ctx) => {
-      return res(ctx.json(mockShotsResponse))
-    }),
-    rest.post('/api/video-planning/generate-storyboard', (req, res, ctx) => {
-      return res(ctx.json({ storyboardUrl: '/mock-storyboard.jpg' }))
-    }),
-    rest.post('/api/video-planning/export-pdf', (req, res, ctx) => {
-      return res(ctx.json({ pdfUrl: '/mock-planning.pdf' }))
-    })
-  )
+  server.listen({ onUnhandledRequest: 'error' })
+})
+
+afterEach(() => {
+  server.resetHandlers()
+})
+
+afterAll(() => {
+  server.close()
 })
 
 describe('VideoPlanningWizard', () => {
   const user = userEvent.setup()
 
   beforeEach(() => {
-    jest.clearAllMocks()
+    vi.clearAllMocks()
   })
 
   describe('STEP 1: 입력/선택 단계', () => {
     it('초기 상태에서 STEP 1이 활성화되어야 한다', () => {
-      render(<VideoPlanningWizard />)
+      renderWithRedux(<VideoPlanningWizard />)
       
       expect(screen.getByText('STEP 1')).toBeInTheDocument()
       expect(screen.getByText('입력/선택')).toBeInTheDocument()

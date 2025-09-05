@@ -29,40 +29,38 @@ const nextConfig = {
     // Performance optimizations (stable features only)
     optimizeCss: true,           // Re-enable CSS optimization
     serverSourceMaps: false,     // Disable for production performance
-    workerThreads: true,         // Enable for better build performance
+    workerThreads: false,        // Disabled due to webpack config serialization issue
     
     // Bundle optimization (stable features only)
     optimizeServerReact: true,
     
     // Memory and caching (stable features only)
-    webpackBuildWorker: true,
+    webpackBuildWorker: false,  // Disabled due to webpack config serialization issue
   },
   compress: true,
   
-  // Image optimization - Critical for 98MB → 10MB reduction
+  // Image optimization - Critical for 17MB → 5MB reduction (Performance Blocker Fix)
   images: {
     domains: process.env.NEXT_PUBLIC_IMAGE_DOMAINS?.split(',') || ['localhost'],
-    formats: ['image/webp', 'image/avif'],
+    formats: ['image/avif', 'image/webp'],
     dangerouslyAllowSVG: false,
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     
-    // Enhanced optimization settings for Core Web Vitals
+    // Enhanced optimization settings for Core Web Vitals (LCP < 2.5s)
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    
-    // Default quality setting (removed 'quality' from images config)
     
     // Enable static optimization for builds
     unoptimized: false,
     
-    // Lazy loading by default
+    // Lazy loading by default with performance priorities
     loader: 'default',
     
-    // Performance budget constraints
+    // Performance budget constraints - stricter caching
     minimumCacheTTL: 31536000, // 1 year cache
     
-    // Custom loader options
-    loaderFile: './shared/lib/image-loader.js'
+    // Enhanced loader for critical path optimization - temporarily disabled
+    // loaderFile: './shared/lib/image-loader.js'
   },
 
   // Security headers

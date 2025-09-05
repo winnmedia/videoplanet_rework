@@ -22,6 +22,13 @@ interface DragState {
   originalEnd: string
 }
 
+interface KeyboardEventState {
+  selectedEventId: string | null
+  isEditMode: boolean
+  editType: 'move' | 'resize-start' | 'resize-end' | null
+  editAnnouncement: string
+}
+
 export function GanttView({
   events,
   selectedDate,
@@ -38,8 +45,17 @@ export function GanttView({
     originalEnd: ''
   })
   
+  // 키보드 네비게이션 상태
+  const [keyboardState, setKeyboardState] = useState<KeyboardEventState>({
+    selectedEventId: null,
+    isEditMode: false,
+    editType: null,
+    editAnnouncement: ''
+  })
+  
   const ganttRef = useRef<HTMLDivElement>(null)
   const [hoveredEvent, setHoveredEvent] = useState<string | null>(null)
+  const [liveRegionMessage, setLiveRegionMessage] = useState('')
 
   // 간트 차트용 시간라인 데이터 변환
   const timelineItems = useMemo((): GanttTimelineItem[] => {
@@ -105,6 +121,146 @@ export function GanttView({
     resultDate.setDate(resultDate.getDate() + dayOffset)
     
     return resultDate.toISOString().split('T')[0]
+  }
+
+  // 키보드 네비게이션: 이벤트 선택
+  const handleEventKeyDown = (e: React.KeyboardEvent, eventId: string) => {
+    const event = events.find(ev => ev.id === eventId)
+    if (!event) return
+
+    switch (e.key) {
+      case 'Enter':
+      case ' ':
+        e.preventDefault()
+        if (!keyboardState.isEditMode) {
+          // 일정 클릭 동작
+          onEventClick(event)
+        }
+        break
+        
+      case 'e':
+      case 'E':
+        if (!keyboardState.isEditMode && event.isDraggable) {
+          e.preventDefault()
+          setKeyboardState({
+            selectedEventId: eventId,
+            isEditMode: true,
+            editType: 'move',
+            editAnnouncement: `${event.phase.name} 일정 이동 모드입니다. 화살표 키로 날짜를 조정하고 Enter로 확정, Escape로 취소하세요.`
+          })
+          setLiveRegionMessage(`${event.phase.name} 일정 이동 모드입니다. 화살표 키로 날짜를 조정하고 Enter로 확정, Escape로 취소하세요.`)
+        }
+        break
+        
+      case 'r':
+      case 'R':
+        if (!keyboardState.isEditMode && event.isDraggable) {
+          e.preventDefault()
+          setKeyboardState({
+            selectedEventId: eventId,
+            isEditMode: true,
+            editType: 'resize-end',
+            editAnnouncement: `${event.phase.name} 일정 기간 수정 모드입니다. 화살표 키로 종료일을 조정하고 Enter로 확정, Escape로 취소하세요.`
+          })
+          setLiveRegionMessage(`${event.phase.name} 일정 기간 수정 모드입니다. 화살표 키로 종료일을 조정하고 Enter로 확정, Escape로 취소하세요.`)
+        }
+        break
+        
+      case 'ArrowLeft':
+      case 'ArrowRight':
+        if (keyboardState.isEditMode && keyboardState.selectedEventId === eventId) {
+          e.preventDefault()
+          handleKeyboardEdit(e.key === 'ArrowRight' ? 1 : -1)
+        }
+        break
+        
+      case 'Enter':
+        if (keyboardState.isEditMode && keyboardState.selectedEventId === eventId) {
+          e.preventDefault()
+          confirmKeyboardEdit()
+        }
+        break
+        
+      case 'Escape':
+        if (keyboardState.isEditMode && keyboardState.selectedEventId === eventId) {
+          e.preventDefault()
+          cancelKeyboardEdit()
+        }
+        break
+    }
+  }
+
+  // 키보드로 일정 수정
+  const handleKeyboardEdit = (daysDelta: number) => {
+    if (!keyboardState.selectedEventId) return
+    
+    const event = events.find(ev => ev.id === keyboardState.selectedEventId)
+    if (!event) return
+
+    const currentStart = new Date(event.startDate)
+    const currentEnd = new Date(event.endDate)
+    
+    let newStart = event.startDate
+    let newEnd = event.endDate
+    let message = ''
+    
+    if (keyboardState.editType === 'move') {
+      const newStartDate = new Date(currentStart)
+      newStartDate.setDate(currentStart.getDate() + daysDelta)
+      const newEndDate = new Date(currentEnd)
+      newEndDate.setDate(currentEnd.getDate() + daysDelta)
+      
+      newStart = newStartDate.toISOString().split('T')[0]
+      newEnd = newEndDate.toISOString().split('T')[0]
+      message = `일정을 ${daysDelta > 0 ? '뒤로' : '앞으로'} ${Math.abs(daysDelta)}일 이동했습니다. 새 시작일: ${newStartDate.toLocaleDateString('ko-KR')}`
+    } else if (keyboardState.editType === 'resize-end') {
+      const newEndDate = new Date(currentEnd)
+      newEndDate.setDate(currentEnd.getDate() + daysDelta)
+      
+      // 종료일이 시작일보다 앞설 수 없음
+      if (newEndDate <= currentStart) {
+        setLiveRegionMessage('종료일은 시작일보다 뒤여야 합니다.')
+        return
+      }
+      
+      newEnd = newEndDate.toISOString().split('T')[0]
+      message = `일정 기간을 ${daysDelta > 0 ? '연장' : '단축'}했습니다. 새 종료일: ${newEndDate.toLocaleDateString('ko-KR')}`
+    }
+    
+    // 임시 변경사항 적용 (실제로는 확정 시에만 API 호출)
+    setLiveRegionMessage(message)
+  }
+
+  // 키보드 편집 확정
+  const confirmKeyboardEdit = () => {
+    if (!keyboardState.selectedEventId) return
+    
+    const event = events.find(ev => ev.id === keyboardState.selectedEventId)
+    if (!event) return
+
+    // 실제 변경사항 적용
+    onEventDrag(keyboardState.selectedEventId, event.startDate, event.endDate)
+    
+    setKeyboardState({
+      selectedEventId: null,
+      isEditMode: false,
+      editType: null,
+      editAnnouncement: ''
+    })
+    
+    setLiveRegionMessage(`${event.phase.name} 일정 수정이 완료되었습니다.`)
+  }
+
+  // 키보드 편집 취소
+  const cancelKeyboardEdit = () => {
+    setKeyboardState({
+      selectedEventId: null,
+      isEditMode: false,
+      editType: null,
+      editAnnouncement: ''
+    })
+    
+    setLiveRegionMessage('일정 수정을 취소했습니다.')
   }
 
   // 드래그 시작
@@ -216,6 +372,19 @@ export function GanttView({
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      {/* 스크린 리더용 실시간 알림 */}
+      <div 
+        aria-live="polite" 
+        aria-atomic="true"
+        className="sr-only"
+      >
+        {liveRegionMessage}
+      </div>
+      
+      {/* 키보드 사용법 안내 */}
+      <div className="sr-only" id="gantt-keyboard-help">
+        간트 차트 키보드 사용법: Tab으로 일정 선택, Enter로 상세보기, E키로 이동, R키로 기간 수정, 화살표 키로 조정, Enter로 확정, Escape로 취소
+      </div>
       {/* 간트 차트 헤더 */}
       <div className="flex items-center justify-between px-6 py-4 bg-gray-50 border-b border-gray-200">
         <button
@@ -228,7 +397,10 @@ export function GanttView({
           </svg>
         </button>
         
-        <h2 className="text-lg font-semibold text-gray-900">
+        <h2 
+          className="text-lg font-semibold text-gray-900"
+          id="gantt-header-title"
+        >
           {selectedDate.getFullYear()}년 {monthNames[selectedDate.getMonth()]} 간트 차트
         </h2>
         
@@ -243,11 +415,22 @@ export function GanttView({
         </button>
       </div>
 
-      <div ref={ganttRef} className="flex">
+      <div 
+        ref={ganttRef} 
+        className="flex"
+        role="application"
+        aria-labelledby="gantt-title"
+        aria-describedby="gantt-keyboard-help"
+      >
         {/* 프로젝트/페이즈 목록 (고정) */}
         <div className="w-48 bg-gray-50 border-r border-gray-200">
           <div className="p-3 border-b border-gray-200 bg-gray-100">
-            <h3 className="text-sm font-medium text-gray-700">프로젝트 / 페이즈</h3>
+            <h3 
+              id="gantt-title"
+              className="text-sm font-medium text-gray-700"
+            >
+              프로젝트 / 페이즈
+            </h3>
           </div>
           
           <div className="max-h-96 overflow-y-auto">
@@ -312,16 +495,17 @@ export function GanttView({
                   className="relative border-b border-gray-100"
                   style={{ height: '48px' }}
                 >
-                  {/* 간트 바 */}
+                  {/* 간트 바 - 키보드 접근성 지원 */}
                   <div
                     data-event-id={item.id}
                     className={`
                       absolute top-2 h-8 rounded cursor-pointer
-                      border-l-4 transition-all duration-200
+                      border-l-4 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500
                       ${hasConflicts ? 'border-dashed bg-red-100 border-red-500' : 'border-solid bg-opacity-20'}
                       ${hoveredEvent === item.id ? 'shadow-lg z-20 bg-opacity-40' : 'z-10'}
                       ${event?.isDraggable ? 'hover:shadow-md' : 'cursor-default'}
                       ${dragState.eventId === item.id ? 'shadow-lg z-30' : ''}
+                      ${keyboardState.selectedEventId === item.id && keyboardState.isEditMode ? 'ring-2 ring-warning-500 bg-warning-100' : ''}
                     `}
                     style={{ 
                       left: `${startX}px`,
@@ -333,7 +517,23 @@ export function GanttView({
                     onMouseEnter={() => setHoveredEvent(item.id)}
                     onMouseLeave={() => setHoveredEvent(null)}
                     onMouseDown={(e) => handleMouseDown(e, item.id, 'move')}
-                    title={`${item.projectName} - ${item.phaseName}`}
+                    onKeyDown={(e) => handleEventKeyDown(e, item.id)}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`${
+                      item.projectName
+                    } - ${
+                      item.phaseName
+                    } 일정. 시작일: ${
+                      new Date(item.startDate).toLocaleDateString('ko-KR')
+                    }, 종료일: ${
+                      new Date(item.endDate).toLocaleDateString('ko-KR')
+                    }${
+                      hasConflicts ? '. 일정 충돌 있음' : ''
+                    }${
+                      event?.isDraggable ? '. E키로 이동, R키로 기간 수정 가능' : ''
+                    }`}
+                    aria-describedby={keyboardState.selectedEventId === item.id ? 'keyboard-edit-help' : undefined}
                   >
                     {/* 진행률 바 */}
                     <div 
@@ -364,6 +564,7 @@ export function GanttView({
                             e.stopPropagation()
                             handleMouseDown(e, item.id, 'resize-start')
                           }}
+                          aria-hidden="true"
                         />
                         <div 
                           className="absolute right-0 top-0 w-2 h-full cursor-ew-resize bg-gray-400 opacity-0 hover:opacity-100 rounded-r"
@@ -371,8 +572,19 @@ export function GanttView({
                             e.stopPropagation()
                             handleMouseDown(e, item.id, 'resize-end')
                           }}
+                          aria-hidden="true"
                         />
                       </>
+                    )}
+                    
+                    {/* 키보드 편집 모드 도움말 */}
+                    {keyboardState.selectedEventId === item.id && keyboardState.isEditMode && (
+                      <div 
+                        id="keyboard-edit-help"
+                        className="sr-only"
+                      >
+                        {keyboardState.editAnnouncement}
+                      </div>
                     )}
                   </div>
                   
@@ -383,6 +595,8 @@ export function GanttView({
                       style={{ 
                         left: `${dateToPixel(new Date().toISOString().split('T')[0], ganttRef.current?.clientWidth || 800)}px`
                       }}
+                      aria-label="오늘 날짜"
+                      role="img"
                     />
                   )}
                 </div>
@@ -391,6 +605,24 @@ export function GanttView({
           </div>
         </div>
       </div>
+      
+      {/* 키보드 사용법 안내 (토글 가능) */}
+      <details className="border-t border-gray-200 bg-gray-50">
+        <summary className="px-4 py-2 text-sm font-medium text-gray-700 cursor-pointer hover:bg-gray-100 focus:bg-gray-100 focus:outline-none">
+          키보드 사용법 보기
+        </summary>
+        <div className="px-4 py-3 text-sm text-gray-600 bg-white border-t border-gray-100">
+          <ul className="space-y-1">
+            <li><kbd className="px-1 bg-gray-200 rounded text-xs">Tab</kbd> - 일정 간 이동</li>
+            <li><kbd className="px-1 bg-gray-200 rounded text-xs">Enter</kbd> 또는 <kbd className="px-1 bg-gray-200 rounded text-xs">Space</kbd> - 일정 상세보기</li>
+            <li><kbd className="px-1 bg-gray-200 rounded text-xs">E</kbd> - 일정 이동 모드</li>
+            <li><kbd className="px-1 bg-gray-200 rounded text-xs">R</kbd> - 일정 기간 수정 모드</li>
+            <li><kbd className="px-1 bg-gray-200 rounded text-xs">← →</kbd> - 편집 모드에서 날짜 조정</li>
+            <li><kbd className="px-1 bg-gray-200 rounded text-xs">Enter</kbd> - 편집 확정</li>
+            <li><kbd className="px-1 bg-gray-200 rounded text-xs">Esc</kbd> - 편집 취소</li>
+          </ul>
+        </div>
+      </details>
     </div>
   )
 }
