@@ -12,7 +12,7 @@ RUN adduser --system --uid 1001 nextjs
 WORKDIR /app
 
 # 패키지 파일 복사 (캐시 최적화)
-COPY package*.json ./
+COPY package*.json pnpm-lock.yaml ./
 
 # PNPM 설치 및 프로덕션 의존성 설치
 RUN npm install -g pnpm@10.15.0
