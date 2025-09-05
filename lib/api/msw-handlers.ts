@@ -71,9 +71,9 @@ const MOCK_SUBMENU_DATA: Record<string, SubMenuItemType[]> = {
   ],
   feedback: [
     {
-      id: 'fb-001',
+      id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
       name: '웹사이트 로딩 속도 개선',
-      path: '/feedback/fb-001',
+      path: '/feedback/f47ac10b-58cc-4372-a567-0e02b2c3d479',
       status: 'active',
       badge: 2,
       lastModified: new Date('2025-08-27T16:20:00Z').toISOString(),
@@ -81,9 +81,9 @@ const MOCK_SUBMENU_DATA: Record<string, SubMenuItemType[]> = {
       priority: 'high'
     },
     {
-      id: 'fb-002',
+      id: '6ba7b810-9dad-11d1-80b4-00c04fd430c8',
       name: '모바일 반응형 버그',
-      path: '/feedback/fb-002',
+      path: '/feedback/6ba7b810-9dad-11d1-80b4-00c04fd430c8',
       status: 'pending',
       badge: 4,
       lastModified: new Date('2025-08-25T13:45:00Z').toISOString(),
@@ -147,14 +147,14 @@ const MOCK_PROJECTS_DATA: ProjectType[] = [
 
 const MOCK_FEEDBACK_DATA: FeedbackType[] = [
   {
-    id: 'fb-001',
+    id: 'f47ac10b-58cc-4372-a567-0e02b2c3d479',
     title: '웹사이트 로딩 속도 개선 요청',
     content: '메인 페이지 로딩 시간이 너무 길어 사용자 경험에 문제가 있습니다.',
     type: 'improvement',
     status: 'open',
-    projectId: 'proj-001',
-    authorId: 'user-001',
-    assigneeId: 'user-005',
+    projectId: '123e4567-e89b-12d3-a456-426614174000',
+    authorId: '987fcdeb-51a2-43f1-9876-543210987654',
+    assigneeId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
     createdAt: new Date('2025-08-27T09:15:00Z').toISOString(),
     updatedAt: new Date('2025-08-27T16:20:00Z').toISOString(),
     tags: ['performance', 'frontend', 'ux'],
@@ -162,14 +162,14 @@ const MOCK_FEEDBACK_DATA: FeedbackType[] = [
     attachments: []
   },
   {
-    id: 'fb-002',
+    id: '6ba7b810-9dad-11d1-80b4-00c04fd430c8',
     title: '모바일 반응형 레이아웃 버그',
     content: '모바일 화면에서 네비게이션 메뉴가 제대로 표시되지 않는 문제가 있습니다.',
     type: 'bug',
     status: 'in-review',
-    projectId: 'proj-001',
-    authorId: 'user-002',
-    assigneeId: 'user-003',
+    projectId: '123e4567-e89b-12d3-a456-426614174000',
+    authorId: 'b2c3d4e5-f6a7-8901-bcde-f23456789012',
+    assigneeId: 'c3d4e5f6-a7b8-9012-cdef-345678901234',
     createdAt: new Date('2025-08-25T14:30:00Z').toISOString(),
     updatedAt: new Date('2025-08-25T13:45:00Z').toISOString(),
     tags: ['mobile', 'responsive', 'bug'],
@@ -817,10 +817,12 @@ export const handlers = [
   http.post('*/api/video-planning/generate-stages', async ({ request }) => {
     await delay(2000) // LLM 응답 대기 시간 시뮬레이션
     
-    const body = await request.json() as { input: PlanningInput }
+    const body = await request.json() as any
+    // body가 직접 input 객체인 경우와 { input: ... } 형태인 경우 모두 처리
+    const input: PlanningInput = body.input || body
     
     // 입력 검증
-    if (!body.input?.title || !body.input?.logline) {
+    if (!input?.title || !input?.logline) {
       return HttpResponse.json({
         success: false,
         error: '제목과 로그라인은 필수 입력 항목입니다.'
@@ -830,7 +832,7 @@ export const handlers = [
     // 개발 방식에 따른 단계 변형 시뮬레이션
     const stages = MOCK_FOUR_STAGES.map(stage => ({
       ...stage,
-      content: `[${body.input.developmentMethod}] ${stage.content}`
+      content: `[${input.developmentMethod || '기승전결'}] ${stage.content}`
     }))
     
     const response: GenerateStagesResponse = {
