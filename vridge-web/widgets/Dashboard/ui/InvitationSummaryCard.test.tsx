@@ -4,6 +4,7 @@
  */
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+
 import { InvitationSummaryCard } from './InvitationSummaryCard'
 import type { InvitationStats } from '../model/types'
 

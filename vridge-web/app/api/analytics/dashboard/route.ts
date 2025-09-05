@@ -4,9 +4,17 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+
 import { withErrorHandler } from '@/lib/api/error-handler';
 import { apiMonitor } from '@/lib/api/monitoring';
-import { z } from 'zod';
+import type { 
+  MetricData, 
+  ApiSummary, 
+  PerformanceMetrics, 
+  TimeSeriesData,
+  DashboardData 
+} from '@/shared/api/types';
 
 // 대시보드 데이터 요청 스키마
 const DashboardRequestSchema = z.object({
@@ -269,8 +277,8 @@ async function collectPerformanceMetrics(timeRangeHours: number) {
       
       if (recent.length === 0 || earlier.length === 0) return 0;
       
-      const recentAvg = recent.reduce((sum: number, m: any) => sum + (m[metricName] || 0), 0) / recent.length;
-      const earlierAvg = earlier.reduce((sum: number, m: any) => sum + (m[metricName] || 0), 0) / earlier.length;
+      const recentAvg = recent.reduce((sum: number, m: MetricData) => sum + ((m[metricName] as number) || 0), 0) / recent.length;
+      const earlierAvg = earlier.reduce((sum: number, m: MetricData) => sum + ((m[metricName] as number) || 0), 0) / earlier.length;
       
       return earlierAvg > 0 ? ((recentAvg - earlierAvg) / earlierAvg) * 100 : 0;
     };
@@ -290,19 +298,19 @@ async function collectPerformanceMetrics(timeRangeHours: number) {
       },
       pageLoadTime: {
         current: Object.keys(summary).length > 0 
-          ? Object.values(summary).reduce((avg: number, stat: any) => avg + (stat?.avgResponseTime || 0), 0) / Object.keys(summary).length 
+          ? Object.values(summary).reduce((avg: number, stat: ApiSummary) => avg + (stat?.avgResponseTime || 0), 0) / Object.keys(summary).length 
           : 1500,
         trend: Math.random() * 20 - 10 // 시뮬레이션 - 실제 환경에서는 실제 트렌드 계산
       },
       apiResponseTime: {
         current: Object.keys(summary).length > 0 
-          ? Object.values(summary).reduce((avg: number, stat: any) => avg + (stat?.avgResponseTime || 0), 0) / Object.keys(summary).length 
+          ? Object.values(summary).reduce((avg: number, stat: ApiSummary) => avg + (stat?.avgResponseTime || 0), 0) / Object.keys(summary).length 
           : 250,
         trend: Math.random() * 15 - 7.5
       },
       errorRate: {
         current: Object.keys(summary).length > 0 
-          ? Object.values(summary).reduce((avg: number, stat: any) => avg + (stat?.errorRate || 0), 0) / Object.keys(summary).length 
+          ? Object.values(summary).reduce((avg: number, stat: ApiSummary) => avg + (stat?.errorRate || 0), 0) / Object.keys(summary).length 
           : 0.02,
         trend: Math.random() * 10 - 5
       }

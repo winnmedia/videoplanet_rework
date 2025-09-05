@@ -8,8 +8,9 @@
 import { render, screen } from '@testing-library/react'
 import React from 'react'
 
-import { NavigationErrorBoundary } from '../NavigationErrorBoundary'
 import { useNavigation } from '@/features/navigation'
+
+import { NavigationErrorBoundary } from '../NavigationErrorBoundary'
 
 // Navigation hook 모킹
 jest.mock('@/features/navigation', () => ({

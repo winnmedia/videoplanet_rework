@@ -251,7 +251,7 @@ describe('HTTP Error Handling E2E Tests', () => {
       cy.logTestStep('Testing error logging functionality')
       
       // 콘솔 에러 캡처
-      let consoleErrors: string[] = []
+      const consoleErrors: string[] = []
       cy.window().then((win) => {
         cy.stub(win.console, 'error').callsFake((...args) => {
           consoleErrors.push(args.join(' '))

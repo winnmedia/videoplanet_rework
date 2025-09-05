@@ -4,6 +4,7 @@
  */
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+
 import { ScheduleSummaryCard } from './ScheduleSummaryCard'
 import type { ScheduleStats } from '../model/types'
 

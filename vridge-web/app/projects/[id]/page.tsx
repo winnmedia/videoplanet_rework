@@ -1,6 +1,7 @@
 'use client'
 
 import { useParams } from 'next/navigation'
+
 import { SideBar } from '@/widgets'
 
 export default function ProjectDetailPage() {

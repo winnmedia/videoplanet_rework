@@ -1,3 +1,8 @@
 .vercel
 vridge_back/my_settings.py
 vridge_back/__pycache__/
+node_modules/
+*.log
+.DS_Store
+*.tmp
+*.temp

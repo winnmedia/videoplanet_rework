@@ -4,9 +4,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { z } from 'zod'
+
 import { withErrorHandler } from '@/lib/api/error-handler'
 import { MenuItemsResponseSchema, validateRequest, parseUrlSearchParams } from '@/shared/api/schemas'
-import { z } from 'zod'
 
 // 메인 메뉴 데이터 (실제로는 데이터베이스나 CMS에서 가져옴)
 const MAIN_MENU_ITEMS = [

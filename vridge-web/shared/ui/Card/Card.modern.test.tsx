@@ -6,6 +6,7 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { axe, toHaveNoViolations } from 'jest-axe'
+
 import { Card } from './Card.modern'
 
 // Jest-axe matcher 확장

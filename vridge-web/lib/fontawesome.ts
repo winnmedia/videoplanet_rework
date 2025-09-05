@@ -5,6 +5,12 @@
 
 import { library } from '@fortawesome/fontawesome-svg-core'
 import {
+  // 정규 스타일 아이콘들
+  faUser,
+  faClock,
+  faHeart
+} from '@fortawesome/free-regular-svg-icons'
+import {
   // 네비게이션 및 인터페이스
   faHome,
   faCalendarDays,
@@ -46,12 +52,6 @@ import {
   faSignOutAlt
 } from '@fortawesome/free-solid-svg-icons'
 
-import {
-  // 정규 스타일 아이콘들
-  faUser,
-  faClock,
-  faHeart
-} from '@fortawesome/free-regular-svg-icons'
 
 // 라이브러리에 아이콘 추가
 library.add(

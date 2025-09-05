@@ -1,0 +1,25 @@
+[
+  {
+    "id": 1,
+    "videoId": "video-123",
+    "comments": [
+      {
+        "id": 1,
+        "content": "첫 번째 장면 조명이 너무 어둡습니다",
+        "timestamp": 125.5,
+        "authorId": 1,
+        "createdAt": "2025-01-15T10:30:00Z"
+      },
+      {
+        "id": 2,
+        "content": "음향 품질이 우수합니다",
+        "timestamp": 245.8,
+        "authorId": 2,
+        "createdAt": "2025-01-15T11:15:00Z"
+      }
+    ],
+    "status": "pending",
+    "createdAt": "2025-01-15T10:30:00Z",
+    "updatedAt": "2025-01-15T14:45:00Z"
+  }
+]

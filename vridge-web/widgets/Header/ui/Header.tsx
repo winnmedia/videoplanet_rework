@@ -2,6 +2,7 @@
 
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
+
 import { NotificationBell } from '@/features/notification'
 
 import type { HeaderProps, HeaderItem } from '../model/types'

@@ -12,11 +12,12 @@
  * 5. 실제 사용자 시나리오 성능 테스트
  */
 
-import React from 'react'
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { server } from '@/test/mocks/server'
 import { http, HttpResponse } from 'msw'
+import React from 'react'
+
+import { server } from '@/test/mocks/server'
 
 import { DashboardWidget } from './DashboardWidget'
 import { EmptyState } from './EmptyState'

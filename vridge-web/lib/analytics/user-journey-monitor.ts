@@ -3,14 +3,15 @@
  * 비즈니스 크리티컬한 사용자 경로를 추적하고 이탈 지점을 실시간 감지
  */
 
+import { alertManager } from '@/lib/api/monitoring'
 import { 
   CriticalUserJourney, 
   UserJourneyEvent, 
   BusinessMetric,
   MonitoringSchemaValidator 
 } from '@/shared/api/monitoring-schemas'
+
 import { realTimeDataCollector } from './real-time-data-collector'
-import { alertManager } from '@/lib/api/monitoring'
 
 // 비즈니스 크리티컬 여정 정의
 export enum CriticalJourneyType {

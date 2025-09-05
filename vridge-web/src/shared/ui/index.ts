@@ -40,17 +40,8 @@ export {
   DelayedSpinner
 } from './LoadingStates'
 
-// Performance Optimization Components
-export {
-  OptimizedErrorPage,
-  OptimizedNetworkError,
-  ErrorPerformanceProvider,
-  CLSOptimizedContainer,
-  INPOptimizedButton,
-  ErrorPerformanceMonitor,
-  useErrorPerformance,
-  useErrorPerformanceMonitor
-} from '../lib/performance/ErrorPerformanceOptimizer'
+// Performance Optimization Components - Completely removed from public API
+// These components will be imported directly when needed
 
 // Network Status Hooks
 export {
@@ -89,3 +80,6 @@ export type {
   NetworkStatus,
   UseNetworkStatusOptions
 } from '../lib/hooks/useNetworkStatus'
+
+// Store Provider
+export { StoreProvider } from './StoreProvider/StoreProvider'

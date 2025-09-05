@@ -9,9 +9,10 @@
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { vi } from 'vitest'
+
 import { SideBar } from './SideBar'
 
-import { vi } from 'vitest'
 
 // Mock navigation hooks
 const mockPush = vi.fn()

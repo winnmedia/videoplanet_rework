@@ -3,12 +3,14 @@
  * 모든 모니터링 컴포넌트를 통합 관리하고 초기화하는 메인 시스템
  */
 
+import { apiMonitor } from '@/lib/api/monitoring'
+
+import { alertSystem, AlertChannel, AlertPriority } from './alert-system'
+import { dataQualityMonitor } from './data-quality-monitor'
 import { realTimeDataCollector, DataCollectionConfig } from './real-time-data-collector'
 import { userJourneyMonitor, CriticalJourneyType } from './user-journey-monitor'
 import { webVitalsMonitor, WebVitalsConfig } from './web-vitals-monitor'
-import { alertSystem, AlertChannel, AlertPriority } from './alert-system'
-import { dataQualityMonitor } from './data-quality-monitor'
-import { apiMonitor } from '@/lib/api/monitoring'
+
 
 // 통합 모니터링 시스템 설정
 export interface MonitoringSystemConfig {

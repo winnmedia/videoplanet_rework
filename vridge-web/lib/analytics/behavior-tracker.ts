@@ -4,6 +4,7 @@
  */
 
 import { z } from 'zod';
+
 import { UserBehaviorEventSchema, NavigationEventSchema, InteractionEventSchema } from '@/shared/api/schemas';
 
 type UserBehaviorEvent = z.infer<typeof UserBehaviorEventSchema>;

@@ -2,8 +2,9 @@
  * TDD 테스트: Railway 백엔드 API 연결 검증
  */
 
-import { authApi } from '../api/authApi';
 import { config } from '@/lib/config/env';
+
+import { authApi } from '../api/authApi';
 
 describe('Auth API Integration (TDD)', () => {
   beforeAll(() => {

@@ -1,28 +1,21 @@
 'use client'
 
+import { faCalendarDays, faVideo, faComments, faChartBar } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCalendarDays, faVideo, faComments, faChartBar } from '@fortawesome/free-solid-svg-icons'
+
 import { QuickActions } from '@/features/project'
 import { SideBar } from '@/widgets'
 import { 
-  ProjectStatusCard, 
   RecentActivityFeed,
   FeedbackSummaryCard,
   InvitationSummaryCard,
   ScheduleSummaryCard,
-  UnreadBadge
+  UnreadBadge,
+  dashboardApiClient,
+  type DashboardData
 } from '@/widgets/Dashboard'
-import { dashboardApiClient } from '@/widgets/Dashboard/api/dashboardApi'
-import type { 
-  ProjectStatus, 
-  DashboardData,
-  FeedbackSummaryStats,
-  InvitationStats,
-  ScheduleStats,
-  UnreadStats
-} from '@/widgets/Dashboard/model/types'
 
 export default function DashboardPage() {
   const router = useRouter()

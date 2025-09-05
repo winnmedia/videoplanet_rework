@@ -15,8 +15,8 @@
  * @generated Claude Code
  */
 
-import { test, expect } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
+import { test, expect } from '@playwright/test'
 
 // 테스트할 주요 페이지 경로
 const MAIN_PAGES = [

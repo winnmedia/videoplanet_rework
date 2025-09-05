@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 
 import styles from '@/styles/home.module.scss'
+// Temporarily removed image optimization module for E2E testing
+// import { getOptimizedImageProps, IMAGE_OPTIMIZATION_CONFIGS } from '@/shared/lib/image-optimization'
 
 export default function Home() {
   const router = useRouter()
@@ -80,11 +82,12 @@ export default function Home() {
             </div>
             <div className={styles.visualImage}>
               <Image 
-                src="/images/Home/new/visual-img.png" 
-                alt="브이래닛 플랫폼 메인 비주얼" 
-                width={600} 
+                src="/images/Home/new/visual-img.png"
+                alt="브이래닛 플랫폼 메인 비주얼"
+                width={600}
                 height={400}
                 priority
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 600px"
               />
             </div>
           </div>
@@ -93,12 +96,13 @@ export default function Home() {
         {/* 텍스트박스 섹션 */}
         <section className={styles.textbox}>
           <Image 
-            src="/images/Home/new/tool02.png" 
-            alt="다양한 협업 도구들 일러스트" 
-            width={420} 
+            src="/images/Home/new/tool02.png"
+            alt="다양한 협업 도구들 일러스트"
+            width={420}
             height={300}
             className={styles.toolImage}
             style={{ width: 'auto', height: '300px' }}
+            sizes="(max-width: 768px) 100vw, 420px"
           />
           <h2>번거로운 n가지 툴 사용은 이제 그만,</h2>
           <p>
@@ -135,12 +139,12 @@ export default function Home() {
               </div>
               <div className={styles.featureImage}>
                 <Image 
-                  src="/images/Home/new/feedback-img.png" 
-                  alt="영상 피드백 기능 예시 화면" 
-                  width={600} 
+                  src="/images/Home/new/feedback-img.png"
+                  alt="영상 피드백 기능 예시 화면"
+                  width={600}
                   height={400}
-                  loading="lazy"
                   style={{ width: 'auto', height: '400px' }}
+                  sizes="(max-width: 768px) 100vw, 600px"
                 />
               </div>
             </div>
@@ -171,11 +175,11 @@ export default function Home() {
               </div>
               <div className={styles.featureImage}>
                 <Image 
-                  src="/images/Home/new/project-img.png" 
-                  alt="프로젝트 관리 대시보드 화면" 
-                  width={600} 
+                  src="/images/Home/new/project-img.png"
+                  alt="프로젝트 관리 대시보드 화면"
+                  width={600}
                   height={400}
-                  loading="lazy"
+                  sizes="(max-width: 768px) 100vw, 600px"
                 />
               </div>
             </div>
@@ -207,11 +211,11 @@ export default function Home() {
               </div>
               <div className={styles.featureImage}>
                 <Image 
-                  src="/images/Home/new/contents-img.png" 
-                  alt="콘텐츠 학습 기능 예시" 
-                  width={600} 
+                  src="/images/Home/new/contents-img.png"
+                  alt="콘텐츠 학습 기능 예시"
+                  width={600}
                   height={400}
-                  loading="lazy"
+                  sizes="(max-width: 768px) 100vw, 600px"
                 />
               </div>
             </div>
@@ -226,10 +230,11 @@ export default function Home() {
               <div className={styles.identityItem}>
                 <div className={styles.identityImage}>
                   <Image 
-                    src="/images/Home/new/identity-img.png" 
-                    alt="Easy Management" 
-                    width={300} 
+                    src="/images/Home/new/identity-img.png"
+                    alt="Easy Management"
+                    width={300}
                     height={200}
+                    sizes="(max-width: 768px) 50vw, 300px"
                     loading="lazy"
                   />
                 </div>

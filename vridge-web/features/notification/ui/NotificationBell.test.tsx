@@ -1,7 +1,8 @@
 import { render, screen, fireEvent } from '@testing-library/react'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
 import userEvent from '@testing-library/user-event'
 import { axe, toHaveNoViolations } from 'jest-axe'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+
 import { NotificationBell } from './NotificationBell'
 
 // jest-axe 매처 확장

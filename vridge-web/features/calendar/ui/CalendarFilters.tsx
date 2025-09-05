@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+
 // import { CalendarIcon, FunnelIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import type { CalendarFilter, Project, PhaseType } from '@/entities/project/model/calendar-types'
 

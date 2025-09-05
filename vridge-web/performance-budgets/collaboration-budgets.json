@@ -1,0 +1,212 @@
+{
+  "$schema": "https://github.com/GoogleChrome/budget.json/blob/main/dist/budget-schema.json",
+  "budgets": [
+    {
+      "path": "/**/collaboration/**",
+      "resourceSizes": [
+        {
+          "resourceType": "script",
+          "budget": 50,
+          "comment": "Collaboration JavaScript bundle limit - 50KB (gzipped)"
+        },
+        {
+          "resourceType": "style",
+          "budget": 10,
+          "comment": "Collaboration CSS bundle limit - 10KB (gzipped)"
+        }
+      ],
+      "timings": [
+        {
+          "metric": "first-contentful-paint",
+          "budget": 1500,
+          "comment": "FCP target for collaboration pages - 1.5s"
+        },
+        {
+          "metric": "largest-contentful-paint",
+          "budget": 1500,
+          "comment": "LCP target for collaboration pages - 1.5s (aggressive target)"
+        },
+        {
+          "metric": "interaction-to-next-paint",
+          "budget": 200,
+          "comment": "INP target - 200ms (2024 Core Web Vital)"
+        },
+        {
+          "metric": "cumulative-layout-shift",
+          "budget": 0.1,
+          "comment": "CLS target - 0.1 (no layout shifts from collaboration UI)"
+        }
+      ]
+    },
+    {
+      "path": "/projects/**",
+      "resourceCounts": [
+        {
+          "resourceType": "total",
+          "budget": 100,
+          "comment": "Total resource count limit for project pages with collaboration"
+        },
+        {
+          "resourceType": "third-party",
+          "budget": 10,
+          "comment": "Third-party resource limit for collaboration features"
+        }
+      ],
+      "customMetrics": [
+        {
+          "name": "collaboration-poll-time",
+          "budget": 150,
+          "comment": "Average collaboration polling response time - 150ms"
+        },
+        {
+          "name": "collaboration-cache-hit-rate",
+          "budget": 0.7,
+          "comment": "Collaboration cache hit rate minimum - 70%"
+        },
+        {
+          "name": "collaboration-error-rate",
+          "budget": 0.05,
+          "comment": "Maximum collaboration error rate - 5%"
+        },
+        {
+          "name": "collaboration-adaptive-interval-min",
+          "budget": 1000,
+          "comment": "Minimum adaptive polling interval - 1 second"
+        },
+        {
+          "name": "collaboration-adaptive-interval-max",
+          "budget": 30000,
+          "comment": "Maximum adaptive polling interval - 30 seconds"
+        }
+      ]
+    },
+    {
+      "path": "/planning/**",
+      "resourceSizes": [
+        {
+          "resourceType": "script",
+          "budget": 200,
+          "comment": "Video planning with collaboration features - 200KB total JS budget"
+        }
+      ],
+      "timings": [
+        {
+          "metric": "time-to-interactive",
+          "budget": 3000,
+          "comment": "TTI for video planning with real-time collaboration - 3s"
+        },
+        {
+          "metric": "total-blocking-time",
+          "budget": 300,
+          "comment": "TBT limit for planning page with collaboration - 300ms"
+        }
+      ],
+      "customMetrics": [
+        {
+          "name": "video-planning-collaboration-init",
+          "budget": 500,
+          "comment": "Video planning collaboration initialization time - 500ms"
+        },
+        {
+          "name": "stage-transition-with-collaboration",
+          "budget": 100,
+          "comment": "Stage transition time with collaboration sync - 100ms"
+        }
+      ]
+    },
+    {
+      "path": "/calendar/**", 
+      "resourceSizes": [
+        {
+          "resourceType": "script",
+          "budget": 150,
+          "comment": "Calendar with collaboration features - 150KB JS budget"
+        }
+      ],
+      "timings": [
+        {
+          "metric": "largest-contentful-paint",
+          "budget": 2000,
+          "comment": "Calendar LCP with collaboration - 2s (relaxed for complex calendar view)"
+        }
+      ],
+      "customMetrics": [
+        {
+          "name": "calendar-collaboration-sync",
+          "budget": 200,
+          "comment": "Calendar collaboration sync time - 200ms"
+        }
+      ]
+    }
+  ],
+  "performanceThresholds": {
+    "collaboration": {
+      "polling": {
+        "maxResponseTime": 150,
+        "maxErrorRate": 0.05,
+        "minCacheHitRate": 0.7,
+        "adaptiveIntervals": {
+          "min": 1000,
+          "max": 30000,
+          "backgroundMultiplier": 3,
+          "networkAdjustments": {
+            "slow-2g": 2.5,
+            "2g": 2.0,
+            "3g": 1.5,
+            "4g": 1.0,
+            "fast": 0.8
+          }
+        }
+      },
+      "bundleSizes": {
+        "maxCollaborationJS": 51200,
+        "maxCollaborationCSS": 10240,
+        "maxLazyChunk": 25600
+      },
+      "coreWebVitals": {
+        "lcp": 1500,
+        "inp": 200,
+        "cls": 0.1,
+        "fcp": 1500,
+        "ttfb": 600
+      },
+      "memoryUsage": {
+        "maxHeapIncrease": 5242880,
+        "maxDOMNodes": 100,
+        "maxEventListeners": 20
+      }
+    }
+  },
+  "alerting": {
+    "critical": [
+      "largest-contentful-paint > 2000",
+      "interaction-to-next-paint > 300", 
+      "collaboration-error-rate > 0.1"
+    ],
+    "warning": [
+      "largest-contentful-paint > 1500",
+      "collaboration-poll-time > 200",
+      "collaboration-cache-hit-rate < 0.6"
+    ],
+    "info": [
+      "largest-contentful-paint > 1200",
+      "collaboration-adaptive-interval-max > 45000"
+    ]
+  },
+  "monitoring": {
+    "sampleRate": 0.1,
+    "enableDetailedMetrics": true,
+    "trackUserJourneys": [
+      "project-creation-with-collaboration",
+      "video-planning-collaboration",
+      "calendar-collaboration-sync"
+    ],
+    "performanceMarks": [
+      "collaboration-init-start",
+      "collaboration-init-end", 
+      "collaboration-first-poll",
+      "collaboration-cache-ready",
+      "collaboration-ui-ready"
+    ]
+  }
+}

@@ -4,8 +4,10 @@
  */
 
 import { render, screen } from '@testing-library/react'
-import { SubMenu } from '../SubMenu'
+
 import type { SubMenuItem } from '@/entities/menu/model/types'
+
+import { SubMenu } from '../SubMenu'
 
 // Mock 데이터
 const mockItems: SubMenuItem[] = [

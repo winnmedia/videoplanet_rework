@@ -5,10 +5,10 @@
  * 구현해야 할 기능의 명세를 정의합니다.
  */
 
-import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { axe, toHaveNoViolations } from 'jest-axe'
 import userEvent from '@testing-library/user-event'
+import { axe, toHaveNoViolations } from 'jest-axe'
+import React from 'react'
 
 import { StatsTooltip } from './StatsTooltip'
 

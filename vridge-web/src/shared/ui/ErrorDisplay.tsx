@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * HTTP 에러 및 네트워크 에러 디스플레이 컴포넌트
  * FSD 경계: shared/ui - 재사용 가능한 에러 UI 컴포넌트
@@ -6,6 +8,7 @@
  */
 
 import React, { useEffect, useRef } from 'react'
+
 import { HttpErrorPageProps, NetworkErrorProps, OfflineIndicatorProps, RetryButtonProps } from './types'
 
 /**

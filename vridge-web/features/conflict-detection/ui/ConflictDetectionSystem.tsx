@@ -8,7 +8,7 @@
 import { useMemo, useCallback } from 'react'
 
 import styles from './ConflictDetectionSystem.module.scss'
-import type { CalendarEvent } from '../../../widgets/Calendar/model/types'
+import type { CalendarEvent } from '../../../entities'
 import type { ConflictDetectionResult, ConflictInfo } from '../model/types'
 import { ConflictSeverity, ConflictResolution } from '../model/types'
 

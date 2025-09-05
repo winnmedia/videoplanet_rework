@@ -1,10 +1,8 @@
 'use client'
 
-import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { SideBar } from '@/widgets'
-import { ProjectSchedulePreview, TeamInviteForm, TeamMemberTable } from '@/features/project'
-import { Button, Card } from '@/shared/ui'
+import { useState } from 'react'
+
 import { 
   useCreateProjectMutation,
   useInviteTeamMembersMutation,
@@ -14,6 +12,9 @@ import {
   useRemoveMemberMutation,
   type TeamInviteData
 } from '@/entities/project/api/projectApi'
+import { ProjectSchedulePreview, TeamInviteForm, TeamMemberTable } from '@/features/project'
+import { Button, Card } from '@/shared/ui'
+import { SideBar } from '@/widgets'
 
 interface ProjectFormData {
   title: string

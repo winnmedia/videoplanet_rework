@@ -8,9 +8,9 @@ import { render, screen } from '@testing-library/react'
 import { Provider } from 'react-redux'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+import { Permission, UserRole, type RBACUser } from '@/entities/rbac'
+
 import { PermissionGuard } from './PermissionGuard'
-import { Permission, UserRole } from '../../../entities/rbac'
-import type { RBACUser } from '../../../entities/rbac'
 
 // Mock useCurrentUserPermissions 훅
 vi.mock('../model/useUserPermissions', () => ({

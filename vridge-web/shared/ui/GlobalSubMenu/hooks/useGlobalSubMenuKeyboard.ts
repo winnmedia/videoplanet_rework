@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
+
 import type { GlobalSubMenuItem } from '../types'
 
 interface UseGlobalSubMenuKeyboardProps {

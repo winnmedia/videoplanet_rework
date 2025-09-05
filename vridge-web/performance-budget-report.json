@@ -1,0 +1,21 @@
+{
+  "timestamp": "2025-09-04T12:06:20.259Z",
+  "budget": {
+    "maxBundleSize": 1000,
+    "maxChunkSize": 250,
+    "maxCssSize": 100,
+    "maxNetworkRequests": 50,
+    "maxImageSize": 500,
+    "maxTotalImageSize": 5632,
+    "LCP_TARGET": 2500,
+    "INP_TARGET": 200,
+    "CLS_TARGET": 0.1,
+    "FCP_TARGET": 1800,
+    "TTFB_TARGET": 800
+  },
+  "results": {
+    "bundleSize": true,
+    "imageOptimization": true
+  },
+  "recommendations": []
+}

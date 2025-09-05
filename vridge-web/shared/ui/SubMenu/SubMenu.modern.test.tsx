@@ -5,10 +5,11 @@
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { SubMenu } from './SubMenu'
-
 import { vi } from 'vitest'
+
 import type { SubMenuItem } from '@/entities/menu/model/types'
+
+import { SubMenu } from './SubMenu'
 
 const mockSubMenuItems: SubMenuItem[] = [
   {

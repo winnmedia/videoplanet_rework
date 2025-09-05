@@ -1,11 +1,25 @@
 'use client'
 
-import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { useState, useEffect } from 'react'
+import { useAppDispatch, useAppSelector } from '@/app/store/store'
+
+import { 
+  createProject,
+  selectIsCreating,
+  selectCreateError,
+  selectAutoSchedulePreview,
+  setAutoSchedulePreview,
+  clearCreateError
+} from '@/entities/project'
+import { AutoScheduleResult } from '@/shared/lib/project-scheduler'
 import { Button } from '@/shared/ui'
 import { Input } from '@/shared/ui/Input/Input.modern'
-import { Select } from '@/shared/ui/Select/Select.modern'
 import { LoadingSpinner } from '@/shared/ui/LoadingSpinner/LoadingSpinner.modern'
+import { Select } from '@/shared/ui/Select/Select.modern'
+
+import { AutoSchedulePreviewCard } from './AutoSchedulePreviewCard'
+import { ProjectCreationSuccess } from './ProjectCreationSuccess'
 
 interface CreateProjectFormData {
   title: string
@@ -13,6 +27,7 @@ interface CreateProjectFormData {
   type: string
   priority: string
   startDate: string
+  autoSchedule?: AutoScheduleResult
 }
 
 const PROJECT_TYPES = [
@@ -30,11 +45,19 @@ const PRIORITY_OPTIONS = [
 ]
 
 /**
- * 프로젝트 생성 폼 컴포넌트
- * 접근성과 사용성을 고려한 프로젝트 생성 인터페이스
+ * 프로젝트 생성 폼 컴포넌트 (Redux 통합)
+ * DEVPLAN.md 요구사항: 자동 스케줄링, 팀 초대, RBAC 권한 시스템 통합
  */
 export function CreateProjectForm() {
   const router = useRouter()
+  const dispatch = useAppDispatch()
+  
+  // Redux state
+  const isSubmitting = useAppSelector(selectIsCreating)
+  const createError = useAppSelector(selectCreateError)
+  const autoSchedulePreview = useAppSelector(selectAutoSchedulePreview)
+  
+  // Local state
   const [formData, setFormData] = useState<CreateProjectFormData>({
     title: '',
     description: '',
@@ -43,7 +66,18 @@ export function CreateProjectForm() {
     startDate: new Date().toISOString().split('T')[0] // 오늘 날짜
   })
   const [errors, setErrors] = useState<Partial<CreateProjectFormData>>({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [createdProject, setCreatedProject] = useState<{
+    id: string
+    title: string
+    autoSchedule?: AutoScheduleResult
+  } | null>(null)
+
+  // 컴포넌트 언마운트 시 에러 클리어
+  useEffect(() => {
+    return () => {
+      dispatch(clearCreateError())
+    }
+  }, [dispatch])
 
   const validateForm = (): boolean => {
     const newErrors: Partial<CreateProjectFormData> = {}
@@ -83,24 +117,46 @@ export function CreateProjectForm() {
       return
     }
 
-    setIsSubmitting(true)
-
     try {
-      // TODO: 실제 API 호출 구현
-      console.log('Creating project:', formData)
+      // DEVPLAN.md 요구사항: 자동 일정이 API 요청에 포함되어야 함
+      const projectData = {
+        title: formData.title,
+        description: formData.description,
+        tags: [formData.type], // 프로젝트 유형을 태그로 저장
+        settings: {
+          isPublic: false,
+          allowComments: true,
+          allowDownload: false,
+          requireApproval: true,
+          watermarkEnabled: true
+        },
+        // 자동 스케줄링 데이터 포함
+        autoSchedule: autoSchedulePreview ? {
+          planning: { duration: autoSchedulePreview.planning.duration },
+          shooting: { duration: autoSchedulePreview.filming.duration },
+          editing: { duration: autoSchedulePreview.editing.duration }
+        } : undefined
+      }
       
-      // 임시 성공 응답 시뮬레이션
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      console.log('Creating project with auto schedule:', projectData)
       
-      // 프로젝트 생성 성공 시 목록 페이지로 이동
-      router.push('/projects')
+      // Redux async thunk 호출
+      const result = await dispatch(createProject(projectData))
+      
+      if (createProject.fulfilled.match(result)) {
+        // 프로젝트 생성 성공 시 성공 페이지 표시
+        setCreatedProject({
+          id: result.payload.project.id,
+          title: result.payload.project.title,
+          autoSchedule: autoSchedulePreview || undefined
+        })
+      } else if (createProject.rejected.match(result)) {
+        // 에러는 Redux state에서 관리
+        console.error('프로젝트 생성 실패:', result.payload)
+      }
       
     } catch (error) {
-      console.error('프로젝트 생성 실패:', error)
-      // TODO: 에러 토스트 표시
-      alert('프로젝트 생성에 실패했습니다. 다시 시도해주세요.')
-    } finally {
-      setIsSubmitting(false)
+      console.error('프로젝트 생성 중 예외 발생:', error)
     }
   }
 
@@ -113,8 +169,37 @@ export function CreateProjectForm() {
     }
   }
 
+  const handleScheduleChange = (schedule: AutoScheduleResult) => {
+    dispatch(setAutoSchedulePreview(schedule))
+  }
+
   const handleCancel = () => {
     router.push('/projects')
+  }
+
+  // 성공 페이지 렌더링
+  if (createdProject) {
+    return (
+      <ProjectCreationSuccess
+        projectId={createdProject.id}
+        projectTitle={createdProject.title}
+        autoSchedule={createdProject.autoSchedule ? {
+          totalDays: createdProject.autoSchedule.totalDays,
+          planning: { 
+            duration: createdProject.autoSchedule.planning.duration, 
+            unit: createdProject.autoSchedule.planning.unit 
+          },
+          filming: { 
+            duration: createdProject.autoSchedule.filming.duration, 
+            unit: createdProject.autoSchedule.filming.unit 
+          },
+          editing: { 
+            duration: createdProject.autoSchedule.editing.duration, 
+            unit: createdProject.autoSchedule.editing.unit 
+          }
+        } : undefined}
+      />
+    )
   }
 
   return (
@@ -222,6 +307,23 @@ export function CreateProjectForm() {
           />
         </div>
       </div>
+
+      {/* Redux 에러 표시 */}
+      {createError && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-sm text-red-800" role="alert">
+            {createError}
+          </p>
+        </div>
+      )}
+
+      {/* 자동 일정 프리뷰 카드 - DEVPLAN.md 요구사항 */}
+      <AutoSchedulePreviewCard
+        startDate={formData.startDate}
+        onScheduleChange={handleScheduleChange}
+        projectTitle={formData.title || '새 프로젝트'}
+        className="bg-gray-50"
+      />
 
       {/* 액션 버튼 */}
       <div className="flex items-center justify-end space-x-4 pt-6 border-t border-gray-200">

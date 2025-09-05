@@ -8,9 +8,9 @@
 import { renderHook } from '@testing-library/react'
 import React from 'react'
 
+import type { NavigationContextType } from '../types'
 import { useNavigation, useNavigationWithPath } from '../useNavigation'
 import { NavigationContext } from '../useNavigation'
-import type { NavigationContextType } from '../types'
 
 // Mock data for testing
 const mockNavigationContext: NavigationContextType = {

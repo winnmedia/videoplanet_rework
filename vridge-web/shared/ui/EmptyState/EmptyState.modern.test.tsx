@@ -5,9 +5,10 @@
 
 import { render, screen, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { vi } from 'vitest'
+
 import { EmptyState } from './EmptyState'
 
-import { vi } from 'vitest'
 
 describe('EmptyState Modern - Enhanced Error State Support', () => {
   const mockOnClick = vi.fn()

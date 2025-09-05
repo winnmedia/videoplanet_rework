@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+
 import type { GenerateShotsRequest, GenerateShotsResponse, VideoShot, InsertShot } from '@/features/video-planning-wizard'
 
 export async function POST(request: NextRequest) {

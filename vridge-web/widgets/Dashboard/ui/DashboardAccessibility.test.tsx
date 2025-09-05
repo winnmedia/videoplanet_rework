@@ -9,12 +9,13 @@
  * - 터치 타겟 크기 (2.5.5)
  */
 
-import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import { axe, toHaveNoViolations } from 'jest-axe'
 import userEvent from '@testing-library/user-event'
-import { server } from '@/test/mocks/server'
+import { axe, toHaveNoViolations } from 'jest-axe'
 import { http, HttpResponse } from 'msw'
+import React from 'react'
+
+import { server } from '@/test/mocks/server'
 
 import { DashboardWidget } from './DashboardWidget'
 import { FeedbackSummaryCard } from './FeedbackSummaryCard'

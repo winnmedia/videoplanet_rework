@@ -4,6 +4,7 @@
  */
 
 import { setupWorker } from 'msw/browser'
+
 import { handlers, shouldEnableMSW, mswConfig } from './msw-handlers'
 
 let worker: ReturnType<typeof setupWorker> | undefined

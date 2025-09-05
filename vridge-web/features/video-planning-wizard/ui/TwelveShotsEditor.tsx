@@ -6,8 +6,10 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { Button, Card, Input, Select } from '@/shared/ui/index.modern'
+
 import { cn } from '@/shared/lib/utils'
+import { Button, Card, Input, Select } from '@/shared/ui/index.modern'
+
 import type { 
   TwelveShotsEditorProps, 
   VideoShot, 

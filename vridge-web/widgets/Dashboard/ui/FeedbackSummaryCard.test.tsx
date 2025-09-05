@@ -4,6 +4,7 @@
  */
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+
 import { FeedbackSummaryCard } from './FeedbackSummaryCard'
 import type { FeedbackSummaryStats } from '../model/types'
 

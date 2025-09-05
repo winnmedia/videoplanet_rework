@@ -1,0 +1,66 @@
+name: Performance Budget Enforcement
+# Core Web Vitals 예산 위반 시 PR 차단
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main, develop]
+
+jobs:
+  performance-budget:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+          
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        
+      - name: Build application
+        run: pnpm run build
+        
+      - name: Start server
+        run: pnpm run start &
+        
+      - name: Wait for server
+        run: |
+          timeout 60 bash -c 'until curl -f http://localhost:3000; do sleep 1; done'
+          
+      - name: Run Lighthouse CI (Performance Budget)
+        uses: treosh/lighthouse-ci-action@v10
+        with:
+          configPath: './lighthouserc.js'
+          uploadArtifacts: true
+          temporaryPublicStorage: true
+          
+      - name: Performance Budget Status
+        run: |
+          echo "## 🎯 성능 예산 검증 결과" >> $GITHUB_STEP_SUMMARY
+          echo "- LCP 목표: ≤ 2.5초" >> $GITHUB_STEP_SUMMARY
+          echo "- CLS 목표: ≤ 0.1" >> $GITHUB_STEP_SUMMARY 
+          echo "- INP 목표: ≤ 200ms" >> $GITHUB_STEP_SUMMARY
+          echo "- TTI 목표: ≤ 3.8초" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "상세 결과는 Lighthouse CI 리포트를 확인하세요." >> $GITHUB_STEP_SUMMARY
+          
+      # 성능 예산 위반 시 Slack 알림 (선택사항)
+      - name: Performance Budget Violation Alert
+        if: failure()
+        run: |
+          echo "⚠️ 성능 예산 위반이 감지되었습니다!"
+          echo "Core Web Vitals 기준을 충족하지 못했습니다."
+          echo "성능 최적화가 필요합니다."
+          exit 1

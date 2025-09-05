@@ -1,3 +1,5 @@
+'use client'
+
 /**
  * 에러 컴포넌트 성능 최적화 유틸리티
  * Core Web Vitals 최적화: LCP, CLS, INP 영향 최소화
@@ -11,13 +13,13 @@ import React, { memo, Suspense, lazy, useMemo, useCallback } from 'react'
  * 메인 번들 크기 최소화로 LCP 개선
  */
 const LazyHttpErrorPage = lazy(() => 
-  import('../ui/ErrorDisplay').then(module => ({
+  import('../../ui/ErrorDisplay').then(module => ({
     default: module.HttpErrorPage
   }))
 )
 
 const LazyNetworkErrorDisplay = lazy(() =>
-  import('../ui/ErrorDisplay').then(module => ({
+  import('../../ui/ErrorDisplay').then(module => ({
     default: module.NetworkErrorDisplay
   }))
 )

@@ -8,36 +8,75 @@
 // ============================
 
 export type ToneManner = 
-  | '잔잔' 
-  | '발랄' 
-  | '소름' 
-  | '귀엽' 
-  | '시크' 
-  | '감성' 
-  | '유머' 
-  | '진지'
+  | '잔잔'        // Calm - 평온한
+  | '발랄'        // Lively - 활기찬
+  | '소름'        // Thrilling - 스릴감 있는
+  | '귀엽'        // Cute - 사랑스러운
+  | '시크'        // Chic - 세련된
+  | '감성'        // Emotional - 감정적인
+  | '유머'        // Humorous - 유머러스한
+  | '진지'        // Serious - 진중한
+  | '웅장'        // Epic - 대규모 스케일
+  | '몽환'        // Dreamy - 환상적인
+  | '역동'        // Dynamic - 활발한
+  | '차분'        // Calm - 안정적인
+  | '열정'        // Passionate - 열정적인
+  | '신비'        // Mysterious - 미스터리한
+  | '따뜻'        // Warm - 온화한
+  | '차가움'      // Cold - 냉정한
+  | '빈티지'      // Vintage - 복고풍
+  | '미래지향'    // Futuristic - 미래적
+  | '럭셔리'      // Luxury - 고급스러운
+  | '미니멀'      // Minimal - 간결한
 
 export type Genre = 
-  | '드라마' 
-  | '공포' 
-  | 'SF' 
-  | '액션' 
-  | '광고' 
-  | '다큐멘터리' 
-  | '교육' 
-  | '뮤직비디오' 
-  | '예능' 
-  | '뉴스'
+  | '드라마'          // Drama - 연극적 서사
+  | '공포'           // Horror - 무서운 장르
+  | 'SF'             // Science Fiction - 과학소설
+  | '액션'           // Action - 액션
+  | '광고'           // Commercial - 상업광고
+  | '다큐멘터리'      // Documentary - 다큐멘터리
+  | '교육'           // Educational - 교육적
+  | '뮤직비디오'      // Music Video - 음악영상
+  | '예능'           // Entertainment - 예능
+  | '뉴스'           // News - 뉴스
+  | '로맨스'         // Romance - 로맨스
+  | '코미디'         // Comedy - 코미디
+  | '판타지'         // Fantasy - 판타지
+  | '스릴러'         // Thriller - 스릴러
+  | '미스터리'       // Mystery - 미스터리
+  | '애니메이션'     // Animation - 애니메이션
+  | '전기'           // Biography - 전기
+  | '역사'           // Historical - 역사
+  | '음식'           // Food - 푸드
+  | '여행'           // Travel - 여행
+  | '스포츠'         // Sports - 스포츠
+  | '패션'           // Fashion - 패션
+  | '라이프스타일'   // Lifestyle - 라이프스타일
+  | '게임'           // Gaming - 게임
+  | '뷰티'           // Beauty - 뷰티
 
 export type Target = 
-  | '10대' 
-  | '20대' 
-  | '30대' 
-  | '40대' 
-  | '50대 이상' 
-  | '전 연령' 
-  | '비즈니스 전문가' 
-  | '일반 소비자'
+  | '10대'           // Teenagers - 청소년
+  | '20대'           // 20s - 20대
+  | '30대'           // 30s - 30대
+  | '40대'           // 40s - 40대
+  | '50대 이상'      // 50+ - 50대 이상
+  | '전 연령'        // All ages - 전 연령
+  | '비즈니스 전문가' // Business professionals
+  | '일반 소비자'     // General consumers
+  | '학생'           // Students - 학생
+  | '직장인'         // Office workers - 직장인
+  | '주부'           // Housewives - 주부
+  | '시니어'         // Seniors - 시니어
+  | '창업가'         // Entrepreneurs - 창업가
+  | '아티스트'       // Artists - 아티스트
+  | '개발자'         // Developers - 개발자
+  | '마케터'         // Marketers - 마케터
+  | '디자이너'       // Designers - 디자이너
+  | '투자자'         // Investors - 투자자
+  | '의료진'         // Medical professionals
+  | '교육자'         // Educators - 교육자
 
 export type Duration = 
   | '15초' 
@@ -65,12 +104,12 @@ export type Tempo =
   | '느리게'
 
 export type StoryStructure = 
-  | '훅–몰입–반전–떡밥' 
-  | '기승전결' 
-  | '귀납법' 
-  | '연역법' 
-  | '다큐(인터뷰식)' 
-  | '픽사 스토리텔링'
+  | '훅–몰입–반전–떡밥'    // Hook-Immersion-Twist-Bait (바이럴)
+  | '기승전결'            // Introduction-Development-Climax-Conclusion
+  | '귀납법'              // Inductive - 사실에서 결론으로
+  | '연역법'              // Deductive - 결론에서 사실으로
+  | '다큐(인터뷰식)'       // Documentary Interview Style
+  | '픽사 스토리텔링'      // Pixar Storytelling (감정호소)
 
 export type StoryIntensity = 
   | '그대로' 
@@ -98,6 +137,12 @@ export interface PlanningInput {
   tempo: Tempo
   storyStructure: StoryStructure
   storyIntensity: StoryIntensity
+  // 신규 추가 필드
+  visualStyle?: VisualStyle
+  cameraWork?: CameraWork
+  keywords?: string[]  // AI 학습을 위한 키워드
+  mood?: string       // 전체적인 분위기
+  colorScheme?: string // 색상 테마
 }
 
 export interface PresetConfig {
@@ -126,6 +171,44 @@ export interface FourStagesPlan {
   createdAt: string
   updatedAt: string
 }
+
+// ============================
+// 새로운 카테고리: 시각적 스타일과 카메라 워크
+// ============================
+
+export type VisualStyle = 
+  | '시네마틱'        // Cinematic - 영화적
+  | '다큐멘터리'      // Documentary - 다큐멘터리
+  | '뮤직비디오'      // Music Video - 뮤직비디오
+  | '애니메이션'      // Animation - 애니메이션
+  | '인포그래픽'      // Infographic - 인포그래픽
+  | '스케치'          // Sketch - 스케치
+  | '일러스트'        // Illustration - 일러스트
+  | '픽셀아트'        // Pixel Art - 픽셀아트
+  | '3D렌더링'        // 3D Rendering - 3D 렌더링
+  | '콜라주'          // Collage - 콜라주
+  | '빈티지'          // Vintage - 빈티지
+  | '미니멀'          // Minimal - 미니멀
+  | '네온'            // Neon - 네온
+  | '파스텔'          // Pastel - 파스텔
+  | '모노크롬'        // Monochrome - 흑백
+
+export type CameraWork = 
+  | '고정샷'          // Static Shot - 고정된
+  | '패닝'            // Panning - 좌우 이동
+  | '틸팅'            // Tilting - 상하 이동
+  | '줌인'            // Zoom In - 확대
+  | '줌아웃'          // Zoom Out - 축소
+  | '돌리인'          // Dolly In - 전진
+  | '돌리아웃'        // Dolly Out - 후진
+  | '트래킹샷'        // Tracking Shot - 추적
+  | '크레인샷'        // Crane Shot - 크레인
+  | '핸드헬드'        // Handheld - 핸드헬드
+  | '스테디캠'        // Steadicam - 스테디캠
+  | '드론샷'          // Drone Shot - 드론
+  | '360도회전'       // 360 Rotation - 360도 회전
+  | '오비탈'          // Orbital - 궤도운동
+  | '슬라이더'        // Slider - 슬라이더
 
 // ============================
 // STEP 3: 12숏 편집 타입
@@ -186,6 +269,12 @@ export interface VideoShot {
   transition: Transition
   storyboardUrl?: string
   notes?: string
+  // 신규 추가 필드
+  visualStyle?: VisualStyle
+  cameraWork?: CameraWork
+  aiGenerated?: boolean
+  imagePrompt?: string    // AI 이미지 생성용 프롬프트
+  imageUrl?: string       // 생성된 이미지 URL
 }
 
 export interface InsertShot {
@@ -286,6 +375,7 @@ export interface VideoPlanningWizardProps {
 
 export interface PlanningInputFormProps {
   onSubmit: (input: PlanningInput) => void
+  onSubmitWithAI?: (input: PlanningInput) => void
   onPresetSelect: (preset: PresetConfig) => void
   isLoading?: boolean
   error?: string
@@ -323,6 +413,8 @@ export interface WizardState {
   stages: PlanningStage[]
   shots: VideoShot[]
   insertShots: InsertShot[]
+  isAIGenerated: boolean
+  aiGenerationMode: 'standard' | 'ai'
   isLoading: boolean
   error: string | null
 }

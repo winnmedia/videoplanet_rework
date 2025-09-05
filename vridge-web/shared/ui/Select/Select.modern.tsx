@@ -5,8 +5,9 @@
 
 'use client'
 
-import { useState, useRef, useEffect, useCallback } from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
+import { useState, useRef, useEffect, useCallback } from 'react'
+
 import { cn } from '../../lib/utils'
 
 // Select variants 정의

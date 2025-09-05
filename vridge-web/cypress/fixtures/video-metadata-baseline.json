@@ -1,0 +1,13 @@
+{
+  "id": "video-123",
+  "title": "프로젝트 Alpha - 메인 비디오",
+  "duration": 300.5,
+  "fileSize": 1048576000,
+  "format": "mp4",
+  "resolution": "1920x1080",
+  "uploadedAt": "2025-01-14T09:00:00Z",
+  "projectId": 1,
+  "uploaderId": 1,
+  "thumbnailUrl": "/api/videos/video-123/thumbnail",
+  "streamUrl": "/api/videos/video-123/stream"
+}

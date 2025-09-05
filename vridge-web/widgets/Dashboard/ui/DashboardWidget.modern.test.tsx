@@ -6,6 +6,7 @@
 import { render, screen, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { axe, toHaveNoViolations } from 'jest-axe'
+
 import { DashboardWidget } from './DashboardWidget.modern'
 import type { DashboardData } from '../model/types'
 

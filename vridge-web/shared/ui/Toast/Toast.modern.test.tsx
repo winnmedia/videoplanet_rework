@@ -5,6 +5,7 @@
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { vi } from 'vitest'
+
 import { Toast } from './Toast.modern'
 
 // Mock timers for animations

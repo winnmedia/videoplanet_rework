@@ -9,8 +9,8 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { useRouter, usePathname } from 'next/navigation'
 import React from 'react'
 
-import { NavigationProvider, NavigationProviderWithDebug } from '../NavigationProvider'
 import { useNavigation } from '../../model/useNavigation'
+import { NavigationProvider, NavigationProviderWithDebug } from '../NavigationProvider'
 
 // Next.js 라우터 모킹
 jest.mock('next/navigation', () => ({

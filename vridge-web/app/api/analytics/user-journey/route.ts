@@ -4,9 +4,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
+
 import { withErrorHandler } from '@/lib/api/error-handler';
 import { apiMonitor } from '@/lib/api/monitoring';
-import { z } from 'zod';
 
 // 사용자 여정 데이터 스키마
 const UserJourneyMetricsSchema = z.object({

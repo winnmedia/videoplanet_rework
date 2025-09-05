@@ -4,19 +4,20 @@
  * TDD 기반, MSW 모킹, 성능 및 접근성 검증 포함
  */
 
-import React from 'react'
 import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { rest } from 'msw'
 import { setupServer } from 'msw/node'
-import { ErrorBoundary, DefaultErrorFallback } from '../ErrorBoundary'
-import { HttpErrorPage, NetworkErrorDisplay, OfflineIndicator } from '../ErrorDisplay'
+import React from 'react'
+
 import { useNetworkStatus } from '../../lib/hooks/useNetworkStatus'
 import { 
   ErrorPerformanceProvider, 
   OptimizedErrorPage,
   useErrorPerformanceMonitor 
 } from '../../lib/performance/ErrorPerformanceOptimizer'
+import { ErrorBoundary, DefaultErrorFallback } from '../ErrorBoundary'
+import { HttpErrorPage, NetworkErrorDisplay, OfflineIndicator } from '../ErrorDisplay'
 
 // MSW 서버 설정
 const server = setupServer(

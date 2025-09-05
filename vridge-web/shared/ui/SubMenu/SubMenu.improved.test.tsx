@@ -6,8 +6,9 @@ import userEvent from '@testing-library/user-event'
 import { axe, toHaveNoViolations } from 'jest-axe'
 import React from 'react'
 
-import { SubMenuImproved } from './SubMenu.improved'
 import type { SubMenuItem } from '@/entities/menu/model/types'
+
+import { SubMenuImproved } from './SubMenu.improved'
 
 // Extend Jest matchers
 expect.extend(toHaveNoViolations)

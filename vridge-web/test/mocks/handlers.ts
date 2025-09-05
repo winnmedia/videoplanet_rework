@@ -13,6 +13,7 @@ import { externalHandlers } from './modules/external.handlers'
 import { projectHandlers } from './modules/project.handlers'
 import { videoFeedbackHandlers } from './modules/video-feedback.handlers'
 import { videoPlanningHandlers } from './modules/video-planning.handlers'
+import { collaborationHandlers } from '@/shared/lib/collaboration/__tests__/collaboration-handlers'
 
 // Base API URL - adjust this based on your actual API
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'
@@ -29,6 +30,7 @@ export const handlers = [
   ...videoPlanningHandlers,
   ...videoFeedbackHandlers,
   ...externalHandlers,
+  ...collaborationHandlers,
   
   // Catch-all handler for unhandled requests (optional)
   http.get('*', ({ request }) => {
@@ -89,5 +91,6 @@ export {
   projectHandlers,
   videoPlanningHandlers,
   videoFeedbackHandlers,
-  externalHandlers
+  externalHandlers,
+  collaborationHandlers
 }

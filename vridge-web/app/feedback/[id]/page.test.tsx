@@ -10,8 +10,9 @@
  */
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
-import FeedbackDetailPage from './page'
 import { vi } from 'vitest'
+
+import FeedbackDetailPage from './page'
 
 // Mock next/navigation hooks
 const mockParams = { id: '1' }

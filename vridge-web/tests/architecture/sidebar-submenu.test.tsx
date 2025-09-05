@@ -5,9 +5,10 @@
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { act } from 'react'
-import { SideBar } from '@/widgets/SideBar'
-import { NavigationProvider } from '@/features/navigation'
+
 import { menuApi } from '@/entities/menu'
+import { NavigationProvider } from '@/features/navigation'
+import { SideBar } from '@/widgets/SideBar'
 
 // Mock modules
 jest.mock('@/entities/menu/api/menuApi', () => ({

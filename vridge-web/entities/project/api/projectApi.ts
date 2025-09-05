@@ -1,5 +1,6 @@
-import { apiSlice } from '@/shared/api'
 import { z } from 'zod'
+
+import { apiSlice } from '@/shared/api'
 
 import type { Project, CreateProjectDto } from '../model/types'
 

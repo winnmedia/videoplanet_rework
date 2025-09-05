@@ -4,6 +4,7 @@
  */
 
 import { setupServer } from 'msw/node'
+
 import { handlers, shouldEnableMSW, mswConfig } from './msw-handlers'
 
 let server: ReturnType<typeof setupServer> | undefined

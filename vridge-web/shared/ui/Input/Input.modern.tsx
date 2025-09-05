@@ -5,8 +5,9 @@
 
 'use client'
 
-import React, { forwardRef, InputHTMLAttributes, useId } from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
+import React, { forwardRef, InputHTMLAttributes, useId } from 'react'
+
 import { cn } from '../../lib/utils'
 
 // Input variants 정의 (CVA 사용)

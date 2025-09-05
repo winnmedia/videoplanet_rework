@@ -4,6 +4,7 @@
  */
 
 import { render, screen } from '@testing-library/react'
+
 import { UnreadBadge } from './UnreadBadge'
 
 describe('UnreadBadge', () => {

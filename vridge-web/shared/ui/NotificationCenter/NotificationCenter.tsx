@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useRef, memo, useMemo, useCallback } from 'react'
 import clsx from 'clsx'
-import type { NotificationCenterProps, Notification } from './types'
+import { useEffect, useRef, memo, useMemo, useCallback } from 'react'
+
 import { useNotificationKeyboard } from './hooks/useNotificationKeyboard'
+import type { NotificationCenterProps, Notification } from './types'
 import { formatRelativeTime } from './utils/timeFormat'
 
 export const NotificationCenter = memo(function NotificationCenter({

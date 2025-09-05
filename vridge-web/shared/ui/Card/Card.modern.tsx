@@ -5,43 +5,64 @@
 
 'use client'
 
-import React, { forwardRef, HTMLAttributes } from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
+import React, { forwardRef, HTMLAttributes } from 'react'
+
 import { cn } from '../../lib/utils'
 
 // Card variants 정의 (CVA 사용)
 const cardVariants = cva(
-  // 기본 스타일 (초미니멀)
+  // VRidge 레거시 Card 완전 재현 (초미니멀 세련됨)
   [
-    'rounded-lg',
-    'transition-all duration-200 ease-out',
+    // 기본 구조 (레거시 .card 매핑)
+    'bg-white flex flex-col relative',
+    
+    // 레거시 transition (all 0.2s ease)
+    'transition-all duration-200 ease-in-out',
+    
+    // 접근성
     'focus:outline-none'
   ],
   {
     variants: {
       variant: {
         default: [
-          'bg-white border border-gray-200',
-          'shadow-sm'
+          // 레거시 .default 완전 재현
+          'bg-white border border-neutral-300',    // border: 1px solid $color-border
+          'rounded-lg',                           // 기본 12px radius
+          'shadow-sm'                             // 기본 그림자
         ],
-        outlined: [
-          'bg-transparent border-2 border-gray-300'
-        ],
-        filled: [
-          'bg-gray-50 border border-transparent'
+        outline: [
+          // 레거시 .outline 완전 재현
+          'bg-transparent border-2 border-neutral-300', // border: 2px solid $color-border
+          'rounded-lg'
         ],
         elevated: [
-          'bg-white shadow-md border border-transparent'
+          // 레거시 .elevated 완전 재현
+          'bg-white border border-transparent',
+          'rounded-lg',
+          'shadow-lg'                             // $shadow-lg
+        ],
+        ghost: [
+          // 레거시 .ghost 완전 재현
+          'bg-transparent border-none shadow-none',
+          'rounded-lg'
+        ],
+        legacy: [
+          // 레거시 .legacyStyle + .legacyRadius 완전 재현
+          'bg-white border border-neutral-300',
+          'rounded-2xl',                          // 20px radius (legacyRadius)
+          'shadow-legacy'                         // 0 2px 8px rgba(0, 0, 0, 0.1)
         ]
       },
       padding: {
         none: 'p-0',
-        sm: 'p-3',
-        default: 'p-4',
-        lg: 'p-6'
+        sm: 'p-2',      // $spacing-sm: 8px
+        default: 'p-4', // $spacing-md: 16px  
+        lg: 'p-6'       // $spacing-lg: 24px
       },
       fullWidth: {
-        true: 'w-full'
+        true: 'w-full' // 레거시 .fullWidth 매핑
       }
     },
     defaultVariants: {
@@ -51,26 +72,33 @@ const cardVariants = cva(
   }
 )
 
-// 클릭 가능한 Card의 추가 스타일
+// 클릭 가능한 Card의 추가 스타일 (레거시 정확 매핑)
 const clickableVariants = cva('', {
   variants: {
     clickable: {
       true: [
         'cursor-pointer',
-        'hover:shadow-md',
-        'active:scale-[0.98] active:transition-transform active:duration-75',
-        'focus:ring-2 focus:ring-vridge-500 focus:ring-offset-2'
+        
+        // 레거시 .hover:hover 완전 재현
+        'hover:shadow-xl hover:-translate-y-0.5',   // translateY(-2px) + $shadow-xl
+        
+        // 포커스 스타일 (레거시 focus-visible 매핑)
+        'focus-visible:ring-2 focus-visible:ring-vridge-500 focus-visible:ring-offset-2'
       ]
     },
     disabled: {
       true: [
-        'opacity-50 cursor-not-allowed',
-        'hover:shadow-sm active:scale-100'
+        // 레거시 .disabled 완전 재현
+        'opacity-60 cursor-not-allowed',            // opacity: 0.6
+        
+        // 호버 효과 비활성화
+        'hover:shadow-sm hover:translate-y-0'
       ]
     },
     loading: {
       true: [
-        'animate-pulse cursor-wait'
+        // 레거시 .loading 완전 재현
+        'pointer-events-none opacity-70'           // opacity: 0.7
       ]
     }
   }

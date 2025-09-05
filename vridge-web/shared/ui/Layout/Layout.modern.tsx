@@ -5,8 +5,9 @@
 
 'use client'
 
-import { ReactNode, HTMLAttributes } from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
+import { ReactNode, HTMLAttributes } from 'react'
+
 import { cn } from '../../lib/utils'
 
 // Layout variants 정의

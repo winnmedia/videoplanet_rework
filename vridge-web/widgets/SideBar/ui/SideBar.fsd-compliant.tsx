@@ -8,6 +8,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 import { menuApi, createMenuItem, createSubMenuItem, type MenuItem, type SubMenuItem } from '@/entities/menu'
 import { useNavigation, useSubMenuKeyboard, useFocusTrap, NavigationProvider } from '@/features/navigation'
 import { MenuButton, SubMenu } from '@/shared/ui'
+
 import type { SideBarItem } from '../model/types'
 
 interface SideBarProps {

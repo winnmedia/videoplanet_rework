@@ -1,7 +1,9 @@
 'use client'
 
 import React from 'react'
+
 import { EmptyState } from '@/shared/ui/EmptyState/EmptyState.modern'
+
 import type { RecentActivityFeedProps } from '../model/types'
 
 // 활동 타입별 아이콘과 색상 매핑

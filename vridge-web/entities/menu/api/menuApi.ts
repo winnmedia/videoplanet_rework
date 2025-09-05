@@ -1,10 +1,11 @@
-import type { MenuApiResponse, SubMenuItem } from '../model/types'
 import { api } from '@/lib/api/client'
 import { 
   validateRequest, 
   SubMenuResponseSchema,
   MenuItemsResponseSchema 
 } from '@/shared/api/schemas'
+
+import type { MenuApiResponse, SubMenuItem } from '../model/types'
 
 class MenuApi {
   private readonly baseUrl = '/api/menu'

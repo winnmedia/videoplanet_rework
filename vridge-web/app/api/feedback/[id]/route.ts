@@ -6,6 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+
 import { withErrorHandler, NotFoundError } from '@/lib/api/error-handler'
 import { 
   FeedbackSchema,
@@ -14,7 +15,7 @@ import {
 } from '@/shared/api/schemas'
 
 // 임시 데이터 스토어 (실제로는 데이터베이스)
-let FEEDBACK_DATA: FeedbackType[] = [
+const FEEDBACK_DATA: FeedbackType[] = [
   {
     id: 'fb-001',
     title: '웹사이트 로딩 속도 개선 요청',

@@ -5,6 +5,7 @@
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+
 import { Select } from './Select.modern'
 
 describe('Select 컴포넌트', () => {

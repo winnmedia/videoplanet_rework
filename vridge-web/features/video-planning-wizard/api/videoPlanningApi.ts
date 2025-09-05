@@ -4,6 +4,7 @@
  */
 
 import { apiClient } from '@/shared/api/client'
+
 import type {
   GenerateStagesRequest,
   GenerateStagesResponse,
@@ -26,25 +27,98 @@ export class VideoPlanningWizardApi {
   private static readonly BASE_PATH = '/api/video-planning'
 
   /**
-   * STEP 1 → STEP 2: 기본 정보를 바탕으로 4단계 기획 생성
+   * AI 기반 4단계 스토리 구조 자동 생성
+   * 
+   * Gemini API를 사용한 장르별 최적화된 스토리 생성
+   * 실패 시 기존 방식으로 자동 폴백
+   */
+  static async generateFourStagesWithAI(input: PlanningInput): Promise<PlanningStage[]> {
+    try {
+      // entities/ai-service에서 AI 클라이언트 import
+      const { GeminiClient } = await import('@/entities/ai-service')
+      
+      // PlanningInput을 StoryGenerationRequest로 변환
+      const aiRequest = this.convertToAIRequest(input)
+      
+      // Gemini API 호출
+      const geminiClient = new GeminiClient()
+      const aiResponse = await geminiClient.generateStory(aiRequest)
+      
+      // AI 응답을 PlanningStage[]로 변환
+      const stages = aiResponse.stages.map((stage, index) => ({
+        ...stage,
+        id: String(index + 1)
+      }))
+      
+      // 사용량 로깅 (비용 모니터링)
+      console.log('🤖 AI Generation Success:', {
+        genre: aiRequest.genre,
+        promptTokens: aiResponse.usage.promptTokens,
+        completionTokens: aiResponse.usage.completionTokens,
+        totalTokens: aiResponse.usage.totalTokens,
+        generatedAt: aiResponse.generatedAt
+      })
+      
+      return stages
+    } catch (error) {
+      console.warn('⚠️  AI 생성 실패, 기존 방식으로 폴백:', error)
+      
+      // AI 실패 시 기존 방식으로 폴백
+      return await this.generateFourStages(input)
+    }
+  }
+
+  /**
+   * PlanningInput을 AI 요청 형식으로 변환
+   */
+  private static convertToAIRequest(input: PlanningInput): any {
+    // 기존 장르 매핑
+    const genreMap: Record<string, '광고' | '드라마' | '다큐멘터리'> = {
+      '광고': '광고',
+      '드라마': '드라마',
+      '다큐': '다큐멘터리',
+      '다큐멘터리': '다큐멘터리'
+    }
+    
+    return {
+      genre: genreMap[input.genre] || '드라마',
+      target: input.target || '일반',
+      duration: this.parseDuration(input.duration),
+      concept: `${input.title}: ${input.logline}`,
+      mood: `${input.toneManner}, ${input.storyIntensity} 강도`
+    }
+  }
+
+  /**
+   * 시간 문자열을 숫자로 변환 (예: "60초" -> 60)
+   */
+  private static parseDuration(durationStr: string): number {
+    const match = durationStr.match(/(\d+)/)
+    return match ? parseInt(match[1]) : 60
+  }
+
+  /**
+   * STEP 1 → STEP 2: 기본 정보를 바탕으로 4단계 기획 생성 (기존 방식)
    */
   static async generateFourStages(input: PlanningInput): Promise<PlanningStage[]> {
     const request: GenerateStagesRequest = { input }
 
     try {
-      const response = await apiClient.post<GenerateStagesResponse>(
+      const apiResponse = await apiClient.post<GenerateStagesResponse>(
         `${this.BASE_PATH}/generate-stages`,
-        request,
-        {
-          timeout: 30000, // 30초 타임아웃 (LLM 응답 대기)
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        }
+        request
       )
 
-      if (!response.success) {
-        throw new Error(response.error || '4단계 기획 생성에 실패했습니다.')
+      if (apiResponse.error) {
+        throw new Error(apiResponse.error.message || '4단계 기획 생성에 실패했습니다.')
+      }
+
+      const response = apiResponse.data
+      if (!response || !response.success) {
+        const errorMessage = typeof response?.error === 'string' 
+          ? response.error 
+          : response?.message || '4단계 기획 생성에 실패했습니다.'
+        throw new Error(errorMessage)
       }
 
       return response.stages
@@ -69,19 +143,21 @@ export class VideoPlanningWizardApi {
     const request: GenerateShotsRequest = { stages, input: originalInput }
 
     try {
-      const response = await apiClient.post<GenerateShotsResponse>(
+      const apiResponse = await apiClient.post<GenerateShotsResponse>(
         `${this.BASE_PATH}/generate-shots`,
-        request,
-        {
-          timeout: 45000, // 45초 타임아웃 (더 복잡한 생성)
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        }
+        request
       )
 
-      if (!response.success) {
-        throw new Error(response.error || '12개 숏 생성에 실패했습니다.')
+      if (apiResponse.error) {
+        throw new Error(apiResponse.error.message || '12개 숏 생성에 실패했습니다.')
+      }
+
+      const response = apiResponse.data
+      if (!response || !response.success) {
+        const errorMessage = typeof response?.error === 'string' 
+          ? response.error 
+          : response?.message || '12개 숏 생성에 실패했습니다.'
+        throw new Error(errorMessage)
       }
 
       return {
@@ -118,7 +194,10 @@ export class VideoPlanningWizardApi {
       )
 
       if (!response.success) {
-        throw new Error(response.error || '스토리보드 생성에 실패했습니다.')
+        const errorMessage = typeof response.error === 'string' 
+          ? response.error 
+          : response.message || '스토리보드 생성에 실패했습니다.'
+        throw new Error(errorMessage)
       }
 
       return response.storyboardUrl
@@ -163,7 +242,10 @@ export class VideoPlanningWizardApi {
       )
 
       if (!response.success) {
-        throw new Error(response.error || '기획서 내보내기에 실패했습니다.')
+        const errorMessage = typeof response.error === 'string' 
+          ? response.error 
+          : response.message || '기획서 내보내기에 실패했습니다.'
+        throw new Error(errorMessage)
       }
 
       return response.downloadUrl
@@ -201,7 +283,10 @@ export class VideoPlanningWizardApi {
       )
 
       if (!response.success) {
-        throw new Error(response.error || '프로젝트 저장에 실패했습니다.')
+        const errorMessage = typeof response.error === 'string' 
+          ? response.error 
+          : response.message || '프로젝트 저장에 실패했습니다.'
+        throw new Error(errorMessage)
       }
 
       return response.projectId

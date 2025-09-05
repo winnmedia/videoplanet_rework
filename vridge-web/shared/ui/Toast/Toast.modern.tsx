@@ -5,8 +5,9 @@
 
 'use client'
 
-import { ReactNode, useEffect, useRef, useState } from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
+import { ReactNode, useEffect, useRef, useState } from 'react'
+
 import { cn } from '../../lib/utils'
 
 // Toast variants 정의

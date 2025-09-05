@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useCallback, memo } from 'react'
+
 import { NotificationCenter, type Notification } from '@/shared/ui'
 
 interface NotificationBellProps {

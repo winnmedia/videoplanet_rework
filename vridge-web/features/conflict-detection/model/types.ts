@@ -3,7 +3,7 @@
  * Phase 1 - 핵심 비즈니스 로직 타입
  */
 
-import type { CalendarEvent } from '../../../widgets/Calendar/model/types'
+import type { CalendarEvent } from '../../../entities'
 
 /**
  * 충돌 심각도 레벨

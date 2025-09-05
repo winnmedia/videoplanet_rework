@@ -12,10 +12,11 @@ export interface PerformanceMetric {
 
 export interface CoreWebVitals {
   LCP: number // Largest Contentful Paint
-  FID: number // First Input Delay  
+  INP: number // Interaction to Next Paint (2024 Core Web Vital)
   CLS: number // Cumulative Layout Shift
   TTI: number // Time to Interactive
   FCP: number // First Contentful Paint
+  FID: number // First Input Delay (deprecated, keeping for backward compatibility)
 }
 
 export interface CustomMetrics {
@@ -57,7 +58,38 @@ export class PerformanceMonitor {
       console.warn('LCP observation not supported')
     }
 
-    // FID (First Input Delay)
+    // INP (Interaction to Next Paint) - 2024 Core Web Vital
+    let maxINP = 0
+    const inpObserver = new PerformanceObserver((list) => {
+      const entries = list.getEntries() as any[]
+      entries.forEach((entry) => {
+        // Calculate interaction delay
+        const interactionDelay = entry.processingStart - entry.startTime
+        const presentationDelay = entry.startTime + entry.duration - entry.processingEnd
+        const totalDelay = Math.max(interactionDelay + presentationDelay, entry.duration)
+        
+        // Track maximum INP (worst case for user experience)
+        if (totalDelay > maxINP) {
+          maxINP = totalDelay
+          this.recordMetric('INP', maxINP, {
+            eventType: entry.name,
+            target: entry.target?.tagName,
+            interactionDelay,
+            presentationDelay,
+            duration: entry.duration
+          })
+        }
+      })
+    })
+    
+    try {
+      inpObserver.observe({ type: 'event', buffered: true })
+      this.observers.set('INP', inpObserver)
+    } catch (e) {
+      console.warn('INP observation not supported')
+    }
+
+    // FID (First Input Delay) - Legacy metric, deprecated but kept for compatibility
     const fidObserver = new PerformanceObserver((list) => {
       const entries = list.getEntries() as any[]
       entries.forEach((entry) => {
@@ -112,12 +144,15 @@ export class PerformanceMonitor {
   }
 
   private setupPerformanceBudgets() {
-    // Core Web Vitals budgets
-    this.budgets.set('LCP', 2500)   // 2.5s
-    this.budgets.set('FID', 100)    // 100ms
-    this.budgets.set('CLS', 0.1)    // 0.1 score
-    this.budgets.set('TTI', 3800)   // 3.8s
-    this.budgets.set('FCP', 1800)   // 1.8s
+    // Core Web Vitals budgets (2024 Update - Performance Lead Requirements)
+    this.budgets.set('LCP', 2500)   // 2.5s - Largest Contentful Paint
+    this.budgets.set('INP', 200)    // 200ms - Interaction to Next Paint (NEW Core Web Vital)
+    this.budgets.set('CLS', 0.1)    // 0.1 score - Cumulative Layout Shift
+    this.budgets.set('TTI', 3800)   // 3.8s - Time to Interactive
+    this.budgets.set('FCP', 1800)   // 1.8s - First Contentful Paint
+    
+    // Legacy metric (deprecated but maintained for compatibility)
+    this.budgets.set('FID', 100)    // 100ms - First Input Delay (deprecated)
 
     // Custom metrics budgets
     this.budgets.set('videoLoadTime', 5000)        // 5s
@@ -268,10 +303,11 @@ export class PerformanceMonitor {
   getCoreWebVitals(): Partial<CoreWebVitals> {
     return {
       LCP: this.getAverageMetric('LCP') || 0,
-      FID: this.getAverageMetric('FID') || 0,
+      INP: this.getAverageMetric('INP') || 0, // 2024 Core Web Vital
       CLS: this.getAverageMetric('CLS') || 0,
       TTI: this.getAverageMetric('TTI') || 0,
-      FCP: this.getAverageMetric('FCP') || 0
+      FCP: this.getAverageMetric('FCP') || 0,
+      FID: this.getAverageMetric('FID') || 0  // Legacy metric
     }
   }
 

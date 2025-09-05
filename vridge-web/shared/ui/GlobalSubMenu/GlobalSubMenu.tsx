@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect, useRef, memo } from 'react'
 import clsx from 'clsx'
-import type { GlobalSubMenuProps } from './types'
+import { useEffect, useRef, memo } from 'react'
+
 import { useGlobalSubMenuKeyboard } from './hooks/useGlobalSubMenuKeyboard'
+import type { GlobalSubMenuProps } from './types'
 
 export const GlobalSubMenu = memo(function GlobalSubMenu({
   isOpen,

@@ -4,6 +4,7 @@
  */
 
 import { alertManager } from '@/lib/api/monitoring';
+
 import { behaviorTracker } from './behavior-tracker';
 
 // 알림 규칙 타입 정의

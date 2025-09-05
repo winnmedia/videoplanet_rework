@@ -6,9 +6,7 @@
 'use client'
 
 import React, { useState, useEffect, useMemo } from 'react'
-import { Card } from '@/shared/ui/Card/Card'
-import { LoadingSpinner } from '@/shared/ui/LoadingSpinner/LoadingSpinner'
-import { Toast } from '@/shared/ui/Toast/Toast'
+
 import { 
   Alert, 
   AlertPriority, 
@@ -29,6 +27,9 @@ import {
   getCurrentWebVitals 
 } from '@/lib/analytics/web-vitals-monitor'
 import { apiMonitor } from '@/lib/api/monitoring'
+import { Card } from '@/shared/ui/Card/Card'
+import { LoadingSpinner } from '@/shared/ui/LoadingSpinner/LoadingSpinner'
+import { Toast } from '@/shared/ui/Toast/Toast'
 
 // 대시보드 탭
 type DashboardTab = 'overview' | 'alerts' | 'journeys' | 'performance' | 'api'

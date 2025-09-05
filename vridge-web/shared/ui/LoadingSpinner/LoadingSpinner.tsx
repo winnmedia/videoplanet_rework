@@ -1,7 +1,7 @@
 'use client'
 
-import { HTMLAttributes, memo, useEffect, useState } from 'react'
 import clsx from 'clsx'
+import { HTMLAttributes, memo, useEffect, useState } from 'react'
 
 export interface LoadingSpinnerProps extends HTMLAttributes<HTMLDivElement> {
   /** 스피너 크기 */

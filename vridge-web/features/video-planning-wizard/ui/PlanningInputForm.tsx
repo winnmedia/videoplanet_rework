@@ -6,8 +6,10 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { Button, Card, Input, Select } from '@/shared/ui/index.modern'
+
 import { cn } from '@/shared/lib/utils'
+import { Button, Card, Input, Select } from '@/shared/ui/index.modern'
+
 import type { 
   PlanningInputFormProps, 
   PlanningInput, 
@@ -20,20 +22,28 @@ import type {
   Tempo,
   StoryStructure,
   StoryIntensity,
-  PresetType
+  PresetType,
+  VisualStyle,
+  CameraWork
 } from '../model/types'
 import { PRESETS } from '../model/types'
 
 const TONE_MANNER_OPTIONS: ToneManner[] = [
-  '잔잔', '발랄', '소름', '귀엽', '시크', '감성', '유머', '진지'
+  '잔잔', '발랄', '소름', '귀엽', '시크', '감성', '유머', '진지',
+  '웅장', '몽환', '역동', '차분', '열정', '신비', '따뜻', '차가움',
+  '빈티지', '미래지향', '럭셔리', '미니멀'
 ]
 
 const GENRE_OPTIONS: Genre[] = [
-  '드라마', '공포', 'SF', '액션', '광고', '다큐멘터리', '교육', '뮤직비디오', '예능', '뉴스'
+  '드라마', '공포', 'SF', '액션', '광고', '다큐멘터리', '교육', '뮤직비디오', '예능', '뉴스',
+  '로맨스', '코미디', '판타지', '스릴러', '미스터리', '애니메이션', '전기', '역사',
+  '음식', '여행', '스포츠', '패션', '라이프스타일', '게임', '뷰티'
 ]
 
 const TARGET_OPTIONS: Target[] = [
-  '10대', '20대', '30대', '40대', '50대 이상', '전 연령', '비즈니스 전문가', '일반 소비자'
+  '10대', '20대', '30대', '40대', '50대 이상', '전 연령', '비즈니스 전문가', '일반 소비자',
+  '학생', '직장인', '주부', '시니어', '창업가', '아티스트', '개발자', '마케터',
+  '디자이너', '투자자', '의료진', '교육자'
 ]
 
 const DURATION_OPTIONS: Duration[] = [
@@ -63,6 +73,19 @@ const STORY_INTENSITY_OPTIONS: { value: StoryIntensity; label: string }[] = [
   { value: '풍부하게', label: '풍부하게' }
 ]
 
+// 신규 카테고리 옵션
+const VISUAL_STYLE_OPTIONS: VisualStyle[] = [
+  '시네마틱', '다큐멘터리', '뮤직비디오', '애니메이션', '인포그래픽',
+  '스케치', '일러스트', '픽셀아트', '3D렌더링', '콜라주',
+  '빈티지', '미니멀', '네온', '파스텔', '모노크롬'
+]
+
+const CAMERA_WORK_OPTIONS: CameraWork[] = [
+  '고정샷', '패닝', '틸팅', '줌인', '줌아웃', '돌리인', '돌리아웃',
+  '트래킹샷', '크레인샷', '핸드헬드', '스테디캠', '드론샷',
+  '360도회전', '오비탈', '슬라이더'
+]
+
 const PRESET_BUTTONS: { type: PresetType; label: string; description: string }[] = [
   { type: '광고형', label: '광고형 프리셋', description: '제품/서비스 홍보용 영상' },
   { type: '드라마형', label: '드라마형 프리셋', description: '감동적인 스토리텔링 영상' },
@@ -72,6 +95,7 @@ const PRESET_BUTTONS: { type: PresetType; label: string; description: string }[]
 
 export const PlanningInputForm = ({
   onSubmit,
+  onSubmitWithAI,
   onPresetSelect,
   isLoading = false,
   error
@@ -86,6 +110,12 @@ export const PlanningInputForm = ({
     format: '실사 촬영',
     tempo: '보통',
     storyStructure: '기승전결',
+    // 신규 필드 초기값
+    visualStyle: '시네마틱',
+    cameraWork: '고정샷',
+    keywords: [],
+    mood: '',
+    colorScheme: '',
     storyIntensity: '적당히'
   })
 
@@ -117,7 +147,7 @@ export const PlanningInputForm = ({
     })
   }, [onPresetSelect])
 
-  // 폼 제출 핸들러
+  // 폼 제출 핸들러 (일반 생성)
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault()
     
@@ -125,6 +155,13 @@ export const PlanningInputForm = ({
     
     onSubmit(formData as PlanningInput)
   }, [formData, isFormValid, onSubmit])
+
+  // AI 생성 핸들러
+  const handleSubmitWithAI = useCallback(() => {
+    if (!isFormValid) return
+    
+    onSubmitWithAI?.(formData as PlanningInput)
+  }, [formData, isFormValid, onSubmitWithAI])
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
@@ -185,7 +222,7 @@ export const PlanningInputForm = ({
         {/* 스타일 설정 섹션 */}
         <Card className="p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">스타일 설정</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div>
               <Select
                 label="톤앤매너"
@@ -341,22 +378,80 @@ export const PlanningInputForm = ({
         </Card>
 
         {/* 제출 버튼 */}
-        <div className="flex justify-center">
-          <Button
-            type="submit"
-            disabled={!isFormValid || isLoading}
-            size="lg"
-            className="min-w-32"
-          >
-            {isLoading ? (
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                <span>생성 중...</span>
+        <div className="space-y-6">
+          {/* AI 생성 섹션 (신규) */}
+          {onSubmitWithAI && (
+            <Card className="p-6 bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200">
+              <div className="text-center space-y-4">
+                <div className="flex justify-center">
+                  <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
+                    <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                </div>
+                <div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-2">AI로 스마트하게 생성</h4>
+                  <p className="text-sm text-gray-600">
+                    Gemini AI가 장르별 최적화된 4단계 스토리 구조를 자동으로 생성합니다
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  onClick={handleSubmitWithAI}
+                  disabled={!isFormValid || isLoading}
+                  size="lg"
+                  className="min-w-40 bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white border-0"
+                >
+                  {isLoading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>AI 생성 중...</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+                      </svg>
+                      <span>AI로 생성</span>
+                    </div>
+                  )}
+                </Button>
               </div>
-            ) : (
-              '생성'
-            )}
-          </Button>
+            </Card>
+          )}
+
+          {/* 구분선 */}
+          {onSubmitWithAI && (
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">또는</span>
+              </div>
+            </div>
+          )}
+
+          {/* 기존 생성 버튼 */}
+          <div className="flex justify-center">
+            <Button
+              type="submit"
+              disabled={!isFormValid || isLoading}
+              size="lg"
+              className="min-w-32"
+              variant={onSubmitWithAI ? "outline" : "default"}
+            >
+              {isLoading ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" />
+                  <span>생성 중...</span>
+                </div>
+              ) : (
+                '일반 생성'
+              )}
+            </Button>
+          </div>
         </div>
       </form>
 

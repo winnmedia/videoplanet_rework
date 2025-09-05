@@ -1,14 +1,10 @@
 'use client'
 
 import { useState, useMemo, useCallback } from 'react'
+
+import type { CalendarFilter, CalendarViewSettings, CalendarEvent, Project, ProjectLegendItem } from '@/entities/project'
+import { CalendarFilters, CalendarView, ConflictAlert, GanttView, ProjectLegend, WeekView } from '@/features/calendar'
 import { SideBar } from '@/widgets'
-import { CalendarView } from '@/features/calendar/ui/CalendarView'
-import { WeekView } from '@/features/calendar/ui/WeekView'
-import { GanttView } from '@/features/calendar/ui/GanttView'
-import { CalendarFilters } from '@/features/calendar/ui/CalendarFilters'
-import { ProjectLegend } from '@/features/calendar/ui/ProjectLegend'
-import { ConflictAlert } from '@/features/calendar/ui/ConflictAlert'
-import type { CalendarFilter, CalendarViewSettings, CalendarEvent, Project, ProjectLegendItem } from '@/entities/project/model/calendar-types'
 
 export default function CalendarPage() {
   // 상태 관리
@@ -30,8 +26,8 @@ export default function CalendarPage() {
   })
   const [projectVisibility, setProjectVisibility] = useState<Record<string, boolean>>({})
   
-  // Mock 데이터
-  const mockProjects: Project[] = [
+  // Mock 데이터 - useMemo로 래핑하여 의존성 최적화
+  const mockProjects: Project[] = useMemo(() => [
     {
       id: 'proj1',
       name: 'VRidge 웹 플랫폼',
@@ -68,9 +64,9 @@ export default function CalendarPage() {
       endDate: '2025-09-15',
       description: '신규 클라이언트 대상 프레젠테이션 준비'
     }
-  ]
+  ], [])
 
-  const mockEvents: CalendarEvent[] = [
+  const mockEvents: CalendarEvent[] = useMemo(() => [
     {
       id: 'event1',
       title: '프로젝트 킥오프',
@@ -146,7 +142,7 @@ export default function CalendarPage() {
       isDraggable: true,
       isResizable: false
     }
-  ]
+  ], [])
 
   // 필터링된 이벤트 계산
   const filteredEvents = useMemo(() => {

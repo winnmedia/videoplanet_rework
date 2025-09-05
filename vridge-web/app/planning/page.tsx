@@ -1,8 +1,9 @@
 'use client'
 
 import { Metadata } from 'next'
-import { SideBar } from '@/widgets'
+
 import { VideoPlanningWizard } from '@/features/video-planning-wizard'
+import { SideBar } from '@/widgets'
 
 export default function PlanningPage() {
   return (

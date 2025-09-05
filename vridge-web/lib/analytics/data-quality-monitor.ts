@@ -3,14 +3,15 @@
  * 데이터 파이프라인의 신뢰성을 보장하고 서비스 수준 목표를 추적
  */
 
+import { apiMonitor } from '@/lib/api/monitoring'
 import { 
   DataQualityMetric, 
   SLOMetric, 
   MonitoringSchemaValidator 
 } from '@/shared/api/monitoring-schemas'
-import { realTimeDataCollector } from './real-time-data-collector'
+
 import { alertSystem } from './alert-system'
-import { apiMonitor } from '@/lib/api/monitoring'
+import { realTimeDataCollector } from './real-time-data-collector'
 
 // 데이터 품질 규칙
 export interface DataQualityRule {

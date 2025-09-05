@@ -5,6 +5,7 @@
 
 import 'cypress-axe'
 import '@cypress/code-coverage/support'
+import 'cypress-real-events'
 
 // 전역 타입 정의
 declare global {

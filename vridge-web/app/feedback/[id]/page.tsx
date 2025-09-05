@@ -2,6 +2,7 @@
 
 import { useParams } from 'next/navigation'
 import { useState, useEffect } from 'react'
+
 import { SideBar } from '@/widgets'
 
 export default function FeedbackDetailPage() {

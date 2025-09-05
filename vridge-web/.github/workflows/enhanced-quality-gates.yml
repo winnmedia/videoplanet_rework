@@ -1,0 +1,885 @@
+name: Enhanced Quality Gates - Phase 2-3 Support
+
+on:
+  pull_request:
+    branches: [main, master, develop]
+  push:
+    branches: [main, master, develop]
+  workflow_dispatch:
+    inputs:
+      force_e2e:
+        description: 'Force E2E tests regardless of changes'
+        required: false
+        default: 'false'
+        type: boolean
+      skip_cache:
+        description: 'Skip cache for debugging'
+        required: false
+        default: 'false'
+        type: boolean
+
+env:
+  NODE_VERSION: '20.19.0'
+  PNPM_VERSION: '10.15.0'
+  CI: true
+  FORCE_COLOR: 3
+  DETERMINISTIC_BUILD: true
+
+jobs:
+  # === PHASE 1: DETERMINISTIC SETUP ===
+  setup-and-analysis:
+    name: Deterministic Setup & Change Analysis
+    runs-on: ubuntu-latest
+    outputs:
+      cache-key: ${{ steps.cache-key.outputs.key }}
+      should-run-e2e: ${{ steps.changes.outputs.frontend == 'true' || steps.changes.outputs.e2e == 'true' || github.event.inputs.force_e2e == 'true' }}
+      fsd-changes: ${{ steps.changes.outputs.fsd-structure == 'true' }}
+      client-server-changes: ${{ steps.changes.outputs.client-server == 'true' }}
+      
+    steps:
+      - name: Checkout with full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          
+      - name: Detect architectural changes for intelligent testing
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            frontend:
+              - 'src/**'
+              - 'app/**'
+              - '*.config.*'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+            fsd-structure:
+              - 'src/app/**'
+              - 'src/processes/**'
+              - 'src/widgets/**'
+              - 'src/features/**'
+              - 'src/entities/**'
+              - 'src/shared/**'
+            client-server:
+              - 'app/**/page.tsx'
+              - 'app/**/layout.tsx'
+              - '**/*.client.tsx'
+              - '**/use*.ts'
+            e2e:
+              - 'test/e2e/**'
+              - 'cypress/**'
+              - 'playwright.config.*'
+              - 'cypress.config.*'
+
+      - name: Setup Node.js with corepack
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          check-latest: true
+
+      - name: Enable deterministic PNPM
+        run: |
+          corepack enable
+          corepack prepare pnpm@${{ env.PNPM_VERSION }} --activate
+          
+          # Verify version determinism
+          if [ "$(pnpm --version)" != "${{ env.PNPM_VERSION }}" ]; then
+            echo "❌ PNPM version mismatch! Expected: ${{ env.PNPM_VERSION }}, Got: $(pnpm --version)"
+            exit 1
+          fi
+          echo "✅ PNPM version confirmed: $(pnpm --version)"
+
+      - name: Generate deterministic cache keys
+        id: cache-key
+        run: |
+          NODE_PLATFORM="$(node -p 'process.platform + process.arch')"
+          LOCKFILE_HASH="$(sha256sum pnpm-lock.yaml | cut -d' ' -f1)"
+          
+          echo "key=deterministic-pnpm-${{ env.NODE_VERSION }}-${NODE_PLATFORM}-${LOCKFILE_HASH}" >> $GITHUB_OUTPUT
+          echo "node-modules-key=node-modules-${{ env.NODE_VERSION }}-${NODE_PLATFORM}-${LOCKFILE_HASH}" >> $GITHUB_OUTPUT
+
+      - name: Setup dependency cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pnpm-store
+            node_modules
+            ~/.cache/cypress
+          key: ${{ steps.cache-key.outputs.node-modules-key }}
+          restore-keys: |
+            node-modules-${{ env.NODE_VERSION }}-
+
+      - name: Install dependencies (Deterministic)
+        run: |
+          echo "📦 Installing dependencies with frozen lockfile..."
+          pnpm install --frozen-lockfile --prefer-offline --no-optional
+          
+          # Verify critical dependencies
+          echo "🔍 Verifying installation integrity..."
+          pnpm audit --audit-level high || echo "⚠️  High-severity vulnerabilities found"
+          echo "Package count: $(find node_modules -name 'package.json' | wc -l)"
+
+  # === PHASE 2: ENHANCED ARCHITECTURE VALIDATION ===
+  architecture-compliance:
+    name: FSD & Client/Server Architecture Compliance
+    runs-on: ubuntu-latest
+    needs: setup-and-analysis
+    strategy:
+      matrix:
+        check: [fsd-boundaries, client-server-boundaries, circular-dependencies, import-validation]
+      fail-fast: false
+      
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js with corepack
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Enable Corepack
+        run: |
+          corepack enable
+          corepack prepare pnpm@${{ env.PNPM_VERSION }} --activate
+
+      - name: Restore dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pnpm-store
+            node_modules
+            ~/.cache/cypress
+          key: ${{ needs.setup-and-analysis.outputs.cache-key }}
+          fail-on-cache-miss: true
+
+      - name: FSD Boundaries Enforcement
+        if: matrix.check == 'fsd-boundaries'
+        run: |
+          echo "::group::FSD Architecture Boundaries Validation"
+          
+          # Enhanced ESLint check with FSD-specific rules
+          echo "🏗️  Validating FSD layer boundaries..."
+          pnpm lint --format=@eslint/eslint-formatter-unix --max-warnings=0
+          
+          # Additional FSD compliance checks
+          echo "📋 Checking FSD structure compliance..."
+          
+          # Check for proper index.ts exports (Public API)
+          echo "🔍 Validating Public API exports..."
+          find src/features -mindepth 2 -maxdepth 2 -type d | while read dir; do
+            if [ ! -f "$dir/index.ts" ]; then
+              echo "❌ Missing Public API: $dir/index.ts"
+              exit 1
+            fi
+          done
+          
+          # Check for cross-layer imports
+          echo "🚫 Scanning for prohibited cross-layer imports..."
+          if grep -r "from.*\.\./\.\./\.\." --include="*.ts" --include="*.tsx" src/; then
+            echo "❌ Deep relative imports detected! Use absolute imports."
+            exit 1
+          fi
+          
+          echo "✅ FSD boundaries validation passed"
+          echo "::endgroup::"
+
+      - name: Client/Server Component Boundaries
+        if: matrix.check == 'client-server-boundaries'
+        run: |
+          echo "::group::Next.js 15.5 Client/Server Component Boundaries"
+          
+          # Check for Server Component violations
+          echo "🖥️  Validating Server Component compliance..."
+          
+          # Check that Server Components don't use client-side hooks
+          if grep -r "useState\|useEffect\|useCallback" --include="page.tsx" --include="layout.tsx" app/; then
+            echo "❌ Server Components cannot use client-side hooks!"
+            echo "   Add 'use client' directive or move to a separate Client Component"
+            exit 1
+          fi
+          
+          # Check for proper 'use client' directives
+          echo "📱 Validating Client Component directives..."
+          find src -name "*.client.tsx" | while read file; do
+            if ! head -1 "$file" | grep -q "use client"; then
+              echo "❌ Client Component missing 'use client' directive: $file"
+              exit 1
+            fi
+          done
+          
+          # Check for Node.js imports in Client Components
+          echo "🚫 Checking for Node.js imports in Client Components..."
+          if grep -r "import.*from ['\"]fs['\"]" --include="*.client.tsx" --include="use*.ts" src/; then
+            echo "❌ Node.js imports detected in Client Components!"
+            exit 1
+          fi
+          
+          echo "✅ Client/Server boundaries validation passed"
+          echo "::endgroup::"
+
+      - name: Circular Dependencies Detection
+        if: matrix.check == 'circular-dependencies'
+        run: |
+          echo "::group::Circular Dependencies Analysis"
+          
+          # Install madge for circular dependency detection
+          npm install -g madge
+          
+          echo "🔄 Scanning for circular dependencies..."
+          if madge --circular --extensions ts,tsx src/; then
+            echo "❌ Circular dependencies detected!"
+            echo "   This violates clean architecture principles"
+            exit 1
+          fi
+          
+          # Check specific critical components
+          echo "🎯 Checking critical component dependencies..."
+          madge --extensions ts,tsx --json src/features/conflict-detection/ > conflict-deps.json
+          madge --extensions ts,tsx --json src/features/realtime-collaboration/ > collab-deps.json
+          
+          # Validate that critical components have minimal dependencies
+          CONFLICT_DEPS=$(cat conflict-deps.json | jq 'length')
+          if [ "$CONFLICT_DEPS" -gt 10 ]; then
+            echo "⚠️  Conflict Detection has high dependency count: $CONFLICT_DEPS"
+            echo "   Consider reducing dependencies for better performance"
+          fi
+          
+          echo "✅ Circular dependencies check passed"
+          echo "::endgroup::"
+
+      - name: Import Validation & Path Aliases
+        if: matrix.check == 'import-validation'
+        run: |
+          echo "::group::Import Path Validation"
+          
+          # Check for consistent path aliases usage
+          echo "📁 Validating path aliases consistency..."
+          
+          # Check that @/ aliases are used consistently
+          if grep -r "import.*from ['\"]\.\./" --include="*.ts" --include="*.tsx" src/; then
+            echo "❌ Relative imports detected! Use absolute imports with @/ aliases"
+            exit 1
+          fi
+          
+          # Validate that all layers use proper imports
+          echo "🔍 Validating layer import patterns..."
+          
+          # Features should not import from widgets/processes/app
+          if grep -r "from ['\"]@/widgets\|@/processes\|@/app" --include="*.ts" --include="*.tsx" src/features/; then
+            echo "❌ Features layer importing from higher layers!"
+            exit 1
+          fi
+          
+          # Entities should only import from shared
+          if grep -r "from ['\"]@/features\|@/widgets\|@/processes\|@/app" --include="*.ts" --include="*.tsx" src/entities/; then
+            echo "❌ Entities layer importing from higher layers!"
+            exit 1
+          fi
+          
+          echo "✅ Import validation passed"
+          echo "::endgroup::"
+
+  # === PHASE 3: ENHANCED E2E TESTING WITH PROGRESSIVE THRESHOLDS ===
+  e2e-quality-progressive:
+    name: Progressive E2E Quality Enhancement
+    runs-on: ubuntu-latest
+    needs: [setup-and-analysis, architecture-compliance]
+    if: needs.setup-and-analysis.outputs.should-run-e2e == 'true'
+    
+    strategy:
+      matrix:
+        test-suite: [smoke, critical-path, user-journey]
+      fail-fast: false
+      
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js with corepack
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Enable Corepack
+        run: |
+          corepack enable
+          corepack prepare pnpm@${{ env.PNPM_VERSION }} --activate
+
+      - name: Restore dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pnpm-store
+            node_modules
+            ~/.cache/cypress
+          key: ${{ needs.setup-and-analysis.outputs.cache-key }}
+          fail-on-cache-miss: true
+
+      - name: Install E2E dependencies
+        run: |
+          echo "🎭 Installing E2E test dependencies..."
+          pnpm dlx playwright install --with-deps chromium
+          
+          # Verify Playwright installation
+          echo "🔍 Verifying Playwright setup..."
+          npx playwright --version
+
+      - name: Build application for E2E testing
+        run: |
+          echo "🏗️  Building application for E2E tests..."
+          pnpm build
+          
+          # Validate build artifacts
+          if [ ! -d ".next" ]; then
+            echo "❌ Build artifacts missing!"
+            exit 1
+          fi
+
+      - name: Start application server
+        run: |
+          echo "🚀 Starting application server..."
+          pnpm start &
+          
+          # Wait for server to be ready
+          npx wait-on http://localhost:3000 --timeout 60000
+          
+          # Health check
+          curl -f http://localhost:3000 || exit 1
+
+      - name: Run E2E Smoke Tests (Current Baseline)
+        if: matrix.test-suite == 'smoke'
+        run: |
+          echo "::group::E2E Smoke Tests - Baseline Measurement"
+          
+          # Current baseline: measure and improve from 1.6%
+          echo "🧪 Running baseline smoke tests..."
+          
+          # Set environment for deterministic testing
+          export DETERMINISTIC_E2E=true
+          export PLAYWRIGHT_BROWSERS_PATH=$HOME/.cache/ms-playwright
+          
+          # Run smoke tests with detailed reporting
+          pnpm test:e2e:smoke --reporter=json,html --output-dir=test-results/smoke
+          
+          # Analyze results and set progressive targets
+          SMOKE_RESULTS=$(find test-results/smoke -name "*.json" -exec cat {} \; | jq -r '.stats')
+          PASSING_TESTS=$(echo $SMOKE_RESULTS | jq '.passing // 0')
+          TOTAL_TESTS=$(echo $SMOKE_RESULTS | jq '.total // 1')
+          CURRENT_RATE=$(echo "scale=2; $PASSING_TESTS * 100 / $TOTAL_TESTS" | bc -l)
+          
+          echo "📊 Smoke Test Results:"
+          echo "   Passing: $PASSING_TESTS"
+          echo "   Total: $TOTAL_TESTS"  
+          echo "   Success Rate: ${CURRENT_RATE}%"
+          
+          # Phase 2-3 Progressive Target: 25% (from current 1.6%)
+          TARGET_RATE=25.0
+          
+          if (( $(echo "$CURRENT_RATE >= $TARGET_RATE" | bc -l) )); then
+            echo "✅ Phase 2-3 target achieved: ${CURRENT_RATE}% >= ${TARGET_RATE}%"
+          else
+            echo "📈 Phase 2-3 progress: ${CURRENT_RATE}% (target: ${TARGET_RATE}%)"
+            echo "   Improvement needed: $(echo "$TARGET_RATE - $CURRENT_RATE" | bc -l)%"
+            
+            # Don't fail CI - just track progress
+            echo "::warning::E2E success rate below Phase 2-3 target, but acceptable for current phase"
+          fi
+          
+          echo "::endgroup::"
+
+      - name: Run Critical Path Tests (Enhanced)
+        if: matrix.test-suite == 'critical-path'
+        run: |
+          echo "::group::Critical Path E2E Tests - Phase 2-3 Enhancement"
+          
+          # Phase 2-3 Target: 60% for critical paths
+          echo "🎯 Running enhanced critical path tests..."
+          
+          pnpm test:e2e:critical --reporter=json,html --output-dir=test-results/critical
+          
+          # Enhanced error reporting for failing tests
+          if [ -f "test-results/critical/results.json" ]; then
+            CRITICAL_RESULTS=$(cat test-results/critical/results.json | jq -r '.stats')
+            CRITICAL_PASSING=$(echo $CRITICAL_RESULTS | jq '.passing // 0')
+            CRITICAL_TOTAL=$(echo $CRITICAL_RESULTS | jq '.total // 1')
+            CRITICAL_RATE=$(echo "scale=2; $CRITICAL_PASSING * 100 / $CRITICAL_TOTAL" | bc -l)
+            
+            echo "📊 Critical Path Results:"
+            echo "   Passing: $CRITICAL_PASSING"
+            echo "   Total: $CRITICAL_TOTAL"
+            echo "   Success Rate: ${CRITICAL_RATE}%"
+            
+            # Phase 2-3 target for critical paths: 60%
+            CRITICAL_TARGET=60.0
+            
+            if (( $(echo "$CRITICAL_RATE >= $CRITICAL_TARGET" | bc -l) )); then
+              echo "✅ Critical path target achieved: ${CRITICAL_RATE}% >= ${CRITICAL_TARGET}%"
+            else
+              echo "⚠️  Critical path below target: ${CRITICAL_RATE}% < ${CRITICAL_TARGET}%"
+              echo "::warning::Critical path tests need attention for Phase 2-3 completion"
+            fi
+          fi
+          
+          echo "::endgroup::"
+
+      - name: Run User Journey Tests (Comprehensive)
+        if: matrix.test-suite == 'user-journey'
+        run: |
+          echo "::group::User Journey E2E Tests - Full Flow Validation"
+          
+          # Focus on end-to-end user workflows
+          echo "👤 Running comprehensive user journey tests..."
+          
+          pnpm test:e2e:journey --reporter=json,html --output-dir=test-results/journey
+          
+          # Journey tests are more complex - lower target but critical
+          if [ -f "test-results/journey/results.json" ]; then
+            JOURNEY_RESULTS=$(cat test-results/journey/results.json | jq -r '.stats')
+            JOURNEY_PASSING=$(echo $JOURNEY_RESULTS | jq '.passing // 0')
+            JOURNEY_TOTAL=$(echo $JOURNEY_RESULTS | jq '.total // 1')
+            JOURNEY_RATE=$(echo "scale=2; $JOURNEY_PASSING * 100 / $JOURNEY_TOTAL" | bc -l)
+            
+            echo "📊 User Journey Results:"
+            echo "   Passing: $JOURNEY_PASSING"
+            echo "   Total: $JOURNEY_TOTAL"
+            echo "   Success Rate: ${JOURNEY_RATE}%"
+            
+            # Phase 2-3 target for user journeys: 40%
+            JOURNEY_TARGET=40.0
+            
+            if (( $(echo "$JOURNEY_RATE >= $JOURNEY_TARGET" | bc -l) )); then
+              echo "✅ User journey target achieved: ${JOURNEY_RATE}% >= ${JOURNEY_TARGET}%"
+            else
+              echo "📈 User journey progress: ${JOURNEY_RATE}% (target: ${JOURNEY_TARGET}%)"
+            fi
+          fi
+          
+          echo "::endgroup::"
+
+      - name: Upload E2E Results with Enhanced Reporting
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-results-${{ matrix.test-suite }}-${{ github.sha }}
+          path: |
+            test-results/
+            playwright-report/
+          retention-days: 30
+
+  # === PHASE 4: ENHANCED PERFORMANCE & CORE WEB VITALS ===
+  performance-budget-enhanced:
+    name: Enhanced Performance Budget & Core Web Vitals
+    runs-on: ubuntu-latest
+    needs: [setup-and-analysis, architecture-compliance]
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js with corepack
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Enable Corepack
+        run: |
+          corepack enable
+          corepack prepare pnpm@${{ env.PNPM_VERSION }} --activate
+
+      - name: Restore dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pnpm-store
+            node_modules
+            ~/.cache/cypress
+          key: ${{ needs.setup-and-analysis.outputs.cache-key }}
+          fail-on-cache-miss: true
+
+      - name: Build for Performance Analysis
+        run: |
+          echo "🏗️  Building optimized production build..."
+          NODE_ENV=production pnpm build --profile
+          
+          # Validate build size
+          BUILD_SIZE=$(du -sh .next | cut -f1)
+          echo "📦 Build size: $BUILD_SIZE"
+
+      - name: Start production server
+        run: |
+          echo "🚀 Starting production server..."
+          pnpm start &
+          npx wait-on http://localhost:3000 --timeout 60000
+
+      - name: Install Lighthouse CI
+        run: |
+          echo "💡 Installing Lighthouse CI..."
+          npm install -g @lhci/cli@0.12.0
+
+      - name: Run Enhanced Lighthouse Analysis
+        run: |
+          echo "::group::Enhanced Core Web Vitals Analysis"
+          
+          # Create lighthouse configuration for comprehensive analysis
+          cat > lighthouserc.enhanced.js << 'EOF'
+          module.exports = {
+            ci: {
+              collect: {
+                url: [
+                  'http://localhost:3000',
+                  'http://localhost:3000/dashboard',
+                  'http://localhost:3000/calendar',
+                  'http://localhost:3000/feedback'
+                ],
+                numberOfRuns: 3,
+                settings: {
+                  preset: 'desktop',
+                  chromeFlags: '--no-sandbox --disable-dev-shm-usage',
+                  onlyCategories: ['performance', 'accessibility'],
+                }
+              },
+              assert: {
+                assertions: {
+                  'categories:performance': ['error', {minScore: 0.85}],
+                  'categories:accessibility': ['error', {minScore: 0.90}],
+                  'largest-contentful-paint': ['error', {maxNumericValue: 2500}],
+                  'first-input-delay': ['error', {maxNumericValue: 100}],
+                  'cumulative-layout-shift': ['error', {maxNumericValue: 0.1}],
+                  'total-blocking-time': ['error', {maxNumericValue: 200}],
+                  'speed-index': ['error', {maxNumericValue: 3000}]
+                }
+              },
+              upload: {
+                target: 'temporary-public-storage',
+              },
+            },
+          };
+          EOF
+          
+          # Run Lighthouse CI with enhanced configuration
+          lhci autorun --config=lighthouserc.enhanced.js
+          
+          echo "::endgroup::"
+
+      - name: Core Web Vitals Validation & Reporting
+        run: |
+          echo "::group::Core Web Vitals Compliance Check"
+          
+          # Extract detailed metrics from Lighthouse results
+          if [ -f ".lighthouseci/lhr-*.json" ]; then
+            LHR_FILE=$(ls .lighthouseci/lhr-*.json | head -1)
+            
+            # Extract Core Web Vitals
+            LCP=$(cat "$LHR_FILE" | jq '.audits["largest-contentful-paint"].numericValue // 0')
+            FID=$(cat "$LHR_FILE" | jq '.audits["max-potential-fid"].numericValue // 0')
+            CLS=$(cat "$LHR_FILE" | jq '.audits["cumulative-layout-shift"].numericValue // 0')
+            TBT=$(cat "$LHR_FILE" | jq '.audits["total-blocking-time"].numericValue // 0')
+            SI=$(cat "$LHR_FILE" | jq '.audits["speed-index"].numericValue // 0')
+            
+            # Performance score
+            PERF_SCORE=$(cat "$LHR_FILE" | jq '.categories.performance.score * 100')
+            A11Y_SCORE=$(cat "$LHR_FILE" | jq '.categories.accessibility.score * 100')
+            
+            echo "📊 Enhanced Performance Report:"
+            echo "=================================="
+            echo "Performance Score: ${PERF_SCORE}% (target: 85%+)"
+            echo "Accessibility Score: ${A11Y_SCORE}% (target: 90%+)"
+            echo ""
+            echo "Core Web Vitals:"
+            echo "  LCP: ${LCP}ms (target: ≤2500ms)"
+            echo "  FID: ${FID}ms (target: ≤100ms)"  
+            echo "  CLS: $CLS (target: ≤0.1)"
+            echo "  TBT: ${TBT}ms (target: ≤200ms)"
+            echo "  SI: ${SI}ms (target: ≤3000ms)"
+            
+            # Enhanced validation with detailed feedback
+            VIOLATIONS=0
+            
+            if (( $(echo "$LCP > 2500" | bc -l) )); then
+              echo "❌ LCP violation: ${LCP}ms > 2500ms"
+              VIOLATIONS=$((VIOLATIONS + 1))
+            fi
+            
+            if (( $(echo "$CLS > 0.1" | bc -l) )); then
+              echo "❌ CLS violation: $CLS > 0.1"
+              VIOLATIONS=$((VIOLATIONS + 1))
+            fi
+            
+            if (( $(echo "$TBT > 200" | bc -l) )); then
+              echo "⚠️  TBT warning: ${TBT}ms > 200ms"
+              echo "   Consider code splitting and reducing main thread work"
+            fi
+            
+            if (( $(echo "$PERF_SCORE < 85" | bc -l) )); then
+              echo "❌ Performance score violation: ${PERF_SCORE}% < 85%"
+              VIOLATIONS=$((VIOLATIONS + 1))
+            fi
+            
+            if [ $VIOLATIONS -gt 0 ]; then
+              echo ""
+              echo "🚫 Performance budget violated with $VIOLATIONS critical issues"
+              echo "🔧 Recommended actions:"
+              echo "  - Optimize images and lazy loading"
+              echo "  - Implement code splitting"
+              echo "  - Reduce bundle size"
+              echo "  - Optimize critical rendering path"
+              exit 1
+            else
+              echo "✅ All performance budgets met!"
+            fi
+          else
+            echo "⚠️  Lighthouse results not found - skipping detailed validation"
+          fi
+          
+          echo "::endgroup::"
+
+      - name: Upload Performance Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: performance-reports-${{ github.sha }}
+          path: |
+            .lighthouseci/
+          retention-days: 30
+
+  # === PHASE 5: ENHANCED TYPESCRIPT VALIDATION ===
+  typescript-enhanced:
+    name: Enhanced TypeScript Validation & Type Safety
+    runs-on: ubuntu-latest
+    needs: setup-and-analysis
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js with corepack
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Enable Corepack
+        run: |
+          corepack enable
+          corepack prepare pnpm@${{ env.PNPM_VERSION }} --activate
+
+      - name: Restore dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pnpm-store
+            node_modules
+            ~/.cache/cypress
+          key: ${{ needs.setup-and-analysis.outputs.cache-key }}
+          fail-on-cache-miss: true
+
+      - name: Enhanced TypeScript Compilation Check
+        run: |
+          echo "::group::Enhanced TypeScript Type Safety Validation"
+          
+          # Check TypeScript version
+          TS_VERSION=$(pnpm exec tsc --version)
+          echo "📝 Using TypeScript: $TS_VERSION"
+          
+          # Incremental compilation for faster feedback
+          echo "🔨 Running incremental TypeScript compilation..."
+          pnpm type-check:incremental
+          
+          # Strict mode validation for critical paths
+          echo "🔒 Validating strict mode compliance for critical components..."
+          
+          # Check critical components with strict settings
+          CRITICAL_FILES=(
+            "src/shared/lib/data-integrity.ts"
+            "src/shared/lib/api-contract.ts"
+            "src/features/conflict-detection/**/*.ts"
+            "src/features/realtime-collaboration/**/*.ts"
+          )
+          
+          for pattern in "${CRITICAL_FILES[@]}"; do
+            if ls $pattern 1> /dev/null 2>&1; then
+              echo "🔍 Checking: $pattern"
+              npx tsc --noEmit --strict $pattern || {
+                echo "❌ Strict mode violation in critical component: $pattern"
+                exit 1
+              }
+            fi
+          done
+          
+          # Type coverage analysis
+          echo "📊 Analyzing type coverage..."
+          
+          # Check for any types
+          ANY_TYPES=$(grep -r ": any" --include="*.ts" --include="*.tsx" src/ | wc -l)
+          echo "⚠️  'any' types found: $ANY_TYPES"
+          
+          if [ $ANY_TYPES -gt 10 ]; then
+            echo "❌ Too many 'any' types detected: $ANY_TYPES > 10"
+            echo "   Please add proper type annotations"
+            exit 1
+          fi
+          
+          # Check for @ts-ignore usage
+          TS_IGNORES=$(grep -r "@ts-ignore\|@ts-nocheck" --include="*.ts" --include="*.tsx" src/ | wc -l)
+          echo "🚫 TypeScript ignores found: $TS_IGNORES"
+          
+          if [ $TS_IGNORES -gt 0 ]; then
+            echo "❌ TypeScript ignores detected: $TS_IGNORES"
+            echo "   Found violations:"
+            grep -r "@ts-ignore\|@ts-nocheck" --include="*.ts" --include="*.tsx" src/
+            exit 1
+          fi
+          
+          echo "✅ Enhanced TypeScript validation passed"
+          echo "::endgroup::"
+
+  # === PHASE 6: FINAL QUALITY GATE SUMMARY ===
+  enhanced-quality-summary:
+    name: Enhanced Quality Gate Summary - Phase 2-3
+    runs-on: ubuntu-latest
+    needs: [
+      setup-and-analysis,
+      architecture-compliance, 
+      e2e-quality-progressive,
+      performance-budget-enhanced,
+      typescript-enhanced
+    ]
+    if: always()
+    
+    steps:
+      - name: Generate Enhanced Quality Report
+        run: |
+          echo "::group::Phase 2-3 Enhanced Quality Gate Summary"
+          
+          # Collect all job results
+          ARCHITECTURE_RESULT="${{ needs.architecture-compliance.result }}"
+          E2E_RESULT="${{ needs.e2e-quality-progressive.result }}"
+          PERFORMANCE_RESULT="${{ needs.performance-budget-enhanced.result }}"
+          TYPESCRIPT_RESULT="${{ needs.typescript-enhanced.result }}"
+          
+          echo "📋 ENHANCED QUALITY GATE REPORT - PHASE 2-3"
+          echo "============================================="
+          echo "Commit SHA: ${{ github.sha }}"
+          echo "Node.js: ${{ env.NODE_VERSION }} (deterministic)"
+          echo "PNPM: ${{ env.PNPM_VERSION }} (deterministic)"
+          echo "Build System: Deterministic ✅"
+          echo ""
+          
+          echo "🎯 Phase 2-3 Quality Gates Status:"
+          echo "  Architecture Compliance: $ARCHITECTURE_RESULT"
+          echo "  E2E Progressive Testing: $E2E_RESULT"
+          echo "  Performance Budget: $PERFORMANCE_RESULT"
+          echo "  TypeScript Enhanced: $TYPESCRIPT_RESULT"
+          echo ""
+          
+          # Required gates for Phase 2-3
+          REQUIRED_GATES=("$ARCHITECTURE_RESULT" "$TYPESCRIPT_RESULT")
+          PROGRESSIVE_GATES=("$E2E_RESULT" "$PERFORMANCE_RESULT")
+          
+          CRITICAL_FAILURES=0
+          for gate in "${REQUIRED_GATES[@]}"; do
+            if [ "$gate" != "success" ]; then
+              CRITICAL_FAILURES=$((CRITICAL_FAILURES + 1))
+            fi
+          done
+          
+          echo "📊 Phase 2-3 Progress Analysis:"
+          echo "  Required Gates (MUST PASS): $CRITICAL_FAILURES failures"
+          echo "  Progressive Gates (IMPROVING): tracked for enhancement"
+          echo ""
+          
+          if [ $CRITICAL_FAILURES -eq 0 ]; then
+            echo "✅ PHASE 2-3 QUALITY GATES PASSED"
+            echo "🚀 Architecture and TypeScript compliance maintained"
+            echo "📈 E2E and Performance tracking in progress"
+            echo ""
+            echo "✅ MERGE APPROVED - Continue Phase 2-3 development"
+          else
+            echo "❌ CRITICAL QUALITY GATES FAILED: $CRITICAL_FAILURES"
+            echo "🚫 MERGE BLOCKED - Fix required gates first"
+            echo ""
+            echo "🔧 Required Actions:"
+            if [ "$ARCHITECTURE_RESULT" != "success" ]; then
+              echo "  - Fix FSD architecture violations"
+              echo "  - Resolve Client/Server component boundaries"
+            fi
+            if [ "$TYPESCRIPT_RESULT" != "success" ]; then
+              echo "  - Fix TypeScript compilation errors"
+              echo "  - Remove 'any' types and @ts-ignore usage"
+            fi
+            
+            exit 1
+          fi
+          
+          echo "::endgroup::"
+
+      - name: Post Enhanced Quality Report to PR
+        if: github.event_name == 'pull_request' && github.event.action != 'closed'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const results = {
+              'architecture-compliance': '${{ needs.architecture-compliance.result }}',
+              'e2e-quality-progressive': '${{ needs.e2e-quality-progressive.result }}',
+              'performance-budget-enhanced': '${{ needs.performance-budget-enhanced.result }}',
+              'typescript-enhanced': '${{ needs.typescript-enhanced.result }}'
+            };
+            
+            const requiredGates = ['architecture-compliance', 'typescript-enhanced'];
+            const progressiveGates = ['e2e-quality-progressive', 'performance-budget-enhanced'];
+            
+            const criticalFailures = requiredGates.filter(gate => results[gate] !== 'success');
+            const progressiveStatus = progressiveGates.map(gate => `${gate}: ${results[gate]}`);
+            
+            let comment;
+            if (criticalFailures.length === 0) {
+              comment = `## ✅ **Phase 2-3 Enhanced Quality Gates - PASSED**
+            
+            🎉 **Critical quality gates maintained for Phase 2-3 development**
+            
+            ### ✅ Required Gates (PASSED):
+            - ✅ Architecture Compliance (FSD + Client/Server boundaries)
+            - ✅ TypeScript Enhanced Validation
+            
+            ### 📈 Progressive Gates (Tracking):
+            ${progressiveStatus.map(status => `- ${status.includes('success') ? '✅' : '📊'} ${status.replace('-', ' ')}`).join('\n')}
+            
+            ### 🏗️ Phase 2-3 Status:
+            - **FSD Structure**: Architecture boundaries enforced
+            - **E2E Testing**: Progressive improvement (target: 25% → 40% → 60%)
+            - **Performance**: Core Web Vitals tracking
+            - **Type Safety**: Enhanced validation with strict mode
+            
+            🚀 **This PR supports Phase 2-3 objectives - ready for merge!**
+            
+            ---
+            *Enhanced Quality Report generated for Phase 2-3 development*`;
+            } else {
+              comment = `## ❌ **Phase 2-3 Enhanced Quality Gates - FAILED**
+            
+            🚫 **Critical quality gates failed - merge blocked**
+            
+            ### ❌ Failed Required Gates:
+            ${criticalFailures.map(gate => `- ❌ ${gate.replace('-', ' ')}: ${results[gate]}`).join('\n')}
+            
+            ### 📊 Progressive Gates Status:
+            ${progressiveStatus.map(status => `- ${status.includes('success') ? '✅' : '📊'} ${status.replace('-', ' ')}`).join('\n')}
+            
+            ### 🔧 **Required Actions**:
+            ${criticalFailures.includes('architecture-compliance') ? '- Fix FSD architecture violations and Client/Server boundaries\n' : ''}${criticalFailures.includes('typescript-enhanced') ? '- Resolve TypeScript compilation errors and type safety issues\n' : ''}
+            ### 📋 **Phase 2-3 Requirements**:
+            - Architecture compliance is mandatory for FSD structure improvement
+            - TypeScript safety is critical for build determinism
+            - E2E and Performance gates are progressive (tracking only)
+            
+            ---
+            *Fix required gates to enable merge for Phase 2-3*`;
+            }
+            
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });

@@ -93,6 +93,9 @@ const PrivateEnvSchema = z.object({
   REDIS_URL: z.string().url().or(z.string().startsWith('redis://')).optional(),
   REDIS_TOKEN: z.string().optional(),
   
+  // AI Services (Gemini API)
+  GOOGLE_GEMINI_API_KEY: z.string().min(10).optional(),
+  
   // Server Logging
   LOG_LEVEL: z.enum(['error', 'warn', 'info', 'debug']).default('info'),
   

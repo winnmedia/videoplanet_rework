@@ -4,9 +4,10 @@
  */
 
 import { render, screen, waitFor } from '@testing-library/react'
+import { vi } from 'vitest'
+
 import { LoadingSpinner } from './LoadingSpinner'
 
-import { vi } from 'vitest'
 
 // Mock IntersectionObserver for performance testing
 global.IntersectionObserver = vi.fn().mockImplementation(() => ({

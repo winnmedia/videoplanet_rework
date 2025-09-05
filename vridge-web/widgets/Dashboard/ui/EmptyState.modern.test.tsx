@@ -8,12 +8,13 @@
  * 4. 사용자 여정 전반의 접근성 준수
  */
 
-import React from 'react'
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react'
-import { axe, toHaveNoViolations } from 'jest-axe'
 import userEvent from '@testing-library/user-event'
-import { server } from '@/test/mocks/server'
+import { axe, toHaveNoViolations } from 'jest-axe'
 import { http, HttpResponse } from 'msw'
+import React from 'react'
+
+import { server } from '@/test/mocks/server'
 
 import { DashboardWidget } from './DashboardWidget'
 import { EmptyState } from './EmptyState'

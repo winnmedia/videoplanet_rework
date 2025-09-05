@@ -4,10 +4,11 @@
  * 테스트 도구: React Testing Library + jest-axe
  */
 
-import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { axe, toHaveNoViolations } from 'jest-axe'
+import React from 'react'
+
 import { 
   HttpErrorPage, 
   NetworkErrorDisplay, 

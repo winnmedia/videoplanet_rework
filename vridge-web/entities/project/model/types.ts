@@ -52,3 +52,26 @@ export interface InviteProjectMemberDto {
   role: 'editor' | 'viewer';
   message?: string;
 }
+
+// Auto-scheduling types
+export interface AutoScheduleResult {
+  planning: {
+    startDate: Date
+    endDate: Date
+    duration: number
+    unit: 'days' | 'weeks'
+  }
+  filming: {
+    startDate: Date
+    endDate: Date  
+    duration: number
+    unit: 'days'
+  }
+  editing: {
+    startDate: Date
+    endDate: Date
+    duration: number
+    unit: 'days' | 'weeks'  
+  }
+  totalDays: number
+}

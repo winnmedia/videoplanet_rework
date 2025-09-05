@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+
 // import { EyeIcon, EyeSlashIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
 import type { ProjectLegendItem } from '@/entities/project/model/calendar-types'
 

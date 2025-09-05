@@ -3,9 +3,10 @@
  * Railway 백엔드 연동의 안정성을 극대화하는 통합 유틸리티
  */
 
+import { config } from '@/lib/config/env'
+
 import { ApiError, ApiResponse, ApiRequestConfig } from './client'
 import { apiClient } from './client'
-import { config } from '@/lib/config/env'
 
 // 안정성 설정
 interface StabilityConfig {

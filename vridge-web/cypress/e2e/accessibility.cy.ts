@@ -26,8 +26,12 @@ describe('Accessibility (WCAG 2.1 AA) E2E Tests', () => {
           'landmark-one-main': { enabled: true },
           // 폼 레이블
           'label': { enabled: true },
-          // 포커스 가능한 요소
-          'focusable-element': { enabled: true }
+          // 키보드 접근성 및 포커스 관리 관련 규칙들  
+          'tabindex': { enabled: true }, // tabindex 값이 0보다 크지 않도록 확인
+          'button-name': { enabled: true }, // 버튼 요소에 접근 가능한 이름 확인
+          'link-name': { enabled: true }, // 링크 요소에 접근 가능한 이름 확인
+          'aria-roles': { enabled: true }, // ARIA 역할 사용의 유효성 검증
+          'aria-valid-attr': { enabled: true } // ARIA 속성의 유효성 검증
         }
       })
     })
@@ -106,7 +110,7 @@ describe('Accessibility (WCAG 2.1 AA) E2E Tests', () => {
     it('Tab과 Shift+Tab으로 올바른 순서로 네비게이션되어야 한다', () => {
       cy.logTestStep('Testing tab order navigation')
       
-      let focusOrder: string[] = []
+      const focusOrder: string[] = []
       
       // Tab으로 전진 네비게이션
       cy.get('body').tab()

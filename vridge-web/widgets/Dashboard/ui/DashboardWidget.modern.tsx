@@ -6,6 +6,7 @@
 'use client'
 
 import React from 'react'
+
 import { Button, Card } from '../../../shared/ui/index.modern'
 import type { DashboardWidgetProps } from '../model/types'
 

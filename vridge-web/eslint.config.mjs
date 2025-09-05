@@ -73,26 +73,55 @@ const eslintConfig = [
           },
         },
       ],
-      // Prevent cross-imports between slices
+      // Enforce PUBLIC API ONLY imports - STRICT FSD BOUNDARY ENFORCEMENT
       "no-restricted-imports": [
         "error",
         {
           patterns: [
+            // Block all internal imports - force public API usage
+            {
+              group: ["@features/*/api/*", "@features/*/model/*", "@features/*/lib/*", "@features/*/ui/*"],
+              message: "CRITICAL: Direct internal imports forbidden. Use @features/[slice]/index.ts public API only.",
+            },
+            {
+              group: ["@entities/*/api/*", "@entities/*/model/*", "@entities/*/lib/*", "@entities/*/ui/*"],
+              message: "CRITICAL: Direct internal imports forbidden. Use @entities/[slice]/index.ts public API only.",
+            },
+            {
+              group: ["@widgets/*/api/*", "@widgets/*/model/*", "@widgets/*/lib/*", "@widgets/*/ui/*"],
+              message: "CRITICAL: Direct internal imports forbidden. Use @widgets/[slice]/index.ts public API only.",
+            },
+            {
+              group: ["@shared/*/lib/*", "@shared/*/api/*", "@shared/*/ui/*"],
+              message: "CRITICAL: Direct internal imports forbidden. Use @shared/[segment]/index.ts public API only.",
+            },
+            // Block cross-slice imports
             {
               group: ["@features/*/*"],
-              message: "Direct cross-imports between features are forbidden. Use public API exports.",
+              message: "CRITICAL: Cross-slice imports forbidden. Use public API exports only.",
             },
             {
               group: ["@entities/*/*"],
-              message: "Direct cross-imports between entities are forbidden. Use public API exports.",
+              message: "CRITICAL: Cross-slice imports forbidden. Use public API exports only.",
             },
             {
               group: ["@widgets/*/*"],
-              message: "Direct cross-imports between widgets are forbidden. Use public API exports.",
+              message: "CRITICAL: Cross-slice imports forbidden. Use public API exports only.",
+            },
+            // Block TypeScript any usage patterns
+            {
+              group: ["**/types"],
+              message: "Import specific types, avoid wildcard imports that may include 'any' types.",
             },
           ],
         },
       ],
+      // Enforce TypeScript strict typing
+      "@typescript-eslint/no-explicit-any": "error",
+      "@typescript-eslint/no-unsafe-assignment": "error",
+      "@typescript-eslint/no-unsafe-call": "error",
+      "@typescript-eslint/no-unsafe-member-access": "error",
+      "@typescript-eslint/no-unsafe-return": "error",
     },
   },
   {
@@ -212,6 +241,61 @@ const eslintConfig = [
       ],
     },
   },
+  // Client/Server Component Boundary Enforcement (Next.js 15.5)
+  {
+    files: ["**/*.tsx", "**/*.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["react-dom/server"],
+              message: "Server-side imports should only be in Server Components or API routes. Consider moving to a Server Component or use dynamic imports.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // Server Component Rules
+  {
+    files: ["app/**/page.tsx", "app/**/layout.tsx", "app/**/loading.tsx", "app/**/error.tsx", "app/**/not-found.tsx"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["react-dom/client"],
+              message: "Client-side imports are not allowed in Server Components.",
+            },
+            {
+              group: ["@/shared/lib/hooks/*"],
+              message: "React hooks are not allowed in Server Components. Move to a Client Component.",
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // Client Component Rules (use client directive)
+  {
+    files: ["**/*.client.tsx", "**/use*.ts"],
+    rules: {
+      "no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["fs", "path", "crypto", "os"],
+              message: "Node.js built-in modules are not allowed in Client Components.",
+            },
+          ],
+        },
+      ],
+    },
+  },
   // VideoIntegration Widget Rules
   {
     files: ["widgets/VideoIntegration/**/*"],
@@ -259,6 +343,27 @@ const eslintConfig = [
     files: ["**/*{ConflictDetection,RealtimeCollaboration,RBAC,VideoIntegration}*"],
     rules: {
       "import/no-cycle": ["error", { maxDepth: 3 }],
+    },
+  },
+  // Test files - relax strict type checking
+  {
+    files: ["**/*.test.{ts,tsx}", "**/__tests__/**/*.{ts,tsx}", "**/*.spec.{ts,tsx}"],
+    rules: {
+      "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-unsafe-call": "off",
+      "@typescript-eslint/no-unsafe-member-access": "off",
+      "@typescript-eslint/no-unsafe-return": "off",
+      "@typescript-eslint/no-explicit-any": "warn", // Warn instead of error
+    },
+  },
+  // AI Service files - relax strict type checking for new integration
+  {
+    files: ["entities/ai-service/**/*.{ts,tsx}"],
+    rules: {
+      "@typescript-eslint/no-unsafe-assignment": "off",
+      "@typescript-eslint/no-unsafe-call": "off",
+      "@typescript-eslint/no-unsafe-member-access": "off",
+      "@typescript-eslint/no-unsafe-return": "off",
     },
   },
 ];

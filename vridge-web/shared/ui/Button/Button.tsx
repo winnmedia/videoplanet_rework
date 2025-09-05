@@ -1,7 +1,7 @@
 'use client'
 
-import { ButtonHTMLAttributes, ReactNode } from 'react'
 import clsx from 'clsx'
+import { ButtonHTMLAttributes, ReactNode } from 'react'
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'outline' | 'danger' | 'ghost'

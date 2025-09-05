@@ -16,18 +16,51 @@ const nextConfig = {
     dirs: ['app', 'features', 'entities', 'shared', 'widgets', 'processes']
   },
 
-  // Build optimizations - Tailwind-only mode
+  // Build optimizations - Performance Lead requirements (stable features only)
   experimental: {
-    // optimizeCss: true // Disabled temporarily due to critters module issue
+    // React 19 & Next.js 15.5 performance optimizations
+    optimizePackageImports: [
+      '@reduxjs/toolkit', 
+      '@xstate/react', 
+      'react-hook-form',
+      'web-vitals'
+    ],
+    
+    // Performance optimizations (stable features only)
+    optimizeCss: true,           // Re-enable CSS optimization
+    serverSourceMaps: false,     // Disable for production performance
+    workerThreads: true,         // Enable for better build performance
+    
+    // Bundle optimization (stable features only)
+    optimizeServerReact: true,
+    
+    // Memory and caching (stable features only)
+    webpackBuildWorker: true,
   },
   compress: true,
   
-  // Image optimization
+  // Image optimization - Critical for 17MB → 5MB reduction (Performance Blocker Fix)
   images: {
     domains: process.env.NEXT_PUBLIC_IMAGE_DOMAINS?.split(',') || ['localhost'],
-    formats: ['image/webp', 'image/avif'],
+    formats: ['image/avif', 'image/webp'],
     dangerouslyAllowSVG: false,
-    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;"
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+    
+    // Enhanced optimization settings for Core Web Vitals (LCP < 2.5s)
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    
+    // Enable static optimization for builds
+    unoptimized: false,
+    
+    // Lazy loading by default with performance priorities
+    loader: 'default',
+    
+    // Performance budget constraints - stricter caching
+    minimumCacheTTL: 31536000, // 1 year cache
+    
+    // Enhanced loader for critical path optimization - temporarily disabled
+    // loaderFile: './shared/lib/image-loader.js'
   },
 
   // Security headers
@@ -53,37 +86,172 @@ const nextConfig = {
     ];
   },
 
-  // Webpack configuration
+  // Webpack configuration - Enhanced for build optimization
   webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
-    // Bundle analyzer in development
-    if (dev && process.env.ANALYZE === 'true') {
+    const path = require('path');
+    
+    // Enhanced FSD path aliases with better resolution
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      // FSD Layer aliases (both src and root level)
+      '@app': path.resolve(__dirname, 'app'),
+      '@processes': path.resolve(__dirname, 'processes'),
+      '@widgets': [
+        path.resolve(__dirname, 'widgets'),
+        path.resolve(__dirname, 'src/widgets')
+      ],
+      '@features': [
+        path.resolve(__dirname, 'features'),
+        path.resolve(__dirname, 'src/features')
+      ],
+      '@entities': [
+        path.resolve(__dirname, 'entities'),
+        path.resolve(__dirname, 'src/entities')
+      ],
+      '@shared': [
+        path.resolve(__dirname, 'shared'),
+        path.resolve(__dirname, 'src/shared')
+      ],
+      // Legacy compatibility aliases
+      '@/lib': path.resolve(__dirname, 'lib'),
+      '@/styles': path.resolve(__dirname, 'styles'),
+    };
+
+    // Enhanced bundle analyzer for both dev and production
+    if (process.env.ANALYZE === 'true') {
       const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
       config.plugins.push(
         new BundleAnalyzerPlugin({
-          analyzerMode: 'server',
-          openAnalyzer: true
+          analyzerMode: dev ? 'server' : 'static',
+          reportFilename: dev ? undefined : '../bundle-report.html',
+          openAnalyzer: dev,
+          generateStatsFile: true,
+          statsFilename: '../bundle-stats.json'
         })
       );
     }
 
-    // Production optimizations
-    if (!dev) {
-      // Tree shaking optimization
-      config.optimization.usedExports = true;
-      config.optimization.sideEffects = false;
-
-      // Bundle splitting
-      config.optimization.splitChunks = {
-        chunks: 'all',
-        cacheGroups: {
-          vendor: {
-            test: /[\\/]node_modules[\\/]/,
-            name: 'vendors',
-            chunks: 'all'
+    // Circular dependency detection (development only)
+    if (dev && process.env.CHECK_CIRCULAR === 'true') {
+      const CircularDependencyPlugin = require('circular-dependency-plugin');
+      config.plugins.push(
+        new CircularDependencyPlugin({
+          exclude: /node_modules/,
+          include: /\.(ts|tsx|js|jsx)$/,
+          failOnError: false,
+          allowAsyncCycles: false,
+          cwd: process.cwd(),
+          onDetected({ module: webpackModuleRecord, paths, compilation }) {
+            compilation.warnings.push(
+              new Error(`Circular dependency detected: ${paths.join(' → ')}`)
+            );
           }
-        }
-      };
+        })
+      );
     }
+
+    // Enhanced production optimizations
+    if (!dev) {
+      // Advanced tree shaking
+      config.optimization = {
+        ...config.optimization,
+        usedExports: true,
+        sideEffects: false,
+        
+        // Enhanced bundle splitting strategy
+        splitChunks: {
+          chunks: 'all',
+          cacheGroups: {
+            // Framework chunks (React, Next.js)
+            framework: {
+              chunks: 'all',
+              name: 'framework',
+              test: /(?<!node_modules.*)[\\/]node_modules[\\/](react|react-dom|scheduler|prop-types|use-subscription)[\\/]/,
+              priority: 40,
+              enforce: true,
+            },
+            
+            // UI Libraries chunk
+            lib: {
+              test: /[\\/]node_modules[\\/](@reduxjs|@xstate|react-hook-form|class-variance-authority|clsx)[\\/]/,
+              name: 'lib',
+              priority: 30,
+              chunks: 'all',
+            },
+            
+            // FSD Layer-based splitting
+            shared: {
+              test: /[\\/](shared|src[\\/]shared)[\\/]/,
+              name: 'shared-layer',
+              priority: 20,
+              chunks: 'all',
+              minChunks: 2,
+            },
+            
+            entities: {
+              test: /[\\/](entities|src[\\/]entities)[\\/]/,
+              name: 'entities-layer',
+              priority: 20,
+              chunks: 'all',
+              minChunks: 2,
+            },
+            
+            features: {
+              test: /[\\/](features|src[\\/]features)[\\/]/,
+              name: 'features-layer',
+              priority: 20,
+              chunks: 'all',
+              minChunks: 2,
+            },
+            
+            // Default vendor chunk
+            vendor: {
+              test: /[\\/]node_modules[\\/]/,
+              name: 'vendors',
+              priority: 10,
+              chunks: 'all',
+            },
+          },
+        },
+        
+        // Module concatenation for better performance
+        concatenateModules: true,
+        
+        // Minimize module IDs for better caching
+        moduleIds: 'deterministic',
+        chunkIds: 'deterministic',
+      };
+      
+      // Ignore source maps in production for smaller bundles
+      config.devtool = false;
+    }
+
+    // CSS optimization for legacy SCSS + Tailwind coexistence
+    if (!isServer) {
+      config.module.rules.push({
+        test: /\.module\.(scss|sass)$/,
+        use: [
+          defaultLoaders.scss,
+          {
+            loader: 'sass-loader',
+            options: {
+              sassOptions: {
+                // Optimize SCSS compilation
+                outputStyle: 'compressed',
+                sourceMap: dev,
+              },
+            },
+          },
+        ],
+      });
+    }
+
+    // Performance optimizations
+    config.optimization.realContentHash = true;
+    
+    // Resolve modules faster
+    config.resolve.extensions = ['.ts', '.tsx', '.js', '.jsx', '.json'];
+    config.resolve.modules = ['node_modules', path.resolve(__dirname)];
 
     return config;
   },

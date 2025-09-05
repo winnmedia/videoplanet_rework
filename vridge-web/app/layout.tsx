@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
-import { StoreProvider } from "@shared/ui";
 import { NavigationProvider } from "@/features/navigation";
 
 import { ConditionalHeader } from "./components/ConditionalHeader";
+import { StoreProvider } from "../shared/ui/StoreProvider/StoreProvider";
+
 import "./globals.css";
 
 // FontAwesome 설정 import
@@ -56,13 +57,35 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        {/* FontAwesome은 로컬 import로만 처리하여 Hydration 오류 방지 */}
+        
+        {/* Critical Image Preloading - Performance Blocker Fix */}
+        {/* Above-the-fold images for LCP optimization */}
         <link
-          rel="stylesheet"
-          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-          integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
-          crossOrigin="anonymous"
-          referrerPolicy="no-referrer"
+          rel="preload"
+          as="image"
+          href="/images/Home/new/visual-bg.webp"
+          type="image/webp"
+          fetchPriority="high"
         />
+        <link
+          rel="preload"
+          as="image" 
+          href="/images/User/bg.png"
+          type="image/webp"
+          fetchPriority="high"
+        />
+        <link
+          rel="preload"
+          as="image"
+          href="/images/Home/img01.png"
+          type="image/webp"
+          fetchPriority="high"
+        />
+        
+        {/* Preconnect to optimize image loading */}
+        <link rel="preconnect" href="https://images.unsplash.com" />
+        <link rel="dns-prefetch" href="https://images.unsplash.com" />
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}

@@ -1,9 +1,12 @@
+'use client'
+
 /**
  * FSD 준수 에러 바운더리 컴포넌트
  * 경계: shared/ui - 재사용 가능한 UI 컴포넌트
  */
 
 import React, { Component, ReactNode, ErrorInfo } from 'react'
+
 import {
   BaseError,
   createErrorBoundaryState,
@@ -71,47 +74,47 @@ export const DefaultErrorFallback: React.FC<ErrorFallbackProps> = ({
   }
 
   return (
-    <div className=\"flex min-h-96 items-center justify-center p-4\">
-      <div className=\"w-full max-w-md rounded-lg border border-red-200 bg-red-50 p-6 text-center shadow-sm\">
-        <div className=\"mb-4 text-6xl\">{getErrorIcon(error)}</div>
+    <div className="flex min-h-96 items-center justify-center p-4">
+      <div className="w-full max-w-md rounded-lg border border-red-200 bg-red-50 p-6 text-center shadow-sm">
+        <div className="mb-4 text-6xl">{getErrorIcon(error)}</div>
         
-        <h2 className=\"mb-2 text-xl font-semibold text-red-800\">
+        <h2 className="mb-2 text-xl font-semibold text-red-800">
           {getErrorTitle(error)}
         </h2>
         
-        <p className=\"mb-4 text-sm text-red-600\">
+        <p className="mb-4 text-sm text-red-600">
           {error.message}
         </p>
         
-        <div className=\"flex flex-col gap-2 sm:flex-row sm:justify-center\">
+        <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
           <button
             onClick={resetError}
-            className=\"rounded bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2\"
+            className="rounded bg-red-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
           >
             다시 시도
           </button>
           
           <button
             onClick={() => window.location.reload()}
-            className=\"rounded border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2\"
+            className="rounded border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
           >
             새로고침
           </button>
         </div>
         
         {isDevelopment && (
-          <details className=\"mt-6 text-left\">
-            <summary className=\"cursor-pointer text-xs text-red-500 hover:text-red-700\">
+          <details className="mt-6 text-left">
+            <summary className="cursor-pointer text-xs text-red-500 hover:text-red-700">
               개발자 정보 (에러 ID: {errorId})
             </summary>
-            <div className=\"mt-2 rounded bg-red-100 p-2 text-xs font-mono text-red-800\">
+            <div className="mt-2 rounded bg-red-100 p-2 text-xs font-mono text-red-800">
               <div><strong>코드:</strong> {error.code}</div>
               <div><strong>HTTP 상태:</strong> {error.httpStatus}</div>
               <div><strong>타임스탬프:</strong> {error.timestamp}</div>
               {error.context && (
-                <div className=\"mt-2\">
+                <div className="mt-2">
                   <strong>컨텍스트:</strong>
-                  <pre className=\"mt-1 whitespace-pre-wrap\">
+                  <pre className="mt-1 whitespace-pre-wrap">
                     {JSON.stringify(error.context, null, 2)}
                   </pre>
                 </div>
@@ -131,15 +134,15 @@ export const MinimalErrorFallback: React.FC<ErrorFallbackProps> = ({
   error, 
   resetError 
 }) => (
-  <div className=\"rounded border border-red-200 bg-red-50 p-4\">
-    <div className=\"flex items-center justify-between\">
-      <div className=\"flex items-center\">
-        <span className=\"text-red-500\">⚠️</span>
-        <span className=\"ml-2 text-sm text-red-700\">{error.message}</span>
+  <div className="rounded border border-red-200 bg-red-50 p-4">
+    <div className="flex items-center justify-between">
+      <div className="flex items-center">
+        <span className="text-red-500">⚠️</span>
+        <span className="ml-2 text-sm text-red-700">{error.message}</span>
       </div>
       <button
         onClick={resetError}
-        className=\"ml-4 text-xs text-red-600 underline hover:text-red-800\"
+        className="ml-4 text-xs text-red-600 underline hover:text-red-800"
       >
         다시 시도
       </button>
@@ -289,23 +292,23 @@ export const AuthErrorBoundary: React.FC<{ children: ReactNode }> = ({ children 
       }
 
       return (
-        <div className=\"flex min-h-96 items-center justify-center p-4\">
-          <div className=\"w-full max-w-md rounded-lg border border-red-200 bg-red-50 p-6 text-center shadow-sm\">
-            <div className=\"mb-4 text-6xl\">🔐</div>
-            <h2 className=\"mb-2 text-xl font-semibold text-red-800\">
+        <div className="flex min-h-96 items-center justify-center p-4">
+          <div className="w-full max-w-md rounded-lg border border-red-200 bg-red-50 p-6 text-center shadow-sm">
+            <div className="mb-4 text-6xl">🔐</div>
+            <h2 className="mb-2 text-xl font-semibold text-red-800">
               인증 오류가 발생했습니다
             </h2>
-            <p className=\"mb-4 text-sm text-red-600\">{error.message}</p>
-            <div className=\"flex flex-col gap-2 sm:flex-row sm:justify-center\">
+            <p className="mb-4 text-sm text-red-600">{error.message}</p>
+            <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
               <button
                 onClick={handleLoginRedirect}
-                className=\"rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700\"
+                className="rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
               >
                 로그인 페이지로
               </button>
               <button
                 onClick={resetError}
-                className=\"rounded border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50\"
+                className="rounded border border-red-300 bg-white px-4 py-2 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
               >
                 다시 시도
               </button>

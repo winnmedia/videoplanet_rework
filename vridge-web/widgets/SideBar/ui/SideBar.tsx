@@ -1,10 +1,11 @@
 'use client'
 
-import React, { useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
-import { SubMenu, MenuButton } from '@/shared/ui'
-import { useNavigation } from '@/features/navigation'
+import React, { useState } from 'react'
+
 import type { MenuItem, SubMenuItem } from '@/entities/menu'
+import { useNavigation } from '@/features/navigation'
+import { SubMenu, MenuButton } from '@/shared/ui'
 
 interface SideBarProps {
   isCollapsed?: boolean

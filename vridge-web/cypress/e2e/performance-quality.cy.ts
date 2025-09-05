@@ -57,8 +57,55 @@ describe('Performance & Quality Gates E2E Tests', () => {
       })
     })
 
-    it('First Input Delay (FID)가 임계값 이내여야 한다', () => {
-      cy.logTestStep('Testing FID (First Input Delay)')
+    it('Interaction to Next Paint (INP)가 임계값 이내여야 한다', () => {
+      cy.logTestStep('Testing INP (Interaction to Next Paint) - 2024 Core Web Vital')
+      
+      let maxINP = 0
+      let interactionCount = 0
+      
+      cy.window().then((win) => {
+        if ('PerformanceObserver' in win) {
+          return new Promise((resolve) => {
+            const observer = new win.PerformanceObserver((list) => {
+              for (const entry of list.getEntries()) {
+                if (entry.entryType === 'event') {
+                  const interactionDelay = entry.processingStart - entry.startTime
+                  const presentationDelay = entry.startTime + entry.duration - entry.processingEnd
+                  const totalDelay = Math.max(interactionDelay + presentationDelay, entry.duration)
+                  
+                  if (totalDelay > maxINP) {
+                    maxINP = totalDelay
+                    interactionCount++
+                  }
+                }
+              }
+            })
+            
+            observer.observe({ entryTypes: ['event'] })
+            
+            // 다양한 상호작용 시뮬레이션
+            cy.get('button, a, input').each(($el, index) => {
+              if (index < 3) { // 처음 3개 요소만 테스트
+                cy.wrap($el).click({ force: true })
+                cy.wait(100)
+              }
+            }).then(() => {
+              setTimeout(() => {
+                observer.disconnect()
+                cy.task('log', `Max INP measured: ${maxINP}ms from ${interactionCount} interactions`)
+                
+                // INP 임계값 검증 (200ms)
+                expect(maxINP).to.be.lessThan(200, 'INP should be less than 200ms')
+                resolve(maxINP)
+              }, 2000)
+            })
+          })
+        }
+      })
+    })
+
+    it('First Input Delay (FID) - Legacy 메트릭 테스트', () => {
+      cy.logTestStep('Testing FID (First Input Delay) - Legacy Core Web Vital')
       
       // 사용자 상호작용 시뮬레이션
       cy.get('button, a, input').first().click()
@@ -70,10 +117,10 @@ describe('Performance & Quality Gates E2E Tests', () => {
               for (const entry of list.getEntries()) {
                 if (entry.entryType === 'first-input') {
                   const fid = entry.processingStart - entry.startTime
-                  cy.task('log', `FID measured: ${fid}ms`)
+                  cy.task('log', `FID measured: ${fid}ms (Legacy metric)`)
                   
-                  // FID 임계값 검증 (100ms)
-                  expect(fid).to.be.lessThan(100, 'FID should be less than 100ms')
+                  // FID 임계값 검증 (100ms) - 레거시 호환성 유지
+                  expect(fid).to.be.lessThan(100, 'FID should be less than 100ms (legacy)')
                   resolve(fid)
                 }
               }

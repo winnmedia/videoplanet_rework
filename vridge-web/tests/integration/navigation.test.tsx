@@ -11,9 +11,10 @@
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { SideBar } from '../../widgets/SideBar/ui/SideBar'
-import ProjectDetailPage from '../../app/projects/[id]/page'
+
 import FeedbackDetailPage from '../../app/feedback/[id]/page'
+import ProjectDetailPage from '../../app/projects/[id]/page'
+import { SideBar } from '../../widgets/SideBar/ui/SideBar'
 
 // Navigation 통합 테스트를 위한 Mock Router
 class MockRouter {

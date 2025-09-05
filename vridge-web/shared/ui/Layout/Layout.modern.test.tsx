@@ -5,6 +5,7 @@
 
 import { render, screen } from '@testing-library/react'
 import { vi } from 'vitest'
+
 import { Layout } from './Layout.modern'
 
 describe('Layout 컴포넌트', () => {

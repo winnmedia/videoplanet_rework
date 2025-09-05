@@ -52,5 +52,8 @@ export type {
   MockProjectData
 } from './model/types'
 
+// API Services
+export { dashboardApiClient } from './api/dashboardApi'
+
 // Re-export commonly used utilities (if any)
 // 향후 API 레이어와 유틸리티 함수들이 추가될 경우 여기서 re-export

@@ -10,6 +10,7 @@
  */
 
 import { useState } from 'react'
+
 import type { ScheduleSummaryCardProps, ProjectSchedule } from '../model/types'
 
 export function ScheduleSummaryCard({

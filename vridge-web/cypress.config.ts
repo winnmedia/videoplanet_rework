@@ -8,7 +8,7 @@ import { defineConfig } from 'cypress'
 export default defineConfig({
   e2e: {
     // 기본 설정
-    baseUrl: 'http://localhost:3005/test',
+    baseUrl: 'http://localhost:3001',
     viewportWidth: 1280,
     viewportHeight: 720,
     
@@ -55,21 +55,30 @@ export default defineConfig({
         }
       },
       
-      // 성능 테스트 임계값
+      // 성능 테스트 임계값 (Performance Lead 2024 기준)
       PERFORMANCE_THRESHOLDS: {
         LCP: 2500,  // Largest Contentful Paint
-        FID: 100,   // First Input Delay  
+        INP: 200,   // Interaction to Next Paint (새로운 Core Web Vital)
         CLS: 0.1,   // Cumulative Layout Shift
         FCP: 1800,  // First Contentful Paint
+        TTFB: 800,  // Time to First Byte
         TTI: 3800   // Time to Interactive
+      },
+      
+      // E2E 성능 최적화 설정
+      E2E_OPTIMIZATION: {
+        PARALLEL_EXECUTION: true,
+        HEADLESS_BROWSER: true,
+        DISABLE_ANIMATIONS: true,
+        MOCK_API_CALLS: false // 실제 API 성능 측정을 위해 false
       }
     },
     
     setupNodeEvents(on, config) {
       // 플러그인 등록
       
-      // axe-core 접근성 테스트 플러그인 (간소화)
-      // require('cypress-axe/src/plugin')(on) // 플러그인 비활성화
+      // cypress-axe는 최신 버전에서 플러그인 설정이 불필요합니다
+      // commands는 support/e2e.ts 파일에서 import됩니다
       
       // 코드 커버리지 플러그인 (개발 환경에서만)
       if (config.env.NODE_ENV !== 'production') {
