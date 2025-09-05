@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 
 import { 
   useCreateProjectMutation,
@@ -31,9 +31,9 @@ interface ProjectSchedule {
 }
 
 /**
- * 프로젝트 관리 페이지 - 프로젝트 생성 & 팀원 초대
+ * 프로젝트 관리 페이지 컴포넌트 (내부)
  */
-export default function ProjectManagePage() {
+function ProjectManageContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const projectId = searchParams.get('id') || ''
@@ -475,5 +475,16 @@ export default function ProjectManagePage() {
         </div>
       </main>
     </div>
+  )
+}
+
+/**
+ * 프로젝트 관리 페이지 - Suspense 경계를 포함한 메인 컴포넌트
+ */
+export default function ProjectManagePage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <ProjectManageContent />
+    </Suspense>
   )
 }

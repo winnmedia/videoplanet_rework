@@ -29,13 +29,13 @@ const nextConfig = {
     // Performance optimizations (stable features only)
     optimizeCss: true,           // Re-enable CSS optimization
     serverSourceMaps: false,     // Disable for production performance
-    workerThreads: true,         // Enable for better build performance
+    workerThreads: false,        // Disabled due to webpack config serialization issue
     
     // Bundle optimization (stable features only)
     optimizeServerReact: true,
     
     // Memory and caching (stable features only)
-    webpackBuildWorker: true,
+    webpackBuildWorker: false,  // Disabled due to webpack config serialization issue
   },
   compress: true,
   

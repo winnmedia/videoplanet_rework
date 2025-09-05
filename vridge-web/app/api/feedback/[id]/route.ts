@@ -48,13 +48,16 @@ const FEEDBACK_DATA: FeedbackType[] = [
   }
 ]
 
-// TODO(human): Next.js 15 RouteContext 타입 호환성 확인 및 수정 필요
-export const GET = withErrorHandler<{ id: string }>(async (
+export const GET = withErrorHandler(async (
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  context?: { params: Promise<Record<string, string>> }
 ) => {
   try {
-    const { id } = await context.params
+    if (!context) {
+      throw new NotFoundError('컨텍스트가 없습니다')
+    }
+    const params = await context.params
+    const id = params.id
     
     // ID 형식 검증
     if (!id || (typeof id !== 'string')) {
@@ -108,12 +111,16 @@ export const GET = withErrorHandler<{ id: string }>(async (
   }
 })
 
-export const PUT = withErrorHandler<{ id: string }>(async (
+export const PUT = withErrorHandler(async (
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  context?: { params: Promise<Record<string, string>> }
 ) => {
   try {
-    const { id } = await context.params
+    if (!context) {
+      throw new NotFoundError('컨텍스트가 없습니다')
+    }
+    const params = await context.params
+    const id = params.id
     
     // 피드백 존재 확인
     const feedbackIndex = FEEDBACK_DATA.findIndex(f => f.id === id)
@@ -127,10 +134,13 @@ export const PUT = withErrorHandler<{ id: string }>(async (
     // 수정 불가능한 필드 보호
     const currentFeedback = FEEDBACK_DATA[feedbackIndex]
     const updateData = {
-      ...body,
+      ...currentFeedback, // 기존 데이터를 먼저 복사
+      ...body, // 그 다음에 업데이트 내용 적용
       id: currentFeedback.id, // ID 변경 방지
       createdAt: currentFeedback.createdAt, // 생성일 변경 방지
-      updatedAt: new Date().toISOString() // 수정일 자동 업데이트
+      updatedAt: new Date().toISOString(), // 수정일 자동 업데이트
+      tags: body.tags ?? currentFeedback.tags ?? [], // tags 필드 보장
+      attachments: body.attachments ?? currentFeedback.attachments ?? [] // attachments 필드 보장
     }
     
     // 상태 변경에 따른 resolvedAt 업데이트
@@ -172,12 +182,16 @@ export const PUT = withErrorHandler<{ id: string }>(async (
   }
 })
 
-export const DELETE = withErrorHandler<{ id: string }>(async (
+export const DELETE = withErrorHandler(async (
   request: NextRequest,
-  context: { params: Promise<{ id: string }> }
+  context?: { params: Promise<Record<string, string>> }
 ) => {
   try {
-    const { id } = await context.params
+    if (!context) {
+      throw new NotFoundError('컨텍스트가 없습니다')
+    }
+    const params = await context.params
+    const id = params.id
     
     // 피드백 존재 확인
     const feedbackIndex = FEEDBACK_DATA.findIndex(f => f.id === id)

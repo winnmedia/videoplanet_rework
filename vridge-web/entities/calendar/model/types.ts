@@ -197,10 +197,12 @@ export interface ProjectCalendarEvent extends Omit<CalendarEvent, 'projectId' | 
 /**
  * Enhanced Calendar Conflict
  */
-export interface EnhancedCalendarConflict extends CalendarConflict {
+export interface EnhancedCalendarConflict {
   id: string
-  type: 'filming-overlap' | 'resource-conflict' | 'double-booking'
+  type: 'filming-overlap' | 'resource-conflict' | 'double-booking' | 'overlap'
   events: ProjectCalendarEvent[]
+  message: string
+  severity: 'warning' | 'error'
   suggestedResolution?: string
   createdAt: string
 }

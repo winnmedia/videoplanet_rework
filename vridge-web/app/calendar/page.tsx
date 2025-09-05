@@ -2,7 +2,8 @@
 
 import { useState, useMemo, useCallback } from 'react'
 
-import type { CalendarFilter, CalendarViewSettings, CalendarEvent, Project, ProjectLegendItem } from '@/entities/project'
+import type { CalendarFilter, CalendarViewSettings, CalendarEvent, ProjectLegendItem } from '@/entities/project'
+import type { Project } from '@/entities/calendar'
 import { CalendarFilters, CalendarView, ConflictAlert, GanttView, ProjectLegend, WeekView } from '@/features/calendar'
 import { SideBar } from '@/widgets'
 
@@ -33,36 +34,30 @@ export default function CalendarPage() {
       name: 'VRidge 웹 플랫폼',
       status: 'active',
       color: '#3B82F6',
-      hue: 217,
-      organization: 'VRidge팀',
-      manager: '김개발',
-      startDate: '2025-08-01',
-      endDate: '2025-12-31',
-      description: 'VRidge 웹 플랫폼 개발 프로젝트'
+      description: 'VRidge 웹 플랫폼 개발 프로젝트',
+      phases: [],
+      createdAt: '2025-08-01T00:00:00.000Z',
+      updatedAt: '2025-08-01T00:00:00.000Z'
     },
     {
       id: 'proj2',
       name: '홍보 영상 제작',
       status: 'active',
       color: '#10B981',
-      hue: 158,
-      organization: '마케팅팀',
-      manager: '이마케터',
-      startDate: '2025-08-15',
-      endDate: '2025-09-30',
-      description: '회사 홍보 영상 제작'
+      description: '회사 홍보 영상 제작',
+      phases: [],
+      createdAt: '2025-08-15T00:00:00.000Z',
+      updatedAt: '2025-08-15T00:00:00.000Z'
     },
     {
       id: 'proj3',
       name: '클라이언트 프레젠테이션',
-      status: 'planning',
+      status: 'on-hold',
       color: '#F59E0B',
-      hue: 43,
-      organization: '영업팀',
-      manager: '박영업',
-      startDate: '2025-09-01',
-      endDate: '2025-09-15',
-      description: '신규 클라이언트 대상 프레젠테이션 준비'
+      description: '신규 클라이언트 대상 프레젠테이션 준비',
+      phases: [],
+      createdAt: '2025-09-01T00:00:00.000Z',
+      updatedAt: '2025-09-01T00:00:00.000Z'
     }
   ], [])
 
@@ -187,10 +182,15 @@ export default function CalendarPage() {
   const legendItems = useMemo((): ProjectLegendItem[] => {
     return mockProjects.map(project => ({
       project,
-      isVisible: projectVisibility[project.id] !== false,
-      phaseCount: mockEvents.filter(event => event.project.id === project.id).length
+      palette: {
+        primary: project.color,
+        secondary: project.color + '40', // Add transparency
+        accent: project.color + 'CC',
+        text: '#FFFFFF'
+      },
+      isVisible: projectVisibility[project.id] !== false
     }))
-  }, [mockProjects, projectVisibility, mockEvents])
+  }, [mockProjects, projectVisibility])
   
   // 충돌 이벤트 필터링
   const conflictingEvents = useMemo(() => {

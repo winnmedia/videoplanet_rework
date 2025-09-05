@@ -66,13 +66,13 @@ function getErrorName(statusCode: number): string {
 }
 
 // Next.js API 라우트 핸들러 타입 (NextRequest 지원) - Next.js 15 호환
-type NextApiHandler = (request: NextRequest, context?: { params: Promise<Record<string, string>> }) => Promise<Response | NextResponse>
+export type NextApiHandler = (request: NextRequest, context?: { params: Promise<Record<string, string>> }) => Promise<Response | NextResponse>
 
 // 에러 처리 래퍼
-export function withErrorHandler<T extends NextApiHandler>(
-  handler: T
-): T {
-  return (async (request: NextRequest, context?: { params: Promise<Record<string, string>> }) => {
+export function withErrorHandler(
+  handler: NextApiHandler
+): NextApiHandler {
+  return async (request: NextRequest, context?: { params: Promise<Record<string, string>> }) => {
     try {
       return await handler(request, context)
     } catch (error) {
@@ -116,7 +116,7 @@ export function withErrorHandler<T extends NextApiHandler>(
       
       return createErrorResponse(500)
     }
-  }) as T
+  }
 }
 
 // 유효성 검사 에러 처리
