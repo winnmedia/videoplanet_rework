@@ -3,6 +3,14 @@
  * Production-safe settings with quality gates enabled
  */
 
+// Global SSR polyfill - must be at top level
+if (typeof global !== 'undefined' && typeof global.self === 'undefined') {
+  global.self = global;
+}
+
+// Import additional polyfills
+require('./lib/polyfills.js');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // TypeScript and ESLint validation (CRITICAL: Keep enabled for production safety)
@@ -137,6 +145,20 @@ const nextConfig = {
   // Webpack configuration - Enhanced for build optimization
   webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
     const path = require('path');
+    
+    // Exclude server-only modules from client bundle to prevent SSR issues
+    if (!isServer) {
+      config.externals = config.externals || [];
+      config.externals.push('puppeteer');
+      
+      // Provide fallback for server-only modules
+      config.resolve = config.resolve || {};
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        puppeteer: false,
+      };
+    }
+    
     
     // Enhanced FSD path aliases with better resolution
     config.resolve.alias = {

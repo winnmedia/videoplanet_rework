@@ -9,9 +9,6 @@ import {
   safeMarpExportRequest
 } from '@/entities/video-planning/model/marp-export.schema'
 import { 
-  MarpPdfService,
-  createMarpExportResponse,
-  logPdfGeneration,
   storePdf
 } from '@/shared/lib/marp'
 import type { 
@@ -38,15 +35,17 @@ export async function POST(request: NextRequest): Promise<NextResponse<MarpExpor
 
     const exportRequest: MarpExportRequest = validation.data
 
-    // PDF 생성 서비스 초기화
-    const pdfService = new MarpPdfService()
+    // PDF 생성 서비스 초기화 (async import)
+    const { MarpPdfService, createMarpExportResponse, logPdfGeneration } = await import('@/shared/lib/marp');
+    const PdfServiceClass = await MarpPdfService();
+    const pdfService = new PdfServiceClass()
 
     // PDF 생성
     const pdfResult = await pdfService.generateFromExportRequest(exportRequest)
 
     if (!pdfResult.success || !pdfResult.pdfBuffer) {
       // 생성 실패 로깅
-      logPdfGeneration(exportRequest.projectTitle, pdfResult)
+      await logPdfGeneration(exportRequest.projectTitle, pdfResult)
       
       return NextResponse.json<MarpExportResponse>({
         success: false,
@@ -55,7 +54,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<MarpExpor
     }
 
     // 생성 성공 로깅
-    logPdfGeneration(exportRequest.projectTitle, pdfResult)
+    await logPdfGeneration(exportRequest.projectTitle, pdfResult)
 
     // 임시 파일 저장 및 다운로드 URL 생성
     // 실제 환경에서는 S3, Cloudinary 등에 업로드
@@ -63,7 +62,7 @@ export async function POST(request: NextRequest): Promise<NextResponse<MarpExpor
     const downloadUrl = await saveAndGetDownloadUrl(pdfResult.pdfBuffer, filename)
     
     // 응답 생성
-    const response = createMarpExportResponse(pdfResult, downloadUrl)
+    const response = await createMarpExportResponse(pdfResult, downloadUrl)
     
     return NextResponse.json<MarpExportResponse>(response)
 

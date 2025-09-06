@@ -101,7 +101,13 @@ export const projectApi = apiSlice.injectEndpoints({
           });
 
           if (!result.success) {
-            return { error: result.message };
+            return { 
+              error: {
+                status: 'CUSTOM_ERROR',
+                error: result.message,
+                data: undefined
+              } as const
+            };
           }
 
           return { 
@@ -114,7 +120,13 @@ export const projectApi = apiSlice.injectEndpoints({
           };
         } catch (error) {
           console.error('RTK Query invite error:', error);
-          return { error: '네트워크 오류가 발생했습니다.' };
+          return { 
+            error: {
+              status: 'CUSTOM_ERROR',
+              error: '네트워크 오류가 발생했습니다.',
+              data: undefined
+            } as const
+          };
         }
       },
       invalidatesTags: ['ProjectTeam']

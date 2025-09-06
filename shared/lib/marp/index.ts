@@ -12,16 +12,63 @@ export {
   createMarpTheme
 } from './marp-template-generator'
 
-// PDF 생성 서비스
-export {
-  MarpPdfService,
-  generatePdfFromMarkdown,
-  createPdfBuffer,
-  validatePdfOutput,
-  createMarpExportResponse,
-  getMemoryUsage,
-  logPdfGeneration
-} from './marp-pdf-service'
+// PDF 생성 서비스 (Conditional export to avoid SSR issues)
+// Only export when we're in a server environment
+export const MarpPdfService = async () => {
+  if (typeof window !== 'undefined') {
+    throw new Error('MarpPdfService is server-side only');
+  }
+  const { MarpPdfService } = await import('./marp-pdf-service');
+  return MarpPdfService;
+};
+
+export const generatePdfFromMarkdown = async (...args: any[]) => {
+  if (typeof window !== 'undefined') {
+    throw new Error('generatePdfFromMarkdown is server-side only');
+  }
+  const { generatePdfFromMarkdown } = await import('./marp-pdf-service');
+  return generatePdfFromMarkdown(...args);
+};
+
+export const createPdfBuffer = async (...args: any[]) => {
+  if (typeof window !== 'undefined') {
+    throw new Error('createPdfBuffer is server-side only');
+  }
+  const { createPdfBuffer } = await import('./marp-pdf-service');
+  return createPdfBuffer(...args);
+};
+
+export const validatePdfOutput = async (...args: any[]) => {
+  if (typeof window !== 'undefined') {
+    throw new Error('validatePdfOutput is server-side only');
+  }
+  const { validatePdfOutput } = await import('./marp-pdf-service');
+  return validatePdfOutput(...args);
+};
+
+export const createMarpExportResponse = async (...args: any[]) => {
+  if (typeof window !== 'undefined') {
+    throw new Error('createMarpExportResponse is server-side only');
+  }
+  const { createMarpExportResponse } = await import('./marp-pdf-service');
+  return createMarpExportResponse(...args);
+};
+
+export const getMemoryUsage = async () => {
+  if (typeof window !== 'undefined') {
+    throw new Error('getMemoryUsage is server-side only');
+  }
+  const { getMemoryUsage } = await import('./marp-pdf-service');
+  return getMemoryUsage();
+};
+
+export const logPdfGeneration = async (...args: any[]) => {
+  if (typeof window !== 'undefined') {
+    throw new Error('logPdfGeneration is server-side only');
+  }
+  const { logPdfGeneration } = await import('./marp-pdf-service');
+  return logPdfGeneration(...args);
+};
 
 // PDF 스토리지
 export {

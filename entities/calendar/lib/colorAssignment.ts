@@ -4,7 +4,7 @@
  * @layer entities
  */
 
-import type { Project, ProjectColorPalette, ProjectLegendItem } from '../model/types'
+import type { Project, ProjectColorPalette, ProjectLegendItem, ProjectPhaseType } from '../model/types'
 
 /**
  * Tailwind color palette mapping for project assignment
@@ -185,7 +185,7 @@ export class ColorAssignmentService {
   /**
    * Gets color for a specific project phase
    */
-  static getPhaseColor(project: Project, phaseType: 'pre-production' | 'production' | 'post-production'): string {
+  static getPhaseColor(project: Project, phaseType: ProjectPhaseType): string {
     const basePalette = this.generateProjectPalette(project.id)
     
     switch (phaseType) {
@@ -195,6 +195,10 @@ export class ColorAssignmentService {
         return basePalette.primary  // Main color for filming
       case 'post-production':
         return basePalette.accent   // Darker for editing
+      case 'review':
+        return basePalette.accent   // Similar to post-production
+      case 'delivery':
+        return basePalette.primary  // Similar to production
       default:
         return basePalette.primary
     }
