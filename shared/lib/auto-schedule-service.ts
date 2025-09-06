@@ -134,8 +134,6 @@ export class AutoScheduleService {
       category: 'project-deadline',
       priority: 'high',
       type: 'pre-production',
-      projectId,
-      projectTitle,
       projectColor: this.generateProjectColor(projectId),
       recurrence: 'none',
       createdBy: 'system',
@@ -174,8 +172,6 @@ export class AutoScheduleService {
       category: 'filming',
       priority: 'high',
       type: 'production',
-      projectId,
-      projectTitle,
       projectColor: this.generateProjectColor(projectId),
       recurrence: 'none',
       createdBy: 'system',
@@ -214,8 +210,6 @@ export class AutoScheduleService {
       category: 'project-deadline',
       priority: 'medium',
       type: 'post-production',
-      projectId,
-      projectTitle,
       projectColor: this.generateProjectColor(projectId),
       recurrence: 'none',
       createdBy: 'system',
@@ -454,9 +448,4 @@ export function generateConflictSummaryText(result: ConflictAwareScheduleResult)
 // ===========================
 // Exports
 // ===========================
-
-export type {
-  ConflictAwareScheduleResult,
-  ScheduleConflictCheck,
-  AutoScheduleOptions
-}
+// Note: Types are already exported at declaration

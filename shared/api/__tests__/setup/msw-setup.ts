@@ -21,7 +21,7 @@ export const server = setupServer(...navigationSuccessHandlers)
 
 // 브라우저 환경용 MSW 워커 (Cypress에서만 사용)
 // Node.js 환경에서는 사용하지 않음
-export const worker = null
+export const worker: any = null
 
 // Jest 환경 설정
 export const setupMSWForJest = () => {
@@ -225,7 +225,7 @@ if (typeof global !== 'undefined') {
 
 // TypeScript를 위한 전역 타입 선언
 declare global {
-  var MSWTestUtils: typeof MSWTestUtils
+  var MSWTestUtils: any
 }
 
 // Jest 환경에서 자동 설정을 원하는 경우 아래 주석 해제
