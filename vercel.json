@@ -4,13 +4,13 @@
   "git": {
     "deploymentEnabled": {
       "main": true,
+      "master": true,
       "security-fix-clean": true,
       "railway-deploy": false,
       "railway": false,
       "railway-staging": false,
       "deploy-railway": false,
-      "staging": false,
-      "master": false
+      "staging": false
     }
   },
   "github": {
