@@ -219,7 +219,7 @@ export class MSWTestUtils {
 
 // Jest에서 사용할 수 있는 전역 유틸리티 설정
 if (typeof global !== 'undefined') {
-  // @ts-ignore
+  // @ts-expect-error
   global.MSWTestUtils = MSWTestUtils
 }
 

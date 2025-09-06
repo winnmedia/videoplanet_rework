@@ -13,7 +13,7 @@ import {
   type TeamInviteData
 } from '@/entities/project/api/projectApi'
 import { TeamInviteForm } from '@/features/projects'
-import { Button, Card } from '@/shared/ui'
+import { Button } from '@/shared/ui'
 import { SideBar } from '@/widgets'
 
 interface ProjectFormData {
@@ -274,7 +274,7 @@ function ProjectManageContent({ projectId }: { projectId: string }) {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* 프로젝트 생성 폼 */}
               <div className="lg:col-span-2">
-                <Card className="p-6">
+                <div className="p-6 bg-white rounded-lg shadow">
                   <h2 className="text-xl font-semibold text-gray-900 mb-6">새 프로젝트 생성</h2>
                   
                   <form onSubmit={handleCreateProject} className="space-y-6">
@@ -454,12 +454,12 @@ function ProjectManageContent({ projectId }: { projectId: string }) {
                       </Button>
                     </div>
                   </form>
-                </Card>
+                </div>
               </div>
 
               {/* 일정 프리뷰 */}
               <div className="lg:col-span-1">
-                <Card className="p-4">
+                <div className="p-4 bg-white rounded-lg shadow">
                   <h3 className="text-lg font-medium text-gray-900 mb-4">예상 일정</h3>
                   <div className="space-y-3 text-sm">
                     <div className="flex justify-between">
@@ -481,7 +481,7 @@ function ProjectManageContent({ projectId }: { projectId: string }) {
                       </div>
                     </div>
                   </div>
-                </Card>
+                </div>
               </div>
             </div>
           )}
@@ -504,7 +504,7 @@ function ProjectManageContent({ projectId }: { projectId: string }) {
                       <p className="text-gray-500">로딩 중...</p>
                     </div>
                   ) : (
-                    <Card className="p-6">
+                    <div className="p-6 bg-white rounded-lg shadow">
                       <div className="space-y-4">
                         <h3 className="text-lg font-medium">팀원 목록</h3>
                         {(teamData?.members?.length || 0) > 0 ? (
@@ -558,7 +558,7 @@ function ProjectManageContent({ projectId }: { projectId: string }) {
                           </div>
                         )}
                       </div>
-                    </Card>
+                    </div>
                   )}
                 </div>
               )}
