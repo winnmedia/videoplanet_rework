@@ -137,7 +137,7 @@ jobs:
           fi
 
       - name: Coverage 보고서 업로드
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v5
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./coverage/lcov.info
