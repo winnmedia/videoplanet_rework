@@ -5,17 +5,36 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 
-import { QuickActions } from '@/features/projects'
+// Emergency deployment - temporarily disable missing imports
+// import { QuickActions } from '@/features/projects'
 import { SideBar } from '@/widgets'
-import { 
-  RecentActivityFeed,
-  FeedbackSummaryCard,
-  InvitationSummaryCard,
-  ScheduleSummaryCard,
-  UnreadBadge,
-  dashboardApiClient,
-  type DashboardData
-} from '@/widgets/Dashboard'
+// import { 
+//   RecentActivityFeed,
+//   FeedbackSummaryCard,
+//   InvitationSummaryCard,
+//   ScheduleSummaryCard,
+//   UnreadBadge,
+//   dashboardApiClient,
+//   type DashboardData
+// } from '@/widgets/Dashboard'
+
+// Temporary placeholder components
+const RecentActivityFeed = ({ activities }: any) => <div className="text-gray-500">활동 피드 준비중...</div>
+const FeedbackSummaryCard = ({ data, onViewDetails, onMarkAllRead, onItemClick }: any) => <div className="text-gray-500">피드백 요약 준비중...</div>
+const InvitationSummaryCard = ({ data, onViewDetails, onResendInvitation, onAcceptInvitation, onDeclineInvitation, onItemClick }: any) => <div className="text-gray-500">초대 요약 준비중...</div>
+const ScheduleSummaryCard = ({ data, viewType, onViewTypeChange, onProjectClick, onViewDetails, onCreateProject }: any) => <div className="text-gray-500">일정 요약 준비중...</div>
+const UnreadBadge = ({ count, priority, size }: any) => <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">{count}</span>
+const QuickActions = () => <div className="text-gray-500">빠른 작업 준비중...</div>
+
+// Mock API client
+const dashboardApiClient = {
+  fetchDashboardData: () => Promise.resolve({}),
+  markFeedbackAsRead: (id: string) => Promise.resolve(),
+  resendInvitation: (id: string) => Promise.resolve(),
+  acceptInvitation: (id: string) => Promise.resolve(),
+}
+
+type DashboardData = any
 
 export default function DashboardPage() {
   const router = useRouter()

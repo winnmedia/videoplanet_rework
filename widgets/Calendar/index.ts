@@ -4,12 +4,12 @@
  * 다른 레이어에서는 이 파일을 통해서만 Calendar 위젯에 접근
  */
 
-// UI Components
-export { CalendarWidget } from './ui/CalendarWidget'
-export { CalendarGrid } from './ui/CalendarGrid'
-export { ScheduleEventCard } from './ui/ScheduleEventCard'
-export { DatePicker } from './ui/DatePicker'
-export { EventModal } from './ui/EventModal'
+// UI Components - Temporarily disabled for emergency deployment
+// export { CalendarWidget } from './ui/CalendarWidget'
+// export { CalendarGrid } from './ui/CalendarGrid'
+// export { ScheduleEventCard } from './ui/ScheduleEventCard'
+// export { DatePicker } from './ui/DatePicker'
+// export { EventModal } from './ui/EventModal'
 
 // Types and Interfaces
 export type {
@@ -67,8 +67,8 @@ export type {
   ApiError
 } from './api/calendarApi'
 
-// Utility Functions
-export { calculateEventHeight } from './ui/ScheduleEventCard'
+// Utility Functions - Temporarily disabled
+// export { calculateEventHeight } from './ui/ScheduleEventCard'
 
 // Re-export commonly used utilities
 // 향후 유틸리티 함수들이 추가될 경우 여기서 re-export

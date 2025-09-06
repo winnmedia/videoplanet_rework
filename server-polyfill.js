@@ -3,17 +3,16 @@
  * Must be loaded before any modules that use browser APIs
  */
 
-// Comprehensive polyfills for SSR
+// Emergency deployment - enhanced polyfills for SSR
 if (typeof global !== 'undefined') {
-  // Self polyfill
-  if (!global.self) {
-    global.self = global;
-  }
+  // Force self polyfill at the very beginning
+  global.self = global;
   
-  // Window polyfill
-  if (!global.window) {
-    global.window = global;
-  }
+  // Force window polyfill
+  global.window = global;
+  
+  // Force globalThis polyfill
+  global.globalThis = global;
   
   // Document polyfill (basic)
   if (!global.document) {
@@ -21,15 +20,18 @@ if (typeof global !== 'undefined') {
       createElement: () => ({}),
       createDocumentFragment: () => ({}),
       addEventListener: () => {},
-      removeEventListener: () => {}
+      removeEventListener: () => {},
+      getElementById: () => null,
+      querySelector: () => null,
+      querySelectorAll: () => []
     };
   }
   
   // Location polyfill
   if (!global.location) {
     global.location = {
-      origin: 'http://localhost:3000',
-      href: 'http://localhost:3000',
+      origin: 'https://videoplanet.vercel.app',
+      href: 'https://videoplanet.vercel.app',
       pathname: '/',
       search: '',
       hash: ''
@@ -39,7 +41,23 @@ if (typeof global !== 'undefined') {
   // Navigator polyfill
   if (!global.navigator) {
     global.navigator = {
-      userAgent: 'Node.js'
+      userAgent: 'Node.js SSR'
     };
   }
+  
+  // Console polyfill (ensure it exists)
+  if (!global.console) {
+    global.console = {
+      log: () => {},
+      error: () => {},
+      warn: () => {},
+      info: () => {},
+      debug: () => {}
+    };
+  }
+}
+
+// Additional emergency polyfill at module level
+if (typeof self === 'undefined') {
+  global.self = global;
 }

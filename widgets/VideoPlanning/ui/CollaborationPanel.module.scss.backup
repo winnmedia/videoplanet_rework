@@ -1,0 +1,461 @@
+@use '@/shared/config/design-tokens.scss' as *;
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: $color-white;
+  border-radius: $radius-lg;
+}
+
+.tabNav {
+  display: flex;
+  border-bottom: $border-1 solid $color-gray-200;
+
+  .tab {
+    flex: 1;
+    padding: $spacing-md;
+    background: none;
+    border: none;
+    font-family: $font-primary;
+    font-size: $font-size-sm;
+    color: $color-text-secondary;
+    cursor: pointer;
+    transition: $transition-colors;
+    position: relative;
+
+    &.active {
+      color: $color-primary;
+      font-weight: $font-weight-semibold;
+
+      &::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: $color-primary;
+      }
+    }
+
+    &:hover:not(.active) {
+      color: $color-text-primary;
+    }
+  }
+}
+
+.commentsTab, .teamTab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+// 댓글 입력
+.commentInput {
+  padding: $spacing-md;
+  border-bottom: $border-1 solid $color-gray-200;
+
+  textarea {
+    width: 100%;
+    min-height: 60px;
+    border: $border-1 solid $color-gray-300;
+    border-radius: $radius-md;
+    padding: $spacing-sm;
+    font-family: $font-primary;
+    font-size: $font-size-sm;
+    resize: vertical;
+    margin-bottom: $spacing-sm;
+
+    &:focus {
+      outline: none;
+      border-color: $color-primary;
+    }
+  }
+
+  .submitButton {
+    @include button-base;
+    background: $color-primary;
+    color: $color-white;
+    padding: $spacing-xs $spacing-md;
+    font-size: $font-size-sm;
+    margin-left: auto;
+    display: block;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+}
+
+// 댓글 목록
+.commentsList {
+  flex: 1;
+  overflow-y: auto;
+  padding: $spacing-sm;
+
+  .comment {
+    margin-bottom: $spacing-md;
+    padding: $spacing-md;
+    background: rgba($color-gray-50, 0.5);
+    border-radius: $radius-md;
+    border-left: 3px solid $color-primary;
+    transition: $transition-all;
+
+    &.resolved {
+      opacity: 0.6;
+      border-left-color: $color-success;
+    }
+
+    &:hover {
+      background: rgba($color-gray-100, 0.5);
+    }
+  }
+
+  .commentHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: $spacing-sm;
+
+    .author {
+      display: flex;
+      align-items: center;
+      gap: $spacing-sm;
+
+      .avatar, .avatarPlaceholder {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+      }
+
+      .avatar {
+        object-fit: cover;
+      }
+
+      .avatarPlaceholder {
+        background: $color-primary;
+        color: $color-white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: $font-size-xs;
+        font-weight: $font-weight-semibold;
+      }
+
+      .authorInfo {
+        .authorName {
+          font-weight: $font-weight-semibold;
+          font-size: $font-size-sm;
+          color: $color-text-primary;
+        }
+
+        .role {
+          font-size: $font-size-xs;
+          color: $color-text-secondary;
+          margin-left: $spacing-xs;
+        }
+      }
+    }
+
+    .commentMeta {
+      display: flex;
+      align-items: center;
+      gap: $spacing-sm;
+
+      .timestamp {
+        font-size: $font-size-xs;
+        color: $color-text-secondary;
+      }
+
+      .commentActions {
+        display: flex;
+        gap: $spacing-xs;
+        opacity: 0;
+        transition: $transition-opacity;
+
+        button {
+          width: 20px;
+          height: 20px;
+          border: none;
+          border-radius: 50%;
+          cursor: pointer;
+          font-size: $font-size-xs;
+          transition: $transition-all;
+
+          &.resolveButton {
+            background: $color-success;
+            color: $color-white;
+
+            &:hover {
+              background: $color-success-dark;
+            }
+          }
+
+          &.deleteButton {
+            background: $color-error;
+            color: $color-white;
+
+            &:hover {
+              background: $color-error-dark;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .comment:hover .commentActions {
+    opacity: 1;
+  }
+
+  .commentContent {
+    font-size: $font-size-sm;
+    line-height: $line-height-normal;
+    color: $color-text-primary;
+    margin-bottom: $spacing-xs;
+
+    :global(.mention) {
+      background: rgba($color-primary, 0.1);
+      color: $color-primary;
+      padding: 2px $spacing-xs;
+      border-radius: $radius-sm;
+      font-weight: $font-weight-medium;
+    }
+  }
+
+  .mentions {
+    font-size: $font-size-xs;
+    color: $color-text-secondary;
+    font-style: italic;
+  }
+
+  .emptyComments {
+    text-align: center;
+    padding: $spacing-xl;
+    color: $color-text-secondary;
+
+    p {
+      margin: 0 0 $spacing-sm 0;
+    }
+  }
+}
+
+// 팀멤버 섹션
+.inviteSection {
+  padding: $spacing-md;
+  border-bottom: $border-1 solid $color-gray-200;
+
+  .inviteButton {
+    @include button-base;
+    background: $color-primary;
+    color: $color-white;
+    padding: $spacing-sm $spacing-md;
+    font-size: $font-size-sm;
+    width: 100%;
+  }
+}
+
+.membersList {
+  flex: 1;
+  overflow-y: auto;
+  padding: $spacing-sm;
+
+  .member {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: $spacing-md;
+    margin-bottom: $spacing-sm;
+    background: rgba($color-gray-50, 0.5);
+    border-radius: $radius-md;
+    transition: $transition-all;
+
+    &:hover {
+      background: rgba($color-gray-100, 0.5);
+    }
+
+    .memberInfo {
+      display: flex;
+      align-items: center;
+      gap: $spacing-sm;
+
+      .memberAvatar {
+        position: relative;
+
+        img, .avatarPlaceholder {
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+        }
+
+        .avatarPlaceholder {
+          background: $color-primary;
+          color: $color-white;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: $font-weight-semibold;
+        }
+
+        .onlineStatus {
+          position: absolute;
+          bottom: 0;
+          right: 0;
+          width: 10px;
+          height: 10px;
+          border-radius: 50%;
+          border: 2px solid $color-white;
+
+          &.online {
+            background: $color-success;
+          }
+
+          &.offline {
+            background: $color-gray-400;
+          }
+        }
+      }
+
+      .memberDetails {
+        .memberName {
+          display: block;
+          font-weight: $font-weight-semibold;
+          font-size: $font-size-sm;
+          color: $color-text-primary;
+        }
+
+        .memberRole {
+          font-size: $font-size-xs;
+          color: $color-text-secondary;
+        }
+
+        .lastSeen {
+          display: block;
+          font-size: $font-size-xs;
+          color: $color-text-secondary;
+          margin-top: 2px;
+        }
+      }
+    }
+
+    .memberPermissions {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+
+      .permission {
+        background: rgba($color-primary, 0.1);
+        color: $color-primary;
+        font-size: $font-size-xs;
+        padding: 2px $spacing-xs;
+        border-radius: $radius-sm;
+        text-align: center;
+      }
+    }
+  }
+}
+
+// 모달
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba($color-black, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: $z-index-modal;
+
+  .modalContent {
+    background: $color-white;
+    border-radius: $radius-lg;
+    width: 90%;
+    max-width: 400px;
+    box-shadow: $shadow-2xl;
+  }
+
+  .modalHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: $spacing-lg;
+    border-bottom: $border-1 solid $color-gray-200;
+
+    h3 {
+      margin: 0;
+      font-size: $font-size-lg;
+      color: $color-text-primary;
+    }
+
+    .closeButton {
+      width: 32px;
+      height: 32px;
+      border: none;
+      border-radius: 50%;
+      background: $color-gray-200;
+      cursor: pointer;
+    }
+  }
+
+  .modalBody {
+    padding: $spacing-lg;
+
+    .formGroup {
+      margin-bottom: $spacing-md;
+
+      label {
+        display: block;
+        margin-bottom: $spacing-xs;
+        font-weight: $font-weight-medium;
+        color: $color-text-primary;
+      }
+
+      input, select {
+        width: 100%;
+        padding: $spacing-sm;
+        border: $border-1 solid $color-gray-300;
+        border-radius: $radius-md;
+        font-family: $font-primary;
+
+        &:focus {
+          outline: none;
+          border-color: $color-primary;
+        }
+      }
+    }
+  }
+
+  .modalFooter {
+    display: flex;
+    justify-content: flex-end;
+    gap: $spacing-md;
+    padding: $spacing-lg;
+    border-top: $border-1 solid $color-gray-200;
+
+    .cancelButton {
+      background: none;
+      border: $border-1 solid $color-gray-300;
+      color: $color-text-secondary;
+      padding: $spacing-sm $spacing-lg;
+      border-radius: $radius-md;
+      cursor: pointer;
+    }
+
+    .inviteSubmitButton {
+      @include button-base;
+      background: $color-primary;
+      color: $color-white;
+      padding: $spacing-sm $spacing-lg;
+
+      &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+    }
+  }
+}

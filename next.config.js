@@ -4,10 +4,35 @@
  */
 
 // Critical server-side polyfills - must be first
-require('./server-polyfill.js');
+if (typeof global !== 'undefined') {
+  // Comprehensive browser globals for SSR
+  global.self = global.self || global;
+  global.window = global.window || {};
+  global.document = global.document || {};
+  global.navigator = global.navigator || {};
+  global.location = global.location || {};
+  global.localStorage = global.localStorage || {
+    getItem: () => null,
+    setItem: () => {},
+    removeItem: () => {},
+    clear: () => {}
+  };
+  global.sessionStorage = global.sessionStorage || global.localStorage;
+  global.XMLHttpRequest = global.XMLHttpRequest || function() {};
+  global.fetch = global.fetch || function() { return Promise.resolve({ ok: true, json: () => Promise.resolve({}) }); };
+}
 
-// Import additional polyfills
-require('./lib/polyfills.js');
+try {
+  require('./server-polyfill.js');
+} catch (e) {
+  console.warn('Server polyfill load failed, using inline polyfills');
+}
+
+try {
+  require('./lib/polyfills.js');
+} catch (e) {
+  console.warn('Lib polyfill load failed, using inline polyfills');
+}
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -144,12 +169,84 @@ const nextConfig = {
   webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
     const path = require('path');
     
+    // Emergency build mode: Skip problematic SCSS files
+    if (process.env.EMERGENCY_BUILD === 'true') {
+      // Replace all SCSS imports with empty objects
+      config.plugins.push(
+        new webpack.NormalModuleReplacementPlugin(
+          /\.(scss|sass)$/,
+          'data:text/javascript,module.exports = {};'
+        )
+      );
+    }
+    
+    // Emergency deployment: Enhanced global polyfills
+    config.plugins.push(
+      new webpack.DefinePlugin({
+        // Force self and window definitions for all environments
+        'typeof self': '"object"',
+        'typeof window': isServer ? '"undefined"' : '"object"',
+        'typeof global': '"object"',
+        'typeof globalThis': '"object"'
+      })
+    );
+    
     // Global self and window polyfill for server-side rendering
     if (isServer) {
+      // Inject polyfill as first entry to ensure globals are available
+      const originalEntry = config.entry;
+      config.entry = async () => {
+        const entries = await originalEntry();
+        
+        // Create polyfill injection for all server entries
+        const polyfillCode = `
+          if (typeof global !== 'undefined' && typeof self === 'undefined') {
+            global.self = global;
+            global.window = global.window || {};
+            global.document = global.document || {};
+            global.navigator = global.navigator || {};
+          }
+        `;
+        
+        // Inject into all entries
+        Object.keys(entries).forEach(key => {
+          if (Array.isArray(entries[key])) {
+            entries[key].unshift('data:text/javascript,' + encodeURIComponent(polyfillCode));
+          }
+        });
+        
+        return entries;
+      };
+      
       config.plugins.push(
         new webpack.DefinePlugin({
           'self': 'global',
-          'window': 'global'
+          'window': 'global',
+          'globalThis': 'global'
+        })
+      );
+      
+      // Provide fallbacks for problematic modules
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        'self': false,
+        'window': false
+      };
+      
+      // Additional polyfill for server environment
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        // Ensure global variables are available
+        'global': 'global'
+      };
+    }
+    
+    // Client-side global polyfill
+    if (!isServer) {
+      config.plugins.push(
+        new webpack.DefinePlugin({
+          'global': 'window',
+          'globalThis': 'window'
         })
       );
     }
@@ -322,8 +419,16 @@ const nextConfig = {
     return config;
   },
 
-  // Output configuration for deployment
-  output: 'standalone',
+  // Emergency deployment: Change output configuration
+  output: process.env.EMERGENCY_BUILD === 'true' ? 'export' : 'standalone',
+  
+  // Emergency deployment: Disable SSR for problematic pages
+  ...(process.env.EMERGENCY_BUILD === 'true' && {
+    trailingSlash: true,
+    images: {
+      unoptimized: true
+    }
+  }),
   
   // Environment variable validation
   env: {

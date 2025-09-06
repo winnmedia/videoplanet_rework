@@ -5,7 +5,16 @@ import React, { useState } from 'react'
 
 import type { MenuItem, SubMenuItem } from '@/entities/menu'
 import { useNavigation } from '@/features/navigation'
-import { SubMenu, MenuButton } from '@/shared/ui'
+// Emergency deployment - temporarily disable missing import
+import { SubMenu } from '@/shared/ui'
+// import { MenuButton } from '@/shared/ui'
+
+// Temporary MenuButton placeholder
+const MenuButton = ({ children, onClick, className, ...props }: any) => (
+  <button onClick={onClick} className={className} {...props}>
+    {children}
+  </button>
+)
 
 interface SideBarProps {
   isCollapsed?: boolean

@@ -1,0 +1,350 @@
+@use '@/shared/config/precision-craft-tokens.scss' as *;
+@use '@/shared/config/design-tokens.scss' as *;
+
+// Backdrop (90% opacity as per DEVPLAN.md)
+.backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, $submenu-opacity);
+  backdrop-filter: $submenu-backdrop-filter;
+  z-index: $z-submenu-backdrop;
+  opacity: 0;
+  animation: backdrop-fade-in $animation-precision-medium ease-out forwards;
+}
+
+@keyframes backdrop-fade-in {
+  to {
+    opacity: 1;
+  }
+}
+
+// SubMenu Panel
+.subMenu {
+  position: fixed;
+  top: 0;
+  left: 300px; // After main sidebar
+  bottom: 0;
+  width: 330px;
+  background: $color-gray-50;
+  border-radius: 0 $spacing-precision-lg $spacing-precision-lg 0;
+  box-shadow: $shadow-lg;
+  z-index: $z-submenu;
+  overflow-y: auto;
+  overflow-x: hidden;
+  
+  // Precision Craft: Mathematical padding based on 8px grid
+  padding: $spacing-precision-md $spacing-precision-md $spacing-precision-md ($spacing-precision-lg + $spacing-precision-sm); // 24px 24px 24px 56px
+  
+  // Entry animation
+  transform: translateX(-100%);
+  animation: submenu-slide-in $animation-precision-slow ease-out forwards;
+  
+  // Scrollbar styling (Precision Craft: minimal and elegant)
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 49, 255, 0.2);
+    border-radius: 2px;
+  }
+}
+
+@keyframes submenu-slide-in {
+  to {
+    transform: translateX(0);
+  }
+}
+
+// Header
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: $spacing-precision-2xl; // 48px - Precision spacing
+  
+  .title {
+    font-size: $font-precision-xl; // 23px - Golden ratio typography
+    font-weight: 600;
+    color: $color-text-primary;
+    letter-spacing: $optical-correction-medium;
+    margin: 0;
+    line-height: 1.2; // Precision Craft: optimal reading rhythm
+  }
+  
+  .actions {
+    display: flex;
+    align-items: center;
+    gap: $spacing-precision-sm; // 16px
+  }
+  
+  .actionButton {
+    width: $spacing-precision-lg; // 32px (8px grid aligned)
+    height: $spacing-precision-lg;
+    border-radius: 50%;
+    border: none;
+    background: $color-gray-100;
+    color: $color-text-secondary;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: $transition-precision-fast;
+    font-size: $font-precision-md; // 16px
+    
+    // WCAG AA minimum touch target
+    @media (max-width: $breakpoint-tablet) {
+      width: $submenu-min-touch-target;
+      height: $submenu-min-touch-target;
+    }
+    
+    &:hover {
+      background: $color-gray-200;
+      transform: translateY(-1px); // Subtle hover lift
+    }
+    
+    &:focus-visible {
+      outline: $focus-outline-precision;
+      outline-offset: $focus-outline-offset;
+    }
+    
+    &.closeButton {
+      &:hover {
+        background: $color-error;
+        color: $color-white;
+      }
+    }
+    
+    .plusIcon,
+    .closeIcon {
+      font-weight: 600;
+      line-height: 1;
+    }
+  }
+}
+
+// Content Area
+.content {
+  flex: 1;
+}
+
+.menuList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+// Menu Item
+.menuItem {
+  display: block;
+  width: 100%;
+  background: none;
+  border: none;
+  padding: $spacing-precision-sm 0; // 16px top/bottom
+  margin-bottom: $spacing-precision-md; // 24px spacing between items
+  cursor: pointer;
+  transition: $transition-precision;
+  text-align: left;
+  border-radius: $spacing-precision-xs; // 8px
+  
+  &:last-child {
+    margin-bottom: 0;
+  }
+  
+  // WCAG AA minimum touch target
+  min-height: $submenu-min-touch-target;
+  
+  &:hover {
+    background: rgba(0, 49, 255, 0.05);
+    transform: translateY(-1px);
+  }
+  
+  &:focus-visible {
+    outline: $focus-outline-precision;
+    outline-offset: $focus-outline-offset;
+    background: rgba(0, 49, 255, 0.05);
+  }
+  
+  &.active {
+    background: rgba(0, 49, 255, 0.1);
+    
+    .itemName {
+      color: $color-primary;
+      font-weight: 600;
+    }
+  }
+  
+  &.focused {
+    background: rgba(0, 49, 255, 0.08);
+  }
+}
+
+.itemContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: $spacing-precision-xs $spacing-precision-sm; // 8px 16px
+}
+
+.itemName {
+  font-size: $font-precision-lg; // 19px - Precision typography
+  color: $color-text-secondary;
+  line-height: 1.3; // Optimal line height
+  letter-spacing: $optical-correction-small;
+  transition: $transition-precision-fast;
+  
+  // Text overflow handling
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 180px;
+}
+
+.itemMeta {
+  display: flex;
+  align-items: center;
+  gap: $spacing-precision-xs; // 8px
+  flex-shrink: 0;
+}
+
+// Status Badge
+.statusBadge {
+  font-size: $font-precision-xs; // 12px
+  padding: 2px $spacing-precision-xs; // 2px 8px
+  border-radius: 4px; // Half of base unit
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  
+  &.active {
+    background: rgba(40, 167, 69, 0.15);
+    color: $color-success;
+  }
+  
+  &.completed {
+    background: rgba(0, 49, 255, 0.15);
+    color: $color-primary;
+  }
+  
+  &.pending {
+    background: rgba(255, 193, 7, 0.15);
+    color: $color-warning;
+  }
+}
+
+// Notification Badge
+.badge {
+  background: $color-accent;
+  color: $color-white;
+  font-size: $font-precision-xs; // 12px
+  font-weight: 600;
+  min-width: $spacing-precision-sm; // 16px
+  height: $spacing-precision-sm;
+  border-radius: $spacing-precision-xs; // 8px (perfect circle for numbers)
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+// Empty State
+.emptyState {
+  text-align: center;
+  padding: $spacing-precision-2xl 0; // 48px
+  
+  .emptyMessage {
+    font-size: $font-precision-lg; // 19px
+    color: $color-text-secondary;
+    line-height: 1.4;
+    margin: 0 0 $spacing-precision-lg 0; // 32px bottom margin
+    letter-spacing: $optical-correction-small;
+  }
+  
+  .createButton {
+    background: $color-primary;
+    color: $color-white;
+    border: none;
+    padding: $spacing-precision-sm $spacing-precision-md; // 16px 24px
+    border-radius: $spacing-precision-xs; // 8px
+    font-size: $font-precision-md; // 16px
+    font-weight: 500;
+    cursor: pointer;
+    transition: $transition-precision;
+    min-height: $submenu-min-touch-target;
+    
+    &:hover {
+      background: $color-primary-dark;
+      transform: translateY(-1px);
+      box-shadow: $shadow-sm;
+    }
+    
+    &:focus-visible {
+      outline: $focus-outline-precision;
+      outline-offset: $focus-outline-offset;
+    }
+  }
+}
+
+// Responsive Design
+@media (max-width: $breakpoint-mobile) {
+  .subMenu {
+    left: 0;
+    width: 100vw;
+    border-radius: 0;
+    padding: $spacing-precision-md;
+  }
+}
+
+// Reduced Motion Support
+@media (prefers-reduced-motion: reduce) {
+  .backdrop,
+  .subMenu,
+  .menuItem,
+  .actionButton,
+  .createButton {
+    animation-duration: $reduced-motion-duration;
+    transition-duration: $reduced-motion-duration;
+  }
+}
+
+// High Contrast Mode
+@media (prefers-contrast: high) {
+  .subMenu {
+    border: $high-contrast-border;
+  }
+  
+  .menuItem {
+    border: 1px solid transparent;
+    
+    &:focus-visible,
+    &.focused {
+      border-color: currentColor;
+    }
+  }
+  
+  .statusBadge {
+    border: 1px solid currentColor;
+  }
+}
+
+// Screen Reader Only utility class
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

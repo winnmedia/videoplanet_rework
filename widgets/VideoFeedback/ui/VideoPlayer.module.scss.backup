@@ -1,0 +1,432 @@
+/**
+ * @description VideoPlayer 컴포넌트 스타일
+ * @design-system 비디오 전용 어두운 테마, 마커 시스템
+ */
+
+@use '@/shared/config/design-tokens.scss' as *;
+
+.videoPlayerContainer {
+  position: relative;
+  width: 100%;
+  height: 0;
+  padding-bottom: 56.25%; // 16:9 aspect ratio
+  background: $color-black;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  cursor: crosshair;
+  user-select: none;
+
+  &:focus-within {
+    box-shadow: 0 0 0 2px $color-primary;
+  }
+}
+
+.videoElement {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  cursor: pointer;
+
+  &:focus {
+    outline: 2px solid $color-primary;
+    outline-offset: -2px;
+  }
+}
+
+// ===========================
+// 로딩 상태
+// ===========================
+
+.loadingOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba($color-black, 0.8);
+  color: $color-white;
+  z-index: $z-index-50;
+
+  p {
+    margin-top: $spacing-md;
+    font-size: $font-size-sm;
+    opacity: 0.9;
+  }
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba($color-white, 0.3);
+  border-left: 3px solid $color-white;
+  border-radius: $radius-full;
+  animation: spin 1s linear infinite;
+}
+
+// ===========================
+// 비디오 마커들
+// ===========================
+
+.videoMarker {
+  position: absolute;
+  pointer-events: all;
+  cursor: pointer;
+  transition: $transition-all;
+  z-index: $z-index-20;
+  border-style: solid;
+
+  &:hover {
+    transform: scale(1.05);
+    filter: brightness(1.2);
+    z-index: $z-index-30;
+  }
+
+  &:focus {
+    outline: 2px solid $color-white;
+    outline-offset: 2px;
+  }
+
+  // 마커 타입별 스타일
+  &.point {
+    width: 12px;
+    height: 12px;
+    border-radius: $radius-full;
+    transform: translate(-50%, -50%);
+  }
+
+  &.rectangle {
+    border-radius: $radius-sm;
+    background: transparent;
+  }
+
+  &.circle {
+    border-radius: $radius-full;
+    background: transparent;
+    transform: translate(-50%, -50%);
+  }
+
+  &.arrow {
+    width: 0;
+    height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-bottom: 12px solid currentColor;
+    transform: translate(-50%, -100%);
+  }
+}
+
+// ===========================
+// 댓글 포인터들
+// ===========================
+
+.commentPointer {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: $radius-full;
+  cursor: pointer;
+  z-index: $z-index-30;
+  transform: translate(-50%, -50%);
+  transition: $transition-all;
+  border: 2px solid $color-white;
+  box-shadow: $shadow-md;
+
+  &:hover {
+    transform: translate(-50%, -50%) scale(1.3);
+    box-shadow: 0 0 0 4px rgba($color-white, 0.3);
+  }
+
+  &:focus {
+    outline: 2px solid $color-white;
+    outline-offset: 3px;
+  }
+
+  &.visible {
+    animation: commentPulse 2s ease-in-out infinite;
+  }
+
+  // 우선순위별 색상
+  &.priority-urgent {
+    background: $color-error;
+    animation: urgentPulse 1.5s ease-in-out infinite;
+  }
+
+  &.priority-high {
+    background: $color-warning;
+  }
+
+  &.priority-medium {
+    background: $color-info;
+  }
+
+  &.priority-low {
+    background: $color-gray-500;
+  }
+}
+
+// ===========================
+// 드래그 영역 선택
+// ===========================
+
+.dragArea {
+  position: absolute;
+  border: 2px dashed $color-primary;
+  background: rgba($color-primary, 0.1);
+  pointer-events: none;
+  z-index: $z-index-40;
+  border-radius: $radius-sm;
+}
+
+// ===========================
+// 애니메이션
+// ===========================
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes commentPulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.15);
+    opacity: 0.8;
+  }
+}
+
+@keyframes urgentPulse {
+  0%, 100% {
+    transform: translate(-50%, -50%) scale(1);
+    box-shadow: $shadow-md, 0 0 0 0 rgba($color-error, 0.7);
+  }
+  50% {
+    transform: translate(-50%, -50%) scale(1.2);
+    box-shadow: $shadow-lg, 0 0 0 6px rgba($color-error, 0.3);
+  }
+}
+
+// ===========================
+// 반응형 디자인
+// ===========================
+
+@include mobile {
+  .videoPlayerContainer {
+    border-radius: $radius-md;
+  }
+
+  .commentPointer {
+    width: 16px;
+    height: 16px;
+    
+    &:hover {
+      transform: translate(-50%, -50%) scale(1.2);
+    }
+  }
+
+  .videoMarker {
+    &.point {
+      width: 14px;
+      height: 14px;
+    }
+  }
+}
+
+@include tablet {
+  .videoPlayerContainer {
+    padding-bottom: 60%; // 조금 더 사각형에 가까운 비율
+  }
+}
+
+// ===========================
+// 접근성 개선
+// ===========================
+
+// 스크린리더 전용 텍스트
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+// 고대비 모드 지원
+@media (prefers-contrast: high) {
+  .videoMarker {
+    border-width: 3px !important;
+    
+    &.rectangle,
+    &.circle {
+      background: rgba($color-white, 0.2);
+    }
+  }
+
+  .commentPointer {
+    border-width: 3px;
+  }
+
+  .dragArea {
+    border-width: 3px;
+    background: rgba($color-primary, 0.3);
+  }
+}
+
+// 모션 감소 설정 사용자 지원
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: none;
+  }
+
+  .commentPointer {
+    transition: none;
+    
+    &.visible,
+    &.priority-urgent {
+      animation: none;
+    }
+  }
+
+  .videoMarker {
+    transition: none;
+  }
+}
+
+// ===========================
+// 터치 디바이스 최적화
+// ===========================
+
+@media (hover: none) and (pointer: coarse) {
+  .videoPlayerContainer {
+    cursor: default;
+  }
+
+  .commentPointer,
+  .videoMarker {
+    // 터치 대상 크기 확대
+    min-width: 44px;
+    min-height: 44px;
+    
+    &::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 44px;
+      height: 44px;
+      background: transparent;
+    }
+  }
+}
+
+// ===========================
+// 전체화면 모드
+// ===========================
+
+.videoPlayerContainer {
+  &.fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    padding-bottom: 0;
+    z-index: $z-index-modal;
+    border-radius: 0;
+    background: $color-black;
+  }
+}
+
+// ===========================
+// 품질별 표시
+// ===========================
+
+.qualityIndicator {
+  position: absolute;
+  top: $spacing-md;
+  right: $spacing-md;
+  background: rgba($color-black, 0.7);
+  color: $color-white;
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $radius-sm;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  z-index: $z-index-20;
+}
+
+// ===========================
+// 로딩 및 버퍼링 상태
+// ===========================
+
+.bufferingIndicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba($color-black, 0.8);
+  color: $color-white;
+  padding: $spacing-md $spacing-lg;
+  border-radius: $radius-lg;
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  z-index: $z-index-40;
+
+  .spinner {
+    width: 20px;
+    height: 20px;
+    border-width: 2px;
+  }
+}
+
+// ===========================
+// 오류 상태
+// ===========================
+
+.errorOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba($color-black, 0.9);
+  color: $color-white;
+  text-align: center;
+  z-index: $z-index-50;
+
+  .errorIcon {
+    font-size: $font-size-3xl;
+    margin-bottom: $spacing-lg;
+  }
+
+  h3 {
+    font-size: $font-size-lg;
+    font-weight: $font-weight-semibold;
+    margin: 0 0 $spacing-md 0;
+  }
+
+  p {
+    font-size: $font-size-sm;
+    opacity: 0.8;
+    margin: 0;
+    max-width: 300px;
+  }
+}

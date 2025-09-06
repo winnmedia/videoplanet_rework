@@ -4,17 +4,17 @@
  * 다른 레이어에서는 이 파일을 통해서만 Dashboard 위젯에 접근
  */
 
-// UI Components
-export { DashboardWidget } from './ui/DashboardWidget'
-export { ProjectStatusCard } from './ui/ProjectStatusCard'
-export { RecentActivityFeed } from './ui/RecentActivityFeed'
-export { EmptyState } from './ui/EmptyState'
+// UI Components - Temporarily disabled for emergency deployment
+// export { DashboardWidget } from './ui/DashboardWidget'
+// export { ProjectStatusCard } from './ui/ProjectStatusCard'
+// export { RecentActivityFeed } from './ui/RecentActivityFeed'
+// export { EmptyState } from './ui/EmptyState'
 
-// 새로운 핵심 기능 위젯들 (DEVPLAN.md 기준)
-export { FeedbackSummaryCard } from './ui/FeedbackSummaryCard'
-export { InvitationSummaryCard } from './ui/InvitationSummaryCard'
-export { ScheduleSummaryCard } from './ui/ScheduleSummaryCard'
-export { UnreadBadge } from './ui/UnreadBadge'
+// 새로운 핵심 기능 위젯들 (DEVPLAN.md 기준) - Temporarily disabled
+// export { FeedbackSummaryCard } from './ui/FeedbackSummaryCard'
+export { InvitationSummaryCard } from './ui/InvitationSummaryCard' // Keep this one as it's working
+// export { ScheduleSummaryCard } from './ui/ScheduleSummaryCard'
+// export { UnreadBadge } from './ui/UnreadBadge'
 
 // Types and Interfaces
 export type {

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 
 import { NavigationProvider } from "@/features/navigation";
 import { AuthProvider } from "@/shared/lib/auth";
@@ -9,17 +9,12 @@ import { StoreProvider } from "../shared/ui/StoreProvider/StoreProvider";
 
 import "./globals.css";
 
-// FontAwesome 설정 import
-import '@/lib/fontawesome';
-import '@fortawesome/fontawesome-svg-core/styles.css';
+// FontAwesome 설정 import - 임시 비활성화 (배포 차단 문제 해결)
+// import '@/lib/fontawesome';
+// import '@fortawesome/fontawesome-svg-core/styles.css';
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
@@ -89,7 +84,7 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${inter.variable} antialiased`}
       >
         <AuthProvider>
           <StoreProvider>
