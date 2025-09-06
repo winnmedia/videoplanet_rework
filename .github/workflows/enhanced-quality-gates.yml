@@ -816,7 +816,7 @@ jobs:
 
       - name: Post Enhanced Quality Report to PR
         if: github.event_name == 'pull_request' && github.event.action != 'closed'
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const results = {
