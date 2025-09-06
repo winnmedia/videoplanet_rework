@@ -159,7 +159,7 @@ export function validateEnvVars(
     // Skip validation if explicitly disabled (build time only)
     if (env.SKIP_ENV_VALIDATION === 'true') {
       console.warn('⚠️  Environment validation skipped (SKIP_ENV_VALIDATION=true)');
-      return env as EnvVars;
+      return env as unknown as EnvVars;
     }
 
     // Apply more lenient parsing for development
@@ -202,7 +202,7 @@ export function validateEnvVars(
         throw new Error(`Environment validation failed: ${parseResult.error.message}`);
       } else {
         console.warn('⚠️  Environment validation failed, proceeding with raw env');
-        return env as EnvVars;
+        return env as unknown as EnvVars;
       }
     }
     
@@ -289,7 +289,7 @@ export function validateEnvVars(
       throw new Error(errorMessage);
     } else {
       console.warn(`⚠️  ${errorMessage}`);
-      return env as EnvVars;
+      return env as unknown as EnvVars;
     }
   }
 }
@@ -326,7 +326,6 @@ export const validateForContext = {
  * Exports for backward compatibility and convenience
  */
 export { PublicEnvSchema, PrivateEnvSchema };
-export type { Environment };
 
 // Auto-validate on import (runtime only, not during build)
 if (typeof window !== 'undefined' || (process.env.NODE_ENV !== undefined && !process.env.SKIP_ENV_VALIDATION)) {

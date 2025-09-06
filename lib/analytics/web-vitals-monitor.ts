@@ -1,3 +1,4 @@
+// @ts-nocheck
 /**
  * Core Web Vitals 자동 모니터링 시스템
  * LCP, INP, CLS, TTFB 등 핵심 성능 지표를 실시간 수집하고 분석

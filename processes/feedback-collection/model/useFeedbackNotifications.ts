@@ -33,7 +33,7 @@ export function useFeedbackNotifications(options: FeedbackNotificationOptions): 
     unreadCount: 0
   })
 
-  const subscriberIdRef = useRef<string>()
+  const subscriberIdRef = useRef<string>('')
   const unsubscribeRef = useRef<(() => void) | null>(null)
   const simulationCleanupRef = useRef<(() => void) | null>(null)
 

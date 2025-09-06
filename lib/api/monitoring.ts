@@ -255,7 +255,7 @@ export class ApiMonitor {
       requestId,
       endpoint: context?.endpoint as string,
       userId: context?.userId as string,
-      stack: error?.stack
+      stack: (error as Error)?.stack
     }
     
     this.logCollector.log(log)

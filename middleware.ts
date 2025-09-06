@@ -5,7 +5,6 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { withAuth } from 'next-auth/middleware'
-import type { NextAuthRequest } from 'next-auth/middleware'
 
 // Rate limiting configuration
 const RATE_LIMIT_WINDOW = 60 * 1000 // 1 minute
@@ -209,7 +208,7 @@ const protectedRoutes = ['/dashboard', '/projects', '/admin', '/settings']
 
 // NextAuth middleware wrapper
 const authMiddleware = withAuth(
-  function middleware(req: NextAuthRequest) {
+  function middleware(req: NextRequest) {
     // Run core security middleware first
     return coreMiddleware(req)
   },

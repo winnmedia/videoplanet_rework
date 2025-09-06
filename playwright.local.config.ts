@@ -26,8 +26,10 @@ export default defineConfig({
     actionTimeout: 10000, // 10초
     navigationTimeout: 15000, // 15초
     headless: false, // 개발 중이므로 브라우저 표시
-    // 디버깅을 위한 느린 실행
-    slowMo: 500, // 500ms 딜레이
+    launchOptions: {
+      // 디버깅을 위한 느린 실행
+      slowMo: 500, // 500ms 딜레이
+    }
   },
 
   projects: [

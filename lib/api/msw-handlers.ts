@@ -189,11 +189,11 @@ const MOCK_FEEDBACK_DATA: FeedbackType[] = [
 ]
 
 const MOCK_MENU_DATA: MenuItemType[] = [
-  { id: 'dashboard', name: '대시보드', path: '/dashboard', icon: 'home', hasSubMenu: false },
-  { id: 'projects', name: '프로젝트', path: '/projects', icon: 'projects', hasSubMenu: true },
-  { id: 'feedback', name: '피드백', path: '/feedback', icon: 'feedback', hasSubMenu: true },
-  { id: 'planning', name: '기획', path: '/planning', icon: 'planning', hasSubMenu: true },
-  { id: 'calendar', name: '캘린더', path: '/calendar', icon: 'calendar', hasSubMenu: false }
+  { id: 'dashboard', name: '대시보드', path: '/dashboard', icon: 'home', hasSubMenu: false, isActive: true },
+  { id: 'projects', name: '프로젝트', path: '/projects', icon: 'projects', hasSubMenu: true, isActive: true },
+  { id: 'feedback', name: '피드백', path: '/feedback', icon: 'feedback', hasSubMenu: true, isActive: true },
+  { id: 'planning', name: '기획', path: '/planning', icon: 'planning', hasSubMenu: true, isActive: true },
+  { id: 'calendar', name: '캘린더', path: '/calendar', icon: 'calendar', hasSubMenu: false, isActive: true }
 ]
 
 // Video Feedback API 모킹 데이터
@@ -452,11 +452,12 @@ const MOCK_TWELVE_SHOTS: VideoShot[] = [
     description: '강력한 비주얼과 함께 호기심을 유발하는 질문으로 시작',
     shotType: '클로즈업',
     cameraMove: '줌인',
-    composition: '중앙',
+    composition: '정면',
     duration: 3,
     dialogue: '당신은 이런 경험이 있나요?',
+    subtitle: '',
+    audio: '',
     transition: '컷',
-    stageId: 'stage-1',
     order: 1
   },
   {
@@ -464,12 +465,13 @@ const MOCK_TWELVE_SHOTS: VideoShot[] = [
     title: '상황 제시',
     description: '일반적인 문제 상황을 시각적으로 보여줌',
     shotType: '미디엄샷',
-    cameraMove: '패닝',
-    composition: '좌측',
+    cameraMove: '팬',
+    composition: '측면',
     duration: 4,
     dialogue: '',
-    transition: '페이드',
-    stageId: 'stage-1',
+    subtitle: '',
+    audio: '',
+    transition: '페이드인',
     order: 2
   },
   {
@@ -481,8 +483,9 @@ const MOCK_TWELVE_SHOTS: VideoShot[] = [
     composition: '정면',
     duration: 5,
     dialogue: '많은 사람들이 이 문제로 고민하고 있습니다.',
+    subtitle: '',
+    audio: '',
     transition: '컷',
-    stageId: 'stage-2',
     order: 3
   },
   // ... 나머지 샷들을 위한 모킹 데이터
@@ -490,13 +493,14 @@ const MOCK_TWELVE_SHOTS: VideoShot[] = [
     id: `shot-${i + 4}`,
     title: `샷 ${i + 4}`,
     description: `샷 ${i + 4}에 대한 상세 설명`,
-    shotType: ['클로즈업', '미디엄샷', '와이드샷', '익스트림 클로즈업'][i % 4],
-    cameraMove: ['고정', '줌인', '줌아웃', '패닝', '틸트'][i % 5],
-    composition: ['정면', '좌측', '우측', '중앙'][i % 4],
+    shotType: (['클로즈업', '미디엄샷', '와이드샷', '익스트림 클로즈업'] as const)[i % 4],
+    cameraMove: (['고정', '줌인', '줌아웃', '팬', '틸트'] as const)[i % 5],
+    composition: (['정면', '측면', '비스듬', '백샷'] as const)[i % 4],
     duration: 3 + (i % 3),
     dialogue: i % 2 === 0 ? `샷 ${i + 4} 대사 내용` : '',
-    transition: ['컷', '페이드', '와이프'][i % 3],
-    stageId: `stage-${Math.floor(i / 3) + 2}`,
+    subtitle: '',
+    audio: '',
+    transition: (['컷', '페이드인', '와이프'] as const)[i % 3],
     order: i + 4
   }))
 ]
@@ -504,27 +508,21 @@ const MOCK_TWELVE_SHOTS: VideoShot[] = [
 const MOCK_INSERT_SHOTS: InsertShot[] = [
   {
     id: 'insert-1',
-    title: '제품 클로즈업',
     description: '제품의 핵심 기능을 보여주는 상세 컷',
-    timing: '2-4초 구간',
     purpose: '제품 강조',
-    order: 1
+    framing: '클로즈업'
   },
   {
     id: 'insert-2',
-    title: '사용자 반응',
     description: '실제 사용자의 만족스러운 표정',
-    timing: '25-27초 구간',
     purpose: '신뢰성 구축',
-    order: 2
+    framing: '미디엄샷'
   },
   {
     id: 'insert-3',
-    title: 'CTA 강화',
     description: '행동 유도를 위한 시각적 효과',
-    timing: '45-48초 구간',
     purpose: '전환 향상',
-    order: 3
+    framing: '와이드샷'
   }
 ]
 
@@ -842,21 +840,18 @@ export const handlers = [
     // 개발 방식에 따른 단계 변형 시뮬레이션
     const stages = MOCK_FOUR_STAGES.map(stage => ({
       ...stage,
-      content: `[${input.developmentMethod || '기승전결'}] ${stage.content}`
+      content: `[${input.storyStructure || '기승전결'}] ${stage.content}`
     }))
     
+    const totalDuration = stages.reduce((acc, stage) => {
+      const duration = parseInt(stage.duration.match(/\d+/)?.[0] || '0')
+      return acc + duration
+    }, 0)
+
     const response: GenerateStagesResponse = {
       success: true,
       stages,
-      timestamp: new Date().toISOString(),
-      message: '4단계 기획이 성공적으로 생성되었습니다.',
-      metadata: {
-        totalDuration: stages.reduce((acc, stage) => {
-          const duration = parseInt(stage.duration.match(/\d+/)?.[0] || '0')
-          return acc + duration
-        }, 0),
-        qualityScore: 95
-      }
+      totalDuration: `${totalDuration}초`
     }
     
     return HttpResponse.json(response)
@@ -888,7 +883,6 @@ export const handlers = [
         generatedShots.push({
           ...MOCK_TWELVE_SHOTS[shotIndex],
           id: `shot-${shotIndex + 1}`,
-          stageId: stage.id,
           title: `${stage.title}단계 샷 ${j + 1}`,
           description: `${stage.goal}을 위한 샷 ${j + 1}`,
           order: shotIndex + 1
@@ -897,20 +891,13 @@ export const handlers = [
       }
     }
     
+    const totalDuration = generatedShots.reduce((acc, shot) => acc + shot.duration, 0)
+
     const response: GenerateShotsResponse = {
       success: true,
       shots: generatedShots,
       insertShots: MOCK_INSERT_SHOTS,
-      timestamp: new Date().toISOString(),
-      message: '12개 숏과 인서트 3컷이 성공적으로 생성되었습니다.',
-      metadata: {
-        totalDuration: generatedShots.reduce((acc, shot) => acc + shot.duration, 0),
-        shotTypeDistribution: generatedShots.reduce((acc, shot) => {
-          acc[shot.shotType] = (acc[shot.shotType] || 0) + 1
-          return acc
-        }, {} as Record<string, number>),
-        qualityScore: 92
-      }
+      totalDuration
     }
     
     return HttpResponse.json(response)
@@ -935,14 +922,7 @@ export const handlers = [
     
     const response: GenerateStoryboardResponse = {
       success: true,
-      storyboardUrl,
-      timestamp: new Date().toISOString(),
-      message: '스토리보드가 성공적으로 생성되었습니다.',
-      metadata: {
-        imageSize: { width: 1920, height: 1080 },
-        fileFormat: 'JPEG',
-        quality: 'high'
-      }
+      storyboardUrl
     }
     
     return HttpResponse.json(response)
@@ -973,15 +953,7 @@ export const handlers = [
     
     const response: ExportPlanResponse = {
       success: true,
-      downloadUrl,
-      timestamp: new Date().toISOString(),
-      message: `${body.options.format.toUpperCase()} 기획서가 성공적으로 생성되었습니다.`,
-      metadata: {
-        fileSize: body.options.format === 'pdf' ? '2.4MB' : '156KB',
-        pageCount: body.options.format === 'pdf' ? 8 : undefined,
-        includesStoryboard: body.options.includeStoryboard,
-        includesInserts: body.options.includeInserts
-      }
+      downloadUrl
     }
     
     return HttpResponse.json(response)

@@ -419,7 +419,7 @@ const VideoPlanningWizardWithCollaborationBase: React.FC<VideoPlanningWizardWith
             onSubmit={handleInputSubmit}
             onPresetSelect={handlePresetSelect}
             isLoading={wizardState.isLoading}
-            error={wizardState.error}
+            error={wizardState.error || undefined}
           />
         )}
 

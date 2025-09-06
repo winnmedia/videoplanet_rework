@@ -203,8 +203,22 @@ class StableApiClient {
       }
 
       // 정상적인 API 호출
-      const response = await apiClient.request<T>(endpoint, config)
-      return response
+      const method = config.method?.toUpperCase() || 'GET'
+      
+      switch (method) {
+        case 'GET':
+          return await apiClient.get<T>(endpoint, config)
+        case 'POST':
+          return await apiClient.post<T>(endpoint, config.body ? JSON.parse(config.body as string) : undefined, config)
+        case 'PUT':
+          return await apiClient.put<T>(endpoint, config.body ? JSON.parse(config.body as string) : undefined, config)
+        case 'PATCH':
+          return await apiClient.patch<T>(endpoint, config.body ? JSON.parse(config.body as string) : undefined, config)
+        case 'DELETE':
+          return await apiClient.delete<T>(endpoint, config)
+        default:
+          return await apiClient.get<T>(endpoint, config)
+      }
 
     } catch (error) {
       console.warn(`API 호출 실패: ${endpoint}`, error)

@@ -53,5 +53,5 @@ export const mswControls = {
     await stopMSW()
     await startMSW()
   },
-  isRunning: () => worker?.listHandlers().length > 0
+  isRunning: () => Boolean(worker?.listHandlers()?.length)
 }
