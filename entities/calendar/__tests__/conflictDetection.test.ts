@@ -43,7 +43,7 @@ describe('ConflictDetectionService', () => {
       {
         id: 'phase-1-filming',
         name: '프로젝트 A 촬영',
-        type: 'filming',
+        type: 'production',
         projectId: 'project-1',
         startDate: '2025-01-15',
         endDate: '2025-01-17',
@@ -53,7 +53,7 @@ describe('ConflictDetectionService', () => {
       {
         id: 'phase-2-filming',
         name: '프로젝트 B 촬영',
-        type: 'filming',
+        type: 'production',
         projectId: 'project-2',
         startDate: '2025-01-16',
         endDate: '2025-01-18',
@@ -63,7 +63,7 @@ describe('ConflictDetectionService', () => {
       {
         id: 'phase-1-planning',
         name: '프로젝트 A 기획',
-        type: 'planning',
+        type: 'pre-production',
         projectId: 'project-1',
         startDate: '2025-01-10',
         endDate: '2025-01-14',

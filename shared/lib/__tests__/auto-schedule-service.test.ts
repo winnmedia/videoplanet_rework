@@ -42,9 +42,9 @@ describe('AutoScheduleService', () => {
       expect(result.hasConflicts).toBe(false)
       expect(result.conflicts).toHaveLength(0)
       expect(result.conflictSummary).toEqual({
-        planningConflicts: 0,
-        filmingConflicts: 0,
-        editingConflicts: 0
+        preProductionConflicts: 0,
+        productionConflicts: 0,
+        postProductionConflicts: 0
       })
 
       // 대안 일정 없어야 함
@@ -108,7 +108,7 @@ describe('AutoScheduleService', () => {
         isAllDay: false,
         category: 'filming' as const,
         priority: 'high' as const,
-        type: 'filming',
+        type: 'production',
         projectId: 'existing_project',
         recurrence: 'none' as const,
         createdBy: 'user_123',
@@ -127,7 +127,7 @@ describe('AutoScheduleService', () => {
         phase: {
           id: 'existing_filming_phase',
           name: '촬영',
-          type: 'filming' as const,
+          type: 'production' as const,
           projectId: 'existing_project',
           startDate: '2024-01-09T09:00:00Z',
           endDate: '2024-01-09T18:00:00Z',
@@ -312,9 +312,9 @@ describe('헬퍼 함수들', () => {
         hasConflicts: false,
         conflicts: [],
         conflictSummary: {
-          planningConflicts: 0,
-          filmingConflicts: 0,
-          editingConflicts: 0
+          preProductionConflicts: 0,
+          productionConflicts: 0,
+          postProductionConflicts: 0
         }
       }
 
@@ -341,9 +341,9 @@ describe('헬퍼 함수들', () => {
           }
         ],
         conflictSummary: {
-          planningConflicts: 0,
+          preProductionConflicts: 0,
           filmingConflicts: 1,
-          editingConflicts: 0
+          postProductionConflicts: 0
         },
         alternatives: [
           {

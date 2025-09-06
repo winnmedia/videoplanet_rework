@@ -83,7 +83,7 @@ export function useConflictDetection(
   const generateCacheKey = useCallback((events: ProjectCalendarEvent[]): string => {
     // Create deterministic key based on event IDs and dates
     return events
-      .filter(e => e.phase.type === 'filming') // Only filming events matter for conflicts
+      .filter(e => e.phase.type === 'production') // Only production events matter for conflicts
       .sort((a, b) => a.id.localeCompare(b.id))
       .map(e => `${e.id}:${e.startDate}:${e.endDate}`)
       .join('|')

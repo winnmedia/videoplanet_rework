@@ -56,7 +56,7 @@ export function CalendarDashboard({
   const [filters, setFilters] = useState<CalendarFilterOptions>({
     showConflictsOnly: false,
     selectedProjects: projects.map(p => p.id),
-    selectedPhaseTypes: ['planning', 'filming', 'editing'],
+    selectedPhaseTypes: ['pre-production', 'production', 'post-production'],
     dateRange: {
       start: new Date().toISOString().split('T')[0],
       end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
@@ -136,7 +136,7 @@ export function CalendarDashboard({
     setFilters({
       showConflictsOnly: false,
       selectedProjects: projects.map(p => p.id),
-      selectedPhaseTypes: ['planning', 'filming', 'editing'],
+      selectedPhaseTypes: ['pre-production', 'production', 'post-production'],
       dateRange: {
         start: new Date().toISOString().split('T')[0],
         end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]

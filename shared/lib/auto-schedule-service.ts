@@ -30,9 +30,9 @@ export interface ConflictAwareScheduleResult extends AutoScheduleResult {
   hasConflicts: boolean
   alternatives?: AutoScheduleResult[]
   conflictSummary: {
-    planningConflicts: number
-    filmingConflicts: number
-    editingConflicts: number
+    preProductionConflicts: number
+    productionConflicts: number
+    postProductionConflicts: number
   }
 }
 
@@ -133,7 +133,7 @@ export class AutoScheduleService {
       isAllDay: true,
       category: 'project-deadline',
       priority: 'high',
-      type: 'planning',
+      type: 'pre-production',
       projectId,
       projectTitle,
       projectColor: this.generateProjectColor(projectId),
@@ -154,7 +154,7 @@ export class AutoScheduleService {
       phase: {
         id: `${projectId}-planning-phase`,
         name: '기획',
-        type: 'planning',
+        type: 'pre-production',
         projectId,
         startDate: schedule.planning.startDate.toISOString(),
         endDate: schedule.planning.endDate.toISOString(),
@@ -173,7 +173,7 @@ export class AutoScheduleService {
       isAllDay: true,
       category: 'filming',
       priority: 'high',
-      type: 'filming',
+      type: 'production',
       projectId,
       projectTitle,
       projectColor: this.generateProjectColor(projectId),
@@ -194,7 +194,7 @@ export class AutoScheduleService {
       phase: {
         id: `${projectId}-filming-phase`,
         name: '촬영',
-        type: 'filming',
+        type: 'production',
         projectId,
         startDate: schedule.filming.startDate.toISOString(),
         endDate: schedule.filming.endDate.toISOString(),
@@ -213,7 +213,7 @@ export class AutoScheduleService {
       isAllDay: true,
       category: 'project-deadline',
       priority: 'medium',
-      type: 'editing',
+      type: 'post-production',
       projectId,
       projectTitle,
       projectColor: this.generateProjectColor(projectId),
@@ -234,7 +234,7 @@ export class AutoScheduleService {
       phase: {
         id: `${projectId}-editing-phase`,
         name: '편집',
-        type: 'editing',
+        type: 'post-production',
         projectId,
         startDate: schedule.editing.startDate.toISOString(),
         endDate: schedule.editing.endDate.toISOString(),
@@ -254,23 +254,23 @@ export class AutoScheduleService {
     proposedEvents: ProjectCalendarEvent[]
   ) {
     const summary = {
-      planningConflicts: 0,
-      filmingConflicts: 0,
-      editingConflicts: 0
+      preProductionConflicts: 0,
+      productionConflicts: 0,
+      postProductionConflicts: 0
     }
     
     conflicts.forEach(conflict => {
       conflict.events.forEach(event => {
         if (proposedEvents.some(pe => pe.id === event.id)) {
           switch (event.phase.type) {
-            case 'planning':
-              summary.planningConflicts++
+            case 'pre-production':
+              summary.preProductionConflicts++
               break
-            case 'filming':
-              summary.filmingConflicts++
+            case 'production':
+              summary.productionConflicts++
               break
-            case 'editing':
-              summary.editingConflicts++
+            case 'post-production':
+              summary.postProductionConflicts++
               break
           }
         }
@@ -434,14 +434,14 @@ export function generateConflictSummaryText(result: ConflictAwareScheduleResult)
   }
   
   const { conflictSummary } = result
-  const totalConflicts = conflictSummary.planningConflicts + 
-                        conflictSummary.filmingConflicts + 
-                        conflictSummary.editingConflicts
+  const totalConflicts = conflictSummary.preProductionConflicts + 
+                        conflictSummary.productionConflicts + 
+                        conflictSummary.postProductionConflicts
   
   let summary = `총 ${totalConflicts}개의 일정 충돌이 발견되었습니다. `
   
-  if (conflictSummary.filmingConflicts > 0) {
-    summary += `촬영 일정 충돌 ${conflictSummary.filmingConflicts}개가 가장 중요합니다. `
+  if (conflictSummary.productionConflicts > 0) {
+    summary += `촬영 일정 충돌 ${conflictSummary.productionConflicts}개가 가장 중요합니다. `
   }
   
   if (result.alternatives && result.alternatives.length > 0) {

@@ -176,7 +176,7 @@ export function ProjectLegend({
                         inline-flex items-center px-1.5 py-0.5 rounded-full text-xs font-medium
                         ${item.project.status === 'active' 
                         ? 'bg-green-100 text-green-800' 
-                        : item.project.status === 'planning'
+                        : item.project.status === 'cancelled'
                         ? 'bg-blue-100 text-blue-800'
                         : item.project.status === 'on-hold'
                         ? 'bg-yellow-100 text-yellow-800'
@@ -187,7 +187,7 @@ export function ProjectLegend({
                     `}
                   >
                     {item.project.status === 'active' && '진행중'}
-                    {item.project.status === 'planning' && '계획'}
+                    {item.project.status === 'active' && '활성'}
                     {item.project.status === 'on-hold' && '대기'}
                     {item.project.status === 'completed' && '완료'}
                     {item.project.status === 'cancelled' && '취소'}

@@ -185,15 +185,15 @@ export class ColorAssignmentService {
   /**
    * Gets color for a specific project phase
    */
-  static getPhaseColor(project: Project, phaseType: 'planning' | 'filming' | 'editing'): string {
+  static getPhaseColor(project: Project, phaseType: 'pre-production' | 'production' | 'post-production'): string {
     const basePalette = this.generateProjectPalette(project.id)
     
     switch (phaseType) {
-      case 'planning':
+      case 'pre-production':
         return basePalette.secondary // Lighter for planning
-      case 'filming':
+      case 'production':
         return basePalette.primary  // Main color for filming
-      case 'editing':
+      case 'post-production':
         return basePalette.accent   // Darker for editing
       default:
         return basePalette.primary

@@ -20,9 +20,11 @@ interface EnhancedCalendarFiltersProps {
 }
 
 const phaseTypeLabels: Record<ProjectPhaseType, string> = {
-  'planning': '기획',
-  'filming': '촬영', 
-  'editing': '편집'
+  'pre-production': '기획',
+  'production': '촬영',
+  'post-production': '편집',
+  'review': '검토',
+  'delivery': '전달'
 }
 
 export function EnhancedCalendarFilters({
@@ -241,14 +243,16 @@ export function EnhancedCalendarFilters({
               <label className="block text-sm font-medium text-gray-700 mb-3">
                 페이즈 유형
                 <span className="text-xs text-gray-500 ml-1">
-                  ({filters.selectedPhaseTypes.length}/3)
+                  ({filters.selectedPhaseTypes.length}/5)
                 </span>
               </label>
               <div className="space-y-2">
                 {(Object.keys(phaseTypeLabels) as ProjectPhaseType[]).map((phaseType) => {
                   const isSelected = filters.selectedPhaseTypes.includes(phaseType)
-                  const phaseColor = phaseType === 'planning' ? 'text-blue-600' : 
-                                   phaseType === 'filming' ? 'text-green-600' : 'text-purple-600'
+                  const phaseColor = phaseType === 'pre-production' ? 'text-blue-600' : 
+                                   phaseType === 'production' ? 'text-green-600' : 
+                                   phaseType === 'post-production' ? 'text-purple-600' :
+                                   phaseType === 'review' ? 'text-orange-600' : 'text-gray-600'
                   
                   return (
                     <label
@@ -266,15 +270,17 @@ export function EnhancedCalendarFilters({
                       />
                       
                       <div className={clsx('w-2 h-2 rounded-full', 
-                        phaseType === 'planning' ? 'bg-blue-500' :
-                        phaseType === 'filming' ? 'bg-green-500' : 'bg-purple-500'
+                        phaseType === 'pre-production' ? 'bg-blue-500' :
+                        phaseType === 'production' ? 'bg-green-500' :
+                        phaseType === 'post-production' ? 'bg-purple-500' :
+                        phaseType === 'review' ? 'bg-orange-500' : 'bg-gray-500'
                       )} />
                       
                       <span className={clsx('font-medium', phaseColor)}>
                         {phaseTypeLabels[phaseType]}
                       </span>
                       
-                      {phaseType === 'filming' && (
+                      {phaseType === 'production' && (
                         <span className="text-xs bg-yellow-100 text-yellow-800 px-1.5 py-0.5 rounded">
                           충돌 검사 대상
                         </span>

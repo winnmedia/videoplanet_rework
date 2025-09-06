@@ -1422,7 +1422,7 @@ export const handlers = [
         title: `${body.title} - 기획`,
         startDate: new Date().toISOString(),
         endDate: new Date(Date.now() + body.autoSchedule.planning.duration * 7 * 24 * 60 * 60 * 1000).toISOString(),
-        type: 'planning',
+        type: 'pre-production',
         projectId
       },
       {
@@ -1438,7 +1438,7 @@ export const handlers = [
         title: `${body.title} - 편집`,
         startDate: new Date(Date.now() + (body.autoSchedule.planning.duration * 7 + body.autoSchedule.shooting.duration) * 24 * 60 * 60 * 1000).toISOString(),
         endDate: new Date(Date.now() + (body.autoSchedule.planning.duration * 7 + body.autoSchedule.shooting.duration + body.autoSchedule.editing.duration * 7) * 24 * 60 * 60 * 1000).toISOString(),
-        type: 'editing',
+        type: 'post-production',
         projectId
       }
     ] : []
@@ -1603,7 +1603,7 @@ export const handlers = [
         title: '기획',
         startDate: startDate.toISOString(),
         endDate: planningEndDate.toISOString(),
-        type: 'planning',
+        type: 'pre-production',
         projectId
       },
       {
@@ -1611,7 +1611,7 @@ export const handlers = [
         title: '촬영',
         startDate: filmingStartDate.toISOString(),
         endDate: filmingEndDate.toISOString(),
-        type: 'filming',
+        type: 'production',
         projectId
       },
       {
@@ -1619,7 +1619,7 @@ export const handlers = [
         title: '편집',
         startDate: editingStartDate.toISOString(),
         endDate: editingEndDate.toISOString(),
-        type: 'editing',
+        type: 'post-production',
         projectId
       }
     ]

@@ -211,7 +211,7 @@ export class ConflictResolutionService {
     
     // Filter out non-filming events for efficiency
     const filmingEvents = allEvents.filter(e => 
-      e.phase.type === 'filming' && e.id !== event.id
+      e.phase.type === 'production' && e.id !== event.id
     )
 
     const current = new Date(searchStart)
@@ -341,7 +341,7 @@ export class ConflictResolutionService {
     const newConflicts: EnhancedCalendarConflict[] = []
     
     otherEvents
-      .filter(e => e.phase.type === 'filming')
+      .filter(e => e.phase.type === 'production')
       .forEach(event => {
         const eventStart = new Date(event.startDate)
         const eventEnd = new Date(event.endDate)

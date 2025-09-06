@@ -103,7 +103,7 @@ class MockDataGenerator {
     return {
       id: this.generateId('event_'),
       title: 'Test Event',
-      type: 'planning', // planning, shooting, editing
+      type: 'pre-production', // pre-production, production, post-production
       projectId: this.generateId('proj_'),
       projectColor: '#3B82F6', // 파란색
       startDate: this.generateDate(1),
@@ -350,13 +350,13 @@ const projectHandlers = [
       }),
       MockDataGenerator.createProject({
         name: 'Product Introduction',
-        status: 'editing',
+        status: 'post-production',
         progress: 80,
         priority: 'medium'
       }),
       MockDataGenerator.createProject({
         name: 'Event Highlights',
-        status: 'planning',
+        status: 'pre-production',
         progress: 25,
         priority: 'low'
       }),
@@ -395,7 +395,7 @@ const projectHandlers = [
     const newProject = MockDataGenerator.createProject({
       name: projectData.name,
       description: projectData.description,
-      status: 'planning',
+      status: 'pre-production',
       progress: 0,
       createdAt: MockDataGenerator.generateDate(0)
     })
@@ -504,7 +504,7 @@ const calendarHandlers = [
     let events = [
       MockDataGenerator.createCalendarEvent({
         title: 'Brand Video Planning',
-        type: 'planning',
+        type: 'pre-production',
         projectColor: '#3B82F6',
         startDate: MockDataGenerator.generateDate(1),
         endDate: MockDataGenerator.generateDate(7)
@@ -529,7 +529,7 @@ const calendarHandlers = [
       }),
       MockDataGenerator.createCalendarEvent({
         title: 'Video Editing',
-        type: 'editing',
+        type: 'post-production',
         projectColor: '#8B5CF6',
         startDate: MockDataGenerator.generateDate(15),
         endDate: MockDataGenerator.generateDate(25)
