@@ -13,6 +13,7 @@
 export { VideoUploader } from './ui/VideoUploader';
 export { VideoPlayer } from './ui/VideoPlayer';
 export { CommentThread } from './ui/CommentThread';
+export { TimecodeCommentInput } from './ui/TimecodeCommentInput';
 export { ReactionBar } from './ui/ReactionBar';
 export { TimelineMarkers } from './ui/TimelineMarkers';
 
@@ -130,6 +131,41 @@ export {
   checkMediaCapabilities,
   getSupportedVideoCodecs
 } from './lib/videoUtils';
+
+// ============================================================
+// Timecode Utilities
+// ============================================================
+
+export {
+  // Timecode Formatting
+  formatTimecode,
+  parseTimecode,
+  insertTimecode,
+  extractTimecodes,
+  isValidTimecodeFormat,
+  normalizeTimecodeSpacing,
+  removeDuplicateTimecodes,
+  extractTimecodesInRange,
+  findNearestTimecode,
+  
+  // Types
+  type TimecodeInsertResult,
+  type TimecodeMatch
+} from './lib/timecodeUtils';
+
+// ============================================================
+// Timecode Hooks
+// ============================================================
+
+export {
+  useTimecodeSync,
+  useTimecodeClickHandler,
+  useTimecodeRenderer,
+  
+  // Types
+  type TimecodeSync,
+  type TimecodeOptions
+} from './lib/useTimecodeSync';
 
 // ============================================================
 // Component Props Types (for external usage)

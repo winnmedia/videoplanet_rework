@@ -111,6 +111,7 @@ export function EnhancedCalendarFilters({
             )}
             title={`충돌하는 일정만 표시${conflictCount > 0 ? ` (${conflictCount}개)` : ''}`}
             aria-pressed={filters.showConflictsOnly}
+            data-testid="filter-conflicts-only-quick"
           >
             <span className={clsx('w-2 h-2 rounded-full', filters.showConflictsOnly ? 'bg-red-500' : 'bg-gray-400')} />
             충돌만 보기
@@ -164,6 +165,7 @@ export function EnhancedCalendarFilters({
                   checked={filters.showConflictsOnly}
                   onChange={(e) => handleConflictOnlyToggle(e.target.checked)}
                   className="rounded border-gray-300 text-red-600 focus:ring-red-500"
+                  data-testid="filter-conflicts-only"
                 />
                 <span className={clsx('transition-colors', filters.showConflictsOnly ? 'text-red-700 font-medium' : 'text-gray-700')}>
                   충돌하는 일정만 표시

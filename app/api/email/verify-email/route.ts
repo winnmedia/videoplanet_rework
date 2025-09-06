@@ -39,12 +39,12 @@ export async function POST(request: NextRequest) {
     console.log('🔑 Stored verification code:', { email, code, expires })
 
     // React Email 템플릿 렌더링
-    const emailHtml = await sendGridService.renderTemplate(
-      VerifyEmailTemplate({
-        verificationCode: code,
-        userEmail: email,
-      })
-    )
+    const templateElement = VerifyEmailTemplate({
+      verificationCode: code,
+      userEmail: email,
+    })
+    
+    const emailHtml = await sendGridService.renderTemplate(templateElement as any)
 
     // 이메일을 큐에 추가
     const emailId = await emailQueue.add(

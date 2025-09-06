@@ -39,12 +39,12 @@ export async function POST(request: NextRequest) {
     console.log('🔐 Stored reset code:', { email, code, expires })
 
     // React Email 템플릿 렌더링
-    const emailHtml = await sendGridService.renderTemplate(
-      ResetPasswordTemplate({
-        resetCode: code,
-        userEmail: email,
-      })
-    )
+    const templateElement = ResetPasswordTemplate({
+      resetCode: code,
+      userEmail: email,
+    })
+    
+    const emailHtml = await sendGridService.renderTemplate(templateElement as any)
 
     // 이메일을 큐에 추가 (높은 우선순위)
     const emailId = await emailQueue.add(

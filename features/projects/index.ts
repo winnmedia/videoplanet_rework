@@ -5,6 +5,12 @@ export { ProjectGrid, ProjectGridSkeleton } from './ui/ProjectGrid';
 export { CreateProjectForm } from './ui/CreateProjectForm';
 export { TeamMemberList, TeamMemberListSkeleton } from './ui/TeamMemberList';
 export { InviteModal, InviteSuccessToast } from './ui/InviteModal';
+export { AutoSchedulePreviewCard } from './ui/AutoSchedulePreviewCard';
+export { TeamInviteForm } from './ui/TeamInviteForm';
+export { ProjectCreationSuccess } from './ui/ProjectCreationSuccess';
+export { CreateProjectButton } from './ui/CreateProjectButton';
+export { ProjectFilter as ProjectFilterComponent } from './ui/ProjectFilter';
+export { QuickActions } from './ui/QuickActions';
 
 // Model
 export { default as projectReducer } from './model/projectSlice';

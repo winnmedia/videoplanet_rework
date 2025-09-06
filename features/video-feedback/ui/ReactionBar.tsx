@@ -64,6 +64,7 @@ interface ReactionBarProps {
 // Reaction Configuration
 // ============================================================
 
+// DoD 규격: 3종 리액션 (좋아요/싫어요/질문)
 const REACTION_CONFIG: Record<ReactionType, {
   label: string;
   icon: JSX.Element;
@@ -78,53 +79,31 @@ const REACTION_CONFIG: Record<ReactionType, {
         <path d="M1 21h4V9H1v12zm22-11c0-1.1-.9-2-2-2h-6.31l.95-4.57.03-.32c0-.41-.17-.79-.44-1.06L14.17 1 7.59 7.59C7.22 7.95 7 8.45 7 9v10c0 1.1.9 2 2 2h9c.83 0 1.54-.5 1.84-1.22l3.02-7.05c.09-.23.14-.47.14-.73v-2z"/>
       </svg>
     ),
-    color: 'text-vridge-600',
-    bgColor: 'bg-vridge-50',
-    hoverBgColor: 'hover:bg-vridge-100'
+    color: 'text-green-600',
+    bgColor: 'bg-green-50',
+    hoverBgColor: 'hover:bg-green-100'
   },
-  heart: {
-    label: '하트',
+  dislike: {
+    label: '싫어요',
     icon: (
       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+        <path d="M15 3H6c-.83 0-1.54.5-1.84 1.22l-3.02 7.05c-.09.23-.14.47-.14.73v2c0 1.1.9 2 2 2h6.31l-.95 4.57-.03.32c0 .41.17.79.44 1.06L9.83 23l6.59-6.59c.36-.36.58-.86.58-1.41V5c0-1.1-.9-2-2-2zm4 0v12h4V3h-4z"/>
       </svg>
     ),
-    color: 'text-error-500',
-    bgColor: 'bg-error-50',
-    hoverBgColor: 'hover:bg-error-100'
+    color: 'text-red-600',
+    bgColor: 'bg-red-50',
+    hoverBgColor: 'hover:bg-red-100'
   },
-  celebrate: {
-    label: '축하',
-    icon: (
-      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M14 5.7L14.4 4.5L15.6 4.1L14.4 3.7L14 2.5L13.6 3.7L12.4 4.1L13.6 4.5L14 5.7zM10 8.5L10.8 6.3L13 5.5L10.8 4.7L10 2.5L9.2 4.7L7 5.5L9.2 6.3L10 8.5zM5 21L7 13L11 17L19 7L17 15L13 11L5 21z"/>
-      </svg>
-    ),
-    color: 'text-warning-600',
-    bgColor: 'bg-warning-50',
-    hoverBgColor: 'hover:bg-warning-100'
-  },
-  insightful: {
-    label: '인사이트',
-    icon: (
-      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-        <path d="M9 11H7v2h2v-2zm4 0h-2v2h2v-2zm4 0h-2v2h2v-2zm2-7h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11z"/>
-      </svg>
-    ),
-    color: 'text-info-600',
-    bgColor: 'bg-info-50',
-    hoverBgColor: 'hover:bg-info-100'
-  },
-  curious: {
-    label: '궁금해요',
+  question: {
+    label: '질문',
     icon: (
       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
         <path d="M11 18h2v-2h-2v2zm1-16C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm0-14c-2.21 0-4 1.79-4 4h2c0-1.1.9-2 2-2s2 .9 2 2c0 2-3 1.75-3 5h2c0-2.25 3-2.5 3-5 0-2.21-1.79-4-4-4z"/>
       </svg>
     ),
-    color: 'text-success-600',
-    bgColor: 'bg-success-50',
-    hoverBgColor: 'hover:bg-success-100'
+    color: 'text-blue-600',
+    bgColor: 'bg-blue-50',
+    hoverBgColor: 'hover:bg-blue-100'
   }
 };
 
@@ -242,7 +221,7 @@ export const ReactionBar: React.FC<ReactionBarProps> = ({
   disabled = false,
   className = ''
 }) => {
-  // Calculate reaction counts and user reactions
+  // Calculate reaction counts and user reactions (DoD 규격: 3종)
   const reactionData = React.useMemo(() => {
     const data: Record<ReactionType, {
       count: number;
@@ -250,10 +229,8 @@ export const ReactionBar: React.FC<ReactionBarProps> = ({
       users: string[];
     }> = {
       like: { count: 0, users: [] },
-      heart: { count: 0, users: [] },
-      celebrate: { count: 0, users: [] },
-      insightful: { count: 0, users: [] },
-      curious: { count: 0, users: [] }
+      dislike: { count: 0, users: [] },
+      question: { count: 0, users: [] }
     };
     
     reactions.forEach(reaction => {

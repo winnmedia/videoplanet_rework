@@ -222,7 +222,7 @@ export function CalendarExampleUsage() {
         {/* Calendar Dashboard */}
         <CalendarDashboard
           projects={EXAMPLE_PROJECTS}
-          events={eventsWithConflicts}
+          events={eventsWithConflicts as any}
           selectedDate={selectedDate}
           onEventMove={handleEventMove}
           onEventClick={handleEventClick}

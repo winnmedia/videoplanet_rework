@@ -78,6 +78,7 @@ export function FeedbackSummaryCard({
 
   return (
     <div
+      data-testid="feedback-summary"
       className="p-6 bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-shadow duration-200"
       role="region"
       aria-label="피드백 요약"

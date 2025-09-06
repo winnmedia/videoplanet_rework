@@ -10,6 +10,7 @@ import {
   ProjectMember,
   AutoScheduleResult
 } from './types'
+import { AutoScheduleConfig, DEFAULT_AUTO_SCHEDULE, calculateAutoSchedule } from '@/shared/lib/project-scheduler'
 
 // ===========================
 // State Interface
@@ -24,14 +25,17 @@ export interface ProjectState {
   isLoading: boolean
   isCreating: boolean
   isInviting: boolean
+  isGeneratingSchedule: boolean
   
   // Error states  
   error: string | null
   createError: string | null
   inviteError: string | null
+  scheduleError: string | null
   
   // Auto-scheduling
   autoSchedulePreview: AutoScheduleResult | null
+  autoScheduleConfig: AutoScheduleConfig
   
   // Team management
   invitationCooldowns: Record<string, number> // email -> timestamp
@@ -53,10 +57,13 @@ const initialState: ProjectState = {
   isLoading: false,
   isCreating: false,
   isInviting: false,
+  isGeneratingSchedule: false,
   error: null,
   createError: null,
   inviteError: null,
+  scheduleError: null,
   autoSchedulePreview: null,
+  autoScheduleConfig: DEFAULT_AUTO_SCHEDULE,
   invitationCooldowns: {},
   pendingInvitations: [],
   currentUserRole: null,
@@ -76,6 +83,7 @@ const CreateProjectSchema = z.object({
   title: z.string().min(1, '프로젝트 제목을 입력해주세요').max(100, '제목은 100자 이하로 입력해주세요'),
   description: z.string().optional(),
   tags: z.array(z.string()).optional(),
+  startDate: z.date().optional(),
   settings: z.object({
     isPublic: z.boolean().optional(),
     allowComments: z.boolean().optional(),
@@ -84,11 +92,21 @@ const CreateProjectSchema = z.object({
     watermarkEnabled: z.boolean().optional(),
     expirationDate: z.string().optional()
   }).optional(),
-  autoSchedule: z.object({
-    planning: z.object({ duration: z.number() }),
-    shooting: z.object({ duration: z.number() }),
-    editing: z.object({ duration: z.number() })
+  autoScheduleConfig: z.object({
+    planningWeeks: z.number().min(1).max(12),
+    filmingDays: z.number().min(1).max(30),
+    editingWeeks: z.number().min(1).max(24)
   }).optional()
+})
+
+const AutoScheduleSchema = z.object({
+  projectId: z.string(),
+  startDate: z.date(),
+  config: z.object({
+    planningWeeks: z.number().min(1).max(12),
+    filmingDays: z.number().min(1).max(30), 
+    editingWeeks: z.number().min(1).max(24)
+  })
 })
 
 const InviteSchema = z.object({
@@ -103,10 +121,11 @@ const InviteSchema = z.object({
 
 /**
  * 프로젝트 생성 (자동 스케줄링 포함)
+ * DEVPLAN.md 요구사항: "프로젝트 생성 시 자동 일정(기획 1주·촬영 1일·편집 2주) 등록"
  */
 export const createProject = createAsyncThunk(
   'project/create',
-  async (projectData: CreateProjectDto, { rejectWithValue, getState }) => {
+  async (projectData: CreateProjectDto, { rejectWithValue, getState, dispatch }) => {
     try {
       // Zod 검증
       const validatedData = CreateProjectSchema.parse(projectData)
@@ -117,9 +136,44 @@ export const createProject = createAsyncThunk(
           if (validatedData.title === 'error') {
             reject(new Error('프로젝트 생성에 실패했습니다'))
           } else {
+            const projectId = `project_${Date.now()}`
+            const startDate = validatedData.startDate || new Date()
+            const autoConfig = validatedData.autoScheduleConfig || DEFAULT_AUTO_SCHEDULE
+            
+            // 자동 일정 계산
+            const scheduleResult = calculateAutoSchedule(startDate, autoConfig)
+            
+            // 캘린더 이벤트 생성
+            const calendarEvents = [
+              {
+                id: `planning_${projectId}`,
+                title: '기획',
+                startDate: scheduleResult.planning.startDate.toISOString(),
+                endDate: scheduleResult.planning.endDate.toISOString(),
+                type: 'planning',
+                projectId
+              },
+              {
+                id: `filming_${projectId}`,
+                title: '촬영',
+                startDate: scheduleResult.filming.startDate.toISOString(),
+                endDate: scheduleResult.filming.endDate.toISOString(),
+                type: 'filming',
+                projectId
+              },
+              {
+                id: `editing_${projectId}`,
+                title: '편집',
+                startDate: scheduleResult.editing.startDate.toISOString(),
+                endDate: scheduleResult.editing.endDate.toISOString(),
+                type: 'editing',
+                projectId
+              }
+            ]
+            
             resolve({
               project: {
-                id: `project_${Date.now()}`,
+                id: projectId,
                 title: validatedData.title,
                 description: validatedData.description,
                 status: 'draft',
@@ -139,10 +193,11 @@ export const createProject = createAsyncThunk(
                   watermarkEnabled: true,
                   ...validatedData.settings
                 },
+                calendarEvents: calendarEvents as any, // 자동 생성된 캘린더 이벤트 포함
                 createdAt: new Date().toISOString(),
                 updatedAt: new Date().toISOString()
               },
-              calendarEvents: [] // 자동 생성된 캘린더 이벤트들
+              calendarEvents: calendarEvents as any
             })
           }
         }, 1000)
@@ -210,6 +265,124 @@ export const inviteTeamMember = createAsyncThunk(
 )
 
 /**
+ * 자동 일정 생성 (DEVPLAN.md 요구사항)
+ * - 기본값: 기획 1주, 촬영 1일, 편집 2주
+ */
+export const generateAutoSchedule = createAsyncThunk(
+  'project/generateAutoSchedule',
+  async (params: { projectId: string; startDate: Date; config?: AutoScheduleConfig }, { rejectWithValue }) => {
+    try {
+      // Zod 검증
+      const validatedParams = AutoScheduleSchema.parse({
+        projectId: params.projectId,
+        startDate: params.startDate,
+        config: params.config || DEFAULT_AUTO_SCHEDULE
+      })
+      
+      // 자동 일정 계산
+      const scheduleResult = calculateAutoSchedule(validatedParams.startDate, validatedParams.config)
+      
+      // API 호출 시뮬레이션 (실제로는 캘린더 이벤트 생성)
+      const response = await new Promise<{ schedule: AutoScheduleResult; calendarEvents: any[] }>((resolve, reject) => {
+        setTimeout(() => {
+          if (validatedParams.projectId === 'error_project') {
+            reject(new Error('자동 일정 생성에 실패했습니다'))
+          } else {
+            resolve({
+              schedule: scheduleResult,
+              calendarEvents: [
+                {
+                  id: `planning_${validatedParams.projectId}`,
+                  title: '기획',
+                  startDate: scheduleResult.planning.startDate.toISOString(),
+                  endDate: scheduleResult.planning.endDate.toISOString(),
+                  type: 'planning',
+                  projectId: validatedParams.projectId
+                },
+                {
+                  id: `filming_${validatedParams.projectId}`,
+                  title: '촬영', 
+                  startDate: scheduleResult.filming.startDate.toISOString(),
+                  endDate: scheduleResult.filming.endDate.toISOString(),
+                  type: 'filming',
+                  projectId: validatedParams.projectId
+                },
+                {
+                  id: `editing_${validatedParams.projectId}`,
+                  title: '편집',
+                  startDate: scheduleResult.editing.startDate.toISOString(),
+                  endDate: scheduleResult.editing.endDate.toISOString(),
+                  type: 'editing',
+                  projectId: validatedParams.projectId
+                }
+              ]
+            })
+          }
+        }, 1000)
+      })
+      
+      return response
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return rejectWithValue(error.errors.map(e => e.message).join(', '))
+      }
+      return rejectWithValue(error.message || '자동 일정 생성에 실패했습니다')
+    }
+  }
+)
+
+/**
+ * 자동 일정 설정 업데이트
+ */
+export const updateAutoSchedule = createAsyncThunk(
+  'project/updateAutoSchedule', 
+  async (params: { projectId: string; config: AutoScheduleConfig; startDate?: Date }, { rejectWithValue, getState }) => {
+    try {
+      const state = getState() as { project: ProjectState }
+      const currentProject = state.project.currentProject
+      
+      if (!currentProject) {
+        return rejectWithValue('현재 프로젝트가 없습니다')
+      }
+      
+      // 시작일 결정 (전달된 값 또는 현재 프로젝트의 생성일)
+      const startDate = params.startDate || new Date(currentProject.createdAt)
+      
+      // 검증
+      const validatedParams = AutoScheduleSchema.parse({
+        projectId: params.projectId,
+        startDate,
+        config: params.config
+      })
+      
+      // 새로운 일정 계산
+      const scheduleResult = calculateAutoSchedule(startDate, validatedParams.config)
+      
+      // API 호출 시뮬레이션
+      const response = await new Promise<{ schedule: AutoScheduleResult; updated: boolean }>((resolve, reject) => {
+        setTimeout(() => {
+          if (validatedParams.projectId === 'error_project') {
+            reject(new Error('일정 업데이트에 실패했습니다'))
+          } else {
+            resolve({
+              schedule: scheduleResult,
+              updated: true
+            })
+          }
+        }, 800)
+      })
+      
+      return response
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return rejectWithValue(error.errors.map(e => e.message).join(', '))
+      }
+      return rejectWithValue(error.message || '일정 업데이트에 실패했습니다')
+    }
+  }
+)
+
+/**
  * 프로젝트 목록 조회
  */
 export const fetchProjects = createAsyncThunk(
@@ -266,11 +439,16 @@ const projectSlice = createSlice({
       state.autoSchedulePreview = action.payload
     },
     
+    setAutoScheduleConfig: (state, action: PayloadAction<AutoScheduleConfig>) => {
+      state.autoScheduleConfig = action.payload
+    },
+    
     // Error management
     clearErrors: (state) => {
       state.error = null
       state.createError = null
       state.inviteError = null
+      state.scheduleError = null
     },
     
     clearCreateError: (state) => {
@@ -279,6 +457,10 @@ const projectSlice = createSlice({
     
     clearInviteError: (state) => {
       state.inviteError = null
+    },
+    
+    clearScheduleError: (state) => {
+      state.scheduleError = null
     },
     
     // Current project management
@@ -372,6 +554,44 @@ const projectSlice = createSlice({
         state.isLoading = false
         state.error = action.payload as string
       })
+    
+    // Generate auto schedule
+    builder
+      .addCase(generateAutoSchedule.pending, (state) => {
+        state.isGeneratingSchedule = true
+        state.scheduleError = null
+      })
+      .addCase(generateAutoSchedule.fulfilled, (state, action) => {
+        state.isGeneratingSchedule = false
+        state.autoSchedulePreview = action.payload.schedule
+        // 프로젝트에 캘린더 이벤트 추가 (실제 구현에서는 별도 상태로 관리)
+        if (state.currentProject) {
+          state.currentProject.calendarEvents = action.payload.calendarEvents
+        }
+      })
+      .addCase(generateAutoSchedule.rejected, (state, action) => {
+        state.isGeneratingSchedule = false
+        state.scheduleError = action.payload as string
+      })
+    
+    // Update auto schedule  
+    builder
+      .addCase(updateAutoSchedule.pending, (state) => {
+        state.isGeneratingSchedule = true
+        state.scheduleError = null
+      })
+      .addCase(updateAutoSchedule.fulfilled, (state, action) => {
+        state.isGeneratingSchedule = false
+        state.autoSchedulePreview = action.payload.schedule
+        // 설정도 함께 업데이트
+        if (state.currentProject) {
+          // 실제로는 프로젝트의 autoScheduleConfig를 업데이트해야 함
+        }
+      })
+      .addCase(updateAutoSchedule.rejected, (state, action) => {
+        state.isGeneratingSchedule = false
+        state.scheduleError = action.payload as string
+      })
   }
 })
 
@@ -421,9 +641,11 @@ function calculatePermissions(role: ProjectMember['role']) {
 
 export const {
   setAutoSchedulePreview,
+  setAutoScheduleConfig,
   clearErrors,
   clearCreateError,
   clearInviteError,
+  clearScheduleError,
   setCurrentProject,
   addPendingInvitation,
   removePendingInvitation
@@ -444,3 +666,8 @@ export const selectPermissions = (state: { project: ProjectState }) => state.pro
 export const selectPendingInvitations = (state: { project: ProjectState }) => state.project.pendingInvitations
 export const selectInvitationCooldown = (email: string) => 
   (state: { project: ProjectState }) => state.project.invitationCooldowns[email]
+
+// 자동 일정 관련 셀렉터들
+export const selectAutoScheduleConfig = (state: { project: ProjectState }) => state.project.autoScheduleConfig
+export const selectIsGeneratingSchedule = (state: { project: ProjectState }) => state.project.isGeneratingSchedule
+export const selectScheduleError = (state: { project: ProjectState }) => state.project.scheduleError

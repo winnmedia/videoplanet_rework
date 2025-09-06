@@ -58,3 +58,20 @@ export type {
   ExportRequest,
   ExportResponse
 } from './model/types'
+
+// Marp PDF Export (새로운 기능)
+export type {
+  MarpExportOptions,
+  MarpExportRequest,
+  MarpExportResponse,
+  MarpPdfConfig
+} from './model/marp-export.schema'
+
+export {
+  validateMarpExportRequest,
+  validatePdfConfig,
+  safeMarpExportRequest,
+  MarpExportRequestSchema,
+  MarpExportResponseSchema,
+  MarpPdfConfigSchema
+} from './model/marp-export.schema'

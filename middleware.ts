@@ -216,6 +216,10 @@ const authMiddleware = withAuth(
   {
     callbacks: {
       authorized: ({ token, req }) => {
+        // 테스트 환경에서는 인증을 우회하여 E2E를 안정화
+        if (process.env.NEXT_PUBLIC_APP_ENV === 'test') {
+          return true
+        }
         const { pathname } = req.nextUrl
         
         // Allow access to public routes

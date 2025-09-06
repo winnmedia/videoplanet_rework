@@ -5,7 +5,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 
-import { QuickActions } from '@/features/project'
+import { QuickActions } from '@/features/projects'
 import { SideBar } from '@/widgets'
 import { 
   RecentActivityFeed,
@@ -56,15 +56,44 @@ export default function DashboardPage() {
     loadDashboardData()
   }, [])
 
-  // 이벤트 핸들러들
-  const handleFeedbackItemClick = (itemId: string) => {
-    router.push(`/feedback/${itemId}`)
+  // 이벤트 핸들러들 (DoD 규격: 실제 API 호출)
+  const handleFeedbackItemClick = async (itemId: string) => {
+    try {
+      // 읽음 처리 API 호출
+      await dashboardApiClient.markFeedbackAsRead(itemId)
+      
+      // 대시보드 데이터 갱신
+      const updatedData = await dashboardApiClient.fetchDashboardData()
+      setDashboardData(updatedData)
+      
+      // 피드백 상세 페이지로 이동
+      router.push(`/feedback/${itemId}`)
+    } catch (error) {
+      console.error('피드백 읽음 처리 실패:', error)
+      // 실패해도 페이지 이동은 진행
+      router.push(`/feedback/${itemId}`)
+    }
   }
 
   const handleMarkAllFeedbackRead = async () => {
-    // Mock: 실제로는 모든 피드백을 읽음 처리하는 API 호출
-    console.log('Marking all feedback as read...')
-    // TODO: API 호출 후 데이터 갱신
+    try {
+      if (!dashboardData?.feedbackSummary?.recentItems) return
+      
+      // 읽지 않은 피드백들에 대해 일괄 읽음 처리
+      const unreadItems = dashboardData.feedbackSummary.recentItems.filter(item => !item.isRead)
+      
+      await Promise.all(
+        unreadItems.map(item => dashboardApiClient.markFeedbackAsRead(item.id))
+      )
+      
+      // 대시보드 데이터 갱신
+      const updatedData = await dashboardApiClient.fetchDashboardData()
+      setDashboardData(updatedData)
+      
+      console.log('모든 피드백 읽음 처리 완료')
+    } catch (error) {
+      console.error('모든 피드백 읽음 처리 실패:', error)
+    }
   }
 
   const handleInvitationAction = {

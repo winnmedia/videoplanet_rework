@@ -10,12 +10,12 @@ import { rest } from 'msw'
 import { setupServer } from 'msw/node'
 import React from 'react'
 
-import { useNetworkStatus } from '../../lib/hooks/useNetworkStatus'
 import { 
+  useNetworkStatus,
   ErrorPerformanceProvider, 
   OptimizedErrorPage,
   useErrorPerformanceMonitor 
-} from '../../lib/performance/ErrorPerformanceOptimizer'
+} from '../../lib'
 import { ErrorBoundary, DefaultErrorFallback } from '../ErrorBoundary'
 import { HttpErrorPage, NetworkErrorDisplay, OfflineIndicator } from '../ErrorDisplay'
 

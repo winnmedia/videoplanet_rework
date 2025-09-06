@@ -71,19 +71,50 @@ export const projectApi = apiSlice.injectEndpoints({
       }),
     }),
 
-    // 팀원 초대
-    inviteTeamMembers: builder.mutation<{ success: boolean; invites: TeamInvite[] }, TeamInviteData>({
-      query: (data) => {
-        const validatedData = TeamInviteSchema.parse(data)
-        
-        return {
-          url: '/projects/invite',
-          method: 'POST',
-          body: {
-            ...validatedData,
-            emailTemplate: 'team_invitation', // 레거시 초대메일 템플릿
-            sendVia: 'sendgrid'
+    // 팀원 초대 (SendGrid 라우트 사용)
+    inviteTeamMember: builder.mutation<{ 
+      success: boolean; 
+      message: string; 
+      emailId?: string; 
+      inviteLink?: string; 
+    }, {
+      projectId: string;
+      invitation: {
+        email: string;
+        role: 'editor' | 'viewer' | 'admin';
+        message?: string;
+      };
+    }>({
+      queryFn: async (data) => {
+        try {
+          // InvitationService를 통한 초대 처리
+          const { invitationService } = await import('@/shared/services/invitation');
+          
+          const result = await invitationService.sendInvitation({
+            email: data.invitation.email,
+            role: data.invitation.role,
+            projectId: data.projectId,
+            inviterName: '프로젝트 관리자', // TODO: 실제 초대자명 전달
+            projectName: 'VRidge 프로젝트', // TODO: 실제 프로젝트명 전달
+            message: data.invitation.message,
+            expiresInDays: 7
+          });
+
+          if (!result.success) {
+            return { error: result.message };
           }
+
+          return { 
+            data: {
+              success: result.success,
+              message: result.message,
+              inviteId: result.inviteId,
+              canRetryAt: result.canRetryAt
+            }
+          };
+        } catch (error) {
+          console.error('RTK Query invite error:', error);
+          return { error: '네트워크 오류가 발생했습니다.' };
         }
       },
       invalidatesTags: ['ProjectTeam']
@@ -156,7 +187,7 @@ export const projectApi = apiSlice.injectEndpoints({
 export const { 
   useCreateProjectMutation,
   useGenerateDefaultScheduleMutation,
-  useInviteTeamMembersMutation,
+  useInviteTeamMemberMutation,
   useGetProjectTeamQuery,
   useResendInviteMutation,
   useRevokeInviteMutation,

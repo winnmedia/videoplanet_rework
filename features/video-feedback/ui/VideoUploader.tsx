@@ -19,7 +19,7 @@ import { VideoFileValidation, UploadProgress, VideoUploadStatus } from '../model
 // Types
 // ============================================================
 
-interface VideoUploaderProps {
+export interface VideoUploaderProps {
   /**
    * 업로드 성공 콜백
    */

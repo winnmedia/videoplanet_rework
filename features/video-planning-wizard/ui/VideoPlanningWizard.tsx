@@ -186,7 +186,7 @@ export const VideoPlanningWizard = ({
   // 진행률은 selector에서 계산됨
 
   return (
-    <div className={cn('max-w-7xl mx-auto p-6', className)}>
+    <div className={cn('max-w-7xl mx-auto p-6', className)} data-testid="planning-wizard">
       {/* 위저드 헤더 */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">

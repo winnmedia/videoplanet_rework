@@ -94,7 +94,12 @@ export interface GanttTimelineItem {
   startDate: string
   endDate: string
   progress: number // 0-100
-  color: string
+  color: string // RGB color value from Tailwind tokens
+  tailwindClasses?: {
+    bg: string     // Background class with opacity
+    border: string // Border class
+    text: string   // Text color class
+  }
   conflicts: ConflictDetail[]
   dependencies?: string[] // 의존성 관계 phase IDs
 }

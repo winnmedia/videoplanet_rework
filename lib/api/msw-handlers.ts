@@ -1534,6 +1534,179 @@ export const handlers = [
     })
   }),
 
+  // 자동 일정 생성 API
+  http.post('*/api/projects/:projectId/auto-schedule', async ({ params, request }) => {
+    await delay(1000)
+    
+    const { projectId } = params
+    const body = await request.json() as {
+      startDate: string
+      config: {
+        planningWeeks: number
+        filmingDays: number
+        editingWeeks: number
+      }
+    }
+    
+    if (!body.startDate || !body.config) {
+      return HttpResponse.json({
+        success: false,
+        error: '시작 날짜와 일정 설정이 필요합니다.'
+      }, { status: 400 })
+    }
+    
+    // 특수 테스트 케이스
+    if (projectId === 'error_project') {
+      return HttpResponse.json({
+        success: false,
+        error: '자동 일정 생성에 실패했습니다.'
+      }, { status: 500 })
+    }
+    
+    const startDate = new Date(body.startDate)
+    const config = body.config
+    
+    // 자동 일정 계산 (shared/lib/project-scheduler와 동일한 로직)
+    const planningEndDate = new Date(startDate.getTime() + config.planningWeeks * 7 * 24 * 60 * 60 * 1000)
+    const filmingStartDate = new Date(planningEndDate.getTime() + 24 * 60 * 60 * 1000)
+    const filmingEndDate = new Date(filmingStartDate.getTime() + (config.filmingDays - 1) * 24 * 60 * 60 * 1000)
+    const editingStartDate = new Date(filmingEndDate.getTime() + 24 * 60 * 60 * 1000)
+    const editingEndDate = new Date(editingStartDate.getTime() + config.editingWeeks * 7 * 24 * 60 * 60 * 1000)
+    
+    const totalDays = config.planningWeeks * 7 + config.filmingDays + config.editingWeeks * 7
+    
+    const scheduleResult = {
+      planning: {
+        startDate,
+        endDate: planningEndDate,
+        duration: config.planningWeeks,
+        unit: 'weeks' as const
+      },
+      filming: {
+        startDate: filmingStartDate,
+        endDate: filmingEndDate,
+        duration: config.filmingDays,
+        unit: 'days' as const
+      },
+      editing: {
+        startDate: editingStartDate,
+        endDate: editingEndDate,
+        duration: config.editingWeeks,
+        unit: 'weeks' as const
+      },
+      totalDays
+    }
+    
+    const calendarEvents = [
+      {
+        id: `planning_${projectId}`,
+        title: '기획',
+        startDate: startDate.toISOString(),
+        endDate: planningEndDate.toISOString(),
+        type: 'planning',
+        projectId
+      },
+      {
+        id: `filming_${projectId}`,
+        title: '촬영',
+        startDate: filmingStartDate.toISOString(),
+        endDate: filmingEndDate.toISOString(),
+        type: 'filming',
+        projectId
+      },
+      {
+        id: `editing_${projectId}`,
+        title: '편집',
+        startDate: editingStartDate.toISOString(),
+        endDate: editingEndDate.toISOString(),
+        type: 'editing',
+        projectId
+      }
+    ]
+    
+    return HttpResponse.json({
+      success: true,
+      data: {
+        schedule: scheduleResult,
+        calendarEvents
+      },
+      message: '자동 일정이 생성되었습니다.'
+    })
+  }),
+
+  // 자동 일정 수정 API  
+  http.put('*/api/projects/:projectId/auto-schedule', async ({ params, request }) => {
+    await delay(800)
+    
+    const { projectId } = params
+    const body = await request.json() as {
+      config: {
+        planningWeeks: number
+        filmingDays: number
+        editingWeeks: number
+      }
+      startDate?: string
+    }
+    
+    if (!body.config) {
+      return HttpResponse.json({
+        success: false,
+        error: '일정 설정이 필요합니다.'
+      }, { status: 400 })
+    }
+    
+    if (projectId === 'error_project') {
+      return HttpResponse.json({
+        success: false,
+        error: '일정 업데이트에 실패했습니다.'
+      }, { status: 500 })
+    }
+    
+    // 기본 시작일 (현재 시간 또는 전달받은 시작일)
+    const startDate = body.startDate ? new Date(body.startDate) : new Date()
+    const config = body.config
+    
+    // 업데이트된 일정 계산
+    const planningEndDate = new Date(startDate.getTime() + config.planningWeeks * 7 * 24 * 60 * 60 * 1000)
+    const filmingStartDate = new Date(planningEndDate.getTime() + 24 * 60 * 60 * 1000)  
+    const filmingEndDate = new Date(filmingStartDate.getTime() + (config.filmingDays - 1) * 24 * 60 * 60 * 1000)
+    const editingStartDate = new Date(filmingEndDate.getTime() + 24 * 60 * 60 * 1000)
+    const editingEndDate = new Date(editingStartDate.getTime() + config.editingWeeks * 7 * 24 * 60 * 60 * 1000)
+    
+    const totalDays = config.planningWeeks * 7 + config.filmingDays + config.editingWeeks * 7
+    
+    const scheduleResult = {
+      planning: {
+        startDate,
+        endDate: planningEndDate,
+        duration: config.planningWeeks,
+        unit: 'weeks' as const
+      },
+      filming: {
+        startDate: filmingStartDate,
+        endDate: filmingEndDate,
+        duration: config.filmingDays,
+        unit: 'days' as const
+      },
+      editing: {
+        startDate: editingStartDate,
+        endDate: editingEndDate,
+        duration: config.editingWeeks,
+        unit: 'weeks' as const
+      },
+      totalDays
+    }
+    
+    return HttpResponse.json({
+      success: true,
+      data: {
+        schedule: scheduleResult,
+        updated: true
+      },
+      message: '자동 일정이 업데이트되었습니다.'
+    })
+  }),
+
   // Railway API 폴백 핸들러 (실제 API 실패 시)
   http.all('https://api.vlanet.net/*', async () => {
     await delay(100)

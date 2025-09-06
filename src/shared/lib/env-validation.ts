@@ -48,15 +48,27 @@ const serverEnvSchema = z.object({
   NEXTAUTH_URL: z.string().url().optional(),
   NEXTAUTH_SECRET: z.string().min(32, 'NextAuth 비밀키는 최소 32자 이상이어야 합니다').optional(),
 
-  // 외부 API 키
-  GEMINI_API_KEY: z.string().optional(),
+  // 외부 API 키 (프로덕션에서 필수)
+  GOOGLE_GEMINI_API_KEY: z.string().refine(val => {
+    if (process.env.NODE_ENV === 'production' && val === 'dummy-key-for-build') {
+      return false
+    }
+    return process.env.NODE_ENV === 'development' || val?.length > 0
+  }, { message: '프로덕션에서 유효한 Gemini API 키가 필요합니다' }),
   OPENAI_API_KEY: z.string().optional(),
   GOOGLE_API_KEY: z.string().optional(),
   HUGGINGFACE_API_KEY: z.string().optional(),
 
-  // 메일 서비스
-  FROM_EMAIL: z.string().email().optional(),
-  SENDGRID_API_KEY: z.string().optional(),
+  // 메일 서비스 (프로덕션에서 필수)
+  SENDGRID_FROM_EMAIL: z.string().email().refine(val => {
+    return process.env.NODE_ENV === 'development' || val?.length > 0
+  }, { message: '프로덕션에서 SendGrid 발신 이메일이 필요합니다' }),
+  SENDGRID_API_KEY: z.string().refine(val => {
+    return process.env.NODE_ENV === 'development' || val?.length > 0
+  }, { message: '프로덕션에서 SendGrid API 키가 필요합니다' }),
+  VERIFIED_SENDER: z.string().email().refine(val => {
+    return process.env.NODE_ENV === 'development' || val?.length > 0
+  }, { message: '프로덕션에서 검증된 발신자 이메일이 필요합니다' }),
 })
 
 /**
@@ -155,12 +167,13 @@ export function validateServerEnv(): ServerEnv {
     const env = {
       NEXTAUTH_URL: process.env.NEXTAUTH_URL,
       NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
-      GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+      GOOGLE_GEMINI_API_KEY: process.env.GOOGLE_GEMINI_API_KEY,
       OPENAI_API_KEY: process.env.OPENAI_API_KEY,
       GOOGLE_API_KEY: process.env.GOOGLE_API_KEY,
       HUGGINGFACE_API_KEY: process.env.HUGGINGFACE_API_KEY,
-      FROM_EMAIL: process.env.FROM_EMAIL,
+      SENDGRID_FROM_EMAIL: process.env.SENDGRID_FROM_EMAIL,
       SENDGRID_API_KEY: process.env.SENDGRID_API_KEY,
+      VERIFIED_SENDER: process.env.VERIFIED_SENDER,
     }
 
     return serverEnvSchema.parse(env)
@@ -187,7 +200,7 @@ export function checkEnvHealth(): void {
   try {
     const serverEnv = validateServerEnv()
     console.log('✅ 서버 환경변수 검증 통과')
-    console.log(`🔑 API 키 상태: Gemini=${!!serverEnv.GEMINI_API_KEY}, OpenAI=${!!serverEnv.OPENAI_API_KEY}`)
+    console.log(`🔑 API 키 상태: Gemini=${!!serverEnv.GOOGLE_GEMINI_API_KEY}, OpenAI=${!!serverEnv.OPENAI_API_KEY}, SendGrid=${!!serverEnv.SENDGRID_API_KEY}`)
   } catch {
     console.warn('⚠️ 서버 환경변수 일부 누락 (개발환경에서는 선택사항)')
   }

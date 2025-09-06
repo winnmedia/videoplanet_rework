@@ -1,4 +1,4 @@
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 
 import { withErrorHandler, createErrorResponse, ValidationError, AuthenticationError, AuthorizationError, NotFoundError } from '@/lib/api/error-handler'
 
@@ -33,23 +33,18 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
     case 'timeout':
       // Simulate a long-running process
       await new Promise((resolve) => setTimeout(resolve, 10000))
-      return new Response('Timeout test', { status: 200 })
+      return NextResponse.json({ message: 'Timeout test' }, { status: 200 })
       
     case 'success':
     default:
-      return new Response(JSON.stringify({
+      return NextResponse.json({
         success: true,
         message: '정상적으로 처리되었습니다',
         data: {
           timestamp: new Date().toISOString(),
           scenario: scenario || 'default'
         }
-      }), {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
+      }, { status: 200 })
   }
 })
 
@@ -92,19 +87,14 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   }
   
   // Simulate successful processing
-  return new Response(JSON.stringify({
+  return NextResponse.json({
     success: true,
     message: '데이터가 성공적으로 처리되었습니다',
     data: {
       email: typedBody.email,
       createdAt: new Date().toISOString()
     }
-  }), {
-    status: 201,
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  })
+  }, { status: 201 })
 })
 
 /**
@@ -130,5 +120,5 @@ export const DELETE = withErrorHandler(async (request: NextRequest) => {
   }
   
   // Simulate successful deletion
-  return new Response(null, { status: 204 })
+  return new NextResponse(null, { status: 204 })
 })

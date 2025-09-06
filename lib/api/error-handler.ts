@@ -71,15 +71,28 @@ export type RouteContext = {
   params: Promise<Record<string, string>>
 }
 
-export type NextApiHandler = (request: NextRequest, context: RouteContext) => Promise<Response | NextResponse>
+// Next.js App Router 핸들러 타입들
+export type NextApiHandler = (request: NextRequest, context: RouteContext) => Promise<NextResponse>
+export type SimpleNextApiHandler = (request: NextRequest) => Promise<NextResponse>
 
-// 에러 처리 래퍼
+// 에러 처리 래퍼 - 오버로딩
 export function withErrorHandler(
   handler: NextApiHandler
-): NextApiHandler {
-  return async (request: NextRequest, context: RouteContext) => {
+): NextApiHandler
+export function withErrorHandler(
+  handler: SimpleNextApiHandler
+): SimpleNextApiHandler
+export function withErrorHandler(
+  handler: NextApiHandler | SimpleNextApiHandler
+): NextApiHandler | SimpleNextApiHandler {
+  return async (request: NextRequest, context?: RouteContext) => {
     try {
-      return await handler(request, context)
+      // context가 있으면 NextApiHandler로 호출
+      if (context && handler.length === 2) {
+        return await (handler as NextApiHandler)(request, context)
+      }
+      // context가 없으면 SimpleNextApiHandler로 호출
+      return await (handler as SimpleNextApiHandler)(request)
     } catch (error) {
       console.error('API Error:', error)
       

@@ -48,6 +48,9 @@ const PublicEnvSchema = z.object({
   NEXT_PUBLIC_ENABLE_DEBUG: booleanFromString.default(false),
   NEXT_PUBLIC_ENABLE_MAINTENANCE: booleanFromString.default(false),
   NEXT_PUBLIC_ENABLE_PERFORMANCE_MONITORING: booleanFromString.default(true),
+  NEXT_PUBLIC_ENABLE_AUTH: booleanFromString.default(true),
+  NEXT_PUBLIC_ENABLE_VIDEO_UPLOAD: booleanFromString.default(true),
+  NEXT_PUBLIC_ENABLE_AI_STORY: booleanFromString.default(true),
   
   // Third-party Services
   NEXT_PUBLIC_GA_TRACKING_ID: z.string().optional(),

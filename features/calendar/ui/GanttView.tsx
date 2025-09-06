@@ -4,6 +4,7 @@ import { useState, useMemo, useRef, useEffect } from 'react'
 
 // import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
 import type { CalendarEvent, GanttTimelineItem } from '@/entities/project/model/calendar-types'
+import { ColorAssignmentService, CALENDAR_CLASSES } from '@/entities/calendar/lib/colorAssignment'
 
 interface GanttViewProps {
   events: CalendarEvent[]
@@ -61,11 +62,15 @@ export function GanttView({
   const timelineItems = useMemo((): GanttTimelineItem[] => {
     const projectMap = new Map<string, GanttTimelineItem[]>()
     
-    events.forEach(event => {
+    events.forEach((event, index) => {
       const projectId = event.project.id
       if (!projectMap.has(projectId)) {
         projectMap.set(projectId, [])
       }
+
+      // Tailwind 색상 팔레트 생성
+      const colorPalette = ColorAssignmentService.generateProjectPalette(projectId, index)
+      const tailwindClasses = ColorAssignmentService.getProjectTailwindClasses(projectId, index)
       
       const item: GanttTimelineItem = {
         id: event.id,
@@ -74,7 +79,8 @@ export function GanttView({
         startDate: event.startDate,
         endDate: event.endDate,
         progress: Math.random() * 100, // Mock progress
-        color: event.project.color,
+        color: colorPalette.primary, // Tailwind 기반 RGB 색상
+        tailwindClasses, // 추가: Tailwind 클래스들
         conflicts: event.phase.conflictDetails || []
       }
       
@@ -442,11 +448,8 @@ export function GanttView({
               >
                 <div className="flex items-center gap-2">
                   <div 
-                    className="w-3 h-3 rounded-sm border"
-                    style={{ 
-                      backgroundColor: `${item.color}40`,
-                      borderColor: item.color
-                    }}
+                    className={`w-3 h-3 rounded-sm ${item.tailwindClasses?.bg || 'bg-gray-100'} ${item.tailwindClasses?.border || 'border-gray-400'} border`}
+                    title={`${item.projectName} 색상`}
                   />
                   <div className="min-w-0 flex-1">
                     <div className="text-xs font-medium text-gray-900 truncate">
@@ -499,19 +502,23 @@ export function GanttView({
                   <div
                     data-event-id={item.id}
                     className={`
-                      absolute top-2 h-8 rounded cursor-pointer
-                      border-l-4 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500
-                      ${hasConflicts ? 'border-dashed bg-red-100 border-red-500' : 'border-solid bg-opacity-20'}
-                      ${hoveredEvent === item.id ? 'shadow-lg z-20 bg-opacity-40' : 'z-10'}
+                      absolute top-2 h-8 rounded cursor-pointer border-l-4 transition-all duration-200 
+                      focus:outline-none focus:ring-2 focus:ring-vridge-500
+                      ${hasConflicts 
+                        ? `${CALENDAR_CLASSES.CONFLICT_BG} ${CALENDAR_CLASSES.CONFLICT_BORDER}` 
+                        : `${item.tailwindClasses?.bg || 'bg-gray-100/20'} ${item.tailwindClasses?.border || 'border-l-gray-400'} border-solid`
+                      }
+                      ${hoveredEvent === item.id ? 'shadow-lg z-20 opacity-80' : 'z-10'}
                       ${event?.isDraggable ? 'hover:shadow-md' : 'cursor-default'}
                       ${dragState.eventId === item.id ? 'shadow-lg z-30' : ''}
-                      ${keyboardState.selectedEventId === item.id && keyboardState.isEditMode ? 'ring-2 ring-warning-500 bg-warning-100' : ''}
+                      ${keyboardState.selectedEventId === item.id && keyboardState.isEditMode 
+                        ? 'ring-2 ring-warning-500 bg-warning-100' 
+                        : ''
+                      }
                     `}
                     style={{ 
                       left: `${startX}px`,
-                      width: `${Math.max(width, 20)}px`,
-                      backgroundColor: hasConflicts ? undefined : `${item.color}20`,
-                      borderLeftColor: item.color,
+                      width: `${Math.max(width, 20)}px`
                     }}
                     onClick={() => onEventClick(event!)}
                     onMouseEnter={() => setHoveredEvent(item.id)}
@@ -537,20 +544,21 @@ export function GanttView({
                   >
                     {/* 진행률 바 */}
                     <div 
-                      className="absolute top-0 left-0 h-full bg-green-400 rounded-l opacity-30"
+                      className={`absolute top-0 left-0 h-full rounded-l ${CALENDAR_CLASSES.PROGRESS_BAR}`}
                       style={{ width: `${item.progress}%` }}
+                      aria-label={`진행률: ${Math.round(item.progress)}%`}
                     />
                     
                     {/* 텍스트 */}
                     <div className="absolute inset-0 flex items-center px-2">
-                      <span className="text-xs font-medium text-gray-800 truncate">
+                      <span className={`text-xs font-medium truncate ${hasConflicts ? 'text-error-700' : 'text-gray-800'}`}>
                         {item.phaseName}
                       </span>
                     </div>
                     
                     {/* 충돌 경고 */}
                     {hasConflicts && (
-                      <div className="absolute -top-1 -right-1 text-red-500 text-sm">
+                      <div className="absolute -top-1 -right-1 text-error-500 text-sm" aria-label="일정 충돌">
                         ⚠️
                       </div>
                     )}
@@ -591,7 +599,7 @@ export function GanttView({
                   {/* 오늘 날짜 표시선 */}
                   {index === 0 && (
                     <div 
-                      className="absolute top-0 w-0.5 h-full bg-blue-500 z-40"
+                      className="absolute top-0 w-0.5 h-full bg-vridge-500 z-40 opacity-75"
                       style={{ 
                         left: `${dateToPixel(new Date().toISOString().split('T')[0], ganttRef.current?.clientWidth || 800)}px`
                       }}

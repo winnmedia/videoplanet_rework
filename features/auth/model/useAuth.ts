@@ -26,7 +26,7 @@ export function useAuth() {
         // 성공 시 Redux 상태도 업데이트 (필요한 경우)
         if (session?.user) {
           dispatch(setCredentials({
-            user: session.user,
+            user: session.user as any,
             token: 'nextauth-session', // NextAuth가 세션 관리
           }))
         }

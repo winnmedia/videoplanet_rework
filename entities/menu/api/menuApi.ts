@@ -183,7 +183,7 @@ class MenuApi {
       // 프로젝트 생성 후 관련 캐시 무효화
       await this.invalidateMenuCache('projects')
       
-      return response.data.items[0] // 새로 생성된 프로젝트
+      return (response.data as any)?.items?.[0] // 새로 생성된 프로젝트
     } catch (error) {
       console.error('Failed to create project:', error)
       throw new Error('프로젝트 생성에 실패했습니다')
@@ -197,7 +197,7 @@ class MenuApi {
       // 프로젝트 업데이트 후 관련 캐시 무효화
       await this.invalidateMenuCache('projects')
       
-      return response.data.items[0]
+      return (response.data as any)?.items?.[0]
     } catch (error) {
       console.error('Failed to update project:', error)
       throw new Error('프로젝트 업데이트에 실패했습니다')

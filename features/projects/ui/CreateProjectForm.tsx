@@ -44,7 +44,7 @@ export const CreateProjectForm = React.memo(function CreateProjectForm({
 
   // Step 2 Form
   const step2Form = useForm<CreateProjectStep2>({
-    resolver: zodResolver(CreateProjectStep2Schema),
+    resolver: zodResolver(CreateProjectStep2Schema) as any,
     defaultValues: {
       inviteEmails: formData.inviteEmails || [],
       defaultPermission: formData.defaultPermission || 'viewer'
@@ -53,7 +53,7 @@ export const CreateProjectForm = React.memo(function CreateProjectForm({
 
   // Step 3 Form
   const step3Form = useForm<CreateProjectStep3>({
-    resolver: zodResolver(CreateProjectStep3Schema),
+    resolver: zodResolver(CreateProjectStep3Schema) as any,
     defaultValues: {
       isPublic: formData.isPublic ?? false,
       allowComments: formData.allowComments ?? true,

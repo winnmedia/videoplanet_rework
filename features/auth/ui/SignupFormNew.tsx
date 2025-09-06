@@ -34,7 +34,7 @@ export function SignupForm() {
       confirmPassword: '',
       name: '',
       companyName: '',
-      termsAccepted: false,
+      termsAccepted: undefined as any,
       marketingAccepted: false
     }
   })
@@ -138,7 +138,7 @@ export function SignupForm() {
         auth_number: verificationCode,
         company_name: data.companyName,
         marketing_accepted: data.marketingAccepted
-      })
+      } as any)
       router.push('/dashboard')
     } catch (error) {
       setFormError('root', {

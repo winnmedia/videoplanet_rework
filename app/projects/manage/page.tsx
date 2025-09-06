@@ -5,14 +5,14 @@ import { useState, Suspense } from 'react'
 
 import { 
   useCreateProjectMutation,
-  useInviteTeamMembersMutation,
+  useInviteTeamMemberMutation,
   useGetProjectTeamQuery,
   useResendInviteMutation,
   useRevokeInviteMutation,
   useRemoveMemberMutation,
   type TeamInviteData
 } from '@/entities/project/api/projectApi'
-import { ProjectSchedulePreview, TeamInviteForm, TeamMemberTable } from '@/features/project'
+import { TeamInviteForm } from '@/features/projects'
 import { Button, Card } from '@/shared/ui'
 import { SideBar } from '@/widgets'
 
@@ -49,7 +49,7 @@ function ProjectManageContent({ projectId }: { projectId: string }) {
   
   // API Hooks
   const [createProject] = useCreateProjectMutation()
-  const [inviteTeamMembers] = useInviteTeamMembersMutation()
+  const [inviteTeamMember] = useInviteTeamMemberMutation()
   const [resendInvite] = useResendInviteMutation()
   const [revokeInvite] = useRevokeInviteMutation()
   const [removeMember] = useRemoveMemberMutation()
@@ -122,7 +122,7 @@ function ProjectManageContent({ projectId }: { projectId: string }) {
           shooting: { duration: schedule.filming.duration },
           editing: { duration: schedule.editing.duration }
         } : undefined
-      }).unwrap()
+      } as any).unwrap()
       
       // 성공 시 팀원 초대 탭으로 이동하고 URL 업데이트
       setActiveTab('invite')
@@ -145,12 +145,17 @@ function ProjectManageContent({ projectId }: { projectId: string }) {
     }
 
     try {
-      await inviteTeamMembers({
-        projectId,
-        emails: data.emails,
-        role: data.role as any,
-        expiryDate: data.expiryDate
-      }).unwrap()
+      // For multiple emails, send individual invites
+      for (const email of data.emails) {
+        await inviteTeamMember({
+          projectId,
+          invitation: {
+            email,
+            role: data.role as any,
+            message: `프로젝트에 초대되었습니다. 만료일: ${data.expiryDate}`
+          }
+        }).unwrap()
+      }
       
       alert('초대장이 성공적으로 발송되었습니다!')
     } catch (error) {
@@ -454,7 +459,29 @@ function ProjectManageContent({ projectId }: { projectId: string }) {
 
               {/* 일정 프리뷰 */}
               <div className="lg:col-span-1">
-                <ProjectSchedulePreview schedule={schedule} />
+                <Card className="p-4">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">예상 일정</h3>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">기획</span>
+                      <span className="font-medium">{schedule.planning.label}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">촬영</span>
+                      <span className="font-medium">{schedule.filming.label}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">편집</span>
+                      <span className="font-medium">{schedule.editing.label}</span>
+                    </div>
+                    <div className="border-t pt-2 mt-4">
+                      <div className="flex justify-between font-medium">
+                        <span>총 예상 기간</span>
+                        <span>{schedule.planning.duration + schedule.filming.duration + schedule.editing.duration}일</span>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
               </div>
             </div>
           )}
@@ -477,13 +504,61 @@ function ProjectManageContent({ projectId }: { projectId: string }) {
                       <p className="text-gray-500">로딩 중...</p>
                     </div>
                   ) : (
-                    <TeamMemberTable
-                      invites={teamData?.invites || []}
-                      members={teamData?.members || []}
-                      onResendInvite={handleResendInvite}
-                      onRevokeInvite={handleRevokeInvite}
-                      onRemoveMember={handleRemoveMember}
-                    />
+                    <Card className="p-6">
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-medium">팀원 목록</h3>
+                        {(teamData?.members?.length || 0) > 0 ? (
+                          <div className="space-y-2">
+                            {teamData?.members?.map((member: any, index: number) => (
+                              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                <div>
+                                  <span className="font-medium">{member.email || member.name || '멤버'}</span>
+                                  <span className="ml-2 text-sm text-gray-500">({member.role || '역할 없음'})</span>
+                                </div>
+                                <button
+                                  onClick={() => handleRemoveMember(member.id)}
+                                  className="text-red-600 hover:text-red-800 text-sm"
+                                >
+                                  제거
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-gray-500">아직 팀원이 없습니다.</p>
+                        )}
+                        
+                        {(teamData?.invites?.length || 0) > 0 && (
+                          <div className="mt-6">
+                            <h4 className="font-medium text-gray-900 mb-2">대기 중인 초대</h4>
+                            <div className="space-y-2">
+                              {teamData?.invites?.map((invite: any, index: number) => (
+                                <div key={index} className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+                                  <div>
+                                    <span className="font-medium">{invite.email}</span>
+                                    <span className="ml-2 text-sm text-gray-500">({invite.role})</span>
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <button
+                                      onClick={() => handleResendInvite(invite.id)}
+                                      className="text-blue-600 hover:text-blue-800 text-sm"
+                                    >
+                                      재전송
+                                    </button>
+                                    <button
+                                      onClick={() => handleRevokeInvite(invite.id)}
+                                      className="text-red-600 hover:text-red-800 text-sm"
+                                    >
+                                      철회
+                                    </button>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </Card>
                   )}
                 </div>
               )}

@@ -123,6 +123,6 @@ export const authOptions: NextAuthOptions = {
   // 보안 설정
   secret: env.NEXTAUTH_SECRET,
   
-  // 개발 모드 설정
-  debug: process.env.NODE_ENV === 'development',
+  // 디버그 모드 설정 (프로덕션에서는 비활성화)
+  debug: process.env.NODE_ENV === 'development' && process.env.NEXTAUTH_DEBUG !== 'false',
 }

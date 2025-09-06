@@ -64,17 +64,17 @@ export async function POST(request: NextRequest) {
     const feedbackLink = `${baseUrl}/projects/${data.projectId}/feedback/${data.videoId}`
 
     // React Email 템플릿 렌더링
-    const emailHtml = await sendGridService.renderTemplate(
-      FeedbackNotificationTemplate({
-        projectName: data.projectName,
-        feedbackAuthor: data.feedbackAuthor,
-        feedbackContent: data.feedbackContent,
-        videoTitle: data.videoTitle,
-        timestamp: data.timestamp,
-        feedbackLink: feedbackLink,
-        feedbackType: data.feedbackType,
-      })
-    )
+    const templateElement = FeedbackNotificationTemplate({
+      projectName: data.projectName,
+      feedbackAuthor: data.feedbackAuthor,
+      feedbackContent: data.feedbackContent,
+      videoTitle: data.videoTitle,
+      timestamp: data.timestamp,
+      feedbackLink: feedbackLink,
+      feedbackType: data.feedbackType,
+    })
+    
+    const emailHtml = await sendGridService.renderTemplate(templateElement as any)
 
     // 이메일 우선순위 결정
     const priority = data.feedbackType === 'revision' ? 'high' : 'normal'

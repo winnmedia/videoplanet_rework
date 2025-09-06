@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { emailQueue } from '@/lib/email/queue'
 import { sendGridService, generateInviteToken } from '@/lib/email/sendgrid'
 import { InviteMemberTemplate } from '@/lib/email/templates/InviteMemberTemplate'
+import { invitationService, InviteRequestSchema } from '@/shared/services/invitation'
 
 // 요청 스키마
 const requestSchema = z.object({
@@ -44,82 +45,48 @@ export async function POST(request: NextRequest) {
   try {
     // 요청 본문 파싱 및 검증
     const body = await request.json()
-    const data = requestSchema.parse(body)
-
-    // 초대 토큰 생성
-    const token = generateInviteToken()
-    const expires = Date.now() + 7 * 24 * 60 * 60 * 1000 // 7일 후 만료
-
-    // 초대 정보 저장
-    const inviteData: InviteData = {
-      token,
-      projectId: data.projectId,
-      projectName: data.projectName,
-      inviterEmail: data.inviterEmail,
-      recipientEmail: data.recipientEmail,
-      role: data.role,
-      expires,
+    
+    // 기존 스키마를 InvitationService 스키마에 맞게 변환
+    const transformedData = {
+      email: body.recipientEmail,
+      role: body.role,
+      projectId: body.projectId,
+      inviterName: body.inviterName,
+      projectName: body.projectName,
+      message: body.message,
+      expiresInDays: 7
     }
-    
-    globalThis.inviteStore.set(token, inviteData)
 
-    console.log('📨 Created project invite:', { 
-      recipientEmail: data.recipientEmail,
-      projectName: data.projectName,
-      token,
-    })
+    // InvitationService를 통한 초대 처리
+    const result = await invitationService.sendInvitation(transformedData)
 
-    // 초대 링크 생성
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://videoplanet-vlanets-projects.vercel.app'
-    const inviteLink = `${baseUrl}/invite/accept?token=${token}`
-
-    // React Email 템플릿 렌더링
-    const emailHtml = await sendGridService.renderTemplate(
-      InviteMemberTemplate({
-        projectName: data.projectName,
-        inviterName: data.inviterName,
-        inviterEmail: data.inviterEmail,
-        inviteLink: inviteLink,
-        role: roleDisplayNames[data.role],
-      })
-    )
-
-    // 이메일을 큐에 추가
-    const emailId = await emailQueue.add(
-      {
-        to: data.recipientEmail,
-        subject: `${data.inviterName}님이 VLANET 프로젝트에 초대했습니다`,
-        html: emailHtml,
-      },
-      {
-        priority: 'normal',
-      }
-    )
-
-    return NextResponse.json({
-      success: true,
-      message: '초대 이메일이 발송되었습니다.',
-      emailId,
-      inviteLink: process.env.NODE_ENV !== 'production' ? inviteLink : undefined,
-    })
-  } catch (error) {
-    console.error('Invite member email error:', error)
-    
-    if (error instanceof z.ZodError) {
+    if (!result.success) {
+      const statusCode = result.message.includes('재전송') ? 429 : 400
       return NextResponse.json(
-        { 
-          success: false, 
-          error: '입력 데이터가 올바르지 않습니다.',
-          details: error.errors,
+        {
+          success: false,
+          error: result.message,
+          canRetryAt: result.canRetryAt
         },
-        { status: 400 }
+        { status: statusCode }
       )
     }
 
+    // 성공 시 기존 로직과 호환되는 응답
+    return NextResponse.json({
+      success: true,
+      message: result.message,
+      inviteId: result.inviteId,
+      canRetryAt: result.canRetryAt
+    })
+
+  } catch (error) {
+    console.error('Invite member email error:', error)
+    
     return NextResponse.json(
       { 
         success: false, 
-        error: '초대 이메일 발송에 실패했습니다. 다시 시도해주세요.' 
+        error: '초대 이메일 발송에 실패했습니다. 잠시 후 다시 시도해주세요.' 
       },
       { status: 500 }
     )
@@ -185,8 +152,8 @@ export async function PUT(request: NextRequest) {
 // 초대 목록 조회 (관리자용)
 export async function GET() {
   const invites = Array.from(globalThis.inviteStore.entries()).map(([token, data]) => ({
-    token: token.substring(0, 8) + '...', // 토큰 일부만 표시
     ...data,
+    token: token.substring(0, 8) + '...', // 토큰 일부만 표시 (덮어쓰기)
     expiresIn: Math.max(0, data.expires - Date.now()),
   }))
 

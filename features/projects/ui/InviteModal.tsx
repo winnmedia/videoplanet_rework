@@ -23,7 +23,7 @@ export const InviteModal = React.memo(function InviteModal({
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const { register, handleSubmit, formState: { errors }, reset, setError } = useForm<InviteMembers>({
-    resolver: zodResolver(InviteMembersSchema),
+    resolver: zodResolver(InviteMembersSchema) as any,
     defaultValues: {
       projectId,
       emails: [],

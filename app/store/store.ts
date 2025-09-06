@@ -4,6 +4,7 @@ import type { TypedUseSelectorHook } from 'react-redux';
 import { useDispatch, useSelector } from 'react-redux';
 
 import projectReducer from '@/entities/project/model/projectSlice';
+import { notificationSlice } from '@/entities/notification';
 import authReducer from '@/features/auth/model/authSlice';
 import projectsReducer from '@/features/projects/model/projectSlice';
 import uiReducer from '@/features/ui/model/uiSlice';
@@ -14,6 +15,7 @@ export const store = configureStore({
   reducer: {
     auth: authReducer,
     ui: uiReducer,
+    notifications: notificationSlice.reducer,
     videoPlanningWizard: videoPlanningWizardReducer,
     project: projectReducer,
     projects: projectsReducer,

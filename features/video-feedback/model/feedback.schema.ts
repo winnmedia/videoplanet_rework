@@ -40,14 +40,12 @@ export const PlaybackSpeed = z.enum([
 ]);
 
 /**
- * 감정 반응 타입
+ * 감정 반응 타입 (DoD 규격: 3종)
  */
 export const ReactionType = z.enum([
   'like',
-  'heart',
-  'celebrate',
-  'insightful',
-  'curious'
+  'dislike', 
+  'question'
 ]);
 
 /**

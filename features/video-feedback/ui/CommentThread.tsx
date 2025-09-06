@@ -13,6 +13,8 @@
 import React, { useState, useCallback, useMemo } from 'react';
 
 import { Comment, CommentStatus } from '../model/feedback.schema';
+import { useTimecodeRenderer } from '../lib/useTimecodeSync';
+import { TimecodeCommentInput } from './TimecodeCommentInput';
 
 // ============================================================
 // Types
@@ -73,6 +75,16 @@ interface CommentThreadProps {
    * 답글 허용 여부
    */
   allowReplies?: boolean;
+  
+  /**
+   * 비디오 엘리먼트 ref (타임코드 자동 삽입용)
+   */
+  videoRef?: React.RefObject<HTMLVideoElement>;
+  
+  /**
+   * 타임코드 자동 삽입 사용 여부
+   */
+  enableTimecodeInsertion?: boolean;
 }
 
 // ============================================================
@@ -240,22 +252,12 @@ const CommentItem: React.FC<CommentItemProps> = ({
               </div>
             ) : (
               <>
-                {/* Comment Text with Mentions */}
-                <p className="text-sm text-neutral-800 break-words">
-                  {comment.content.split(/(@\w+)/g).map((part, index) => {
-                    if (part.startsWith('@')) {
-                      const mention = comment.mentions?.find(m => `@${m.username}` === part);
-                      if (mention) {
-                        return (
-                          <span key={index} className="text-vridge-600 font-medium">
-                            @{mention.displayName}
-                          </span>
-                        );
-                      }
-                    }
-                    return part;
-                  })}
-                </p>
+                {/* Comment Text with Mentions and Timecodes */}
+                <CommentContent
+                  content={comment.content}
+                  mentions={comment.mentions}
+                  onTimestampClick={onTimestampClick}
+                />
                 
                 {/* Actions */}
                 <div className="flex items-center gap-3 mt-2">
@@ -339,6 +341,67 @@ const CommentItem: React.FC<CommentItemProps> = ({
           ))}
         </div>
       )}
+    </div>
+  );
+};
+
+// ============================================================
+// Comment Content Component
+// ============================================================
+
+interface CommentContentProps {
+  content: string;
+  mentions?: Array<{
+    id: string;
+    username: string;
+    displayName: string;
+    avatarUrl?: string;
+  }>;
+  onTimestampClick?: (timestamp: number) => void;
+}
+
+const CommentContent: React.FC<CommentContentProps> = ({
+  content,
+  mentions,
+  onTimestampClick
+}) => {
+  const { renderTimecodeText } = useTimecodeRenderer(
+    content,
+    (timestamp) => onTimestampClick?.(timestamp)
+  );
+
+  return (
+    <div className="text-sm text-neutral-800 break-words">
+      {renderTimecodeText((part, isTimecode, timestamp, onClick) => {
+        if (isTimecode) {
+          return (
+            <button
+              key={`timecode-${timestamp}`}
+              onClick={onClick}
+              className="inline-flex items-center px-1 py-0.5 rounded text-xs font-mono bg-vridge-100 text-vridge-700 hover:bg-vridge-200 hover:text-vridge-800 transition-colors cursor-pointer mx-0.5"
+              title={`${Math.floor(timestamp! / 60)}분 ${(timestamp! % 60).toFixed(1)}초로 이동`}
+              aria-label={`타임코드 ${part} 클릭하여 해당 시점으로 이동`}
+            >
+              {part}
+            </button>
+          );
+        }
+        
+        // 멘션 처리
+        return part.split(/(@\w+)/g).map((mentionPart, index) => {
+          if (mentionPart.startsWith('@')) {
+            const mention = mentions?.find(m => `@${m.username}` === mentionPart);
+            if (mention) {
+              return (
+                <span key={`mention-${index}`} className="text-vridge-600 font-medium">
+                  @{mention.displayName}
+                </span>
+              );
+            }
+          }
+          return <span key={`text-${index}`}>{mentionPart}</span>;
+        });
+      })}
     </div>
   );
 };
@@ -428,7 +491,9 @@ export const CommentThread: React.FC<CommentThreadProps> = ({
   onTimestampClick,
   mentionableUsers,
   showTimestamps = true,
-  allowReplies = true
+  allowReplies = true,
+  videoRef,
+  enableTimecodeInsertion = true
 }) => {
   const [replyToId, setReplyToId] = useState<string | null>(null);
   
@@ -474,10 +539,20 @@ export const CommentThread: React.FC<CommentThreadProps> = ({
       
       {/* New Comment Input */}
       <div className="border-t border-neutral-200 pt-4">
-        <CommentInput
-          placeholder="댓글을 작성하세요... (@를 입력하여 멘션)"
-          onSubmit={handleAddComment}
-        />
+        {videoRef && enableTimecodeInsertion ? (
+          <TimecodeCommentInput
+            videoRef={videoRef}
+            placeholder="댓글을 작성하세요... (@를 입력하여 멘션, Shift+T로 타임코드 삽입)"
+            onSubmit={handleAddComment}
+            enableTimecodeInsertion={enableTimecodeInsertion}
+            showPreview={true}
+          />
+        ) : (
+          <CommentInput
+            placeholder="댓글을 작성하세요... (@를 입력하여 멘션)"
+            onSubmit={handleAddComment}
+          />
+        )}
       </div>
     </div>
   );

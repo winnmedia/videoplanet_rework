@@ -23,7 +23,7 @@ export default function PlanningPage() {
                 </svg>
               </div>
               <div>
-                <h1 className="text-4xl font-bold text-gray-900 tracking-tight">영상 기획</h1>
+                <h1 data-testid="planning-heading" className="text-4xl font-bold text-gray-900 tracking-tight">영상 기획</h1>
                 <div className="flex items-center gap-2 mt-1">
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
                     프로페셔널

@@ -11,20 +11,14 @@ import {
   ComplexityLevel,
   TemplateCategory,
   IndustryType,
-  RoleType
-} from './types'
-import { 
-  Project, 
-  CreateProjectCommand, 
-  ProjectCategory,
-  ProjectMemberRole 
-} from '../../project'
-import {
-  ProjectSchedule,
+  RoleType,
+  TemplateProject,
+  TemplateProjectSchedule,
+  CreateProjectCommand,
   CreateScheduleCommand,
-  AddMilestoneCommand,
-  AddDeadlineCommand
-} from '../../schedule'
+  ProjectCategory,
+  ProjectMemberRole
+} from './types'
 
 // Template Domain Logic
 export function createTemplate(command: CreateTemplateCommand): ProjectTemplate {
@@ -152,7 +146,7 @@ export function cloneTemplate(
 export function applyTemplateToProject(
   template: ProjectTemplate,
   command: ApplyTemplateCommand
-): { project: Project; schedule?: ProjectSchedule } {
+): { project: TemplateProject; schedule?: TemplateProjectSchedule } {
   if (template.id !== command.templateId) {
     throw new Error('템플릿 ID가 일치하지 않습니다')
   }
@@ -164,20 +158,20 @@ export function applyTemplateToProject(
     ownerId: command.appliedBy,
     category: mapTemplateCategoryToProjectCategory(template.category),
     settings: {
-      visibility: template.settings.defaultVisibility as any,
+      visibility: template.settings.defaultVisibility,
       allowComments: template.settings.collaboration.allowGuestComments,
       allowDownloads: template.settings.collaboration.requireApproval,
-      videoQuality: 'high' as any,
-      collaboration: template.settings.collaboration as any
+      videoQuality: 'high',
+      collaboration: template.settings.collaboration
     },
     tags: template.tags
   }
 
-  const project: Project = {
+  const project: TemplateProject = {
     id: generateProjectId(),
     name: projectCommand.name,
     description: projectCommand.description,
-    status: 'draft' as any,
+    status: 'draft',
     owner: {
       userId: command.appliedBy,
       role: ProjectMemberRole.OWNER,
@@ -192,7 +186,7 @@ export function applyTemplateToProject(
       }
     },
     members: [],
-    settings: projectCommand.settings as any,
+    settings: projectCommand.settings,
     metadata: {
       tags: template.tags,
       category: projectCommand.category,
@@ -204,7 +198,7 @@ export function applyTemplateToProject(
   }
 
   // Create schedule from template if customizations include start date
-  let schedule: ProjectSchedule | undefined
+  let schedule: TemplateProjectSchedule | undefined
 
   if (command.customizations?.startDate) {
     const startDate = command.customizations.startDate
@@ -232,7 +226,7 @@ export function applyTemplateToProject(
         endDate: scheduleCommand.timeline.endDate,
         estimatedDuration: template.schedule.estimatedDuration,
         bufferDays: scheduleCommand.timeline.bufferDays,
-        workingDays: template.schedule.workingHours as any,
+        workingDays: template.schedule.workingHours,
         phases: template.structure.phases.map(phase => ({
           id: generatePhaseId(),
           name: phase.name,
@@ -240,7 +234,7 @@ export function applyTemplateToProject(
           startDate: new Date(startDate.getTime() + (phase.order * 24 * 60 * 60 * 1000)),
           endDate: new Date(startDate.getTime() + ((phase.order + phase.estimatedDuration) * 24 * 60 * 60 * 1000)),
           dependencies: phase.dependencies,
-          status: 'not_started' as any,
+          status: 'not_started',
           progress: 0,
           deliverables: phase.deliverables,
           assignees: []
@@ -251,7 +245,7 @@ export function applyTemplateToProject(
         name: milestone.name,
         description: milestone.description,
         targetDate: new Date(startDate.getTime() + (milestone.daysFromStart * 24 * 60 * 60 * 1000)),
-        status: 'pending' as any,
+        status: 'pending',
         priority: milestone.priority,
         deliverables: milestone.deliverables,
         dependencies: [],
@@ -265,7 +259,7 @@ export function applyTemplateToProject(
         dueDate: new Date(startDate.getTime() + (deadline.daysFromStart * 24 * 60 * 60 * 1000)),
         type: deadline.type,
         priority: deadline.priority,
-        status: 'pending' as any,
+        status: 'pending',
         assignees: [],
         notifications: []
       })),
@@ -273,7 +267,7 @@ export function applyTemplateToProject(
       resources: [],
       createdAt: new Date(),
       updatedAt: new Date(),
-      status: 'draft' as any,
+      status: 'draft',
       version: 1
     }
   }
