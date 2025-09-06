@@ -11,15 +11,40 @@ import { z } from 'zod';
 const EnvironmentSchema = z.enum(['development', 'staging', 'production', 'test']);
 export type Environment = z.infer<typeof EnvironmentSchema>;
 
-// URL validation helpers
-const urlSchema = z.string().url().or(z.string().min(1));
-const optionalUrlSchema = z.string().url().optional().or(z.literal(''));
+// URL validation helpers with development-friendly fallbacks
+const isDevelopment = () => process.env.NODE_ENV === 'development';
 
-// Port validation
-const portSchema = z.string().regex(/^\d+$/).transform(val => parseInt(val, 10)).pipe(z.number().min(1).max(65535));
+const urlSchema = z.string().refine((val) => {
+  if (!val) return false;
+  // In development, allow localhost and non-https URLs
+  if (isDevelopment()) {
+    return val.startsWith('http://') || val.startsWith('https://') || val.includes('localhost');
+  }
+  // In production, require proper URL format
+  try {
+    new URL(val);
+    return true;
+  } catch {
+    return false;
+  }
+}, {
+  message: "Must be a valid URL"
+}).or(z.string().min(1));
 
-// Boolean from string validation
-const booleanFromString = z.string().optional().transform(val => val === 'true').pipe(z.boolean());
+const optionalUrlSchema = urlSchema.optional().or(z.literal(''));
+
+// Port validation - removed unused variable to fix ESLint warning
+
+// Boolean from string validation with proper transformation logic
+const booleanFromString = z
+  .union([z.boolean(), z.string()])
+  .optional()
+  .transform((val) => {
+    if (typeof val === 'boolean') return val;
+    if (val === undefined || val === null) return false;
+    const lowerVal = String(val).toLowerCase().trim();
+    return lowerVal === 'true' || lowerVal === '1' || lowerVal === 'yes';
+  });
 
 // Public environment variables schema (NEXT_PUBLIC_*)
 const PublicEnvSchema = z.object({
@@ -30,10 +55,10 @@ const PublicEnvSchema = z.object({
   NEXT_PUBLIC_APP_VERSION: z.string().min(1).default('0.1.0'),
   
   // API Configuration
-  NEXT_PUBLIC_API_URL: urlSchema.default('https://api.vlanet.net'),
+  NEXT_PUBLIC_API_URL: urlSchema.default(isDevelopment() ? 'http://localhost:8000' : 'https://api.vlanet.net'),
   NEXT_PUBLIC_API_VERSION: z.string().optional().default('v1'),
   NEXT_PUBLIC_API_TIMEOUT: z.string().regex(/^\d+$/).transform(Number).default('30000'),
-  NEXT_PUBLIC_BACKEND_URL: urlSchema.default('https://api.vlanet.net'),
+  NEXT_PUBLIC_BACKEND_URL: urlSchema.default(isDevelopment() ? 'http://localhost:8000' : 'https://api.vlanet.net'),
   NEXT_PUBLIC_BACKEND_API_KEY: z.string().optional(),
   
   // Authentication
@@ -62,7 +87,9 @@ const PublicEnvSchema = z.object({
   NEXT_PUBLIC_IMAGE_DOMAINS: z.string().default('localhost'),
   
   // WebSocket
-  NEXT_PUBLIC_WS_URL: z.string().url().or(z.string().startsWith('ws')).default('wss://api.vlanet.net/ws'),
+  NEXT_PUBLIC_WS_URL: z.string().refine((val) => 
+    val.startsWith('ws://') || val.startsWith('wss://') || val.startsWith('http')
+  ).default(isDevelopment() ? 'ws://localhost:8000/ws' : 'wss://api.vlanet.net/ws'),
   NEXT_PUBLIC_WS_RECONNECT_INTERVAL: z.string().regex(/^\d+$/).transform(Number).default('5000'),
   
   // Rate Limiting
@@ -110,12 +137,7 @@ const PrivateEnvSchema = z.object({
 const EnvSchema = PublicEnvSchema.merge(PrivateEnvSchema);
 export type EnvVars = z.infer<typeof EnvSchema>;
 
-// Production-specific validation rules
-const ProductionRequiredFields = z.object({
-  NEXTAUTH_SECRET: z.string().min(32),
-  NEXT_PUBLIC_APP_URL: z.string().url(),
-  DATABASE_URL: z.string().url(),
-}).partial();
+// Production-specific validation rules - removed unused variable to fix ESLint warning
 
 // Staging-specific validation rules  
 const StagingRequiredFields = z.object({
@@ -137,11 +159,54 @@ export function validateEnvVars(
     // Skip validation if explicitly disabled (build time only)
     if (env.SKIP_ENV_VALIDATION === 'true') {
       console.warn('⚠️  Environment validation skipped (SKIP_ENV_VALIDATION=true)');
-      return env as any;
+      return env as EnvVars;
+    }
+
+    // Apply more lenient parsing for development
+    const currentEnv = env.NODE_ENV || env.NEXT_PUBLIC_APP_ENV || 'development';
+    const isDev = currentEnv === 'development';
+    
+    // In development, use safeParse to avoid throwing on validation errors
+    const parseResult = isDev ? EnvSchema.safeParse(env) : EnvSchema.safeParse(env);
+    
+    if (!parseResult.success) {
+      if (isDev) {
+        console.warn('⚠️  Environment validation failed in development mode, using defaults:');
+        parseResult.error.errors.forEach((err) => {
+          console.warn(`  - ${err.path.join('.')}: ${err.message}`);
+        });
+        
+        // Try to create a minimal valid environment for development
+        const devDefaults = {
+          NODE_ENV: 'development',
+          NEXT_PUBLIC_APP_ENV: 'development',
+          NEXT_PUBLIC_APP_NAME: 'VRidge',
+          NEXT_PUBLIC_APP_URL: 'http://localhost:3000',
+          NEXT_PUBLIC_APP_VERSION: '0.1.0',
+          NEXT_PUBLIC_API_URL: 'http://localhost:8000',
+          NEXT_PUBLIC_API_VERSION: 'v1',
+          NEXT_PUBLIC_BACKEND_URL: 'http://localhost:8000',
+          NEXT_PUBLIC_WS_URL: 'ws://localhost:8000/ws',
+          NEXT_PUBLIC_AUTH_PROVIDER: 'credentials',
+          ...env
+        };
+        
+        const retryResult = EnvSchema.safeParse(devDefaults);
+        if (retryResult.success) {
+          console.log('✅ Using development defaults for missing environment variables');
+          return retryResult.data;
+        }
+      }
+      
+      if (throwOnError) {
+        throw new Error(`Environment validation failed: ${parseResult.error.message}`);
+      } else {
+        console.warn('⚠️  Environment validation failed, proceeding with raw env');
+        return env as EnvVars;
+      }
     }
     
-    // Parse base environment variables
-    const parsedEnv = EnvSchema.parse(env);
+    const parsedEnv = parseResult.data;
     const environment = parsedEnv.NEXT_PUBLIC_APP_ENV || parsedEnv.NODE_ENV;
     
     console.log(`🔍 Validating environment variables for: ${environment}`);
@@ -224,7 +289,7 @@ export function validateEnvVars(
       throw new Error(errorMessage);
     } else {
       console.warn(`⚠️  ${errorMessage}`);
-      return env as any;
+      return env as EnvVars;
     }
   }
 }
@@ -266,9 +331,12 @@ export type { Environment };
 // Auto-validate on import (runtime only, not during build)
 if (typeof window !== 'undefined' || (process.env.NODE_ENV !== undefined && !process.env.SKIP_ENV_VALIDATION)) {
   try {
-    // Skip validation in development to avoid type conflicts
-    if (process.env.NODE_ENV === 'development' || process.env.SKIP_ENV_VALIDATION === 'true') {
-      console.log('🔧 Environment validation skipped for development');
+    // Use lenient validation in development
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔧 Development mode: Using lenient environment validation');
+      validateEnvVars(process.env, false); // Don't throw on errors in development
+    } else if (process.env.SKIP_ENV_VALIDATION === 'true') {
+      console.log('🔧 Environment validation skipped via SKIP_ENV_VALIDATION');
     } else {
       validateForContext.runtime();
     }
@@ -276,6 +344,9 @@ if (typeof window !== 'undefined' || (process.env.NODE_ENV !== undefined && !pro
     // Only log in development/test, don't crash the application
     if (process.env.NODE_ENV !== 'production') {
       console.warn('Environment validation failed on import:', error);
+    } else {
+      // In production, this is a critical error
+      throw error;
     }
   }
 }

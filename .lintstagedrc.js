@@ -5,7 +5,7 @@ module.exports = {
     'eslint --fix --max-warnings=0',
     
     // 2. Prettier with Tailwind plugin
-    'prettier --write --plugin=@tailwindcss/prettier-plugin',
+    'prettier --write --plugin=prettier-plugin-tailwindcss',
     
     // 3. TypeScript check (no-emit)
     () => 'tsc --noEmit',
