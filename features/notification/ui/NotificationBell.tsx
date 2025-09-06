@@ -5,23 +5,12 @@ import { useState, useCallback, memo } from 'react'
 import { NotificationCenter } from '@/shared/ui'
 import type { Notification as UINotification } from '@/shared/ui'
 import { useNotifications } from '@/shared/hooks/useNotifications'
-
-// 임시 Notification 타입 (실제로는 entities/notification에서 import)
-interface Notification {
-  id: string
-  title: string
-  message: string
-  type: 'info' | 'success' | 'warning' | 'error'
-  isRead: boolean
-  timestamp: string
-  actionUrl?: string
-  metadata?: Record<string, any>
-}
+import type { Notification } from '@/entities/notification'
 
 // 엔티티 Notification을 UI Notification으로 변환하는 어댑터
 const adaptNotificationForUI = (notification: Notification): UINotification => ({
   id: notification.id,
-  type: notification.type as any,
+  type: notification.type as UINotification['type'],
   title: notification.title,
   message: notification.message,
   timestamp: new Date(notification.timestamp),
@@ -71,8 +60,20 @@ export const NotificationBell = memo(function NotificationBell({
     setIsOpen(false)
   }, [markAllAsRead])
 
-  const handleNotificationItemClick = useCallback((notification: Notification) => {
-    handleNotificationClick(notification)
+  const handleNotificationItemClick = useCallback((notification: UINotification) => {
+    // UI Notification을 다시 entity Notification으로 변환하여 handleNotificationClick에 전달
+    const entityNotification: Notification = {
+      id: notification.id,
+      type: notification.type as Notification['type'],
+      title: notification.title,
+      message: notification.message,
+      timestamp: notification.timestamp.toISOString(),
+      isRead: notification.isRead,
+      priority: 'medium', // 기본값
+      actionUrl: notification.actionUrl,
+      metadata: notification.metadata
+    }
+    handleNotificationClick(entityNotification)
     setIsOpen(false) // 패널 닫기
   }, [handleNotificationClick])
 
@@ -142,15 +143,14 @@ export const NotificationBell = memo(function NotificationBell({
           <div className="absolute top-16 right-4 w-96">
             <div onClick={(e) => e.stopPropagation()}>
               <NotificationCenter
+                isOpen={isOpen}
                 notifications={uiNotifications}
+                unreadCount={unreadCount}
                 isLoading={isLoading}
-                onNotificationClick={handleNotificationItemClick}
-                onMarkAsRead={markAsRead}
-                onMarkAllRead={handleMarkAllRead}
                 onClose={handleClose}
-                showMarkAllRead={unreadCount > 0}
-                emptyMessage="새로운 알림이 없습니다"
-                loadingMessage="알림을 불러오는 중..."
+                onNotificationClick={handleNotificationItemClick}
+                onRefresh={refreshNotifications}
+                onMarkAsRead={(id) => markAsRead(id)}
                 data-testid="notification-center"
               />
             </div>

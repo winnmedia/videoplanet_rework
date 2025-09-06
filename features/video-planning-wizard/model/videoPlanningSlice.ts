@@ -439,7 +439,7 @@ export const selectCanGoToNextStep = (state: { videoPlanningWizard: WizardState 
   switch (currentStep) {
     case 1:
       // 필수 입력 필드 확인
-      return input.title?.length > 0 && input.logline?.length > 0
+      return (input.title?.length ?? 0) > 0 && (input.logline?.length ?? 0) > 0
     case 2:
       // 4단계가 생성되어 있어야 함
       return stages.length >= 4

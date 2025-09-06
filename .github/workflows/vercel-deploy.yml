@@ -2,7 +2,7 @@ name: Vercel Production Deployment - Optimized Pipeline
 
 on:
   push:
-    branches: [main, security-fix-clean]
+    branches: [main, master, security-fix-clean]
   workflow_dispatch:
     inputs:
       environment:

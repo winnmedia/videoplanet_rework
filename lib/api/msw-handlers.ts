@@ -35,13 +35,23 @@ import type {
 
 // 협업 시스템 핸들러 임포트
 
+// 결정론적 UUID 생성 (플래키 테스트 방지)
+const DETERMINISTIC_UUIDS = {
+  PROJECT_001: '123e4567-e89b-12d3-a456-426614174001',
+  PROJECT_002: '123e4567-e89b-12d3-a456-426614174002', 
+  PROJECT_003: '123e4567-e89b-12d3-a456-426614174003',
+  USER_001: '987fcdeb-51a2-43f1-9876-543210987651',
+  USER_002: '987fcdeb-51a2-43f1-9876-543210987652',
+  USER_003: '987fcdeb-51a2-43f1-9876-543210987653'
+}
+
 // 모킹 데이터
 const MOCK_SUBMENU_DATA: Record<string, SubMenuItemType[]> = {
   projects: [
     {
-      id: 'proj-001',
+      id: DETERMINISTIC_UUIDS.PROJECT_001,
       name: '웹사이트 리뉴얼 프로젝트',
-      path: '/projects/proj-001',
+      path: `/projects/${DETERMINISTIC_UUIDS.PROJECT_001}`,
       status: 'active',
       badge: 3,
       lastModified: new Date('2025-08-25T10:30:00Z').toISOString(),
@@ -49,9 +59,9 @@ const MOCK_SUBMENU_DATA: Record<string, SubMenuItemType[]> = {
       priority: 'high'
     },
     {
-      id: 'proj-002',
+      id: DETERMINISTIC_UUIDS.PROJECT_002,
       name: '모바일 앱 개발',
-      path: '/projects/proj-002',
+      path: `/projects/${DETERMINISTIC_UUIDS.PROJECT_002}`,
       status: 'active',
       badge: 1,
       lastModified: new Date('2025-08-20T15:45:00Z').toISOString(),
@@ -59,9 +69,9 @@ const MOCK_SUBMENU_DATA: Record<string, SubMenuItemType[]> = {
       priority: 'medium'
     },
     {
-      id: 'proj-003',
+      id: DETERMINISTIC_UUIDS.PROJECT_003,
       name: 'UI/UX 디자인 시스템',
-      path: '/projects/proj-003',
+      path: `/projects/${DETERMINISTIC_UUIDS.PROJECT_003}`,
       status: 'active',
       badge: 5,
       lastModified: new Date('2025-08-26T14:15:00Z').toISOString(),
@@ -93,7 +103,7 @@ const MOCK_SUBMENU_DATA: Record<string, SubMenuItemType[]> = {
   ],
   planning: [
     {
-      id: 'plan-001',
+      id: 'plan-concept-001',
       name: '컨셉 기획',
       path: '/planning/concept',
       status: 'active',
@@ -103,7 +113,7 @@ const MOCK_SUBMENU_DATA: Record<string, SubMenuItemType[]> = {
       priority: 'high'
     },
     {
-      id: 'plan-002',
+      id: 'plan-script-002',
       name: '대본 작성',
       path: '/planning/script',
       status: 'pending',
@@ -116,7 +126,7 @@ const MOCK_SUBMENU_DATA: Record<string, SubMenuItemType[]> = {
 
 const MOCK_PROJECTS_DATA: ProjectType[] = [
   {
-    id: 'proj-001',
+    id: DETERMINISTIC_UUIDS.PROJECT_001,
     name: '웹사이트 리뉴얼 프로젝트',
     description: '회사 웹사이트 전체 리뉴얼 및 성능 최적화 작업',
     status: 'in-progress',
@@ -124,13 +134,13 @@ const MOCK_PROJECTS_DATA: ProjectType[] = [
     updatedAt: new Date('2025-08-25T10:30:00Z').toISOString(),
     startDate: new Date('2025-08-01T09:00:00Z').toISOString(),
     endDate: new Date('2025-09-30T18:00:00Z').toISOString(),
-    ownerId: 'user-001',
+    ownerId: DETERMINISTIC_UUIDS.USER_001,
     tags: ['web', 'frontend', 'ux'],
     priority: 'high',
     progress: 65
   },
   {
-    id: 'proj-002',
+    id: DETERMINISTIC_UUIDS.PROJECT_002,
     name: '모바일 앱 개발',
     description: 'iOS/Android 네이티브 앱 신규 개발',
     status: 'planning',
@@ -138,7 +148,7 @@ const MOCK_PROJECTS_DATA: ProjectType[] = [
     updatedAt: new Date('2025-08-20T15:45:00Z').toISOString(),
     startDate: new Date('2025-09-01T09:00:00Z').toISOString(),
     endDate: new Date('2025-12-31T18:00:00Z').toISOString(),
-    ownerId: 'user-002',
+    ownerId: DETERMINISTIC_UUIDS.USER_002,
     tags: ['mobile', 'ios', 'android'],
     priority: 'medium',
     progress: 20
@@ -525,8 +535,8 @@ const MOCK_STORYBOARD_URLS = [
 ]
 
 const MOCK_PROJECT_DATA = {
-  'proj-vp-001': {
-    id: 'proj-vp-001',
+  [DETERMINISTIC_UUIDS.PROJECT_001]: {
+    id: DETERMINISTIC_UUIDS.PROJECT_001,
     title: '테스트 영상 기획',
     input: {
       title: '테스트 영상',
@@ -542,8 +552,8 @@ const MOCK_PROJECT_DATA = {
     stages: MOCK_FOUR_STAGES,
     shots: MOCK_TWELVE_SHOTS,
     insertShots: MOCK_INSERT_SHOTS,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    createdAt: new Date('2025-08-01T10:00:00Z').toISOString(),
+    updatedAt: new Date('2025-08-25T10:30:00Z').toISOString(),
     progress: 75
   }
 }
@@ -996,7 +1006,7 @@ export const handlers = [
       }, { status: 400 })
     }
     
-    const projectId = `proj-vp-${Date.now()}`
+    const projectId = crypto.randomUUID()
     
     return HttpResponse.json({
       success: true,
@@ -1157,7 +1167,7 @@ export const handlers = [
     
     const newComment: TimestampComment = {
       ...body,
-      id: `comment-${Date.now()}`,
+      id: crypto.randomUUID(),
       createdAt: new Date().toISOString()
     }
     
@@ -1314,7 +1324,7 @@ export const handlers = [
     
     const newMarker: VideoMarker = {
       ...body,
-      id: `marker-${Date.now()}`,
+      id: crypto.randomUUID(),
       createdAt: new Date().toISOString()
     }
     
@@ -1413,7 +1423,7 @@ export const handlers = [
       }, { status: 500 })
     }
     
-    const projectId = `project_${Date.now()}`
+    const projectId = crypto.randomUUID()
     
     // 자동 스케줄링이 있으면 캘린더 이벤트 생성
     const calendarEvents = body.autoSchedule ? [
@@ -1520,7 +1530,7 @@ export const handlers = [
     // 쿨다운 설정
     mockInviteCooldowns.set(body.email, now)
     
-    const invitationId = `invite_${Date.now()}`
+    const invitationId = crypto.randomUUID()
     
     return HttpResponse.json({
       success: true,

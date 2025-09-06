@@ -22,7 +22,7 @@ module.exports = {
             file.replace(/\.tsx?$/, '.test.ts'),
             file.replace(/\.tsx?$/, '.test.tsx')
           ];
-          return patterns.find(pattern => require('fs').existsSync(pattern));
+          const fs = require('fs'); return patterns.find(pattern => fs.existsSync(pattern));
         })
         .filter(Boolean);
       
@@ -45,7 +45,7 @@ module.exports = {
       // Prevent new SCSS files
       const newFiles = filenames.filter(file => {
         try {
-          require('child_process').execSync(`git log --oneline -n 1 --pretty=format: --name-status HEAD | grep "^A" | grep "${file}"`, { stdio: 'pipe' });
+          const { execSync } = require('child_process'); execSync(`git log --oneline -n 1 --pretty=format: --name-status HEAD | grep "^A" | grep "${file}"`, { stdio: 'pipe' });
           return true;
         } catch {
           return false;

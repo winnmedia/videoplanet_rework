@@ -7,7 +7,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { withErrorHandler } from '@/lib/api/error-handler'
-import { PermissionPresets, Permission } from '@/shared/lib/permissions/middleware'
+import { PermissionPresets } from '@/shared/lib/permissions/middleware'
+import { Permission } from '@/entities/rbac/model/types'
 import { 
   ProjectsResponseSchema, 
   ProjectRequestSchema, 

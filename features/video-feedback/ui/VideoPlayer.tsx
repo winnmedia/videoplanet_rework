@@ -20,7 +20,7 @@ import { PlayerState, PlaybackSpeed, TimeMarker, KeyboardShortcuts } from '../mo
 // Types
 // ============================================================
 
-interface VideoPlayerProps {
+export interface VideoPlayerProps {
   /**
    * 비디오 소스 URL
    */
@@ -117,7 +117,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const controlsTimeoutRef = useRef<NodeJS.Timeout>();
+  const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const seekBarRef = useRef<HTMLDivElement>(null);
   
   // ============================================================

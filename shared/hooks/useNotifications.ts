@@ -15,18 +15,7 @@ import { useSelector, useDispatch } from 'react-redux'
 import { createSelector } from '@reduxjs/toolkit'
 
 import type { RootState } from '@/app/store/store'
-
-// 임시로 알림 관련 타입 정의 (실제로는 entities/notification에서 import)
-interface Notification {
-  id: string
-  title: string
-  message: string
-  type: 'info' | 'success' | 'warning' | 'error'
-  isRead: boolean
-  createdAt: string
-  actionUrl?: string
-  metadata?: Record<string, any>
-}
+import type { Notification } from '@/entities/notification'
 
 interface NotificationState {
   items: Notification[]

@@ -19,7 +19,7 @@ import { TimeMarker } from '../model/feedback.schema';
 // Types
 // ============================================================
 
-interface TimelineMarkersProps {
+export interface TimelineMarkersProps {
   /**
    * 마커 목록
    */

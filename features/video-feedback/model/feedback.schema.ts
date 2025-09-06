@@ -109,15 +109,16 @@ export const UploadProgressSchema = z.object({
  */
 export const MentionSchema = z.object({
   id: z.string().uuid(),
-  username: z.string(),
-  displayName: z.string(),
+  name: z.string(), // username/displayName을 name으로 통일
   avatarUrl: z.string().url().optional()
 });
+
+// Comment 타입은 CommentSchema에서 z.infer로 추론하여 사용
 
 /**
  * 코멘트 스레드
  */
-export const CommentSchema = z.object({
+export const CommentSchema: z.ZodType<any, any, any> = z.object({
   id: z.string().uuid(),
   content: z.string().min(1).max(1000),
   timestamp: z.number().min(0).optional(), // 비디오 타임스탬프 (초)

@@ -3,10 +3,8 @@
  * Production-safe settings with quality gates enabled
  */
 
-// Global SSR polyfill - must be at top level
-if (typeof global !== 'undefined' && typeof global.self === 'undefined') {
-  global.self = global;
-}
+// Critical server-side polyfills - must be first
+require('./server-polyfill.js');
 
 // Import additional polyfills
 require('./lib/polyfills.js');
@@ -146,8 +144,19 @@ const nextConfig = {
   webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
     const path = require('path');
     
-    // Exclude server-only modules from client bundle to prevent SSR issues
+    // Global self and window polyfill for server-side rendering
+    if (isServer) {
+      config.plugins.push(
+        new webpack.DefinePlugin({
+          'self': 'global',
+          'window': 'global'
+        })
+      );
+    }
+    
+    // Exclude server-only and browser-only modules to prevent SSR issues
     if (!isServer) {
+      // Client-side: exclude server-only modules
       config.externals = config.externals || [];
       config.externals.push('puppeteer');
       
@@ -156,6 +165,18 @@ const nextConfig = {
       config.resolve.fallback = {
         ...config.resolve.fallback,
         puppeteer: false,
+      };
+    } else {
+      // Server-side: exclude browser-only modules
+      config.externals = config.externals || [];
+      config.externals.push('@marp-team/marp-core', '@marp-team/marpit');
+      
+      // Provide fallback for browser-only modules
+      config.resolve = config.resolve || {};
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        '@marp-team/marp-core': false,
+        '@marp-team/marpit': false,
       };
     }
     

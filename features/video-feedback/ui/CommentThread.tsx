@@ -20,7 +20,7 @@ import { TimecodeCommentInput } from './TimecodeCommentInput';
 // Types
 // ============================================================
 
-interface CommentThreadProps {
+export interface CommentThreadProps {
   /**
    * 코멘트 목록
    */
@@ -324,7 +324,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
       {/* Nested Replies */}
       {comment.replies && comment.replies.length > 0 && (
         <div>
-          {comment.replies.map((reply) => (
+          {comment.replies.map((reply: Comment) => (
             <CommentItem
               key={reply.id}
               comment={reply}
