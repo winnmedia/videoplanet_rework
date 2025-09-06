@@ -101,6 +101,9 @@ export function PerformanceDashboard() {
   };
 
   useEffect(() => {
+    // Skip initialization on server-side
+    if (typeof window === 'undefined') return;
+
     // Initialize Web Vitals monitoring
     initWebVitals();
     setIsMonitoring(true);
@@ -129,7 +132,9 @@ export function PerformanceDashboard() {
     }, 5000);
 
     return () => {
-      window.removeEventListener('performance-metric', handlePerformanceUpdate as EventListener);
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('performance-metric', handlePerformanceUpdate as EventListener);
+      }
       clearInterval(diagnosticsInterval);
     };
   }, []);

@@ -349,6 +349,12 @@ export default {
         'precision-fast': 'fadeIn 162ms cubic-bezier(0.25, 0.46, 0.45, 0.94)',
         'precision-medium': 'fadeIn 262ms cubic-bezier(0.25, 0.46, 0.45, 0.94)',
         'precision-slow': 'fadeIn 424ms cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+        
+        // 비디오 피드백 시스템 전용 애니메이션
+        'float-up': 'floatUp 1s ease-out forwards',
+        'fade-in-out': 'fadeInOut 1s ease-out',
+        'reaction-pop': 'reactionPop 400ms cubic-bezier(0.68, -0.55, 0.265, 1.55)',
+        'video-loading': 'videoLoading 1.4s ease-in-out infinite',
       },
       keyframes: {
         // 기본 페이드 애니메이션
@@ -430,6 +436,44 @@ export default {
           },
           'to': {
             transform: 'translateX(0)',
+            opacity: '1'
+          }
+        },
+        
+        // 비디오 피드백 시스템 전용 키프레임
+        floatUp: {
+          '0%': {
+            transform: 'translateX(-50%) translateY(0) scale(0.5)',
+            opacity: '0'
+          },
+          '50%': {
+            transform: 'translateX(-50%) translateY(-30px) scale(1.2)',
+            opacity: '1'
+          },
+          '100%': {
+            transform: 'translateX(-50%) translateY(-60px) scale(1)',
+            opacity: '0'
+          }
+        },
+        fadeInOut: {
+          '0%, 100%': { opacity: '0' },
+          '50%': { opacity: '1' }
+        },
+        reactionPop: {
+          '0%': { transform: 'scale(0)' },
+          '50%': { transform: 'scale(1.1)' },
+          '100%': { transform: 'scale(1)' }
+        },
+        videoLoading: {
+          '0%': {
+            transform: 'rotate(0deg)',
+            opacity: '1'
+          },
+          '50%': {
+            opacity: '0.5'
+          },
+          '100%': {
+            transform: 'rotate(360deg)',
             opacity: '1'
           }
         },

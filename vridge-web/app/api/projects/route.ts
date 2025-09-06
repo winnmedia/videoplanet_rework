@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { withErrorHandler } from '@/lib/api/error-handler'
+import { PermissionPresets, Permission } from '@/shared/lib/permissions/middleware'
 import { 
   ProjectsResponseSchema, 
   ProjectRequestSchema, 
@@ -88,7 +89,7 @@ const PROJECTS_DATA: ProjectType[] = [
   }
 ]
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
+export const GET = PermissionPresets.projectRead()(withErrorHandler(async (request: NextRequest) => {
   try {
     // URL 파라미터 파싱 및 검증
     const params = parseUrlSearchParams(request.url)
@@ -199,9 +200,9 @@ export const GET = withErrorHandler(async (request: NextRequest) => {
   } catch (error) {
     throw error
   }
-})
+}))
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
+export const POST = PermissionPresets.projectCreate()(withErrorHandler(async (request: NextRequest) => {
   try {
     // 요청 본문 파싱
     const body = await request.json()
@@ -236,8 +237,13 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
     // 스키마 최종 검증
     const validatedProject = validateRequest(ProjectSchema, newProject)
     
-    // 실제로는 데이터베이스에 저장
-    PROJECTS_DATA.push(validatedProject)
+    // 실제로는 데이터베이스에 저장 (optional 필드들 기본값 설정)
+    PROJECTS_DATA.push({
+      ...validatedProject,
+      tags: validatedProject.tags ?? [],
+      priority: validatedProject.priority ?? 'medium',
+      progress: validatedProject.progress ?? 0
+    } as ProjectType)
     
     // 응답 데이터 구성
     const responseData = {
@@ -265,7 +271,7 @@ export const POST = withErrorHandler(async (request: NextRequest) => {
   } catch (error) {
     throw error
   }
-})
+}))
 
 // OPTIONS 요청 처리
 export async function OPTIONS() {

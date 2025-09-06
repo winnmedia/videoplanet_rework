@@ -11,6 +11,7 @@ export { Layout } from './Layout/Layout.modern'
 export { Toast } from './Toast/Toast.modern'
 export { Select } from './Select/Select.modern'
 export { SubMenu } from './SubMenu/SubMenu.modern'
+export { Tooltip } from './Tooltip/Tooltip.modern'
 
 // 타입 정의들
 export type { ButtonProps } from './Button/Button.modern'

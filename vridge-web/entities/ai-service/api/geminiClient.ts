@@ -3,6 +3,7 @@
  * @description 단순하고 안정적인 AI 스토리 생성 서비스
  */
 
+import { PromptTemplateManager } from './promptTemplates'
 import type {
   StoryGenerationRequest,
   StoryGenerationResponse, 
@@ -11,7 +12,6 @@ import type {
   PlanningStage,
   GenerationOptions
 } from '../model/types'
-import { PromptTemplateManager } from './promptTemplates'
 
 /**
  * Google Gemini API 클라이언트

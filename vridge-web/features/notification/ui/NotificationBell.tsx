@@ -2,144 +2,163 @@
 
 import { useState, useCallback, memo } from 'react'
 
-import { NotificationCenter, type Notification } from '@/shared/ui'
+import { NotificationCenter } from '@/shared/ui'
+import type { Notification as UINotification } from '@/shared/ui'
+import { useNotifications } from '@/shared/hooks/useNotifications'
+import type { Notification } from '@/entities/notification'
+
+// 엔티티 Notification을 UI Notification으로 변환하는 어댑터
+const adaptNotificationForUI = (notification: Notification): UINotification => ({
+  id: notification.id,
+  type: notification.type as UINotification['type'],
+  title: notification.title,
+  message: notification.message,
+  timestamp: new Date(notification.timestamp),
+  isRead: notification.isRead,
+  actionUrl: notification.actionUrl,
+  metadata: notification.metadata
+})
 
 interface NotificationBellProps {
   className?: string
   'data-testid'?: string
+  wsUrl?: string
+  enableRealtime?: boolean
 }
-
-// 임시 목 데이터 - 실제로는 API에서 가져올 것임
-const mockNotifications: Notification[] = [
-  {
-    id: 'notif-1',
-    type: 'invitation',
-    title: '프로젝트 초대',
-    message: 'VRidge 홍보 영상 프로젝트에 초대되었습니다',
-    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2시간 전
-    isRead: false,
-    actionUrl: '/projects/123'
-  },
-  {
-    id: 'notif-2',
-    type: 'comment',
-    title: '새 댓글',
-    message: '영상 컨셉 검토 건에 새 댓글이 달렸습니다',
-    timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1일 전
-    isRead: true,
-    actionUrl: '/feedback/456'
-  },
-  {
-    id: 'notif-3',
-    type: 'conflict',
-    title: '촬영 일정 충돌',
-    message: '12월 15일 촬영 일정에 다른 프로젝트와 충돌이 있습니다',
-    timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2일 전
-    isRead: false,
-    actionUrl: '/calendar?conflict=789'
-  },
-  {
-    id: 'notif-4',
-    type: 'reaction',
-    title: '좋아요 알림',
-    message: '스토리보드 아이디어에 5개의 좋아요가 달렸습니다',
-    timestamp: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3일 전
-    isRead: true,
-    actionUrl: '/planning/storyboard/101'
-  }
-]
 
 export const NotificationBell = memo(function NotificationBell({ 
   className, 
-  'data-testid': testId 
+  'data-testid': testId,
+  wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:8000/notifications/',
+  enableRealtime = true
 }: NotificationBellProps) {
   const [isOpen, setIsOpen] = useState(false)
-  const [notifications, setNotifications] = useState<Notification[]>(mockNotifications)
-  const [isLoading, setIsLoading] = useState(false)
 
-  const unreadCount = notifications.filter(n => !n.isRead).length
+  // 통합 알림 Hook 사용 - 모든 로직이 여기에 통합됨
+  const {
+    notifications,
+    unreadCount,
+    isLoading,
+    isConnected,
+    markAsRead,
+    markAllAsRead,
+    handleNotificationClick,
+    refreshNotifications
+  } = useNotifications()
 
-  const handleToggle = useCallback(() => {
-    setIsOpen(prev => !prev)
-  }, [])
+  // 이벤트 핸들러들
+  const handleBellClick = useCallback(() => {
+    setIsOpen(!isOpen)
+    if (!isOpen && unreadCount > 0) {
+      // 알림 패널을 열 때 새로고침
+      refreshNotifications()
+    }
+  }, [isOpen, unreadCount, refreshNotifications])
+
+  const handleMarkAllRead = useCallback(() => {
+    markAllAsRead()
+    setIsOpen(false)
+  }, [markAllAsRead])
+
+  const handleNotificationItemClick = useCallback((notification: UINotification) => {
+    // UI Notification을 다시 entity Notification으로 변환하여 handleNotificationClick에 전달
+    const entityNotification: Notification = {
+      id: notification.id,
+      type: notification.type as Notification['type'],
+      title: notification.title,
+      message: notification.message,
+      timestamp: notification.timestamp.toISOString(),
+      isRead: notification.isRead,
+      priority: 'medium', // 기본값
+      actionUrl: notification.actionUrl,
+      metadata: notification.metadata
+    }
+    handleNotificationClick(entityNotification)
+    setIsOpen(false) // 패널 닫기
+  }, [handleNotificationClick])
 
   const handleClose = useCallback(() => {
     setIsOpen(false)
   }, [])
 
-  const handleNotificationClick = useCallback((notification: Notification) => {
-    console.log('알림 클릭:', notification)
-    
-    // 읽음 처리
-    setNotifications(prev => 
-      prev.map(n => 
-        n.id === notification.id ? { ...n, isRead: true } : n
-      )
-    )
-
-    // 실제로는 라우터를 사용하여 해당 페이지로 이동
-    if (notification.actionUrl) {
-      // router.push(notification.actionUrl)
-      console.log('이동할 URL:', notification.actionUrl)
-    }
-
-    setIsOpen(false)
-  }, [])
-
-  const handleRefresh = useCallback(() => {
-    setIsLoading(true)
-    
-    // 실제로는 API 호출
-    console.log('알림 새로고침')
-    
-    // 임시 로딩 시뮬레이션
-    setTimeout(() => {
-      setIsLoading(false)
-    }, 1000)
-  }, [])
-
-  const handleMarkAsRead = useCallback((notificationId: string) => {
-    setNotifications(prev => 
-      prev.map(n => 
-        n.id === notificationId ? { ...n, isRead: true } : n
-      )
-    )
-  }, [])
+  // UI용 알림 데이터 변환
+  const uiNotifications = notifications.map(adaptNotificationForUI)
 
   return (
     <>
+      {/* 알림 벨 아이콘 */}
       <button
-        className={`relative p-2 text-gray-600 hover:text-gray-800 dark:text-gray-300 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors ${className || ''}`}
-        onClick={handleToggle}
-        aria-label={`알림 센터 ${unreadCount > 0 ? `- 읽지 않은 알림 ${unreadCount}개` : ''}`}
-        data-testid={testId}
+        onClick={handleBellClick}
+        className={`
+          relative p-2 rounded-lg transition-colors duration-200
+          hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500
+          ${className || ''}
+        `}
+        data-testid={testId || 'notification-bell'}
+        aria-label={`알림 ${unreadCount > 0 ? `(${unreadCount}개 읽지 않음)` : ''}`}
+        aria-expanded={isOpen}
+        aria-haspopup="dialog"
       >
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        {/* 벨 아이콘 */}
+        <svg 
+          className="w-6 h-6 text-gray-600" 
+          fill="none" 
+          stroke="currentColor" 
+          viewBox="0 0 24 24"
+        >
           <path 
             strokeLinecap="round" 
             strokeLinejoin="round" 
             strokeWidth={2} 
-            d="M15 17h5l-5 5v-5zM4 17v5l5-5H4zm11.5-14.5C17.5 0.5 19 2 19 4c0 2-1.5 3.5-3.5 3.5S12 6 12 4c0-2 1.5-3.5 3.5-3.5zM12 9c-4 0-8 1-8 4v7h16v-7c0-3-4-4-8-4z" 
+            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" 
           />
         </svg>
-        
+
+        {/* 읽지 않은 알림 카운트 배지 */}
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-medium rounded-full flex items-center justify-center">
-            {unreadCount > 9 ? '9+' : unreadCount}
+          <span
+            className="absolute -top-1 -right-1 min-w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center px-1"
+            data-testid="notification-count"
+            aria-label={`읽지 않은 알림 ${unreadCount}개`}
+          >
+            {unreadCount > 99 ? '99+' : unreadCount}
           </span>
+        )}
+
+        {/* 연결 상태 표시 */}
+        {enableRealtime && (
+          <span
+            className={`absolute bottom-0 right-0 w-2 h-2 rounded-full ${
+              isConnected ? 'bg-green-500' : 'bg-gray-400'
+            }`}
+            title={isConnected ? '실시간 연결됨' : '연결 끊어짐'}
+            aria-hidden="true"
+          />
         )}
       </button>
 
-      <NotificationCenter
-        isOpen={isOpen}
-        notifications={notifications}
-        unreadCount={unreadCount}
-        isLoading={isLoading}
-        onClose={handleClose}
-        onNotificationClick={handleNotificationClick}
-        onRefresh={handleRefresh}
-        onMarkAsRead={handleMarkAsRead}
-      />
+      {/* 알림 센터 패널 */}
+      {isOpen && (
+        <div className="fixed inset-0 z-50" onClick={handleClose}>
+          <div className="absolute top-16 right-4 w-96">
+            <div onClick={(e) => e.stopPropagation()}>
+              <NotificationCenter
+                isOpen={isOpen}
+                notifications={uiNotifications}
+                unreadCount={unreadCount}
+                isLoading={isLoading}
+                onClose={handleClose}
+                onNotificationClick={handleNotificationItemClick}
+                onRefresh={refreshNotifications}
+                onMarkAsRead={(id) => markAsRead(id)}
+                data-testid="notification-center"
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 })
+
+NotificationBell.displayName = 'NotificationBell'

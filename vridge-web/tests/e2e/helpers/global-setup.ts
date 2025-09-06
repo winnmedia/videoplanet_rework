@@ -7,9 +7,27 @@ import { FullConfig } from '@playwright/test'
 async function globalSetup(config: FullConfig) {
   console.log('🚀 Starting global setup for E2E tests')
 
-  // 환경 변수 검증
+  // 테스트용 환경 변수 기본값 설정
+  const testDefaults = {
+    NEXTAUTH_SECRET: 'test-secret-key-for-e2e-testing-only-32-chars-minimum-length-required',
+    NEXTAUTH_URL: 'http://localhost:3000',
+    NEXT_PUBLIC_API_URL: 'http://localhost:3000',
+    // NEXT_PUBLIC_API_BASE_URL은 더 이상 사용하지 않음 (NEXT_PUBLIC_API_URL로 통일)
+  }
+
+  // 테스트 환경에서만 기본값 적용
+  if (process.env.NODE_ENV === 'test' || process.env.LOCAL_E2E === 'true') {
+    Object.entries(testDefaults).forEach(([key, value]) => {
+      if (!process.env[key]) {
+        process.env[key] = value
+        console.log(`🔧 Set default ${key} for testing`)
+      }
+    })
+  }
+
+  // 환경 변수 검증 (NEXT_PUBLIC_API_URL로 통일)
   const requiredEnvVars = [
-    'NEXT_PUBLIC_API_BASE_URL',
+    'NEXT_PUBLIC_API_URL',
     'NEXTAUTH_SECRET',
     'NEXTAUTH_URL'
   ]
@@ -17,7 +35,9 @@ async function globalSetup(config: FullConfig) {
   const missingVars = requiredEnvVars.filter(varName => !process.env[varName])
   if (missingVars.length > 0) {
     console.warn(`⚠️ Missing environment variables: ${missingVars.join(', ')}`)
-    console.warn('Some tests may fail or use fallback values')
+    console.warn('Tests will use fallback values where possible')
+  } else {
+    console.log('✅ All required environment variables are set')
   }
 
   // MSW 서버 설정 확인 (테스트 환경에서만)

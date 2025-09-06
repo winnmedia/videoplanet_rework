@@ -5,8 +5,8 @@
 
 'use client'
 
-import { useState, memo } from 'react'
 import clsx from 'clsx'
+import { useState, memo } from 'react'
 
 import type { ConflictModalProps, CollaborationConflict } from '../types'
 

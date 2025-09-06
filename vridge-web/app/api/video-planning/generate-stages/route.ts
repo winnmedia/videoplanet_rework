@@ -5,16 +5,27 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 
-import type { GenerateStagesRequest, GenerateStagesResponse, PlanningStage } from '@/features/video-planning-wizard'
+import type { GenerateStagesRequest, GenerateStagesResponse, PlanningStage, PlanningInput } from '@/features/video-planning-wizard'
 import { geminiClient } from '@/shared/lib/gemini-client'
 import { getStoryPrompt, createIndirectStoryPrompt } from '@/shared/lib/story-prompts'
 
 export async function POST(request: NextRequest) {
   try {
-    const body: GenerateStagesRequest = await request.json()
-    const { input } = body
+    const body = await request.json()
+    
+    // body가 직접 input 객체인 경우와 GenerateStagesRequest 형태인 경우 모두 처리
+    const input: PlanningInput = body.input || body
 
     // 입력 검증
+    if (!input || typeof input !== 'object') {
+      return NextResponse.json<GenerateStagesResponse>({
+        success: false,
+        stages: [],
+        totalDuration: '0초',
+        error: '유효한 요청 데이터가 필요합니다.'
+      }, { status: 400 })
+    }
+
     if (!input.title || !input.logline) {
       return NextResponse.json<GenerateStagesResponse>({
         success: false,

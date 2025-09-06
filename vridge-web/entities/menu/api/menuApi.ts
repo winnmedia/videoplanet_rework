@@ -55,7 +55,7 @@ class MenuApi {
         path: '/projects/1',
         status: 'active',
         badge: 3,
-        lastModified: new Date('2025-08-25')
+        lastModified: '2025-08-25'
       },
       {
         id: '2', 
@@ -63,14 +63,14 @@ class MenuApi {
         path: '/projects/2',
         status: 'pending',
         badge: 1,
-        lastModified: new Date('2025-08-20')
+        lastModified: '2025-08-20'
       },
       {
         id: '3',
         name: '브랜딩 영상 제작',
-        path: '/projects/3',
+        path: '/projects/1',
         status: 'completed',
-        lastModified: new Date('2025-08-15')
+        lastModified: '2025-08-15'
       },
       {
         id: '4',
@@ -78,7 +78,7 @@ class MenuApi {
         path: '/projects/4',
         status: 'active',
         badge: 5,
-        lastModified: new Date('2025-08-26')
+        lastModified: '2025-08-26'
       }
     ]
 
@@ -95,28 +95,28 @@ class MenuApi {
         path: '/planning/concept',
         status: 'active',
         badge: 2,
-        lastModified: new Date('2025-08-27')
+        lastModified: '2025-08-27'
       },
       {
         id: '2',
         name: '대본 작성',
         path: '/planning/script',
         status: 'pending',
-        lastModified: new Date('2025-08-25')
+        lastModified: '2025-08-24'
       },
       {
         id: '3',
         name: '스토리보드',
         path: '/planning/storyboard',
         status: 'completed',
-        lastModified: new Date('2025-08-20')
+        lastModified: '2025-08-22'
       },
       {
         id: '4',
         name: '촬영 리스트',
         path: '/planning/shot-list',
         status: 'pending',
-        lastModified: new Date('2025-08-26')
+        lastModified: '2025-08-23'
       }
     ]
 
@@ -183,7 +183,7 @@ class MenuApi {
       // 프로젝트 생성 후 관련 캐시 무효화
       await this.invalidateMenuCache('projects')
       
-      return response.data.items[0] // 새로 생성된 프로젝트
+      return (response.data as any)?.items?.[0] // 새로 생성된 프로젝트
     } catch (error) {
       console.error('Failed to create project:', error)
       throw new Error('프로젝트 생성에 실패했습니다')
@@ -197,7 +197,7 @@ class MenuApi {
       // 프로젝트 업데이트 후 관련 캐시 무효화
       await this.invalidateMenuCache('projects')
       
-      return response.data.items[0]
+      return (response.data as any)?.items?.[0]
     } catch (error) {
       console.error('Failed to update project:', error)
       throw new Error('프로젝트 업데이트에 실패했습니다')

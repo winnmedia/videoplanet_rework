@@ -5,8 +5,8 @@
 
 'use client'
 
-import { memo } from 'react'
 import clsx from 'clsx'
+import { memo } from 'react'
 
 import type { ActivityFeedProps, CollaborationChange } from '../types'
 

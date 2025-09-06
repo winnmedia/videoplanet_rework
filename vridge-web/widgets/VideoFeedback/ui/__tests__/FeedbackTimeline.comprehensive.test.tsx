@@ -6,15 +6,15 @@
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { axe, toHaveNoViolations } from 'jest-axe'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 
-import { FeedbackTimeline } from '../FeedbackTimeline'
 import type { 
   FeedbackTimelineProps,
   TimestampComment,
   VideoMarker 
 } from '../../model/types'
+import { FeedbackTimeline } from '../FeedbackTimeline'
 
 // Jest-axe 매처 확장
 expect.extend(toHaveNoViolations)

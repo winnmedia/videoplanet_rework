@@ -5,7 +5,6 @@
  */
 
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'
-import { performanceMonitor } from '../../performance-monitor'
 
 import {
   CollaborationState,
@@ -17,6 +16,8 @@ import {
   ConflictResolutionPayload,
   CollaborationApiResponse
 } from './types'
+import { performanceMonitor } from '../../performance-monitor'
+
 
 // ===========================
 // 성능 최적화를 위한 전역 상태

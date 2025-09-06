@@ -2,9 +2,10 @@
 
 import { useState, useMemo, useCallback } from 'react'
 
-import type { CalendarFilter, CalendarViewSettings, CalendarEvent, ProjectLegendItem } from '@/entities/project'
-import type { Project } from '@/entities/calendar'
+import type { Project, ProjectLegendItem } from '@/entities/calendar'
+import type { CalendarFilter, CalendarViewSettings, CalendarEvent } from '@/entities/project'
 import { CalendarFilters, CalendarView, ConflictAlert, GanttView, ProjectLegend, WeekView } from '@/features/calendar'
+import { DragDropCalendarView } from '@/features/calendar/ui/DragDropCalendarView'
 import { SideBar } from '@/widgets'
 
 export default function CalendarPage() {
@@ -67,15 +68,20 @@ export default function CalendarPage() {
       title: '프로젝트 킥오프',
       startDate: '2025-08-28',
       endDate: '2025-08-28',
-      project: mockProjects[0],
+      project: {
+        ...mockProjects[0],
+        hue: 210,
+        startDate: '2025-08-28',
+        endDate: '2025-09-28'
+      },
       phase: {
         id: 'phase1',
         projectId: 'proj1',
         name: '프로젝트 킥오프',
-        type: 'pre-production',
+        type: 'pre-production' as const,
         startDate: '2025-08-28',
         endDate: '2025-08-28',
-        status: 'completed',
+        status: 'completed' as const,
         conflictLevel: 'none',
         isEditable: true
       },
@@ -88,7 +94,12 @@ export default function CalendarPage() {
       title: '영상 촬영',
       startDate: '2025-08-29',
       endDate: '2025-08-30',
-      project: mockProjects[1],
+      project: {
+        ...mockProjects[1],
+        hue: 140,
+        startDate: '2025-08-29',
+        endDate: '2025-09-15'
+      },
       phase: {
         id: 'phase2',
         projectId: 'proj2',
@@ -115,7 +126,12 @@ export default function CalendarPage() {
       title: '클라이언트 미팅',
       startDate: '2025-08-30',
       endDate: '2025-08-30',
-      project: mockProjects[2],
+      project: {
+        ...mockProjects[2],
+        hue: 45,
+        startDate: '2025-08-30',
+        endDate: '2025-09-30'
+      },
       phase: {
         id: 'phase3',
         projectId: 'proj3',
@@ -188,7 +204,8 @@ export default function CalendarPage() {
         accent: project.color + 'CC',
         text: '#FFFFFF'
       },
-      isVisible: projectVisibility[project.id] !== false
+      isVisible: projectVisibility[project.id] !== false,
+      phaseCount: project.phases.length
     }))
   }, [mockProjects, projectVisibility])
   
@@ -276,7 +293,7 @@ export default function CalendarPage() {
         <div className="container mx-auto px-4 py-8 max-w-7xl">
           {/* Page Header */}
           <header className="mb-8" role="banner" aria-label="캘린더">
-            <h1 className="text-3xl font-bold text-gray-900">전체 일정</h1>
+            <h1 data-testid="calendar-heading" className="text-3xl font-bold text-gray-900">전체 일정</h1>
             <p className="text-gray-600 mt-2">프로젝트 일정을 한눈에 확인하세요</p>
           </header>
           
@@ -290,6 +307,7 @@ export default function CalendarPage() {
                   : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
               }`}
               aria-pressed={viewMode === 'month'}
+              data-testid="calendar-view-month"
             >
               월간 보기
             </button>
@@ -301,6 +319,7 @@ export default function CalendarPage() {
                   : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
               }`}
               aria-pressed={viewMode === 'week'}
+              data-testid="calendar-view-week"
             >
               주간 보기
             </button>
@@ -312,6 +331,7 @@ export default function CalendarPage() {
                   : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
               }`}
               aria-pressed={viewMode === 'gantt'}
+              data-testid="calendar-view-gantt"
             >
               간트 보기
             </button>
@@ -332,7 +352,7 @@ export default function CalendarPage() {
           <div className="mb-6">
             <CalendarFilters
               filter={filter}
-              projects={mockProjects}
+              projects={mockProjects as any}
               organizations={organizations}
               assignees={assignees}
               onFilterChange={setFilter}
@@ -343,7 +363,7 @@ export default function CalendarPage() {
           {/* 프로젝트 범례 */}
           <div className="mb-6">
             <ProjectLegend
-              legendItems={legendItems}
+              legendItems={legendItems as any}
               showMyProjectsOnly={filter.showMyProjectsOnly}
               onToggleProject={handleProjectToggle}
               onToggleMode={handleLegendModeToggle}
@@ -354,33 +374,36 @@ export default function CalendarPage() {
           <div className="mb-8">
             {viewMode === 'month' && (
               <CalendarView
-                events={filteredEvents}
+                events={filteredEvents as any}
                 viewSettings={viewSettings}
                 selectedDate={selectedDate}
                 onDateSelect={handleDateSelect}
-                onEventClick={handleEventClick}
+                onEventClick={handleEventClick as any}
                 onNavigateMonth={handleNavigateMonth}
               />
             )}
             
             {viewMode === 'week' && (
               <WeekView
-                events={filteredEvents}
+                events={filteredEvents as any}
                 viewSettings={viewSettings}
                 selectedDate={selectedDate}
                 onDateSelect={handleDateSelect}
-                onEventClick={handleEventClick}
+                onEventClick={handleEventClick as any}
                 onNavigateWeek={handleNavigateWeek}
               />
             )}
             
             {viewMode === 'gantt' && (
-              <GanttView
-                events={filteredEvents}
+              <DragDropCalendarView
+                events={filteredEvents as any}
                 selectedDate={selectedDate}
-                onEventClick={handleEventClick}
-                onEventDrag={handleEventDrag}
+                filters={filter as any}
+                onDateSelect={handleDateSelect}
+                onEventMove={handleEventDrag}
+                onEventClick={handleEventClick as any}
                 onNavigateMonth={handleNavigateMonth}
+                onFiltersChange={setFilter as any}
               />
             )}
           </div>

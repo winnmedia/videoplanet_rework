@@ -1,8 +1,8 @@
 'use client';
 
+import type { Store } from '@reduxjs/toolkit';
 import React from 'react';
 import { Provider } from 'react-redux';
-import type { Store } from '@reduxjs/toolkit';
 
 interface StoreProviderProps {
   children: React.ReactNode;

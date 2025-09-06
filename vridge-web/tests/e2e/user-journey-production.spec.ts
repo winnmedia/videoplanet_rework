@@ -29,7 +29,7 @@ test.describe('배포 환경 사용자 여정 테스트', () => {
   // 여정 0: 배포 환경 기본 접근성 검증
   test.describe('0. 배포 환경 접근성', () => {
     test('배포된 프론트엔드 서비스 상태 확인', async ({ page }) => {
-      console.log('🎯 Testing Production URL:', PRODUCTION_URL)
+      console.log('[INFO] Testing Production URL:', PRODUCTION_URL)
       
       const startTime = Date.now()
       const response = await page.goto(PRODUCTION_URL, { 
@@ -38,47 +38,47 @@ test.describe('배포 환경 사용자 여정 테스트', () => {
       })
       const loadTime = Date.now() - startTime
       
-      console.log(`📊 Load Time: ${loadTime}ms`)
-      console.log(`📊 Response Status: ${response?.status()}`)
-      console.log(`📊 Final URL: ${page.url()}`)
+      console.log(`[DATA] Load Time: ${loadTime}ms`)
+      console.log(`[DATA] Response Status: ${response?.status()}`)
+      console.log(`[DATA] Final URL: ${page.url()}`)
       
       // 상태 검증 (RED Phase - 현재 상태 확인)
       if (response?.status() === 401) {
-        console.log('✅ Service is protected (401 Unauthorized)')
+        console.log('[PASS] Service is protected (401 Unauthorized)')
         expect(response.status()).toBe(401)
       } else if (response?.status() === 200) {
-        console.log('✅ Service is accessible (200 OK)')
+        console.log('[PASS] Service is accessible (200 OK)')
         expect(response.status()).toBe(200)
       } else if (response?.status() === 404) {
         console.log('❌ Service not found (404) - Deployment issue')
         throw new Error('서비스 배포 상태 확인 필요')
       } else {
-        console.log(`⚠️ Unexpected status: ${response?.status()}`)
+        console.log(`[WARN] Unexpected status: ${response?.status()}`)
       }
       
       // 페이지 기본 구조 확인
       const hasTitle = await page.title()
       const hasBody = await page.locator('body').isVisible()
       
-      console.log(`📊 Page Title: ${hasTitle}`)
+      console.log(`[DATA] Page Title: ${hasTitle}`)
       expect(hasTitle.length).toBeGreaterThan(0)
       expect(hasBody).toBeTruthy()
     })
     
     test('백엔드 API 연결 상태 확인', async ({ request }) => {
-      console.log('🎯 Testing Backend API:', API_URL)
+      console.log('[INFO] Testing Backend API:', API_URL)
       
       const startTime = Date.now()
       const healthResponse = await request.get(`${API_URL}/health/`)
       const responseTime = Date.now() - startTime
       
-      console.log(`📊 API Response Time: ${responseTime}ms`)
-      console.log(`📊 API Status: ${healthResponse.status()}`)
+      console.log(`[DATA] API Response Time: ${responseTime}ms`)
+      console.log(`[DATA] API Status: ${healthResponse.status()}`)
       
       expect(healthResponse.status()).toBe(200)
       
       const healthData = await healthResponse.json()
-      console.log('📊 API Health Data:', JSON.stringify(healthData, null, 2))
+      console.log('[DATA] API Health Data:', JSON.stringify(healthData, null, 2))
       
       expect(healthData.status).toBe('healthy')
       expect(healthData.checks.database.status).toBe('ok')
@@ -95,9 +95,9 @@ test.describe('배포 환경 사용자 여정 테스트', () => {
       const currentUrl = page.url()
       const pageContent = await page.content()
       
-      console.log(`📊 Current URL: ${currentUrl}`)
-      console.log(`📊 Page has form: ${pageContent.includes('<form')`)
-      console.log(`📊 Page has input: ${pageContent.includes('<input')`)
+      console.log(`Current URL: ${currentUrl}`)
+      console.log(`Page has form: ${pageContent.includes('<form')}`)
+      console.log(`Page has input: ${pageContent.includes('<input')}`)
       
       // 인증 관련 UI 요소 찾기
       const authElements = await Promise.all([
@@ -107,14 +107,14 @@ test.describe('배포 환경 사용자 여정 테스트', () => {
         page.locator('a').count()
       ])
       
-      console.log(`📊 Email inputs: ${authElements[0]}`)
-      console.log(`📊 Password inputs: ${authElements[1]}`) 
-      console.log(`📊 Buttons: ${authElements[2]}`)
-      console.log(`📊 Links: ${authElements[3]}`)
+      console.log(`[DATA] Email inputs: ${authElements[0]}`)
+      console.log(`[DATA] Password inputs: ${authElements[1]}`) 
+      console.log(`[DATA] Buttons: ${authElements[2]}`)
+      console.log(`[DATA] Links: ${authElements[3]}`)
       
       // RED Phase: 현재 구현 상태 확인
       if (authElements[0] > 0 && authElements[1] > 0) {
-        console.log('✅ 로그인 폼 감지됨')
+        console.log('[PASS] 로그인 폼 감지됨')
         
         // 로그인 시도
         const emailInput = page.locator('input[type="email"], input[name="email"]').first()
@@ -128,7 +128,7 @@ test.describe('배포 환경 사용자 여정 테스트', () => {
         await page.waitForTimeout(3000)
         
         const afterLoginUrl = page.url()
-        console.log(`📊 After login URL: ${afterLoginUrl}`)
+        console.log(`[DATA] After login URL: ${afterLoginUrl}`)
         
         // 로그인 성공 여부 확인
         const loginSuccess = !afterLoginUrl.includes('login') && 
@@ -137,7 +137,7 @@ test.describe('배포 환경 사용자 여정 테스트', () => {
                             afterLoginUrl !== currentUrl)
         
         if (loginSuccess) {
-          console.log('✅ 로그인 성공')
+          console.log('[PASS] 로그인 성공')
           expect(loginSuccess).toBeTruthy()
         } else {
           console.log('❌ 로그인 실패 또는 리다이렉트 없음')
@@ -165,7 +165,7 @@ test.describe('배포 환경 사용자 여정 테스트', () => {
         const element = page.locator(selector).first()
         if (await element.isVisible({ timeout: 1000 }).catch(() => false)) {
           signupElement = element
-          console.log(`✅ 회원가입 요소 발견: ${selector}`)
+          console.log(`[PASS] 회원가입 요소 발견: ${selector}`)
           break
         }
       }
@@ -181,7 +181,7 @@ test.describe('배포 환경 사용자 여정 테스트', () => {
           page.locator('input[name="nickname"], input[name="username"], input[name="name"]').count(),
         ])
         
-        console.log(`📊 회원가입 폼 필드: email=${formFields[0]}, password=${formFields[1]}, name=${formFields[2]}`)
+        console.log(`[DATA] 회원가입 폼 필드: email=${formFields[0]}, password=${formFields[1]}, name=${formFields[2]}`)
         
         if (formFields[0] > 0 && formFields[1] > 0) {
           // 실제 회원가입 시도 (테스트 계정)
@@ -201,7 +201,7 @@ test.describe('배포 환경 사용자 여정 테스트', () => {
           await page.waitForTimeout(3000)
           
           const afterSignupUrl = page.url()
-          console.log(`📊 After signup URL: ${afterSignupUrl}`)
+          console.log(`[DATA] After signup URL: ${afterSignupUrl}`)
           
           // 회원가입 결과 확인
           const signupSuccess = !afterSignupUrl.includes('signup') && 
@@ -209,7 +209,7 @@ test.describe('배포 환경 사용자 여정 테스트', () => {
                                 afterSignupUrl.includes('home') ||
                                 afterSignupUrl.includes('welcome'))
           
-          console.log(`📊 회원가입 성공 여부: ${signupSuccess}`)
+          console.log(`[DATA] 회원가입 성공 여부: ${signupSuccess}`)
         }
       } else {
         console.log('❌ 회원가입 요소를 찾을 수 없음')
@@ -230,14 +230,14 @@ test.describe('배포 환경 사용자 여정 테스트', () => {
       for (const social of socialButtons) {
         for (const selector of social.selectors) {
           if (await page.locator(selector).isVisible({ timeout: 1000 }).catch(() => false)) {
-            console.log(`✅ ${social.name} 로그인 버튼 발견: ${selector}`)
+            console.log(`[PASS] ${social.name} 로그인 버튼 발견: ${selector}`)
             socialLoginFound++
             break
           }
         }
       }
       
-      console.log(`📊 소셜 로그인 옵션 수: ${socialLoginFound}`)
+      console.log(`[DATA] 소셜 로그인 옵션 수: ${socialLoginFound}`)
       
       // RED Phase: 소셜 로그인이 구현되어 있는지 확인
       if (socialLoginFound > 0) {
@@ -266,11 +266,11 @@ test.describe('배포 환경 사용자 여정 테스트', () => {
     
     test('대시보드 핵심 위젯 및 레이아웃', async ({ page }) => {
       const currentUrl = page.url()
-      console.log(`📊 Current page: ${currentUrl}`)
+      console.log(`[DATA] Current page: ${currentUrl}`)
       
       // 대시보드 페이지인지 확인
       if (currentUrl.includes('dashboard') || currentUrl.includes('home')) {
-        console.log('✅ 대시보드에 접근함')
+        console.log('[PASS] 대시보드에 접근함')
         
         // 핵심 레이아웃 요소 확인
         const layoutElements = await Promise.all([
@@ -280,7 +280,7 @@ test.describe('배포 환경 사용자 여정 테스트', () => {
           page.locator('aside, .sidebar').count()
         ])
         
-        console.log(`📊 Layout: header=${layoutElements[0]}, nav=${layoutElements[1]}, main=${layoutElements[2]}, sidebar=${layoutElements[3]}`)
+        console.log(`[DATA] Layout: header=${layoutElements[0]}, nav=${layoutElements[1]}, main=${layoutElements[2]}, sidebar=${layoutElements[3]}`)
         
         // 위젯 요소 찾기
         const widgetSelectors = [
@@ -294,10 +294,10 @@ test.describe('배포 환경 사용자 여정 테스트', () => {
         for (const selector of widgetSelectors) {
           const count = await page.locator(selector).count()
           widgetCount += count
-          if (count > 0) console.log(`✅ 위젯 발견: ${selector} (${count}개)`)
+          if (count > 0) console.log(`[PASS] 위젯 발견: ${selector} (${count}개)`)
         }
         
-        console.log(`📊 총 위젯 수: ${widgetCount}`)
+        console.log(`[DATA] 총 위젯 수: ${widgetCount}`)
         expect(layoutElements[2]).toBeGreaterThan(0) // main 요소는 있어야 함
         
       } else {
@@ -316,15 +316,15 @@ test.describe('배포 환경 사용자 여정 테스트', () => {
       
       // 네비게이션 링크 찾기
       const navLinks = await page.locator('nav a, [role="navigation"] a').all()
-      console.log(`📊 네비게이션 링크 수: ${navLinks.length}`)
+      console.log(`[DATA] 네비게이션 링크 수: ${navLinks.length}`)
       
       const expectedNavItems = ['dashboard', 'project', 'calendar', 'feedback']
-      let foundNavItems = []
+      const foundNavItems = []
       
       for (const link of navLinks) {
         const href = await link.getAttribute('href')
         const text = await link.textContent()
-        console.log(`📊 Nav link: "${text}" → ${href}`)
+        console.log(`[DATA] Nav link: "${text}" → ${href}`)
         
         for (const expected of expectedNavItems) {
           if (href?.includes(expected) || text?.toLowerCase().includes(expected)) {
@@ -333,7 +333,7 @@ test.describe('배포 환경 사용자 여정 테스트', () => {
         }
       }
       
-      console.log(`📊 발견된 주요 네비게이션: ${foundNavItems.join(', ')}`)
+      console.log(`[DATA] 발견된 주요 네비게이션: ${foundNavItems.join(', ')}`)
       
       // 네비게이션 클릭 테스트 (첫 번째 링크)
       if (navLinks.length > 0) {
@@ -344,7 +344,7 @@ test.describe('배포 환경 사용자 여정 테스트', () => {
         await page.waitForTimeout(2000)
         
         const newUrl = page.url()
-        console.log(`📊 네비게이션 클릭 결과: ${originalUrl} → ${newUrl}`)
+        console.log(`[DATA] 네비게이션 클릭 결과: ${originalUrl} → ${newUrl}`)
         
         expect(newUrl).not.toBe(originalUrl) // URL이 변경되어야 함
       }
@@ -373,11 +373,11 @@ test.describe('배포 환경 사용자 여정 테스트', () => {
         if (await page.locator(selector).isVisible({ timeout: 1000 }).catch(() => false)) {
           ctaFound++
           workingCTA = selector
-          console.log(`✅ CTA 버튼 발견: ${selector}`)
+          console.log(`[PASS] CTA 버튼 발견: ${selector}`)
         }
       }
       
-      console.log(`📊 총 CTA 버튼 수: ${ctaFound}`)
+      console.log(`[DATA] 총 CTA 버튼 수: ${ctaFound}`)
       
       // CTA 버튼 동작 테스트
       if (workingCTA) {
@@ -386,14 +386,14 @@ test.describe('배포 환경 사용자 여정 테스트', () => {
         await page.waitForTimeout(2000)
         
         const newUrl = page.url()
-        console.log(`📊 CTA 클릭 결과: ${originalUrl} → ${newUrl}`)
+        console.log(`[DATA] CTA 클릭 결과: ${originalUrl} → ${newUrl}`)
         
         // CTA가 동작했는지 확인 (URL 변경 또는 모달 등)
         const urlChanged = newUrl !== originalUrl
         const modalVisible = await page.locator('.modal, [role="dialog"]').isVisible().catch(() => false)
         
         if (urlChanged || modalVisible) {
-          console.log('✅ CTA 버튼이 정상 동작함')
+          console.log('[PASS] CTA 버튼이 정상 동작함')
           expect(true).toBeTruthy()
         } else {
           console.log('❌ CTA 버튼이 동작하지 않음')
@@ -414,7 +414,7 @@ test.describe('배포 환경 사용자 여정 테스트', () => {
       
       // 뷰포트 적응 확인
       const bodyWidth = await page.locator('body').evaluate(el => el.scrollWidth)
-      console.log(`📱 모바일 뷰 너비: ${bodyWidth}px`)
+      console.log(`[MOBILE] 모바일 뷰 너비: ${bodyWidth}px`)
       
       expect(bodyWidth).toBeLessThanOrEqual(400) // 모바일 너비에 적합해야 함
       
@@ -429,7 +429,7 @@ test.describe('배포 환경 사용자 여정 테스트', () => {
         }
       }
       
-      console.log(`📱 터치 친화적 버튼 수: ${touchFriendlyCount}/${Math.min(buttons.length, 5)}`)
+      console.log(`[MOBILE] 터치 친화적 버튼 수: ${touchFriendlyCount}/${Math.min(buttons.length, 5)}`)
     })
     
     test('태블릿 뷰포트 적응성', async ({ page }) => {
@@ -438,13 +438,13 @@ test.describe('배포 환경 사용자 여정 테스트', () => {
       await page.goto(PRODUCTION_URL)
       
       const bodyWidth = await page.locator('body').evaluate(el => el.scrollWidth)
-      console.log(`📱 태블릿 뷰 너비: ${bodyWidth}px`)
+      console.log(`[MOBILE] 태블릿 뷰 너비: ${bodyWidth}px`)
       
       expect(bodyWidth).toBeLessThanOrEqual(800) // 태블릿 너비에 적합해야 함
       
       // 레이아웃이 태블릿에 맞게 조정되는지 확인
       const sidebarVisible = await page.locator('.sidebar, aside').isVisible().catch(() => false)
-      console.log(`📱 태블릿에서 사이드바 표시: ${sidebarVisible}`)
+      console.log(`[MOBILE] 태블릿에서 사이드바 표시: ${sidebarVisible}`)
     })
   })
 
@@ -485,7 +485,7 @@ test.describe('배포 환경 사용자 여정 테스트', () => {
       await page.goto(PRODUCTION_URL)
       await page.waitForTimeout(3000)
       
-      console.log(`📊 총 JavaScript 에러 수: ${errors.length}`)
+      console.log(`[DATA] 총 JavaScript 에러 수: ${errors.length}`)
       
       // 에러가 있어도 페이지 기본 기능이 동작하는지 확인
       const basicFunctionality = await page.locator('body').isVisible()

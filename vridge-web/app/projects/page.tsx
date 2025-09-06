@@ -1,7 +1,6 @@
 'use client'
 
-import { CreateProjectButton } from '@/features/project'
-import { ProjectFilter } from '@/features/project'
+import { CreateProjectButton, ProjectFilterComponent } from '@/features/projects'
 import { SideBar } from '@/widgets'
 import { ProjectList } from '@/widgets/projects'
 
@@ -25,7 +24,7 @@ export default function ProjectsPage() {
           
           {/* Filters */}
           <div className="mb-6">
-            <ProjectFilter />
+            <ProjectFilterComponent />
           </div>
           
           {/* Projects Grid */}

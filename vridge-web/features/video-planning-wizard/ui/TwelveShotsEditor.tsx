@@ -204,19 +204,21 @@ export const TwelveShotsEditor = ({
 
         <div className="grid grid-cols-3 gap-2">
           <Select
-            label="샷/카메라/구도"
             value={shot.shotType}
-            onValueChange={(value) => onShotUpdate(shot.id, { shotType: value as ShotType })}
+            onChange={(value) => onShotUpdate(shot.id, { shotType: value as ShotType })}
+            placeholder="샷 타입 선택"
             options={SHOT_TYPE_OPTIONS.map(option => ({ value: option, label: option }))}
           />
           <Select
             value={shot.cameraMove}
-            onValueChange={(value) => onShotUpdate(shot.id, { cameraMove: value as CameraMove })}
+            onChange={(value) => onShotUpdate(shot.id, { cameraMove: value as CameraMove })}
+            placeholder="카메라 움직임"
             options={CAMERA_MOVE_OPTIONS.map(option => ({ value: option, label: option }))}
           />
           <Select
             value={shot.composition}
-            onValueChange={(value) => onShotUpdate(shot.id, { composition: value as Composition })}
+            onChange={(value) => onShotUpdate(shot.id, { composition: value as Composition })}
+            placeholder="구도 선택"
             options={COMPOSITION_OPTIONS.map(option => ({ value: option, label: option }))}
           />
         </div>
@@ -234,9 +236,9 @@ export const TwelveShotsEditor = ({
           </div>
           <div>
             <Select
-              label="전환"
               value={shot.transition}
-              onValueChange={(value) => onShotUpdate(shot.id, { transition: value as Transition })}
+              onChange={(value) => onShotUpdate(shot.id, { transition: value as Transition })}
+              placeholder="전환 효과"
               options={TRANSITION_OPTIONS.map(option => ({ value: option, label: option }))}
             />
           </div>

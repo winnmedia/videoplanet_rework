@@ -6,14 +6,23 @@
 'use client'
 
 import React, { useCallback } from 'react'
-import { useAppDispatch, useAppSelector } from '@/app/store/store'
 
+import { useAppDispatch, useAppSelector } from '@/app/store/store'
 import { cn } from '@/shared/lib/utils'
 import { Card } from '@/shared/ui/index.modern'
 
 import { FourStagesReview } from './FourStagesReview'
 import { PlanningInputForm } from './PlanningInputForm'
 import { TwelveShotsEditor } from './TwelveShotsEditor'
+import type {
+  VideoPlanningWizardProps,
+  PlanningInput,
+  PresetConfig,
+  PlanningStage,
+  VideoShot,
+  InsertShot,
+  ExportOptions
+} from '../model/types'
 import {
   generateFourStages,
   generateFourStagesWithAI,
@@ -29,15 +38,6 @@ import {
   selectCurrentStep,
   selectProgressPercentage,
 } from '../model/videoPlanningSlice'
-import type {
-  VideoPlanningWizardProps,
-  PlanningInput,
-  PresetConfig,
-  PlanningStage,
-  VideoShot,
-  InsertShot,
-  ExportOptions
-} from '../model/types'
 
 
 export const VideoPlanningWizard = ({
@@ -186,7 +186,7 @@ export const VideoPlanningWizard = ({
   // 진행률은 selector에서 계산됨
 
   return (
-    <div className={cn('max-w-7xl mx-auto p-6', className)}>
+    <div className={cn('max-w-7xl mx-auto p-6', className)} data-testid="planning-wizard">
       {/* 위저드 헤더 */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-6">

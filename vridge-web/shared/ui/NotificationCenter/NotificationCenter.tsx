@@ -21,6 +21,9 @@ export const NotificationCenter = memo(function NotificationCenter({
 }: NotificationCenterProps) {
   const containerRef = useRef<HTMLDivElement>(null)
 
+  // 최근 10개 알림만 표시
+  const displayedNotifications = useMemo(() => notifications.slice(0, 10), [notifications])
+
   // 키보드 네비게이션 훅
   const { 
     focusedIndex, 
@@ -30,7 +33,7 @@ export const NotificationCenter = memo(function NotificationCenter({
     closeButtonRef 
   } = useNotificationKeyboard({
     isOpen,
-    notifications,
+    notifications: displayedNotifications,
     onClose,
     onNotificationClick
   })
@@ -231,9 +234,9 @@ export const NotificationCenter = memo(function NotificationCenter({
         {/* 알림 목록 */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden">
           {isLoading ? renderLoadingState : (
-            notifications.length === 0 ? renderEmptyState : (
+            displayedNotifications.length === 0 ? renderEmptyState : (
               <ul role="list" aria-label="알림 목록" className="divide-y divide-gray-200/50 dark:divide-gray-700/50">
-                {notifications.map((notification, index) => {
+                {displayedNotifications.map((notification, index) => {
                   const isFocused = focusedIndex === index
                   
                   return (
@@ -296,6 +299,24 @@ export const NotificationCenter = memo(function NotificationCenter({
                     </li>
                   )
                 })}
+                
+                {/* 더 보기 버튼 */}
+                {notifications.length > 10 && (
+                  <li>
+                    <div className="px-6 py-4 text-center border-t border-gray-200/50 dark:border-gray-700/50">
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                        {notifications.length - 10}개의 추가 알림이 있습니다
+                      </p>
+                      <button
+                        className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 font-medium"
+                        onClick={onRefresh}
+                        type="button"
+                      >
+                        모든 알림 보기
+                      </button>
+                    </div>
+                  </li>
+                )}
               </ul>
             )
           )}

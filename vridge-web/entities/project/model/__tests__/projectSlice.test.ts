@@ -9,13 +9,20 @@ import projectReducer, {
   createProject,
   inviteTeamMember,
   fetchProjects,
+  generateAutoSchedule,
+  updateAutoSchedule,
   setAutoSchedulePreview,
+  setAutoScheduleConfig,
   clearCreateError,
   clearInviteError,
+  clearScheduleError,
   selectProjects,
   selectIsCreating,
   selectCreateError,
   selectInviteError,
+  selectAutoScheduleConfig,
+  selectIsGeneratingSchedule,
+  selectScheduleError,
   type ProjectState
 } from '../projectSlice'
 
@@ -32,10 +39,13 @@ function createTestStore(preloadedState?: { project: Partial<ProjectState> }) {
         isLoading: false,
         isCreating: false,
         isInviting: false,
+        isGeneratingSchedule: false,
         error: null,
         createError: null,
         inviteError: null,
+        scheduleError: null,
         autoSchedulePreview: null,
+        autoScheduleConfig: { planningWeeks: 1, filmingDays: 1, editingWeeks: 2 },
         invitationCooldowns: {},
         pendingInvitations: [],
         currentUserRole: null,
@@ -62,10 +72,13 @@ describe('projectSlice', () => {
       expect(state.isLoading).toBe(false)
       expect(state.isCreating).toBe(false)
       expect(state.isInviting).toBe(false)
+      expect(state.isGeneratingSchedule).toBe(false)
       expect(state.error).toBeNull()
       expect(state.createError).toBeNull()
       expect(state.inviteError).toBeNull()
+      expect(state.scheduleError).toBeNull()
       expect(state.autoSchedulePreview).toBeNull()
+      expect(state.autoScheduleConfig).toEqual({ planningWeeks: 1, filmingDays: 1, editingWeeks: 2 })
       expect(state.invitationCooldowns).toEqual({})
       expect(state.pendingInvitations).toEqual([])
       expect(state.currentUserRole).toBeNull()
@@ -168,6 +181,7 @@ describe('projectSlice', () => {
           requireApproval: true,
           watermarkEnabled: true
         },
+        calendarEvents: [],
         createdAt: '2024-01-01T00:00:00Z',
         updatedAt: '2024-01-01T00:00:00Z'
       }
@@ -187,6 +201,60 @@ describe('projectSlice', () => {
       expect(state.projects[0]).toEqual(mockProject)
       expect(state.currentProject).toEqual(mockProject)
       expect(state.autoSchedulePreview).toBeNull()
+    })
+
+    it('프로젝트 생성 시 자동으로 일정이 생성되어야 한다 (DEVPLAN.md 요구사항)', async () => {
+      const store = createTestStore()
+      
+      const result = await store.dispatch(createProject({
+        title: '자동 일정 테스트 프로젝트',
+        description: '자동 일정이 생성되는 프로젝트',
+        startDate: new Date('2024-01-01')
+      }))
+      
+      expect(createProject.fulfilled.match(result)).toBe(true)
+      if (createProject.fulfilled.match(result)) {
+        // 프로젝트가 생성되고 캘린더 이벤트가 포함되어야 함
+        expect(result.payload.project.calendarEvents).toHaveLength(3)
+        expect(result.payload.calendarEvents).toHaveLength(3)
+        
+        const calendarEvents = result.payload.calendarEvents
+        expect(calendarEvents[0].type).toBe('planning')
+        expect(calendarEvents[1].type).toBe('filming')
+        expect(calendarEvents[2].type).toBe('editing')
+        
+        // 기본 일정 기간 확인 (기획 1주, 촬영 1일, 편집 2주)
+        expect(calendarEvents[0].title).toBe('기획')
+        expect(calendarEvents[1].title).toBe('촬영')
+        expect(calendarEvents[2].title).toBe('편집')
+      }
+      
+      const state = store.getState().project
+      expect(state.currentProject?.calendarEvents).toHaveLength(3)
+    })
+
+    it('사용자 정의 자동 일정 설정으로 프로젝트를 생성해야 한다', async () => {
+      const store = createTestStore()
+      
+      const result = await store.dispatch(createProject({
+        title: '커스텀 일정 프로젝트',
+        startDate: new Date('2024-01-01'),
+        autoScheduleConfig: {
+          planningWeeks: 2,
+          filmingDays: 3,
+          editingWeeks: 4
+        }
+      }))
+      
+      expect(createProject.fulfilled.match(result)).toBe(true)
+      if (createProject.fulfilled.match(result)) {
+        const calendarEvents = result.payload.calendarEvents
+        expect(calendarEvents).toHaveLength(3)
+        
+        // 시작일 확인
+        const planningStart = new Date(calendarEvents[0].startDate)
+        expect(planningStart.toISOString()).toBe('2024-01-01T00:00:00.000Z')
+      }
     })
 
     it('rejected 상태에서 에러를 설정해야 한다', () => {
@@ -315,6 +383,186 @@ describe('projectSlice', () => {
       
       const inviteError = selectInviteError(store.getState())
       expect(inviteError).toBe(errorMessage)
+    })
+  })
+
+  describe('자동 일정 시스템 - DEVPLAN.md 요구사항', () => {
+    describe('generateAutoSchedule 액션', () => {
+      it('프로젝트 생성 시 기본 자동 일정(기획 1주, 촬영 1일, 편집 2주)을 생성해야 한다', async () => {
+        const store = createTestStore()
+        const startDate = new Date('2024-01-01')
+        
+        const result = await store.dispatch(generateAutoSchedule({ 
+          projectId: 'project_123', 
+          startDate,
+          config: {
+            planningWeeks: 1,
+            filmingDays: 1,
+            editingWeeks: 2
+          }
+        }))
+        
+        expect(generateAutoSchedule.fulfilled.match(result)).toBe(true)
+        if (generateAutoSchedule.fulfilled.match(result)) {
+          expect(result.payload.schedule.planning.duration).toBe(1)
+          expect(result.payload.schedule.filming.duration).toBe(1)
+          expect(result.payload.schedule.editing.duration).toBe(2)
+        }
+      })
+
+      it('자동 일정 생성 시 프로젝트에 캘린더 이벤트가 생성되어야 한다', async () => {
+        const store = createTestStore({
+          project: {
+            currentProject: {
+              id: 'project_123',
+              title: '테스트 프로젝트',
+              description: '',
+              status: 'draft' as const,
+              ownerId: 'user_1',
+              members: [],
+              videos: [],
+              tags: [],
+              settings: {
+                isPublic: false,
+                allowComments: true,
+                allowDownload: false,
+                requireApproval: true,
+                watermarkEnabled: true
+              },
+              createdAt: '2024-01-01T00:00:00Z',
+              updatedAt: '2024-01-01T00:00:00Z'
+            }
+          }
+        })
+        
+        const result = await store.dispatch(generateAutoSchedule({
+          projectId: 'project_123',
+          startDate: new Date('2024-01-01')
+        }))
+        
+        expect(generateAutoSchedule.fulfilled.match(result)).toBe(true)
+        if (generateAutoSchedule.fulfilled.match(result)) {
+          expect(result.payload.calendarEvents).toHaveLength(3)
+          expect(result.payload.calendarEvents[0].type).toBe('planning')
+          expect(result.payload.calendarEvents[1].type).toBe('filming') 
+          expect(result.payload.calendarEvents[2].type).toBe('editing')
+        }
+        
+        const state = store.getState().project
+        expect(state.currentProject?.calendarEvents).toHaveLength(3)
+      })
+
+      it('자동 일정 설정 변경 시 기존 일정을 업데이트해야 한다', async () => {
+        const store = createTestStore({
+          project: {
+            currentProject: {
+              id: 'project_123',
+              title: '테스트 프로젝트',
+              description: '',
+              status: 'draft' as const,
+              ownerId: 'user_1',
+              members: [],
+              videos: [],
+              tags: [],
+              settings: {
+                isPublic: false,
+                allowComments: true,
+                allowDownload: false,
+                requireApproval: true,
+                watermarkEnabled: true
+              },
+              createdAt: '2024-01-01T00:00:00Z',
+              updatedAt: '2024-01-01T00:00:00Z'
+            }
+          }
+        })
+        
+        const result = await store.dispatch(updateAutoSchedule({
+          projectId: 'project_123',
+          config: { planningWeeks: 2, filmingDays: 1, editingWeeks: 3 }
+        }))
+        
+        expect(updateAutoSchedule.fulfilled.match(result)).toBe(true)
+        if (updateAutoSchedule.fulfilled.match(result)) {
+          expect(result.payload.schedule.planning.duration).toBe(2)
+          expect(result.payload.schedule.editing.duration).toBe(3)
+          expect(result.payload.updated).toBe(true)
+        }
+      })
+    })
+
+    describe('자동 일정 상태 관리', () => {
+      it('autoScheduleConfig 상태가 존재해야 한다', () => {
+        const store = createTestStore()
+        const state = store.getState().project
+        
+        expect(state.autoScheduleConfig).toBeDefined()
+        expect(state.autoScheduleConfig.planningWeeks).toBe(1)
+        expect(state.autoScheduleConfig.filmingDays).toBe(1)
+        expect(state.autoScheduleConfig.editingWeeks).toBe(2)
+      })
+
+      it('isGeneratingSchedule 로딩 상태가 존재해야 한다', () => {
+        const store = createTestStore()
+        const state = store.getState().project
+        
+        expect(state.isGeneratingSchedule).toBe(false)
+      })
+
+      it('scheduleError 에러 상태가 존재해야 한다', () => {
+        const store = createTestStore()
+        const state = store.getState().project
+        
+        expect(state.scheduleError).toBeNull()
+      })
+    })
+
+    describe('새로운 동기 액션', () => {
+      it('setAutoScheduleConfig는 자동 일정 설정을 업데이트해야 한다', () => {
+        const store = createTestStore()
+        const newConfig = { planningWeeks: 3, filmingDays: 2, editingWeeks: 4 }
+        
+        store.dispatch(setAutoScheduleConfig(newConfig))
+        
+        const state = store.getState().project
+        expect(state.autoScheduleConfig).toEqual(newConfig)
+      })
+
+      it('clearScheduleError는 일정 에러를 지워야 한다', () => {
+        const store = createTestStore({
+          project: { scheduleError: '일정 생성 실패' }
+        })
+        
+        store.dispatch(clearScheduleError())
+        
+        const state = store.getState().project  
+        expect(state.scheduleError).toBeNull()
+      })
+    })
+
+    describe('새로운 셀렉터', () => {
+      it('selectAutoScheduleConfig는 자동 일정 설정을 반환해야 한다', () => {
+        const config = { planningWeeks: 2, filmingDays: 3, editingWeeks: 4 }
+        const store = createTestStore({ project: { autoScheduleConfig: config } })
+        
+        const selectedConfig = selectAutoScheduleConfig(store.getState())
+        expect(selectedConfig).toEqual(config)
+      })
+
+      it('selectIsGeneratingSchedule는 생성 상태를 반환해야 한다', () => {
+        const store = createTestStore({ project: { isGeneratingSchedule: true } })
+        
+        const isGenerating = selectIsGeneratingSchedule(store.getState())
+        expect(isGenerating).toBe(true)
+      })
+
+      it('selectScheduleError는 일정 에러를 반환해야 한다', () => {
+        const errorMessage = '일정 생성 실패'
+        const store = createTestStore({ project: { scheduleError: errorMessage } })
+        
+        const scheduleError = selectScheduleError(store.getState())
+        expect(scheduleError).toBe(errorMessage)
+      })
     })
   })
 

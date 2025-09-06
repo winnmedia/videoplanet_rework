@@ -73,24 +73,28 @@ export async function POST(request: NextRequest) {
 
 /**
  * 숏 정보를 기반으로 Imagen API용 이미지 프롬프트 생성
+ * DoD 규격: pencil sketch, rough, monochrome
  */
 function createStoryboardPrompt(shot: any): string {
   const basePrompt = `
-Storyboard illustration for film production: ${shot.description}
+Storyboard pencil sketch for film production: ${shot.description}
 
 Shot type: ${shot.shotType}
 Camera movement: ${shot.cameraMove}
 Composition: ${shot.composition}
 Scene description: ${shot.description}
+
+Style: pencil sketch, rough drawing, hand-drawn, monochrome, black and white, film storyboard
   `.trim()
 
-  // 숏 타입별 스타일 맞춤화
+  // 스토리보드 전용 스타일 옵션 (DoD 규격 준수)
   const styleOptions = {
-    style: getVisualStyleForShot(shot),
-    mood: getMoodFromDescription(shot.description),
-    quality: 'photorealistic' as const,
-    lighting: getLightingForShot(shot),
-    composition: shot.composition
+    style: 'pencil sketch, rough drawing, monochrome',
+    mood: 'storyboard illustration',
+    quality: 'sketch' as const,
+    lighting: 'simple shading',
+    composition: shot.composition,
+    negativePrompts: 'no glitch, no text overlay, no photorealistic, no color, no digital art, no photography'
   }
 
   return optimizeImagePrompt(basePrompt, styleOptions)
@@ -117,35 +121,35 @@ function determineBestAspectRatio(shot: any): '1:1' | '9:16' | '16:9' | '4:3' | 
 }
 
 /**
- * 숏 정보에서 시각적 스타일 추출
+ * 숏 정보에서 스토리보드 스타일 추출 (DoD 규격 준수)
  */
 function getVisualStyleForShot(shot: any): string {
   const visualStyleMap: Record<string, string> = {
-    '익스트림 롱샷': 'cinematic wide landscape',
-    '롱샷': 'cinematic establishing shot',
-    '미디엄샷': 'cinematic medium shot',
-    '클로즈업': 'cinematic close-up portrait',
-    '익스트림 클로즈업': 'cinematic extreme close-up detail',
-    '와이드샷': 'cinematic wide angle',
-    '버드아이뷰': 'aerial drone shot perspective',
-    '웜즈아이뷰': 'low angle dramatic perspective'
+    '익스트림 롱샷': 'wide landscape sketch',
+    '롱샷': 'establishing shot sketch',
+    '미디엄샷': 'medium shot sketch',
+    '클로즈업': 'close-up portrait sketch',
+    '익스트림 클로즈업': 'extreme close-up detail sketch',
+    '와이드샷': 'wide angle sketch',
+    '버드아이뷰': 'aerial perspective sketch',
+    '웜즈아이뷰': 'low angle sketch'
   }
   
-  return visualStyleMap[shot.shotType] || 'cinematic shot'
+  return visualStyleMap[shot.shotType] || 'storyboard sketch'
 }
 
 /**
- * 설명에서 분위기 추출
+ * 설명에서 스토리보드 분위기 추출 (DoD 규격 준수)
  */
 function getMoodFromDescription(description: string): string {
   const moodKeywords = {
-    '긴장': 'tense dramatic',
-    '로맨틱': 'romantic soft',
-    '액션': 'dynamic action',
-    '평화': 'peaceful calm',
-    '어두운': 'dark moody',
-    '밝은': 'bright cheerful',
-    '신비': 'mysterious atmospheric'
+    '긴장': 'tense sketch',
+    '로맨틱': 'soft romantic sketch',
+    '액션': 'dynamic action sketch',
+    '평화': 'peaceful sketch',
+    '어두운': 'dark sketched mood',
+    '밝은': 'bright sketched scene',
+    '신비': 'mysterious sketch'
   }
   
   for (const [keyword, mood] of Object.entries(moodKeywords)) {
@@ -154,25 +158,25 @@ function getMoodFromDescription(description: string): string {
     }
   }
   
-  return 'cinematic dramatic'
+  return 'storyboard sketch'
 }
 
 /**
- * 숏 정보에서 조명 스타일 결정
+ * 숏 정보에서 스토리보드 조명/음영 스타일 결정 (DoD 규격 준수)
  */
 function getLightingForShot(shot: any): string {
-  // 카메라 움직임과 숏 타입에 따른 조명
+  // 카메라 움직임과 숏 타입에 따른 스케치 음영 처리
   if (shot.cameraMove === '크레인샷' || shot.shotType === '버드아이뷰') {
-    return 'natural daylight'
+    return 'simple outdoor shading'
   }
   
   if (shot.shotType === '클로즈업' || shot.shotType === '익스트림 클로즈업') {
-    return 'soft portrait lighting'
+    return 'soft pencil shading'
   }
   
   if (shot.cameraMove === '핸드헬드') {
-    return 'natural realistic lighting'
+    return 'rough sketch shading'
   }
   
-  return 'cinematic lighting'
+  return 'basic pencil shading'
 }

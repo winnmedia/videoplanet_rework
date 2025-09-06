@@ -8,6 +8,7 @@ export interface Project {
   videos: string[];
   tags: string[];
   settings: ProjectSettings;
+  calendarEvents?: CalendarEvent[];
   createdAt: string;
   updatedAt: string;
 }
@@ -31,11 +32,12 @@ export interface CreateProjectDto {
   title: string;
   description?: string;
   tags?: string[];
+  startDate?: Date;
   settings?: Partial<ProjectSettings>;
-  autoSchedule?: {
-    planning: { duration: number }
-    shooting: { duration: number }
-    editing: { duration: number }
+  autoScheduleConfig?: {
+    planningWeeks: number;
+    filmingDays: number;
+    editingWeeks: number;
   }
 }
 
@@ -74,4 +76,14 @@ export interface AutoScheduleResult {
     unit: 'days' | 'weeks'  
   }
   totalDays: number
+}
+
+// Calendar event types
+export interface CalendarEvent {
+  id: string;
+  title: string;
+  startDate: string; // ISO string
+  endDate: string;   // ISO string
+  type: 'planning' | 'filming' | 'editing';
+  projectId?: string;
 }

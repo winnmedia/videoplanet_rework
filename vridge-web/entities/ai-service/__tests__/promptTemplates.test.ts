@@ -4,6 +4,7 @@
  */
 
 import { describe, it, expect } from 'vitest'
+
 import { PromptTemplateManager } from '../api/promptTemplates'
 import type { StoryGenerationRequest } from '../model/types'
 

@@ -7,9 +7,9 @@
 
 import { useState, useMemo, useCallback } from 'react'
 
+import type { CalendarEvent, CalendarViewSettings } from '@/entities/project/model/calendar-types'
 import { withCalendarCollaboration } from '@/shared/lib/collaboration/hocs/withCollaboration'
 import type { CollaborationInjectedProps } from '@/shared/lib/collaboration/hocs/withCollaboration'
-import type { CalendarEvent, CalendarViewSettings } from '@/entities/project/model/calendar-types'
 
 // ===========================
 // 협업 활동 피드 컴포넌트

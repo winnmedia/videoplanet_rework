@@ -6,18 +6,18 @@
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { axe, toHaveNoViolations } from 'jest-axe'
+import { describe, it, expect, beforeEach, vi } from 'vitest'
 
-import { VideoFeedbackWidget } from '../ui/VideoFeedbackWidget'
-import { VideoPlayer } from '../ui/VideoPlayer'
-import { FeedbackTimeline } from '../ui/FeedbackTimeline'
-import { CommentThread } from '../ui/CommentThread'
 import type { 
   VideoFeedbackSession,
   TimestampComment,
   VideoMarker 
 } from '../model/types'
+import { CommentThread } from '../ui/CommentThread'
+import { FeedbackTimeline } from '../ui/FeedbackTimeline'
+import { VideoFeedbackWidget } from '../ui/VideoFeedbackWidget'
+import { VideoPlayer } from '../ui/VideoPlayer'
 
 // Jest-axe 매처 확장
 expect.extend(toHaveNoViolations)
@@ -183,7 +183,7 @@ describe('Video Feedback 접근성 테스트 - TDD Red Phase', () => {
       })
 
       // 키보드 네비게이션 테스트
-      let focusedElement = document.activeElement
+      const focusedElement = document.activeElement
 
       // Tab으로 순차적 네비게이션
       await user.tab()

@@ -6,8 +6,8 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 
-import { FourStagesReview } from '../FourStagesReview'
 import type { PlanningStage, FourStagesReviewProps } from '../../model/types'
+import { FourStagesReview } from '../FourStagesReview'
 
 // 테스트용 Mock 데이터
 const mockStages: PlanningStage[] = [

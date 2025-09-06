@@ -262,9 +262,9 @@ export const PerformanceMetricsChart: React.FC<PerformanceMetricsChartProps> = (
       <div className={styles.header}>
         <h2 className={styles.title}>실시간 성능 메트릭</h2>
         <div className={styles.legend}>
-          {chartData.lines.map((line, index) => (
+          {chartData.lines.map((line) => (
             <div 
-              key={index} 
+              key={line.label} 
               className={styles.legendItem}
               aria-label={`${line.label} 메트릭`}
             >

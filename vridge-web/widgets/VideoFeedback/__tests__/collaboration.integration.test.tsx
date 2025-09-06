@@ -9,8 +9,6 @@ import userEvent from '@testing-library/user-event'
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import WS from 'vitest-websocket-mock'
 
-import { VideoFeedbackWidget } from '../ui/VideoFeedbackWidget'
-import { CollaborationProvider } from '../providers/CollaborationProvider'
 import type { 
   VideoFeedbackSession,
   TimestampComment,
@@ -18,6 +16,8 @@ import type {
   UserPresence,
   ConflictResolution 
 } from '../model/types'
+import { CollaborationProvider } from '../providers/CollaborationProvider'
+import { VideoFeedbackWidget } from '../ui/VideoFeedbackWidget'
 
 // WebSocket Mock 서버
 let wsServer: WS

@@ -7,6 +7,7 @@
 'use client'
 
 import { useState, useCallback, useMemo } from 'react'
+
 import { 
   CalendarDashboard,
   type ProjectCalendarEvent,
@@ -51,11 +52,12 @@ const EXAMPLE_PROJECTS: Project[] = [
 ]
 
 const EXAMPLE_PHASES: ProjectPhase[] = [
+  // TODO(human): 타입 매핑 함수 구현이 필요합니다.
   // 삼성 갤럭시 프로젝트 페이즈
   {
     id: 'phase-1-planning',
     name: '삼성 갤럭시 기획',
-    type: 'planning',
+    type: 'pre-production',
     projectId: 'proj-1',
     startDate: '2025-01-20',
     endDate: '2025-01-24',
@@ -65,7 +67,7 @@ const EXAMPLE_PHASES: ProjectPhase[] = [
   {
     id: 'phase-1-filming',
     name: '삼성 갤럭시 촬영',
-    type: 'filming', 
+    type: 'production', 
     projectId: 'proj-1',
     startDate: '2025-01-25',
     endDate: '2025-01-27',
@@ -75,7 +77,7 @@ const EXAMPLE_PHASES: ProjectPhase[] = [
   {
     id: 'phase-1-editing',
     name: '삼성 갤럭시 편집',
-    type: 'editing',
+    type: 'post-production',
     projectId: 'proj-1', 
     startDate: '2025-01-28',
     endDate: '2025-02-02',
@@ -87,7 +89,7 @@ const EXAMPLE_PHASES: ProjectPhase[] = [
   {
     id: 'phase-2-planning',
     name: 'LG 홈어플라이언스 기획',
-    type: 'planning',
+    type: 'pre-production',
     projectId: 'proj-2',
     startDate: '2025-01-22',
     endDate: '2025-01-25',
@@ -97,7 +99,7 @@ const EXAMPLE_PHASES: ProjectPhase[] = [
   {
     id: 'phase-2-filming', // CONFLICT: Overlaps with proj-1 filming
     name: 'LG 홈어플라이언스 촬영',
-    type: 'filming',
+    type: 'production',
     projectId: 'proj-2',
     startDate: '2025-01-26', // Overlaps with Samsung filming
     endDate: '2025-01-28',
@@ -107,7 +109,7 @@ const EXAMPLE_PHASES: ProjectPhase[] = [
   {
     id: 'phase-2-editing',
     name: 'LG 홈어플라이언스 편집',
-    type: 'editing',
+    type: 'post-production',
     projectId: 'proj-2',
     startDate: '2025-01-29',
     endDate: '2025-02-04',
@@ -119,7 +121,7 @@ const EXAMPLE_PHASES: ProjectPhase[] = [
   {
     id: 'phase-3-planning',
     name: '현대자동차 기획',
-    type: 'planning',
+    type: 'pre-production',
     projectId: 'proj-3',
     startDate: '2025-02-05',
     endDate: '2025-02-08',
@@ -129,7 +131,7 @@ const EXAMPLE_PHASES: ProjectPhase[] = [
   {
     id: 'phase-3-filming',
     name: '현대자동차 촬영',
-    type: 'filming',
+    type: 'production',
     projectId: 'proj-3',
     startDate: '2025-02-10',
     endDate: '2025-02-12',
@@ -152,8 +154,8 @@ export function CalendarExampleUsage() {
         startDate: `${phase.startDate}T09:00:00Z`,
         endDate: `${phase.endDate}T18:00:00Z`,
         isAllDay: false,
-        category: phase.type === 'filming' ? 'filming' : 'project-deadline',
-        priority: phase.type === 'filming' ? 'high' : 'medium',
+        category: phase.type === 'production' ? 'filming' : 'project-deadline',
+        priority: phase.type === 'production' ? 'high' : 'medium',
         recurrence: 'none',
         createdBy: 'user-1',
         isCompleted: false,
@@ -221,7 +223,7 @@ export function CalendarExampleUsage() {
         {/* Calendar Dashboard */}
         <CalendarDashboard
           projects={EXAMPLE_PROJECTS}
-          events={eventsWithConflicts}
+          events={eventsWithConflicts as any}
           selectedDate={selectedDate}
           onEventMove={handleEventMove}
           onEventClick={handleEventClick}

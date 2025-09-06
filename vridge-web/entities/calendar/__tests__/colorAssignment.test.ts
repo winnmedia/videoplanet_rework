@@ -4,6 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest'
+
 import { ColorAssignmentService } from '../lib/colorAssignment'
 import type { Project, ProjectColorPalette } from '../model/types'
 
@@ -15,7 +16,7 @@ describe('ColorAssignmentService', () => {
       {
         id: 'project-1',
         name: '브랜드 A 광고영상',
-        color: '#3B82F6',
+        color: 'rgb(0, 49, 255)',         // vridge-500 (Tailwind 토큰)
         description: 'Brand A commercial video',
         status: 'active',
         phases: [],
@@ -25,7 +26,7 @@ describe('ColorAssignmentService', () => {
       {
         id: 'project-2',
         name: '브랜드 B 홍보영상',
-        color: '#10B981',
+        color: 'rgb(21, 128, 61)',        // success-500 (Tailwind 토큰)
         description: 'Brand B promotional video',
         status: 'active',
         phases: [],
@@ -35,7 +36,7 @@ describe('ColorAssignmentService', () => {
       {
         id: 'project-3',
         name: '브랜드 C 제품소개',
-        color: '#F59E0B',
+        color: 'rgb(180, 83, 9)',         // warning-500 (Tailwind 토큰)
         description: 'Brand C product introduction',
         status: 'completed',
         phases: [],
@@ -75,18 +76,18 @@ describe('ColorAssignmentService', () => {
       expect(palette1.primary).not.toBe(palette2.primary)
     })
 
-    it('should generate valid HSL color strings', () => {
+    it('should generate valid RGB color strings from Tailwind tokens', () => {
       // Given: A project ID
       const projectId = 'test-project'
 
       // When: Generating palette
       const palette = ColorAssignmentService.generateProjectPalette(projectId)
 
-      // Then: All colors should be valid HSL strings
-      expect(palette.primary).toMatch(/^hsl\(\d+,\s*\d+%,\s*\d+%\)$/)
-      expect(palette.secondary).toMatch(/^hsl\(\d+,\s*\d+%,\s*\d+%\)$/)
-      expect(palette.accent).toMatch(/^hsl\(\d+,\s*\d+%,\s*\d+%\)$/)
-      expect(palette.text).toMatch(/^#[0-9a-fA-F]{6}$/)
+      // Then: All colors should be valid RGB strings (Tailwind tokens)
+      expect(palette.primary).toMatch(/^rgb\(\d+,\s*\d+,\s*\d+\)$/)
+      expect(palette.secondary).toMatch(/^rgb\(\d+,\s*\d+,\s*\d+\)$/)
+      expect(palette.accent).toMatch(/^rgb\(\d+,\s*\d+,\s*\d+\)$/)
+      expect(palette.text).toMatch(/^rgb\(\d+,\s*\d+,\s*\d+\)$/)
     })
 
     it('should use project index when provided for predictable colors', () => {
@@ -101,19 +102,18 @@ describe('ColorAssignmentService', () => {
       expect(palette0.primary).not.toBe(palette1.primary)
     })
 
-    it('should generate accessible text colors based on background lightness', () => {
-      // Given: Multiple project IDs to test various hues
-      const lightProjectId = 'light-project'
-      const darkProjectId = 'dark-project'
+    it('should generate WCAG AA compliant text colors', () => {
+      // Given: Multiple project IDs to test various color variants
+      const project1Id = 'test-project-1'
+      const project2Id = 'test-project-2'
 
       // When: Generating palettes
-      const lightPalette = ColorAssignmentService.generateProjectPalette(lightProjectId, 2) // Yellow hue
-      const darkPalette = ColorAssignmentService.generateProjectPalette(darkProjectId, 0) // Blue hue
+      const palette1 = ColorAssignmentService.generateProjectPalette(project1Id, 0) // VRidge primary
+      const palette2 = ColorAssignmentService.generateProjectPalette(project2Id, 1) // Success colors
 
-      // Then: Text colors should provide good contrast
-      expect([lightPalette.text, darkPalette.text]).toEqual(
-        expect.arrayContaining(['#000000', '#ffffff'])
-      )
+      // Then: Text colors should be high contrast (all Tailwind tokens use white text for dark backgrounds)
+      expect(palette1.text).toBe('rgb(255, 255, 255)') // White text for VRidge brand
+      expect(palette2.text).toBe('rgb(255, 255, 255)') // White text for success colors
     })
   })
 
@@ -194,45 +194,45 @@ describe('ColorAssignmentService', () => {
   })
 
   describe('validateColorAccessibility', () => {
-    it('should validate high contrast color combinations', () => {
-      // Given: High contrast colors (black on white)
-      const backgroundColor = 'hsl(0, 0%, 100%)' // White
-      const textColor = '#000000' // Black
+    it('should validate high contrast Tailwind color combinations', () => {
+      // Given: High contrast Tailwind colors
+      const backgroundColor = 'rgb(255, 255, 255)' // white
+      const textColor = 'rgb(0, 0, 0)' // black
 
       // When: Validating accessibility
       const isAccessible = ColorAssignmentService.validateColorAccessibility(backgroundColor, textColor)
 
-      // Then: Should pass WCAG AA
+      // Then: Should pass WCAG AA (21:1 contrast ratio)
       expect(isAccessible).toBe(true)
     })
 
-    it('should reject low contrast color combinations', () => {
-      // Given: Low contrast colors
-      const backgroundColor = 'hsl(0, 0%, 60%)' // Medium gray
-      const textColor = 'hsl(0, 0%, 65%)'       // Slightly lighter gray
+    it('should reject low contrast Tailwind color combinations', () => {
+      // Given: Low contrast Tailwind colors  
+      const backgroundColor = 'rgb(156, 163, 175)' // gray-400
+      const textColor = 'rgb(209, 213, 219)'       // gray-300
 
       // When: Validating accessibility
       const isAccessible = ColorAssignmentService.validateColorAccessibility(backgroundColor, textColor)
 
-      // Then: Should fail WCAG AA
+      // Then: Should fail WCAG AA (insufficient contrast)
       expect(isAccessible).toBe(false)
     })
   })
 
   describe('generateColorSwatch', () => {
-    it('should generate valid swatch configuration', () => {
-      // Given: A color palette
+    it('should generate valid swatch configuration with Tailwind colors', () => {
+      // Given: A Tailwind-based color palette
       const palette: ProjectColorPalette = {
-        primary: 'hsl(220, 70%, 55%)',
-        secondary: 'hsl(220, 50%, 85%)',
-        accent: 'hsl(220, 80%, 35%)',
-        text: '#ffffff'
+        primary: 'rgb(0, 49, 255)',      // vridge-500
+        secondary: 'rgb(230, 236, 255)', // vridge-100
+        accent: 'rgb(0, 89, 219)',       // vridge-700
+        text: 'rgb(255, 255, 255)'       // white
       }
 
       // When: Generating swatch
       const swatch = ColorAssignmentService.generateColorSwatch(palette)
 
-      // Then: Should have valid configuration
+      // Then: Should have valid Tailwind-based configuration
       expect(swatch.background).toBe(palette.primary)
       expect(swatch.border).toBe(palette.accent)
       expect(swatch.size).toBe('16px')
@@ -251,15 +251,12 @@ describe('ColorAssignmentService', () => {
       // When: Generating legend
       const legend = ColorAssignmentService.generateProjectLegend(manyProjects)
 
-      // Then: Should use all available base hues before cycling
-      const hues = legend.map(item => {
-        const hslMatch = item.palette.primary.match(/hsl\((\d+)/)
-        return hslMatch ? parseInt(hslMatch[1]) : 0
-      })
-
-      // Should have diverse hue distribution
-      const uniqueHues = new Set(hues)
-      expect(uniqueHues.size).toBeGreaterThan(8) // Should use most base hues
+      // Then: Should use diverse Tailwind color palettes
+      const primaryColors = legend.map(item => item.palette.primary)
+      const uniqueColors = new Set(primaryColors)
+      
+      // Should have diverse color distribution from Tailwind palettes
+      expect(uniqueColors.size).toBeGreaterThan(8) // Should use most color variants
     })
 
     it('should handle large numbers of projects gracefully', () => {
@@ -273,10 +270,10 @@ describe('ColorAssignmentService', () => {
       // When: Generating legend
       const legend = ColorAssignmentService.generateProjectLegend(manyProjects)
 
-      // Then: Should generate colors for all projects (cycling through hues)
+      // Then: Should generate colors for all projects (cycling through Tailwind palettes)
       expect(legend).toHaveLength(25)
       legend.forEach(item => {
-        expect(item.palette.primary).toMatch(/^hsl\(\d+,\s*\d+%,\s*\d+%\)$/)
+        expect(item.palette.primary).toMatch(/^rgb\(\d+,\s*\d+,\s*\d+\)$/)
       })
     })
   })
@@ -303,8 +300,8 @@ describe('ColorAssignmentService', () => {
       // When: Generating palette
       const palette = ColorAssignmentService.generateProjectPalette(specialProject.id)
 
-      // Then: Should generate valid colors
-      expect(palette.primary).toMatch(/^hsl\(\d+,\s*\d+%,\s*\d+%\)$/)
+      // Then: Should generate valid Tailwind colors
+      expect(palette.primary).toMatch(/^rgb\(\d+,\s*\d+,\s*\d+\)$/)
     })
   })
 })

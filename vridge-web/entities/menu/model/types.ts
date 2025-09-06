@@ -15,8 +15,10 @@ export interface SubMenuItem {
   path: string
   icon?: string
   badge?: number
-  status?: 'active' | 'completed' | 'pending'
-  lastModified?: Date
+  status?: 'active' | 'completed' | 'pending' | 'in-progress' | 'draft'
+  lastModified?: string
+  priority?: 'high' | 'medium' | 'low'
+  description?: string
 }
 
 export interface MenuConfig {

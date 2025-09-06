@@ -8,9 +8,9 @@
  * - Import 경로 표준화
  */
 
+const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
 
 class PublicApiOptimizer {
   constructor() {

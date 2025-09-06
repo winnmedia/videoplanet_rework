@@ -53,7 +53,7 @@ export function createSubMenuItem(params: {
     icon: params.icon,
     badge: params.badge,
     status: params.status || 'active',
-    lastModified: new Date()
+    lastModified: new Date().toISOString()
   }
 }
 

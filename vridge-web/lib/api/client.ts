@@ -642,6 +642,11 @@ export const api = {
     additionalData?: Record<string, string | number | boolean>,
     config?: ApiRequestConfig
   ) => apiClient.upload<T>(endpoint, file, additionalData, config),
+  
+  invalidateCache: (endpoint?: string, method?: string, tag?: string) =>
+    apiClient.invalidateCache(endpoint, method, tag),
+  
+  getCacheStats: () => apiClient.getCacheStats(),
 };
 
 export default api;

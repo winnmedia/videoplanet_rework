@@ -1,0 +1,314 @@
+name: Vercel Production Deployment - Optimized Pipeline
+
+on:
+  push:
+    branches: [main, security-fix-clean]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - preview
+      skip_tests:
+        description: 'Skip test suite (emergency only)'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  NODE_VERSION: '20.19.0'
+  PNPM_VERSION: '10.15.0'
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+  TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+  TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+
+concurrency:
+  group: vercel-deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  # === QUALITY GATES ===
+  quality-gates:
+    name: Quality Gates & Build Validation
+    runs-on: ubuntu-latest
+    if: github.event.inputs.skip_tests != 'true'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-store-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline
+
+      - name: Run type checking
+        run: pnpm type-check
+
+      - name: Run linting
+        run: pnpm lint
+
+      - name: Run unit tests
+        run: pnpm test:unit --run
+
+      - name: Check module boundaries
+        run: pnpm validate:architecture
+
+  # === BUILD & DEPLOY ===
+  build-and-deploy:
+    name: Build & Deploy to Vercel
+    runs-on: ubuntu-latest
+    needs: [quality-gates]
+    if: always() && (needs.quality-gates.result == 'success' || github.event.inputs.skip_tests == 'true')
+    
+    outputs:
+      deployment-url: ${{ steps.deploy.outputs.url }}
+      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+          run_install: false
+
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-store-${{ runner.os }}-
+
+      - name: Setup Turbopack cache
+        uses: actions/cache@v4
+        with:
+          path: .next/cache
+          key: nextjs-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**/*.ts', '**/*.tsx') }}
+          restore-keys: |
+            nextjs-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}-
+            nextjs-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline
+
+      - name: Install Vercel CLI
+        run: pnpm add -g vercel@latest
+
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=${{ github.event.inputs.environment || 'production' }} --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build Project
+        run: |
+          if [ "${{ github.event.inputs.environment }}" == "preview" ]; then
+            vercel build --token=${{ secrets.VERCEL_TOKEN }}
+          else
+            vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+          fi
+        env:
+          NEXT_PUBLIC_APP_ENV: ${{ github.event.inputs.environment || 'production' }}
+          SKIP_ENV_VALIDATION: true
+          NEXT_TELEMETRY_DISABLED: 1
+
+      - name: Deploy to Vercel
+        id: deploy
+        run: |
+          if [ "${{ github.event.inputs.environment }}" == "preview" ]; then
+            URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          else
+            URL=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
+          fi
+          echo "url=$URL" >> $GITHUB_OUTPUT
+          echo "Deployed to: $URL"
+
+      - name: Create deployment status
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const url = '${{ steps.deploy.outputs.url }}';
+            const environment = '${{ github.event.inputs.environment || 'production' }}';
+            
+            await github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: context.payload.deployment?.id || 0,
+              state: 'success',
+              target_url: url,
+              environment_url: url,
+              description: `Deployed to Vercel ${environment}`,
+              environment: environment
+            });
+
+  # === PERFORMANCE VALIDATION ===
+  performance-validation:
+    name: Performance Budget Validation
+    runs-on: ubuntu-latest
+    needs: [build-and-deploy]
+    if: needs.build-and-deploy.outputs.deployment-url
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline
+
+      - name: Run Lighthouse CI
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+          DEPLOYMENT_URL: ${{ needs.build-and-deploy.outputs.deployment-url }}
+        run: |
+          npx @lhci/cli@latest autorun \
+            --collect.url=$DEPLOYMENT_URL \
+            --collect.url=$DEPLOYMENT_URL/dashboard \
+            --collect.url=$DEPLOYMENT_URL/projects \
+            --assert.preset=lighthouse:recommended \
+            --assert.assertions.categories:performance=95 \
+            --assert.assertions.categories:accessibility=95 \
+            --assert.assertions.categories:best-practices=95 \
+            --assert.assertions.categories:seo=95
+
+      - name: Upload Lighthouse reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-reports
+          path: .lighthouseci/
+
+  # === E2E SMOKE TESTS ===
+  e2e-smoke-tests:
+    name: E2E Smoke Tests
+    runs-on: ubuntu-latest
+    needs: [build-and-deploy]
+    if: needs.build-and-deploy.outputs.deployment-url
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --prefer-offline
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install chromium
+
+      - name: Run E2E smoke tests
+        env:
+          DEPLOYMENT_URL: ${{ needs.build-and-deploy.outputs.deployment-url }}
+          PLAYWRIGHT_TEST_BASE_URL: ${{ needs.build-and-deploy.outputs.deployment-url }}
+        run: |
+          pnpm exec playwright test \
+            --grep "@smoke" \
+            --reporter=github \
+            --retries=2 \
+            --workers=2
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results
+          path: test-results/
+
+  # === NOTIFICATION ===
+  notify-deployment:
+    name: Notify Deployment Status
+    runs-on: ubuntu-latest
+    needs: [build-and-deploy, performance-validation, e2e-smoke-tests]
+    if: always()
+    
+    steps:
+      - name: Send deployment notification
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const status = '${{ needs.build-and-deploy.result }}' === 'success' ? '✅' : '❌';
+            const perfStatus = '${{ needs.performance-validation.result }}' === 'success' ? '✅' : '⚠️';
+            const e2eStatus = '${{ needs.e2e-smoke-tests.result }}' === 'success' ? '✅' : '⚠️';
+            const url = '${{ needs.build-and-deploy.outputs.deployment-url }}';
+            
+            const comment = `## Deployment Status Report
+            
+            | Component | Status |
+            |-----------|--------|
+            | Build & Deploy | ${status} |
+            | Performance | ${perfStatus} |
+            | E2E Tests | ${e2eStatus} |
+            
+            **Deployment URL:** ${url}
+            **Environment:** ${{ github.event.inputs.environment || 'production' }}
+            **Commit:** ${{ github.sha }}
+            
+            🤖 Generated with Claude Code
+            Co-Authored-By: Claude <noreply@anthropic.com>
+            `;
+            
+            if (context.eventName === 'pull_request') {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: comment
+              });
+            }

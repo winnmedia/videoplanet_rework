@@ -4,11 +4,13 @@
  * @coverage 낙관적 업데이트, 충돌 감지, 해결 전략, 데이터 일관성
  */
 
-import React from 'react'
-import { act, renderHook, waitFor } from '@testing-library/react'
-import { Provider } from 'react-redux'
 import { configureStore } from '@reduxjs/toolkit'
+import { act, renderHook, waitFor } from '@testing-library/react'
+import React from 'react'
+import { Provider } from 'react-redux'
 import { describe, it, expect, beforeEach, beforeAll, afterAll, vi } from 'vitest'
+
+import { server } from '@/shared/api/__tests__/setup/msw-setup'
 
 import { useVideoPlanningCollaboration } from '../hooks/useCollaboration'
 import collaborationSlice, { 
@@ -25,7 +27,6 @@ import type {
 } from '../types'
 
 // MSW 설정
-import { server } from '@/shared/api/__tests__/setup/msw-setup'
 import { collaborationHandlers } from './collaboration-handlers'
 
 // 테스트용 스토어 생성

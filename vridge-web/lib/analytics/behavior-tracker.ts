@@ -197,7 +197,7 @@ export class BehaviorTracker {
   }
 
   // 공통 추적 메서드
-  private track(eventData: Partial<UserBehaviorEvent>): void {
+  protected track(eventData: Partial<UserBehaviorEvent>): void {
     if (!this.isTracking) return;
 
     try {

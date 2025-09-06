@@ -44,7 +44,7 @@ export class PermissionChecker {
     }
 
     // 5. 컨텍스트 기반 권한 (예: 프로젝트 소유자)
-    if (context?.isOwner && this.isOwnerSpecificPermission(permission)) {
+    if (context?.isOwner && this.isAdminOnlyPermission(permission)) {
       return { allowed: true }
     }
 
@@ -119,15 +119,19 @@ export class PermissionChecker {
   }
 
   /**
-   * 프로젝트 소유자만 가질 수 있는 권한인지 확인
+   * 관리자만 가질 수 있는 권한인지 확인
    */
-  private static isOwnerSpecificPermission(permission: Permission): boolean {
-    const ownerOnlyPermissions = [
+  private static isAdminOnlyPermission(permission: Permission): boolean {
+    const adminOnlyPermissions = [
       Permission.PROJECT_DELETE,
+      Permission.VIDEO_DELETE,
       Permission.TEAM_REMOVE,
-      Permission.SETTINGS_MANAGE
+      Permission.SETTINGS_UPDATE,
+      Permission.SYSTEM_ADMIN,
+      Permission.USER_MANAGE,
+      Permission.AUDIT_LOG_READ
     ]
-    return ownerOnlyPermissions.includes(permission)
+    return adminOnlyPermissions.includes(permission)
   }
 
   /**

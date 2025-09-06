@@ -4,7 +4,6 @@
  */
 
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'
-import { VideoPlanningWizardApi } from '../api/videoPlanningApi'
 
 import type {
   WizardStep,
@@ -15,6 +14,8 @@ import type {
   InsertShot,
   ExportOptions
 } from './types'
+import { VideoPlanningWizardApi } from '../api/videoPlanningApi'
+
 
 // ============================
 // 비동기 액션 (Thunks)

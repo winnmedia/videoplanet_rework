@@ -3,13 +3,14 @@
  * @description TDD tests for drag-and-drop calendar functionality
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import '@testing-library/jest-dom'
 
-import { DragDropCalendarView } from '../DragDropCalendarView'
 import type { ProjectCalendarEvent, CalendarFilterOptions, Project, ProjectPhase } from '@/entities/calendar'
+
+import { DragDropCalendarView } from '../DragDropCalendarView'
 
 // Mock @dnd-kit dependencies
 vi.mock('@dnd-kit/core', () => ({

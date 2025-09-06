@@ -56,3 +56,20 @@ export type {
 // Domain Services
 export { ConflictDetectionService, CONFLICT_DETECTION_RULES } from './lib/conflictDetection'
 export { ColorAssignmentService, CALENDAR_COLORS } from './lib/colorAssignment'
+export { ConflictResolutionService } from './lib/conflictResolution'
+
+// Conflict Resolution Types
+export type {
+  ResolutionStrategy,
+  AutoResolutionStrategy,
+  AvailableTimeSlot,
+  ConflictResolutionOption,
+  ResolutionValidationResult,
+  AutoResolutionResult,
+  ProposedResolution,
+  AutoResolutionOptions
+} from './lib/conflictResolution'
+
+// Style Constants and Utilities
+export * from './constants/styles'
+export * from './lib/styleUtils'

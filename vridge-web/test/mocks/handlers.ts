@@ -5,6 +5,8 @@
 
 import { http, HttpResponse, delay } from 'msw'
 
+import { collaborationHandlers } from '@/shared/lib/collaboration/__tests__/collaboration-handlers'
+
 import { authHandlers } from './modules/auth.handlers'
 import { calendarHandlers } from './modules/calendar.handlers'
 import { dashboardHandlers } from './modules/dashboard.handlers'
@@ -13,7 +15,6 @@ import { externalHandlers } from './modules/external.handlers'
 import { projectHandlers } from './modules/project.handlers'
 import { videoFeedbackHandlers } from './modules/video-feedback.handlers'
 import { videoPlanningHandlers } from './modules/video-planning.handlers'
-import { collaborationHandlers } from '@/shared/lib/collaboration/__tests__/collaboration-handlers'
 
 // Base API URL - adjust this based on your actual API
 export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'

@@ -5,13 +5,14 @@
 
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { act } from 'react'
-import { server } from '@/lib/api/msw-server'
 import { http, HttpResponse } from 'msw'
+import { act } from 'react'
 
-import { VideoPlanningWizard } from '../ui/VideoPlanningWizard'
+import { server } from '@/lib/api/msw-server'
+
 import { VideoPlanningWizardApi } from '../api/videoPlanningApi'
 import type { PlanningInput, PlanningStage, VideoShot } from '../model/types'
+import { VideoPlanningWizard } from '../ui/VideoPlanningWizard'
 
 // 테스트용 시드 데이터
 const testSeedData = {

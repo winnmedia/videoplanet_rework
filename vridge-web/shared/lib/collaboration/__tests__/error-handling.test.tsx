@@ -4,11 +4,14 @@
  * @coverage 에러 복구, 재시도 메커니즘, 데이터 무결성, 경계 조건
  */
 
-import React from 'react'
-import { act, renderHook, waitFor } from '@testing-library/react'
-import { Provider } from 'react-redux'
 import { configureStore } from '@reduxjs/toolkit'
+import { act, renderHook, waitFor } from '@testing-library/react'
+import { http, HttpResponse } from 'msw'
+import React from 'react'
+import { Provider } from 'react-redux'
 import { describe, it, expect, beforeEach, beforeAll, afterAll, vi } from 'vitest'
+
+import { server } from '@/shared/api/__tests__/setup/msw-setup'
 
 import { useVideoPlanningCollaboration, useCalendarCollaboration } from '../hooks/useCollaboration'
 import collaborationSlice, { 
@@ -20,9 +23,8 @@ import collaborationSlice, {
 } from '../slice'
 
 // MSW 설정
-import { server } from '@/shared/api/__tests__/setup/msw-setup'
 import { collaborationHandlers, errorHandlers } from './collaboration-handlers'
-import { http, HttpResponse } from 'msw'
+
 
 // 테스트용 스토어 생성
 function createTestStore() {

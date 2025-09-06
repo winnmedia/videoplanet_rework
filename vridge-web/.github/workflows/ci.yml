@@ -2,9 +2,10 @@ name: Build System & Quality Gates - Deterministic Pipeline
 
 on:
   push:
-    branches: [main, master, develop, railway-deploy]
+    branches: [main, master, develop, railway-deploy, security-fix-clean]
   pull_request:
     branches: [main, master, develop]
+    types: [opened, synchronize, reopened]
   workflow_dispatch:
     inputs:
       skip_cache:
@@ -24,6 +25,10 @@ env:
   CI: true
   FORCE_COLOR: 3
   DETERMINISTIC_BUILD: true
+  TURBO_TELEMETRY_DISABLED: 1
+  NEXT_TELEMETRY_DISABLED: 1
+  NODE_OPTIONS: '--max-old-space-size=4096'
+  SKIP_ENV_VALIDATION: true
 
 jobs:
   # === DETERMINISTIC SETUP PHASE ===
@@ -37,10 +42,10 @@ jobs:
       should-run-e2e: ${{ steps.changes.outputs.frontend == 'true' || steps.changes.outputs.e2e == 'true' || github.event.inputs.run_e2e == 'true' }}
       
     steps:
-      - name: Checkout with full history for cache optimization
+      - name: Checkout with limited history for speed
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 2
           
       - name: Detect changed files for intelligent testing
         uses: dorny/paths-filter@v3

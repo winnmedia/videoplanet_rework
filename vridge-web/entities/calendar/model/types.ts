@@ -148,7 +148,7 @@ export interface CalendarEventUpdateRequest extends Partial<CalendarEventCreateR
 /**
  * Project Phase Types (Video Production Phases)
  */
-export type ProjectPhaseType = 'planning' | 'filming' | 'editing'
+export type ProjectPhaseType = 'pre-production' | 'production' | 'post-production' | 'review' | 'delivery'
 
 /**
  * Project Phase Domain Model
@@ -238,6 +238,7 @@ export interface ProjectLegendItem {
   project: Project
   palette: ProjectColorPalette
   isVisible: boolean
+  phaseCount?: number
 }
 
 // ===========================

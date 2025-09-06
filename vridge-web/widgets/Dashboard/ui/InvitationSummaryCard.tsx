@@ -200,18 +200,34 @@ export function InvitationSummaryCard({
                       
                       {/* 빠른 액션 버튼들 */}
                       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {invitation.type === 'sent' && invitation.status === 'pending' && invitation.canResend && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              onResendInvitation?.(invitation.id)
-                            }}
-                            className="px-2 py-1 text-xs text-primary-600 hover:bg-primary-100 rounded"
-                            title="재전송"
-                            aria-label="재전송"
-                          >
-                            재전송
-                          </button>
+                        {invitation.type === 'sent' && invitation.status === 'pending' && (
+                          invitation.canResend ? (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                onResendInvitation?.(invitation.id)
+                              }}
+                              className="px-2 py-1 text-xs text-primary-600 hover:bg-primary-100 rounded"
+                              title="재전송"
+                              aria-label="재전송"
+                            >
+                              재전송
+                            </button>
+                          ) : (
+                            <div className="relative group/tooltip">
+                              <button
+                                disabled
+                                className="px-2 py-1 text-xs text-gray-400 bg-gray-100 rounded cursor-not-allowed"
+                                title="재전송 쿨다운 중"
+                                aria-label="재전송 쿨다운 중"
+                              >
+                                쿨다운
+                              </button>
+                              <div className="absolute bottom-full mb-1 left-1/2 transform -translate-x-1/2 px-2 py-1 bg-gray-800 text-white text-xs rounded opacity-0 group-hover/tooltip:opacity-100 transition-opacity whitespace-nowrap z-10">
+                                60초 후 재전송 가능
+                              </div>
+                            </div>
+                          )
                         )}
                         {invitation.type === 'received' && invitation.status === 'pending' && (
                           <>

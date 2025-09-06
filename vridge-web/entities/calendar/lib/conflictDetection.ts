@@ -24,7 +24,7 @@ export class ConflictDetectionService {
     const affectedEvents = new Set<ProjectCalendarEvent>()
 
     // Only check for filming phase conflicts as per requirements
-    const filmingEvents = events.filter(event => event.phase.type === 'filming')
+    const filmingEvents = events.filter(event => event.phase.type === 'production')
 
     // Check for filming overlaps (primary conflict type)
     for (let i = 0; i < filmingEvents.length; i++) {
@@ -57,7 +57,7 @@ export class ConflictDetectionService {
     event2: ProjectCalendarEvent
   ): EnhancedCalendarConflict | null {
     // Only check filming phase overlaps
-    if (event1.phase.type !== 'filming' || event2.phase.type !== 'filming') {
+    if (event1.phase.type !== 'production' || event2.phase.type !== 'production') {
       return null
     }
 
@@ -163,7 +163,7 @@ export const CONFLICT_DETECTION_RULES = {
     name: '촬영 일정 충돌',
     description: '같은 시간대에 두 개 이상의 촬영이 예정되어 있습니다',
     applies: (event1: ProjectCalendarEvent, event2: ProjectCalendarEvent) => {
-      return event1.phase.type === 'filming' && event2.phase.type === 'filming'
+      return event1.phase.type === 'production' && event2.phase.type === 'production'
     },
     severity: 'warning' as const
   }
