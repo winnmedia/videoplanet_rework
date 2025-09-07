@@ -9,8 +9,8 @@
  * - 스크린샷 및 공유 기능
  */
 
-import { useParams } from 'next/navigation'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { useParams } from 'next/navigation'
 import { vi } from 'vitest'
 
 import FeedbackDetailPage from './page'
