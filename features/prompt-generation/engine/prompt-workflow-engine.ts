@@ -1,9 +1,9 @@
 /**
  * 프롬프트 생성 워크플로우 엔진
- * 
+ *
  * 스토리 → 4막 구조 → 12샷 → JSON 프롬프트 자동 생성을 위한
  * 완전 자동화된 워크플로우 엔진입니다.
- * 
+ *
  * 주요 기능:
  * - 5단계 파이프라인 실행
  * - 원자성 보장 (실패 시 롤백)
@@ -169,17 +169,19 @@ export class PromptWorkflowEngine {
   /**
    * 완전한 워크플로우 실행
    */
-  async executeFullWorkflow(storyInput: StoryInput): Promise<WorkflowResult<{
-    finalPrompt: VideoPlanetPrompt
-    executionLog: {
-      steps: GenerationStep[]
-      totalExecutionTime: number
-      stepsCompleted: number
-      stepsSkipped: number
-      errors: number
-    }
-    qualityMetrics: QualityReport
-  }>> {
+  async executeFullWorkflow(storyInput: StoryInput): Promise<
+    WorkflowResult<{
+      finalPrompt: VideoPlanetPrompt
+      executionLog: {
+        steps: GenerationStep[]
+        totalExecutionTime: number
+        stepsCompleted: number
+        stepsSkipped: number
+        errors: number
+      }
+      qualityMetrics: QualityReport
+    }>
+  > {
     const startTime = performance.now()
     this.executionLog = []
     let currentData: Record<string, unknown> = { ...storyInput }
@@ -246,23 +248,41 @@ export class PromptWorkflowEngine {
             totalExecutionTime,
             stepsCompleted: this.executionLog.filter(s => s.success).length,
             stepsSkipped: Object.keys(this.config.steps).length - this.executionLog.length,
-            errors: this.executionLog.filter(s => !s.success).length
+            errors: this.executionLog.filter(s => !s.success).length,
           },
-          qualityMetrics
+          qualityMetrics,
         },
-        executionTime: totalExecutionTime
+        executionTime: totalExecutionTime,
       }
-
     } catch (error) {
       return {
         success: false,
-        data: {} as Record<string, unknown>,
+        data: {
+          finalPrompt: {} as VideoPlanetPrompt,
+          executionLog: {
+            steps: this.executionLog,
+            totalExecutionTime: 0,
+            stepsCompleted: 0,
+            stepsSkipped: 0,
+            errors: 1,
+          },
+          qualityMetrics: {
+            consistencyScore: 0,
+            completenessScore: 0,
+            technicalScore: 0,
+            overallScore: 0,
+            issues: [],
+            optimizationSuggestions: [],
+            estimatedGenerationCost: 0,
+            estimatedGenerationTime: 0,
+          } as QualityReport,
+        },
         error: {
           code: 'WORKFLOW_ERROR',
           message: error instanceof Error ? error.message : 'Unknown workflow error',
-          details: { executionLog: this.executionLog }
+          details: { executionLog: this.executionLog },
         },
-        executionTime: performance.now() - startTime
+        executionTime: performance.now() - startTime,
       }
     }
   }
@@ -285,13 +305,13 @@ export class PromptWorkflowEngine {
           executionTime: performance.now() - stepStartTime,
           success: true,
           retryCount: 0,
-          fromCache: true
+          fromCache: true,
         }
         this.executionLog.push(step)
-        return { 
+        return {
           success: true,
           data: cachedResult,
-          fromCache: true 
+          fromCache: true,
         }
       }
     }
@@ -302,7 +322,7 @@ export class PromptWorkflowEngine {
 
         switch (stepName) {
           case 'storyAnalysis':
-            result = await this.executeStoryAnalysis(inputData)
+            result = await this.executeStoryAnalysis(inputData as unknown as StoryInput)
             break
           case 'fourActGeneration':
             result = await this.executeFourActGeneration(inputData)
@@ -332,15 +352,14 @@ export class PromptWorkflowEngine {
           success: result.success,
           retryCount,
           fromCache: false,
-          error: result.error
+          error: result.error,
         }
         this.executionLog.push(step)
 
         return result
-
       } catch (error) {
         retryCount++
-        
+
         if (retryCount > maxRetries) {
           const step: GenerationStep = {
             name: stepName,
@@ -350,8 +369,8 @@ export class PromptWorkflowEngine {
             fromCache: false,
             error: {
               code: 'MAX_RETRIES_EXCEEDED',
-              message: error instanceof Error ? error.message : 'Unknown error'
-            }
+              message: error instanceof Error ? error.message : 'Unknown error',
+            },
           }
           this.executionLog.push(step)
 
@@ -359,7 +378,7 @@ export class PromptWorkflowEngine {
             success: false,
             data: null,
             error: step.error,
-            retryCount: retryCount - 1
+            retryCount: retryCount - 1,
           }
         }
 
@@ -387,7 +406,7 @@ export class PromptWorkflowEngine {
 
     const batchSize = this.config.batchProcessing.batchSize
     const batches: StoryInput[][] = []
-    
+
     // 배치로 나누기
     for (let i = 0; i < storyInputs.length; i += batchSize) {
       batches.push(storyInputs.slice(i, i + batchSize))
@@ -398,22 +417,24 @@ export class PromptWorkflowEngine {
     // 배치별 병렬 처리
     for (const batch of batches) {
       const batchPromises = batch.map(input => this.executeFullWorkflow(input))
-      
+
       if (this.config.batchProcessing.failureHandling === 'stop_on_error') {
         const batchResults = await Promise.all(batchPromises)
         allResults.push(...batchResults)
       } else {
         // 실패해도 계속 진행
         const batchResults = await Promise.allSettled(batchPromises)
-        const processedResults = batchResults.map(result => 
-          result.status === 'fulfilled' ? result.value : {
-            success: false,
-            data: {} as Record<string, unknown>,
-            error: {
-              code: 'BATCH_PROCESSING_ERROR',
-              message: 'Failed during batch processing'
-            }
-          }
+        const processedResults = batchResults.map(result =>
+          result.status === 'fulfilled'
+            ? result.value
+            : {
+                success: false,
+                data: {} as Record<string, unknown>,
+                error: {
+                  code: 'BATCH_PROCESSING_ERROR',
+                  message: 'Failed during batch processing',
+                },
+              }
         )
         allResults.push(...processedResults)
       }
@@ -431,30 +452,30 @@ export class PromptWorkflowEngine {
     if (!input.title || input.targetDuration <= 0) {
       return {
         success: false,
-        data: null as unknown,
+        data: {} as unknown as { analyzedStory: AnalyzedStory },
         error: {
           code: 'VALIDATION_ERROR',
-          message: 'Invalid story input: title and targetDuration are required'
-        }
+          message: 'Invalid story input: title and targetDuration are required',
+        },
       }
     }
 
     try {
       // 테마 추출
       const themes = this.extractThemes(input)
-      
+
       // 핵심 순간 식별
       const keyMoments = this.identifyKeyMoments(input)
-      
+
       // 감정 아크 분석
       const emotionalArc = this.analyzeEmotionalArc(input)
-      
+
       // 캐릭터 다이나믹스 분석
       const characterDynamics = this.analyzeCharacterDynamics(input)
-      
+
       // 시각적 키워드 생성
       const visualKeywords = this.generateVisualKeywords(input)
-      
+
       // 페이싱 결정
       const pacing = this.determinePacing(input)
 
@@ -464,29 +485,30 @@ export class PromptWorkflowEngine {
         emotionalArc,
         characterDynamics,
         visualKeywords,
-        pacing
+        pacing,
       }
 
       return {
         success: true,
-        data: { analyzedStory }
+        data: { analyzedStory },
       }
-
     } catch (error) {
       return {
         success: false,
-        data: null as unknown,
+        data: {} as unknown as { analyzedStory: AnalyzedStory },
         error: {
           code: 'ANALYSIS_ERROR',
-          message: error instanceof Error ? error.message : 'Story analysis failed'
-        }
+          message: error instanceof Error ? error.message : 'Story analysis failed',
+        },
       }
     }
   }
 
-  private async executeFourActGeneration(input: Record<string, unknown>): Promise<WorkflowResult<{ fourActStructure: FourActStructure }>> {
+  private async executeFourActGeneration(
+    input: Record<string, unknown>
+  ): Promise<WorkflowResult<{ fourActStructure: FourActStructure }>> {
     try {
-      const storyInput = input as StoryInput
+      const storyInput = input as unknown as StoryInput
       const analyzedStory = input.analyzedStory as AnalyzedStory
 
       // 4막 구조 템플릿
@@ -495,31 +517,31 @@ export class PromptWorkflowEngine {
           title: '설정 및 도입',
           durationRatio: 0.25,
           purpose: 'establish_setting_characters',
-          emotionalTarget: 'curiosity'
+          emotionalTarget: 'curiosity',
         },
         {
           title: '갈등 발생',
           durationRatio: 0.35,
           purpose: 'introduce_conflict',
-          emotionalTarget: 'tension'
+          emotionalTarget: 'tension',
         },
         {
           title: '절정과 발전',
-          durationRatio: 0.30,
+          durationRatio: 0.3,
           purpose: 'climax_development',
-          emotionalTarget: 'peak_emotion'
+          emotionalTarget: 'peak_emotion',
         },
         {
           title: '해결과 마무리',
-          durationRatio: 0.10,
+          durationRatio: 0.1,
           purpose: 'resolution',
-          emotionalTarget: 'satisfaction'
-        }
+          emotionalTarget: 'satisfaction',
+        },
       ]
 
       const acts = actTemplates.map((template, index) => {
         const duration = Math.round(storyInput.targetDuration * template.durationRatio)
-        
+
         return {
           id: `act_${index + 1}`,
           title: template.title,
@@ -528,7 +550,7 @@ export class PromptWorkflowEngine {
           order: index + 1,
           keyEvents: this.generateKeyEvents(template, analyzedStory, index),
           emotionalTone: template.emotionalTarget,
-          visualFocus: this.generateVisualFocus(template, storyInput)
+          visualFocus: this.generateVisualFocus(template, storyInput),
         }
       })
 
@@ -536,29 +558,30 @@ export class PromptWorkflowEngine {
         projectId: `project_${storyInput.id}_${Date.now()}`,
         acts,
         totalDuration: acts.reduce((sum, act) => sum + act.duration, 0),
-        createdAt: new Date()
+        createdAt: new Date(),
       }
 
       return {
         success: true,
-        data: { fourActStructure }
+        data: { fourActStructure },
       }
-
     } catch (error) {
       return {
         success: false,
-        data: null as unknown,
+        data: {} as unknown as { fourActStructure: FourActStructure },
         error: {
           code: 'FOUR_ACT_GENERATION_ERROR',
-          message: error instanceof Error ? error.message : 'Four act generation failed'
-        }
+          message: error instanceof Error ? error.message : 'Four act generation failed',
+        },
       }
     }
   }
 
-  private async executeShotBreakdown(input: Record<string, unknown>): Promise<WorkflowResult<{ shotBreakdown: ShotBreakdown[] }>> {
+  private async executeShotBreakdown(
+    input: Record<string, unknown>
+  ): Promise<WorkflowResult<{ shotBreakdown: ShotBreakdown[] }>> {
     try {
-      const storyInput = input as StoryInput
+      const storyInput = input as unknown as StoryInput
       const fourActStructure = input.fourActStructure as FourActStructure
 
       const shotBreakdown: ShotBreakdown[] = []
@@ -569,7 +592,7 @@ export class PromptWorkflowEngine {
 
       for (const act of fourActStructure.acts) {
         const actShotDuration = Math.round(act.duration / shotsPerAct)
-        
+
         for (let i = 0; i < shotsPerAct; i++) {
           const shot: ShotBreakdown = {
             shotNumber,
@@ -582,13 +605,13 @@ export class PromptWorkflowEngine {
             technicalSpecs: {
               aspectRatio: storyInput.stylePreferences.aspectRatio,
               resolution: 'hd' as const,
-              frameRate: 24
+              frameRate: 24,
             },
             lighting: {
-              type: this.selectLighting(storyInput, act) === 'natural' ? 'natural' as const : 'artificial' as const,
+              type: this.selectLighting(storyInput, act) === 'natural' ? ('natural' as const) : ('artificial' as const),
               mood: this.mapVisualMoodToLightingMood(storyInput.stylePreferences.visualMood),
-              direction: 'front' as const
-            }
+              direction: 'front' as const,
+            },
           }
 
           shotBreakdown.push(shot)
@@ -598,24 +621,25 @@ export class PromptWorkflowEngine {
 
       return {
         success: true,
-        data: { shotBreakdown }
+        data: { shotBreakdown },
       }
-
     } catch (error) {
       return {
         success: false,
-        data: null as unknown,
+        data: {} as unknown as { shotBreakdown: ShotBreakdown[] },
         error: {
           code: 'SHOT_BREAKDOWN_ERROR',
-          message: error instanceof Error ? error.message : 'Shot breakdown failed'
-        }
+          message: error instanceof Error ? error.message : 'Shot breakdown failed',
+        },
       }
     }
   }
 
-  private async executePromptGeneration(input: Record<string, unknown>): Promise<WorkflowResult<{ videoPlanetPrompt: VideoPlanetPrompt }>> {
+  private async executePromptGeneration(
+    input: Record<string, unknown>
+  ): Promise<WorkflowResult<{ videoPlanetPrompt: VideoPlanetPrompt }>> {
     try {
-      const storyInput = input as StoryInput
+      const storyInput = input as unknown as StoryInput
       const shotBreakdown = input.shotBreakdown as ShotBreakdown[]
 
       // VideoPlanet 프롬프트 생성
@@ -631,7 +655,7 @@ export class PromptWorkflowEngine {
           difficulty: this.assessDifficulty(storyInput, shotBreakdown),
           estimatedTokens: this.estimateTokens(shotBreakdown),
           language: 'ko',
-          targetAudience: 'professional'
+          targetAudience: 'professional',
         },
         promptStructure: {
           shotBreakdown: shotBreakdown.map(shot => ({
@@ -644,13 +668,13 @@ export class PromptWorkflowEngine {
             technicalSpecs: {
               aspectRatio: storyInput.stylePreferences.aspectRatio,
               resolution: 'hd',
-              frameRate: 24
+              frameRate: 24,
             },
             lighting: {
               type: shot.lighting?.type || 'natural',
               mood: this.mapVisualMoodToLightingMood(storyInput.stylePreferences.visualMood),
-              direction: 'front'
-            }
+              direction: 'front',
+            },
           })),
           styleGuide: {
             artStyle: storyInput.stylePreferences.artStyle,
@@ -659,20 +683,23 @@ export class PromptWorkflowEngine {
             characterConsistency: {
               enabled: storyInput.characters.length > 0,
               referenceCharacters: storyInput.characters.map(c => c.name),
-              consistencyStrength: 0.8
+              consistencyStrength: 0.8,
             },
             environmentStyle: {
-              setting: storyInput.setting.location.includes('indoor') || 
-                       storyInput.setting.location.includes('cafe') || 
-                       storyInput.setting.location.includes('서점') ? 'indoor' : 'outdoor',
+              setting:
+                storyInput.setting.location.includes('indoor') ||
+                storyInput.setting.location.includes('cafe') ||
+                storyInput.setting.location.includes('서점')
+                  ? 'indoor'
+                  : 'outdoor',
               timeOfDay: storyInput.setting.timeOfDay,
-              weather: storyInput.setting.weather
-            }
+              weather: storyInput.setting.weather,
+            },
           },
           narrativeFlow: {
             pacing: 'medium',
-            transitionStyle: 'cut'
-          }
+            transitionStyle: 'cut',
+          },
         },
         generationSettings: {
           provider: 'google',
@@ -681,7 +708,7 @@ export class PromptWorkflowEngine {
             aspectRatio: storyInput.stylePreferences.aspectRatio,
             quality: 'high',
             stylization: 0.8,
-            coherence: 0.9
+            coherence: 0.9,
           },
           batchSettings: {
             enabled: true,
@@ -689,68 +716,69 @@ export class PromptWorkflowEngine {
             maxRetries: 3,
             timeoutMs: 30000,
             parallelProcessing: true,
-            failureHandling: 'retry_with_fallback'
+            failureHandling: 'retry_with_fallback',
           },
-          fallbackProvider: 'huggingface'
+          fallbackProvider: 'huggingface',
         },
         qualityAssurance: {
           validationRules: {
             minConsistencyScore: this.config.qualityGates.minConsistencyScore,
             maxRegenerationCount: this.config.qualityGates.maxRegenerationAttempts,
             requiredElements: ['characters', 'setting', 'lighting'],
-            forbiddenElements: ['text', 'watermark', 'signature']
+            forbiddenElements: ['text', 'watermark', 'signature'],
           },
           approvalWorkflow: {
             requiresManualReview: this.config.qualityGates.requireManualApproval,
             autoApproveThreshold: 0.85,
-            reviewers: []
-          }
+            reviewers: [],
+          },
         },
         usage: {
           createdBy: `user_workflow_engine`,
           createdAt: new Date().toISOString(),
           usageCount: 0,
-          totalGenerations: 0
+          totalGenerations: 0,
         },
-        status: 'active'
+        status: 'active',
       }
 
       // Basic validation (temporary until proper schema is set up)
       if (!videoPlanetPrompt.id || !videoPlanetPrompt.projectId) {
         return {
           success: false,
-          data: null as unknown,
+          data: {} as unknown as { videoPlanetPrompt: VideoPlanetPrompt },
           error: {
             code: 'VALIDATION_ERROR',
-            message: 'Generated prompt missing required fields: id, projectId'
-          }
+            message: 'Generated prompt missing required fields: id, projectId',
+          },
         }
       }
 
       return {
         success: true,
-        data: { videoPlanetPrompt }
+        data: { videoPlanetPrompt },
       }
-
     } catch (error) {
       return {
         success: false,
-        data: null as unknown,
+        data: {} as unknown as { videoPlanetPrompt: VideoPlanetPrompt },
         error: {
           code: 'PROMPT_GENERATION_ERROR',
-          message: error instanceof Error ? error.message : 'Prompt generation failed'
-        }
+          message: error instanceof Error ? error.message : 'Prompt generation failed',
+        },
       }
     }
   }
 
-  private async executeQualityValidation(input: Record<string, unknown>): Promise<WorkflowResult<{ qualityReport: QualityReport; optimizedPrompt: VideoPlanetPrompt }>> {
+  private async executeQualityValidation(
+    input: Record<string, unknown>
+  ): Promise<WorkflowResult<{ qualityReport: QualityReport; optimizedPrompt: VideoPlanetPrompt }>> {
     try {
       const videoPlanetPrompt = input.videoPlanetPrompt as VideoPlanetPrompt
 
       // 품질 검증 수행
       const qualityReport = this.performQualityValidation(videoPlanetPrompt)
-      
+
       // 최적화 수행
       const optimizedPrompt = this.optimizePrompt(videoPlanetPrompt, qualityReport)
 
@@ -758,18 +786,17 @@ export class PromptWorkflowEngine {
         success: true,
         data: {
           qualityReport,
-          optimizedPrompt
-        }
+          optimizedPrompt,
+        },
       }
-
     } catch (error) {
       return {
         success: false,
-        data: null as unknown,
+        data: {} as unknown as { qualityReport: QualityReport; optimizedPrompt: VideoPlanetPrompt },
         error: {
           code: 'QUALITY_VALIDATION_ERROR',
-          message: error instanceof Error ? error.message : 'Quality validation failed'
-        }
+          message: error instanceof Error ? error.message : 'Quality validation failed',
+        },
       }
     }
   }
@@ -784,22 +811,22 @@ export class PromptWorkflowEngine {
       title: inputData.title,
       genre: inputData.genre,
       duration: inputData.targetDuration,
-      style: inputData.stylePreferences
+      style: inputData.stylePreferences,
     }
     return `${stepName}_${JSON.stringify(relevantData)}`
   }
 
   private extractThemes(input: StoryInput): string[] {
     const themes: string[] = []
-    
+
     if (input.genre === 'romance') {
       themes.push('love', 'connection', 'serendipity')
     }
-    
+
     if (input.setting.location.includes('카페') || input.setting.location.includes('cafe')) {
       themes.push('urban_life', 'social_space', 'comfort')
     }
-    
+
     if (input.mood.includes('romantic')) {
       themes.push('romance', 'intimacy', 'emotion')
     }
@@ -809,12 +836,12 @@ export class PromptWorkflowEngine {
 
   private identifyKeyMoments(input: StoryInput): string[] {
     const moments: string[] = []
-    
+
     // 장르별 핵심 순간
     if (input.genre === 'romance') {
       moments.push('first_encounter', 'eye_contact', 'conversation', 'emotional_connection')
     }
-    
+
     // 설정별 순간
     if (input.setting.location.includes('카페')) {
       moments.push('entrance', 'ordering', 'seating', 'departure')
@@ -827,7 +854,7 @@ export class PromptWorkflowEngine {
     return {
       beginning: { intensity: 0.2, emotion: 'curiosity' },
       climax: { intensity: 0.9, emotion: input.stylePreferences.visualMood },
-      resolution: { intensity: 0.7, emotion: 'satisfaction' }
+      resolution: { intensity: 0.7, emotion: 'satisfaction' },
     }
   }
 
@@ -835,19 +862,19 @@ export class PromptWorkflowEngine {
     return input.characters.map(char => ({
       character: char.name,
       role: char.role,
-      arcDescription: `${char.name}의 ${char.description}을 통한 감정적 여정`
+      arcDescription: `${char.name}의 ${char.description}을 통한 감정적 여정`,
     }))
   }
 
   private generateVisualKeywords(input: StoryInput): string[] {
     const keywords: string[] = []
-    
+
     keywords.push(input.setting.location)
     keywords.push(input.setting.timeOfDay)
     keywords.push(input.setting.weather)
     keywords.push(input.stylePreferences.artStyle)
     keywords.push(input.stylePreferences.colorPalette)
-    
+
     return keywords
   }
 
@@ -857,25 +884,34 @@ export class PromptWorkflowEngine {
     return 'fast'
   }
 
-  private generateActDescription(template: Record<string, unknown>, storyInput: StoryInput, _: AnalyzedStory): string {
+  private generateActDescription(
+    template: Record<string, unknown>,
+    storyInput: StoryInput,
+    _analyzedStory: AnalyzedStory
+  ): string {
+    void _analyzedStory
     const baseDescriptions = {
       establish_setting_characters: `${storyInput.setting.location}의 분위기를 설정하고 주요 인물들을 소개합니다.`,
       introduce_conflict: '주인공들 사이의 만남과 초기 갈등 또는 긴장감을 조성합니다.',
       climax_development: '감정적 절정과 관계의 발전을 보여줍니다.',
-      resolution: '갈등의 해결과 만족스러운 마무리를 제공합니다.'
+      resolution: '갈등의 해결과 만족스러운 마무리를 제공합니다.',
     }
-    
-    return baseDescriptions[template.purpose as keyof typeof baseDescriptions] || template.title
+
+    return baseDescriptions[template.purpose as keyof typeof baseDescriptions] || String(template.title)
   }
 
-  private generateKeyEvents(template: Record<string, unknown>, analyzedStory: AnalyzedStory, actIndex: number): string[] {
+  private generateKeyEvents(
+    template: Record<string, unknown>,
+    analyzedStory: AnalyzedStory,
+    actIndex: number
+  ): string[] {
     const eventsByAct = [
       ['환경_설정', '캐릭터_등장', '분위기_조성'],
       ['첫_만남', '초기_상호작용', '긴장감_조성'],
       ['감정_절정', '관계_발전', '핵심_갈등'],
-      ['갈등_해결', '마무리', '미래_암시']
+      ['갈등_해결', '마무리', '미래_암시'],
     ]
-    
+
     return eventsByAct[actIndex] || []
   }
 
@@ -884,36 +920,48 @@ export class PromptWorkflowEngine {
       establish_setting_characters: `${storyInput.setting.location}의 시각적 특징과 캐릭터 소개`,
       introduce_conflict: '캐릭터 간의 상호작용과 감정 표현',
       climax_development: '감정적 순간과 핵심 장면의 시각화',
-      resolution: '만족스러운 결말과 여운을 주는 이미지'
+      resolution: '만족스러운 결말과 여운을 주는 이미지',
     }
-    
+
     return focusByPurpose[template.purpose as keyof typeof focusByPurpose] || '일반적인 시각적 구성'
   }
 
   private generateShotDescription(act: FourActStructure['acts'][0], shotIndex: number, storyInput: StoryInput): string {
     const shotTypes = ['establishing', 'character_focus', 'interaction']
     const shotType = shotTypes[shotIndex % shotTypes.length]
-    
+
     const descriptions = {
       establishing: `${storyInput.setting.location}의 전경을 보여주는 설정 샷`,
       character_focus: '주요 인물에 집중하는 캐릭터 샷',
-      interaction: '인물 간의 상호작용을 보여주는 관계 샷'
+      interaction: '인물 간의 상호작용을 보여주는 관계 샷',
     }
-    
+
     return `${act.title} - ${descriptions[shotType as keyof typeof descriptions]}`
   }
 
-  private selectCameraAngle(act: FourActStructure['acts'][0], shotIndex: number, _: number): ShotBreakdown['cameraAngle'] {
+  private selectCameraAngle(
+    act: FourActStructure['acts'][0],
+    shotIndex: number,
+    _totalShots: number
+  ): ShotBreakdown['cameraAngle'] {
+    void _totalShots
     const angles: ShotBreakdown['cameraAngle'][] = ['wide', 'medium', 'close']
     return angles[shotIndex % angles.length]
   }
 
-  private selectCameraMovement(act: FourActStructure['acts'][0], shotIndex: number): 'static' | 'pan' | 'tilt' | 'zoom' | 'dolly' {
+  private selectCameraMovement(
+    act: FourActStructure['acts'][0],
+    shotIndex: number
+  ): 'static' | 'pan' | 'tilt' | 'zoom' | 'dolly' {
     const movements = ['static', 'pan', 'zoom']
     return movements[shotIndex % movements.length] as 'static' | 'pan' | 'zoom'
   }
 
-  private selectLighting(storyInput: StoryInput, _: FourActStructure['acts'][0]): 'natural' | 'artificial' | 'dramatic' | 'soft' {
+  private selectLighting(
+    storyInput: StoryInput,
+    _act: FourActStructure['acts'][0]
+  ): 'natural' | 'artificial' | 'dramatic' | 'soft' {
+    void _act
     if (storyInput.setting.timeOfDay === 'morning' || storyInput.setting.timeOfDay === 'afternoon') {
       return 'natural'
     }
@@ -924,33 +972,44 @@ export class PromptWorkflowEngine {
     return shotIndex === Math.floor(shotsPerAct / 2) ? 'shallow' : 'deep'
   }
 
-  private generateVisualElements(act: FourActStructure['acts'][0], storyInput: StoryInput, _: number): string[] {
+  private generateVisualElements(
+    act: FourActStructure['acts'][0],
+    storyInput: StoryInput,
+    _shotIndex: number
+  ): string[] {
+    void _shotIndex
     const elements: string[] = []
-    
+
     elements.push(storyInput.setting.location)
     if (storyInput.characters.length > 0) {
       elements.push('characters')
     }
     elements.push('lighting')
-    
+
     if (storyInput.setting.weather !== 'sunny') {
       elements.push('weather_effects')
     }
-    
+
     return elements
   }
 
-  private generateShotPrompt(act: FourActStructure['acts'][0], storyInput: StoryInput, _: number): string {
+  private generateShotPrompt(act: FourActStructure['acts'][0], storyInput: StoryInput, _shotIndex: number): string {
+    void _shotIndex
     const basePrompt = `${storyInput.setting.location}, ${storyInput.stylePreferences.artStyle} style, ${storyInput.stylePreferences.colorPalette} colors, ${storyInput.setting.timeOfDay} lighting`
-    
-    const moodAddition = storyInput.stylePreferences.visualMood !== 'happy' ? `, ${storyInput.stylePreferences.visualMood} mood` : ''
-    
+
+    const moodAddition =
+      storyInput.stylePreferences.visualMood !== 'happy' ? `, ${storyInput.stylePreferences.visualMood} mood` : ''
+
     return `${basePrompt}${moodAddition}, professional cinematography, high quality`
   }
 
   private generateTags(storyInput: StoryInput): string[] {
-    const tags: string[] = [storyInput.genre, storyInput.stylePreferences.artStyle, storyInput.stylePreferences.visualMood]
-    
+    const tags: string[] = [
+      storyInput.genre,
+      storyInput.stylePreferences.artStyle,
+      storyInput.stylePreferences.visualMood,
+    ]
+
     if (storyInput.setting.location) {
       // 타입 안전성을 위해 명시적 캐스팅 대신 조건부 체크
       const locationTag = storyInput.setting.location
@@ -958,18 +1017,22 @@ export class PromptWorkflowEngine {
         tags.push(locationTag)
       }
     }
-    
+
     return tags.slice(0, 10)
   }
 
-  private assessDifficulty(storyInput: StoryInput, shotBreakdown: ShotBreakdown[]): 'easy' | 'medium' | 'hard' | 'expert' {
+  private assessDifficulty(
+    storyInput: StoryInput,
+    shotBreakdown: ShotBreakdown[]
+  ): 'easy' | 'medium' | 'hard' | 'expert' {
     let complexityScore = 0
-    
+
     if (storyInput.characters.length > 2) complexityScore += 1
-    if (shotBreakdown.some(shot => shot.cameraAngle === 'dutch_angle' || shot.cameraAngle === 'extreme_close')) complexityScore += 1
+    if (shotBreakdown.some(shot => shot.cameraAngle === 'dutch_angle' || shot.cameraAngle === 'extreme_close'))
+      complexityScore += 1
     if (storyInput.stylePreferences.artStyle === 'cinematic') complexityScore += 1
     if (storyInput.targetDuration > 120) complexityScore += 1
-    
+
     if (complexityScore >= 3) return 'hard'
     if (complexityScore >= 2) return 'medium'
     return 'easy'
@@ -983,11 +1046,11 @@ export class PromptWorkflowEngine {
 
   private mapVisualMoodToLightingMood(visualMood: string): 'bright' | 'dim' | 'dramatic' | 'soft' {
     const moodMap = {
-      'happy': 'bright',
-      'romantic': 'soft',
-      'dramatic': 'dramatic',
-      'mysterious': 'dim',
-      'action': 'dramatic'
+      happy: 'bright',
+      romantic: 'soft',
+      dramatic: 'dramatic',
+      mysterious: 'dim',
+      action: 'dramatic',
     }
     return (moodMap[visualMood as keyof typeof moodMap] || 'soft') as 'bright' | 'dim' | 'dramatic' | 'soft'
   }
@@ -1004,7 +1067,7 @@ export class PromptWorkflowEngine {
         type: 'error',
         category: 'consistency',
         message: 'Style guide is missing',
-        severity: 'high'
+        severity: 'high',
       })
       consistencyScore -= 0.3
     }
@@ -1015,7 +1078,7 @@ export class PromptWorkflowEngine {
         type: 'warning',
         category: 'technical',
         message: 'Expected 12 shots in breakdown',
-        severity: 'medium'
+        severity: 'medium',
       })
       completenessScore -= 0.2
     }
@@ -1026,7 +1089,7 @@ export class PromptWorkflowEngine {
         type: 'error',
         category: 'technical',
         message: 'Generation settings are missing',
-        severity: 'critical'
+        severity: 'critical',
       })
       technicalScore -= 0.5
     }
@@ -1041,7 +1104,7 @@ export class PromptWorkflowEngine {
       issues,
       optimizationSuggestions: this.generateOptimizationSuggestions(issues),
       estimatedGenerationCost: this.estimateGenerationCost(prompt),
-      estimatedGenerationTime: this.estimateGenerationTime(prompt)
+      estimatedGenerationTime: this.estimateGenerationTime(prompt),
     }
   }
 
@@ -1052,10 +1115,12 @@ export class PromptWorkflowEngine {
     if (qualityReport.overallScore < this.config.qualityGates.minConsistencyScore) {
       // 프롬프트 길이 최적화
       if (optimized.promptStructure?.shotBreakdown) {
-        optimized.promptStructure.shotBreakdown = optimized.promptStructure.shotBreakdown.map((shot: ShotBreakdown) => ({
-          ...shot,
-          generationPrompt: this.optimizePromptText(shot.generationPrompt)
-        }))
+        optimized.promptStructure.shotBreakdown = optimized.promptStructure.shotBreakdown.map(
+          (shot: ShotBreakdown) => ({
+            ...shot,
+            generationPrompt: this.optimizePromptText(shot.generationPrompt),
+          })
+        )
       }
 
       // 토큰 수 재계산
@@ -1093,12 +1158,12 @@ export class PromptWorkflowEngine {
   private estimateGenerationCost(prompt: VideoPlanetPrompt): number {
     const shotCount = prompt.promptStructure?.shotBreakdown?.length || 0
     const provider = prompt.generationSettings?.provider || 'google'
-    
+
     const costPerImage = {
-      'google': 0.02,
-      'openai': 0.08,
-      'huggingface': 0.0,
-      'midjourney': 0.01
+      google: 0.02,
+      openai: 0.08,
+      huggingface: 0.0,
+      midjourney: 0.01,
     }
 
     return shotCount * (costPerImage[provider as keyof typeof costPerImage] || 0.02)
@@ -1121,7 +1186,7 @@ export class PromptWorkflowEngine {
       issues: [],
       optimizationSuggestions: [],
       estimatedGenerationCost: this.estimateGenerationCost(prompt),
-      estimatedGenerationTime: this.estimateGenerationTime(prompt)
+      estimatedGenerationTime: this.estimateGenerationTime(prompt),
     }
   }
 }

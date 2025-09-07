@@ -64,6 +64,7 @@ export interface FeedbackSummaryStats {
   newReplies: number
   emotionChanges: number
   recentItems: FeedbackSummary[]
+  [key: string]: unknown
 }
 
 // 2. 초대 관리 요약 (전송/재전송/수락/거절/받은 초대 현황)
@@ -90,6 +91,7 @@ export interface InvitationStats {
   receivedPending: number
   receivedUnread: number
   recentInvitations: InvitationSummary[]
+  [key: string]: unknown
 }
 
 // 3. 편집 일정 간트 요약 (프로젝트별 기획·촬영·편집 진행 상황)
@@ -129,6 +131,7 @@ export interface ScheduleStats {
   completedThisWeek: number
   upcomingDeadlines: ProjectSchedule[]
   currentProjects: ProjectSchedule[]
+  [key: string]: unknown
 }
 
 // 4. 읽지 않음 배지 시스템
