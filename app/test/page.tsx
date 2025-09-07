@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import React, { useState, Component, ReactNode, ErrorInfo } from 'react'
 
 // 간단한 ErrorBoundary 구현 (의존성 없이)
@@ -45,7 +46,7 @@ class SimpleErrorBoundary extends Component<
 }
 
 export default function TestPage() {
-  const [projects, setProjects] = useState<any[]>([])
+  const [projects, setProjects] = useState<Array<{ id: string; title: string; description?: string }>>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -96,19 +97,19 @@ export default function TestPage() {
             </a>
             <ul className="flex space-x-4">
               <li>
-                <a href="/test" className="text-blue-600 hover:text-blue-800" data-cy="nav-home">
+                <Link href="/test" className="text-blue-600 hover:text-blue-800" data-cy="nav-home">
                   홈
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="/projects" className="text-blue-600 hover:text-blue-800">
+                <Link href="/projects" className="text-blue-600 hover:text-blue-800">
                   프로젝트
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="/feedback" className="text-blue-600 hover:text-blue-800">
+                <Link href="/feedback" className="text-blue-600 hover:text-blue-800">
                   피드백
-                </a>
+                </Link>
               </li>
             </ul>
           </nav>

@@ -3,7 +3,7 @@
 import { useParams, useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 
-import { fetchProjectById, updateProject } from '@/features/projects'
+import { fetchProjectById } from '@/features/projects'
 import { TeamMemberList, InviteModal } from '@/features/projects'
 import type { ProjectPermission } from '@/features/projects'
 import { useAppDispatch, useAppSelector } from '@/shared/lib/redux/hooks'

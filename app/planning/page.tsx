@@ -1,6 +1,5 @@
 'use client'
 
-import { Metadata } from 'next'
 
 import { VideoPlanningWizard } from '@/features/video-planning-wizard'
 import { SideBar } from '@/widgets'
