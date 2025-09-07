@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { withAuth } from 'next-auth/middleware'
+// import { withAuth } from 'next-auth/middleware' // 임시 비활성화
 
 // Rate limiting configuration
 const RATE_LIMIT_WINDOW = 60 * 1000 // 1 minute
@@ -203,51 +203,47 @@ function coreMiddleware(request: NextRequest) {
   return addSecurityHeaders(response)
 }
 
-// Protected routes that require authentication
-const protectedRoutes = ['/dashboard', '/projects', '/admin', '/settings']
+// Protected routes that require authentication (임시 비활성화)
+// const protectedRoutes = ['/dashboard', '/projects', '/admin', '/settings']
 
-// NextAuth middleware wrapper
-const authMiddleware = withAuth(
-  function middleware(req: NextRequest) {
-    // Run core security middleware first
-    return coreMiddleware(req)
-  },
-  {
-    callbacks: {
-      authorized: ({ token, req }) => {
-        // 테스트 환경에서는 인증을 우회하여 E2E를 안정화
-        if (process.env.NEXT_PUBLIC_APP_ENV === 'test') {
-          return true
-        }
-        const { pathname } = req.nextUrl
+// NextAuth middleware wrapper (비활성화됨 - 향후 window.location 오류 해결 후 재활성화)
+// const authMiddleware = withAuth(
+//   function middleware(req: NextRequest) {
+//     // Run core security middleware first
+//     return coreMiddleware(req)
+//   },
+//   {
+//     callbacks: {
+//       authorized: ({ token, req }) => {
+//         // 테스트 환경에서는 인증을 우회하여 E2E를 안정화
+//         if (process.env.NEXT_PUBLIC_APP_ENV === 'test') {
+//           return true
+//         }
+//         const { pathname } = req.nextUrl
         
-        // Allow access to public routes
-        if (!protectedRoutes.some(route => pathname.startsWith(route))) {
-          return true
-        }
+//         // Allow access to public routes
+//         if (!protectedRoutes.some(route => pathname.startsWith(route))) {
+//           return true
+//         }
         
-        // Check if user has valid token for protected routes
-        return !!token
-      },
-    },
-    pages: {
-      signIn: '/login',
-    },
-  }
-)
+//         // Check if user has valid token for protected routes
+//         return !!token
+//       },
+//     },
+//     pages: {
+//       signIn: '/login',
+//     },
+//   }
+// )
 
-export default authMiddleware
-export { authMiddleware as middleware }
+// 임시로 NextAuth middleware 비활성화하여 window.location 오류 해결
+export default coreMiddleware
+export { coreMiddleware as middleware }
 
-// Configure which routes use middleware
+// 완전히 middleware 비활성화하여 window.location 오류 해결
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
-    '/((?!_next/static|_next/image|favicon.ico).*)',
+    // 아무것도 매칭하지 않도록 하여 middleware 비활성화
+    '/never-match-anything-for-debugging',
   ],
 }

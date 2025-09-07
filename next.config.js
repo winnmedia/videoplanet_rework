@@ -41,7 +41,7 @@ const nextConfig = {
   },
 
 
-  // Basic security headers
+  // Basic security headers  
   async headers() {
     return [
       {
@@ -50,6 +50,10 @@ const nextConfig = {
           {
             key: 'X-Frame-Options',
             value: 'DENY'
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff'
           }
         ]
       },
@@ -58,7 +62,7 @@ const nextConfig = {
         headers: [
           {
             key: 'Content-Type',
-            value: 'text/css'
+            value: 'text/css; charset=utf-8'
           }
         ]
       },
@@ -68,6 +72,10 @@ const nextConfig = {
           {
             key: 'Cache-Control',
             value: 'public, max-age=86400'
+          },
+          {
+            key: 'Content-Type',
+            value: 'image/png'
           }
         ]
       }

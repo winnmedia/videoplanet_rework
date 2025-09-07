@@ -16,11 +16,11 @@ const frontendEnvSchema = z.object({
   NEXT_PUBLIC_APP_NAME: z.string().min(1, '앱 이름이 필요합니다').default('Video Planet, VLANET'),
   NEXT_PUBLIC_APP: z.string().min(1, '앱 식별자가 필요합니다').default('VideoPlanet'),
   NEXT_PUBLIC_APP_ENV: z.enum(['development', 'production', 'test']).default('production'),
-  NEXT_PUBLIC_PRODUCTION_DOMAIN: z.string().min(1).default('vlanet.net'),
-  NEXT_PUBLIC_APP_URL: z.string().url('올바른 앱 URL이 필요합니다').default('https://vlanet.net'),
+  NEXT_PUBLIC_PRODUCTION_DOMAIN: z.string().min(1).default('videoplanet.up.railway.app'),
+  NEXT_PUBLIC_APP_URL: z.string().url('올바른 앱 URL이 필요합니다').default('https://videoplanet-vlanets-projects.vercel.app'),
 
   // API 연동 (필수 - Vercel 환경변수에서 가져옴)
-  NEXT_PUBLIC_API_BASE: z.string().url('올바른 API URL이 필요합니다').default('https://api.vlanet.net'),
+  NEXT_PUBLIC_API_BASE: z.string().url('올바른 API URL이 필요합니다').default('https://videoplanet.up.railway.app'),
   
   // 백엔드 API - variables.md에 없으므로 API_BASE 기반으로 유도하거나 선택사항으로 처리
   NEXT_PUBLIC_BACKEND_API: z.string().url('올바른 백엔드 API URL이 필요합니다').optional(),
@@ -86,23 +86,36 @@ export type AppEnv = FrontendEnv & ServerEnv
  */
 export function validateFrontendEnv(): FrontendEnv {
   try {
-    // 환경변수 수집 (undefined 허용, Zod default로 처리)
+    // 서버/클라이언트 환경 안전성 체크
+    const isClient = typeof window !== 'undefined';
+    const isServer = !isClient;
+    
+    // 서버 사이드에서는 process.env만 사용, 클라이언트에서는 Next.js의 환경변수 주입 활용
+    const getEnvVar = (key: string, fallback?: string) => {
+      if (isServer) {
+        return process.env[key] || fallback;
+      }
+      // 클라이언트에서는 Next.js가 빌드 타임에 주입한 환경변수 사용
+      return process.env[key] || fallback;
+    };
+    
+    // 환경변수 수집 (안전한 방식으로 처리)
     const rawEnv = {
-      NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,
-      NEXT_PUBLIC_APP: process.env.NEXT_PUBLIC_APP,
-      NEXT_PUBLIC_APP_ENV: process.env.NEXT_PUBLIC_APP_ENV,
-      NEXT_PUBLIC_PRODUCTION_DOMAIN: process.env.NEXT_PUBLIC_PRODUCTION_DOMAIN,
-      NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
-      NEXT_PUBLIC_API_BASE: process.env.NEXT_PUBLIC_API_BASE,
-      NEXT_PUBLIC_BACKEND_API: process.env.NEXT_PUBLIC_BACKEND_API,
-      NEXT_PUBLIC_WS_URL: process.env.NEXT_PUBLIC_WS_URL,
-      NEXT_PUBLIC_WS_RECONNECT_INTERVAL: process.env.NEXT_PUBLIC_WS_RECONNECT_INTERVAL,
-      NEXT_PUBLIC_WS_HEARTBEAT_INTERVAL: process.env.NEXT_PUBLIC_WS_HEARTBEAT_INTERVAL,
-      NEXT_PUBLIC_WS_MAX_RECONNECT_ATTEMPTS: process.env.NEXT_PUBLIC_WS_MAX_RECONNECT_ATTEMPTS,
-      NEXT_PUBLIC_WS_MESSAGE_QUEUE_SIZE: process.env.NEXT_PUBLIC_WS_MESSAGE_QUEUE_SIZE,
-      NEXT_PUBLIC_GA_ID: process.env.NEXT_PUBLIC_GA_ID,
-      NEXT_PUBLIC_RECAPTCHA_SITE_KEY: process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY,
-      NODE_ENV: process.env.NODE_ENV,
+      NEXT_PUBLIC_APP_NAME: getEnvVar('NEXT_PUBLIC_APP_NAME', 'Video Planet, VLANET'),
+      NEXT_PUBLIC_APP: getEnvVar('NEXT_PUBLIC_APP', 'VideoPlanet'),
+      NEXT_PUBLIC_APP_ENV: getEnvVar('NEXT_PUBLIC_APP_ENV', 'production'),
+      NEXT_PUBLIC_PRODUCTION_DOMAIN: getEnvVar('NEXT_PUBLIC_PRODUCTION_DOMAIN', 'videoplanet.up.railway.app'),
+      NEXT_PUBLIC_APP_URL: getEnvVar('NEXT_PUBLIC_APP_URL', 'https://videoplanet-vlanets-projects.vercel.app'),
+      NEXT_PUBLIC_API_BASE: getEnvVar('NEXT_PUBLIC_API_BASE', 'https://videoplanet.up.railway.app'),
+      NEXT_PUBLIC_BACKEND_API: getEnvVar('NEXT_PUBLIC_BACKEND_API'),
+      NEXT_PUBLIC_WS_URL: getEnvVar('NEXT_PUBLIC_WS_URL', 'wss://videoplanet.up.railway.app'),
+      NEXT_PUBLIC_WS_RECONNECT_INTERVAL: getEnvVar('NEXT_PUBLIC_WS_RECONNECT_INTERVAL', '5000'),
+      NEXT_PUBLIC_WS_HEARTBEAT_INTERVAL: getEnvVar('NEXT_PUBLIC_WS_HEARTBEAT_INTERVAL', '30000'),
+      NEXT_PUBLIC_WS_MAX_RECONNECT_ATTEMPTS: getEnvVar('NEXT_PUBLIC_WS_MAX_RECONNECT_ATTEMPTS', '5'),
+      NEXT_PUBLIC_WS_MESSAGE_QUEUE_SIZE: getEnvVar('NEXT_PUBLIC_WS_MESSAGE_QUEUE_SIZE', '1000'),
+      NEXT_PUBLIC_GA_ID: getEnvVar('NEXT_PUBLIC_GA_ID'),
+      NEXT_PUBLIC_RECAPTCHA_SITE_KEY: getEnvVar('NEXT_PUBLIC_RECAPTCHA_SITE_KEY'),
+      NODE_ENV: getEnvVar('NODE_ENV', 'production'),
     }
 
     // BACKEND_API가 없으면 API_BASE를 기본값으로 사용
@@ -129,9 +142,9 @@ export function validateFrontendEnv(): FrontendEnv {
         NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME || 'Video Planet, VLANET',
         NEXT_PUBLIC_APP: process.env.NEXT_PUBLIC_APP || 'VideoPlanet',
         NEXT_PUBLIC_APP_ENV: (process.env.NEXT_PUBLIC_APP_ENV as 'development' | 'production' | 'test') || 'production',
-        NEXT_PUBLIC_PRODUCTION_DOMAIN: process.env.NEXT_PUBLIC_PRODUCTION_DOMAIN || 'vlanet.net',
-        NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'https://vlanet.net',
-        NEXT_PUBLIC_API_BASE: process.env.NEXT_PUBLIC_API_BASE || 'https://api.vlanet.net',
+        NEXT_PUBLIC_PRODUCTION_DOMAIN: process.env.NEXT_PUBLIC_PRODUCTION_DOMAIN || 'videoplanet.up.railway.app',
+        NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'https://videoplanet-vlanets-projects.vercel.app',
+        NEXT_PUBLIC_API_BASE: process.env.NEXT_PUBLIC_API_BASE || 'https://videoplanet.up.railway.app',
         NEXT_PUBLIC_BACKEND_API: process.env.NEXT_PUBLIC_BACKEND_API || process.env.NEXT_PUBLIC_API_BASE || 'https://videoplanet.up.railway.app',
         NEXT_PUBLIC_WS_URL: process.env.NEXT_PUBLIC_WS_URL || 'wss://videoplanet.up.railway.app',
         NEXT_PUBLIC_WS_RECONNECT_INTERVAL: Number(process.env.NEXT_PUBLIC_WS_RECONNECT_INTERVAL) || 5000,
