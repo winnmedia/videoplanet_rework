@@ -25,11 +25,20 @@ class SimpleSendGrid {
   private fromEmail = 'service@vlanet.net'
 
   constructor() {
-    this.initialize()
+    // 프로덕션 빌드 중에는 초기화 하지 않음 (런타임에서만)
+    if (typeof window === 'undefined' && process.env.NODE_ENV !== 'production') {
+      this.initialize()
+    }
   }
 
   private initialize(): void {
     try {
+      // 환경 변수 존재 확인
+      if (!process.env.SENDGRID_API_KEY || !process.env.SENDGRID_FROM_EMAIL) {
+        console.warn('⚠️ SendGrid environment variables not found')
+        return
+      }
+
       const env = envSchema.parse({
         SENDGRID_API_KEY: process.env.SENDGRID_API_KEY,
         SENDGRID_FROM_EMAIL: process.env.SENDGRID_FROM_EMAIL,
@@ -41,7 +50,8 @@ class SimpleSendGrid {
       console.log('✅ SimpleSendGrid initialized')
     } catch (error) {
       console.error('❌ SimpleSendGrid initialization failed:', error)
-      if (process.env.NODE_ENV === 'production') {
+      // 프로덕션 빌드 중에는 오류를 발생시키지 않음
+      if (process.env.NODE_ENV === 'production' && process.env.NEXT_PHASE !== 'phase-production-build') {
         throw error
       }
     }
@@ -49,6 +59,11 @@ class SimpleSendGrid {
 
   async send(data: SimpleEmailData): Promise<SendResult> {
     try {
+      // 런타임에서 초기화 시도
+      if (!this.initialized) {
+        this.initialize()
+      }
+
       if (!this.initialized) {
         if (process.env.NODE_ENV !== 'production') {
           console.log('📧 [DEV] Email would be sent:', data)
@@ -73,7 +88,7 @@ class SimpleSendGrid {
         } catch (error) {
           lastError = error as Error
           console.warn(`⚠️ Attempt ${attempt} failed:`, error)
-          
+
           if (attempt < 3) {
             // 1초 대기 후 재시도
             await new Promise(resolve => setTimeout(resolve, 1000))
@@ -82,15 +97,15 @@ class SimpleSendGrid {
       }
 
       console.error('❌ All attempts failed')
-      return { 
-        success: false, 
-        error: lastError?.message || 'Failed to send email' 
+      return {
+        success: false,
+        error: lastError?.message || 'Failed to send email',
       }
     } catch (error) {
       console.error('❌ Email send error:', error)
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
       }
     }
   }

@@ -3,17 +3,16 @@
  * All complex webpack configurations removed to prevent runtime errors
  */
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const path = require('path');
+const path = require('path')
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // TypeScript and ESLint validation
   typescript: {
-    ignoreBuildErrors: true  // 임시로 배포를 위해 비활성화
+    ignoreBuildErrors: true, // 임시로 배포를 위해 비활성화
   },
   eslint: {
-    ignoreDuringBuilds: true
+    ignoreDuringBuilds: true,
   },
 
   // Railway 배포를 위한 standalone 출력 설정
@@ -23,7 +22,7 @@ const nextConfig = {
   experimental: {
     optimizeCss: true,
     serverSourceMaps: false,
-    webpackBuildWorker: false
+    webpackBuildWorker: false,
   },
 
   // Image optimization
@@ -34,14 +33,13 @@ const nextConfig = {
         hostname: 'localhost',
         port: '',
         pathname: '/**',
-      }
+      },
     ],
     formats: ['image/avif', 'image/webp'],
-    unoptimized: false
+    unoptimized: false,
   },
 
-
-  // Basic security headers  
+  // Basic security headers
   async headers() {
     return [
       {
@@ -49,41 +47,45 @@ const nextConfig = {
         headers: [
           {
             key: 'X-Frame-Options',
-            value: 'DENY'
+            value: 'DENY',
           },
           {
             key: 'X-Content-Type-Options',
-            value: 'nosniff'
-          }
-        ]
+            value: 'nosniff',
+          },
+        ],
       },
       {
         source: '/_next/static/css/(.*)',
         headers: [
           {
             key: 'Content-Type',
-            value: 'text/css; charset=utf-8'
-          }
-        ]
+            value: 'text/css; charset=utf-8',
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+        ],
       },
       {
         source: '/images/(.*)',
         headers: [
           {
             key: 'Cache-Control',
-            value: 'public, max-age=86400'
+            value: 'public, max-age=86400',
           },
           {
             key: 'Content-Type',
-            value: 'image/png'
-          }
-        ]
-      }
-    ];
+            value: 'image/png',
+          },
+        ],
+      },
+    ]
   },
 
   // Simplified webpack configuration
-  webpack: (config) => {
+  webpack: config => {
     // Basic FSD path aliases only
     config.resolve.alias = {
       ...config.resolve.alias,
@@ -93,15 +95,15 @@ const nextConfig = {
       '@features': path.resolve(__dirname, 'features'),
       '@entities': path.resolve(__dirname, 'entities'),
       '@shared': path.resolve(__dirname, 'shared'),
-    };
+    }
 
-    return config;
+    return config
   },
 
   // Environment validation
   env: {
-    CUSTOM_KEY: process.env.CUSTOM_KEY || 'default'
-  }
-};
+    CUSTOM_KEY: process.env.CUSTOM_KEY || 'default',
+  },
+}
 
-module.exports = nextConfig;
+module.exports = nextConfig

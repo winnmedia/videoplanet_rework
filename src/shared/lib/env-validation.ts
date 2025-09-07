@@ -17,11 +17,14 @@ const frontendEnvSchema = z.object({
   NEXT_PUBLIC_APP: z.string().min(1, '앱 식별자가 필요합니다').default('VideoPlanet'),
   NEXT_PUBLIC_APP_ENV: z.enum(['development', 'production', 'test']).default('production'),
   NEXT_PUBLIC_PRODUCTION_DOMAIN: z.string().min(1).default('videoplanet.up.railway.app'),
-  NEXT_PUBLIC_APP_URL: z.string().url('올바른 앱 URL이 필요합니다').default('https://videoplanet-vlanets-projects.vercel.app'),
+  NEXT_PUBLIC_APP_URL: z
+    .string()
+    .url('올바른 앱 URL이 필요합니다')
+    .default('https://videoplanet-vlanets-projects.vercel.app'),
 
   // API 연동 (필수 - Vercel 환경변수에서 가져옴)
   NEXT_PUBLIC_API_BASE: z.string().url('올바른 API URL이 필요합니다').default('https://videoplanet.up.railway.app'),
-  
+
   // 백엔드 API - variables.md에 없으므로 API_BASE 기반으로 유도하거나 선택사항으로 처리
   NEXT_PUBLIC_BACKEND_API: z.string().url('올바른 백엔드 API URL이 필요합니다').optional(),
 
@@ -36,6 +39,12 @@ const frontendEnvSchema = z.object({
   NEXT_PUBLIC_GA_ID: z.string().optional(),
   NEXT_PUBLIC_RECAPTCHA_SITE_KEY: z.string().optional(),
 
+  // 기능 플래그 (boolean을 string으로 처리)
+  NEXT_PUBLIC_ENABLE_ANALYTICS: z.string().optional(),
+  NEXT_PUBLIC_ENABLE_DEBUG: z.string().optional(),
+  NEXT_PUBLIC_ENABLE_MAINTENANCE: z.string().optional(),
+  NEXT_PUBLIC_ENABLE_PERFORMANCE_MONITORING: z.string().optional(),
+
   // 런타임 환경
   NODE_ENV: z.enum(['development', 'production', 'test']).default('production'),
 })
@@ -49,26 +58,47 @@ const serverEnvSchema = z.object({
   NEXTAUTH_SECRET: z.string().min(32, 'NextAuth 비밀키는 최소 32자 이상이어야 합니다').optional(),
 
   // 외부 API 키 (프로덕션에서 필수)
-  GOOGLE_GEMINI_API_KEY: z.string().refine(val => {
-    if (process.env.NODE_ENV === 'production' && val === 'dummy-key-for-build') {
-      return false
-    }
-    return process.env.NODE_ENV === 'development' || val?.length > 0
-  }, { message: '프로덕션에서 유효한 Gemini API 키가 필요합니다' }),
+  GOOGLE_GEMINI_API_KEY: z.string().refine(
+    val => {
+      if (process.env.NODE_ENV === 'production' && val === 'dummy-key-for-build') {
+        return false
+      }
+      return process.env.NODE_ENV === 'development' || val?.length > 0
+    },
+    { message: '프로덕션에서 유효한 Gemini API 키가 필요합니다' }
+  ),
   OPENAI_API_KEY: z.string().optional(),
   GOOGLE_API_KEY: z.string().optional(),
   HUGGINGFACE_API_KEY: z.string().optional(),
 
   // 메일 서비스 (프로덕션에서 필수)
-  SENDGRID_FROM_EMAIL: z.string().email().refine(val => {
-    return process.env.NODE_ENV === 'development' || val?.length > 0
-  }, { message: '프로덕션에서 SendGrid 발신 이메일이 필요합니다' }),
-  SENDGRID_API_KEY: z.string().refine(val => {
-    return process.env.NODE_ENV === 'development' || val?.length > 0
-  }, { message: '프로덕션에서 SendGrid API 키가 필요합니다' }),
-  VERIFIED_SENDER: z.string().email().refine(val => {
-    return process.env.NODE_ENV === 'development' || val?.length > 0
-  }, { message: '프로덕션에서 검증된 발신자 이메일이 필요합니다' }),
+  SENDGRID_FROM_EMAIL: z
+    .string()
+    .email()
+    .refine(
+      val => {
+        return process.env.NODE_ENV === 'development' || val?.length > 0
+      },
+      { message: '프로덕션에서 SendGrid 발신 이메일이 필요합니다' }
+    ),
+  SENDGRID_API_KEY: z.string().refine(
+    val => {
+      return process.env.NODE_ENV === 'development' || val?.length > 0
+    },
+    { message: '프로덕션에서 SendGrid API 키가 필요합니다' }
+  ),
+  VERIFIED_SENDER: z
+    .string()
+    .email()
+    .refine(
+      val => {
+        return process.env.NODE_ENV === 'development' || val?.length > 0
+      },
+      { message: '프로덕션에서 검증된 발신자 이메일이 필요합니다' }
+    ),
+
+  // 기타 설정
+  SKIP_ENV_VALIDATION: z.string().optional(),
 })
 
 /**
@@ -81,24 +111,24 @@ export type AppEnv = FrontendEnv & ServerEnv
 /**
  * 프론트엔드 환경변수 검증 및 로드
  * 배포 환경별 안전한 검증 처리
- * 
+ *
  * Vercel 배포 시 환경변수가 undefined일 수 있으므로 graceful fallback 적용
  */
 export function validateFrontendEnv(): FrontendEnv {
   try {
     // 서버/클라이언트 환경 안전성 체크
-    const isClient = typeof window !== 'undefined';
-    const isServer = !isClient;
-    
+    const isClient = typeof window !== 'undefined'
+    const isServer = !isClient
+
     // 서버 사이드에서는 process.env만 사용, 클라이언트에서는 Next.js의 환경변수 주입 활용
     const getEnvVar = (key: string, fallback?: string) => {
       if (isServer) {
-        return process.env[key] || fallback;
+        return process.env[key] || fallback
       }
       // 클라이언트에서는 Next.js가 빌드 타임에 주입한 환경변수 사용
-      return process.env[key] || fallback;
-    };
-    
+      return process.env[key] || fallback
+    }
+
     // 환경변수 수집 (안전한 방식으로 처리)
     const rawEnv = {
       NEXT_PUBLIC_APP_NAME: getEnvVar('NEXT_PUBLIC_APP_NAME', 'Video Planet, VLANET'),
@@ -115,28 +145,34 @@ export function validateFrontendEnv(): FrontendEnv {
       NEXT_PUBLIC_WS_MESSAGE_QUEUE_SIZE: getEnvVar('NEXT_PUBLIC_WS_MESSAGE_QUEUE_SIZE', '1000'),
       NEXT_PUBLIC_GA_ID: getEnvVar('NEXT_PUBLIC_GA_ID'),
       NEXT_PUBLIC_RECAPTCHA_SITE_KEY: getEnvVar('NEXT_PUBLIC_RECAPTCHA_SITE_KEY'),
+      NEXT_PUBLIC_ENABLE_ANALYTICS: getEnvVar('NEXT_PUBLIC_ENABLE_ANALYTICS'),
+      NEXT_PUBLIC_ENABLE_DEBUG: getEnvVar('NEXT_PUBLIC_ENABLE_DEBUG'),
+      NEXT_PUBLIC_ENABLE_MAINTENANCE: getEnvVar('NEXT_PUBLIC_ENABLE_MAINTENANCE'),
+      NEXT_PUBLIC_ENABLE_PERFORMANCE_MONITORING: getEnvVar('NEXT_PUBLIC_ENABLE_PERFORMANCE_MONITORING'),
       NODE_ENV: getEnvVar('NODE_ENV', 'production'),
     }
 
     // BACKEND_API가 없으면 API_BASE를 기본값으로 사용
     if (!rawEnv.NEXT_PUBLIC_BACKEND_API && rawEnv.NEXT_PUBLIC_API_BASE) {
-      rawEnv.NEXT_PUBLIC_BACKEND_API = rawEnv.NEXT_PUBLIC_API_BASE.replace('api.', 'videoplanet.up.railway.app')
+      rawEnv.NEXT_PUBLIC_BACKEND_API = rawEnv.NEXT_PUBLIC_API_BASE
     }
 
     const validatedEnv = frontendEnvSchema.parse(rawEnv)
-    
+
     // 배포 환경에서 검증 성공 로그 (개발환경에서만 상세 출력)
     if (process.env.NODE_ENV === 'development') {
       console.log('✅ 프론트엔드 환경변수 검증 성공')
     }
-    
+
     return validatedEnv
   } catch (error) {
     // 배포 환경에서 graceful 처리 - 기본값으로 폴백
     if (process.env.VERCEL || process.env.NODE_ENV === 'production') {
-      console.warn('⚠️ 일부 환경변수 누락, 기본값 사용:', error instanceof z.ZodError ? 
-        error.errors.map(e => e.path.join('.')).join(', ') : 'Unknown error')
-      
+      console.warn(
+        '⚠️ 일부 환경변수 누락, 기본값 사용:',
+        error instanceof z.ZodError ? error.errors.map(e => e.path.join('.')).join(', ') : 'Unknown error'
+      )
+
       // 최소한의 필수 환경변수로 폴백
       return {
         NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME || 'Video Planet, VLANET',
@@ -145,7 +181,10 @@ export function validateFrontendEnv(): FrontendEnv {
         NEXT_PUBLIC_PRODUCTION_DOMAIN: process.env.NEXT_PUBLIC_PRODUCTION_DOMAIN || 'videoplanet.up.railway.app',
         NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'https://videoplanet-vlanets-projects.vercel.app',
         NEXT_PUBLIC_API_BASE: process.env.NEXT_PUBLIC_API_BASE || 'https://videoplanet.up.railway.app',
-        NEXT_PUBLIC_BACKEND_API: process.env.NEXT_PUBLIC_BACKEND_API || process.env.NEXT_PUBLIC_API_BASE || 'https://videoplanet.up.railway.app',
+        NEXT_PUBLIC_BACKEND_API:
+          process.env.NEXT_PUBLIC_BACKEND_API ||
+          process.env.NEXT_PUBLIC_API_BASE ||
+          'https://videoplanet.up.railway.app',
         NEXT_PUBLIC_WS_URL: process.env.NEXT_PUBLIC_WS_URL || 'wss://videoplanet.up.railway.app',
         NEXT_PUBLIC_WS_RECONNECT_INTERVAL: Number(process.env.NEXT_PUBLIC_WS_RECONNECT_INTERVAL) || 5000,
         NEXT_PUBLIC_WS_HEARTBEAT_INTERVAL: Number(process.env.NEXT_PUBLIC_WS_HEARTBEAT_INTERVAL) || 30000,
@@ -153,19 +192,26 @@ export function validateFrontendEnv(): FrontendEnv {
         NEXT_PUBLIC_WS_MESSAGE_QUEUE_SIZE: Number(process.env.NEXT_PUBLIC_WS_MESSAGE_QUEUE_SIZE) || 1000,
         NEXT_PUBLIC_GA_ID: process.env.NEXT_PUBLIC_GA_ID,
         NEXT_PUBLIC_RECAPTCHA_SITE_KEY: process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY,
+        NEXT_PUBLIC_ENABLE_ANALYTICS: process.env.NEXT_PUBLIC_ENABLE_ANALYTICS,
+        NEXT_PUBLIC_ENABLE_DEBUG: process.env.NEXT_PUBLIC_ENABLE_DEBUG,
+        NEXT_PUBLIC_ENABLE_MAINTENANCE: process.env.NEXT_PUBLIC_ENABLE_MAINTENANCE,
+        NEXT_PUBLIC_ENABLE_PERFORMANCE_MONITORING: process.env.NEXT_PUBLIC_ENABLE_PERFORMANCE_MONITORING,
         NODE_ENV: (process.env.NODE_ENV as 'development' | 'production' | 'test') || 'production',
       }
     }
 
     // 개발환경에서는 엄격한 검증 유지
     console.error('❌ 프론트엔드 환경변수 검증 실패:', error)
-    
+
     if (error instanceof z.ZodError) {
-      console.error('상세 오류:', error.errors?.map(err => ({
-        path: err.path?.join('.') || 'unknown',
-        message: err.message,
-        received: err.input
-      })) || 'No detailed errors available')
+      console.error(
+        '상세 오류:',
+        error.errors?.map(err => ({
+          path: err.path?.join('.') || 'unknown',
+          message: err.message,
+          code: err.code,
+        })) || 'No detailed errors available'
+      )
     }
 
     throw new Error('환경변수 검증 실패로 인해 애플리케이션을 시작할 수 없습니다.')
@@ -203,7 +249,7 @@ export function checkEnvHealth(): void {
   if (process.env.NODE_ENV !== 'development') return
 
   console.log('🔧 환경변수 상태 확인:')
-  
+
   const frontendEnv = validateFrontendEnv()
   console.log('✅ 프론트엔드 환경변수 검증 통과')
   console.log(`📱 앱: ${frontendEnv.NEXT_PUBLIC_APP_NAME} (${frontendEnv.NEXT_PUBLIC_APP_ENV})`)
@@ -213,7 +259,9 @@ export function checkEnvHealth(): void {
   try {
     const serverEnv = validateServerEnv()
     console.log('✅ 서버 환경변수 검증 통과')
-    console.log(`🔑 API 키 상태: Gemini=${!!serverEnv.GOOGLE_GEMINI_API_KEY}, OpenAI=${!!serverEnv.OPENAI_API_KEY}, SendGrid=${!!serverEnv.SENDGRID_API_KEY}`)
+    console.log(
+      `🔑 API 키 상태: Gemini=${!!serverEnv.GOOGLE_GEMINI_API_KEY}, OpenAI=${!!serverEnv.OPENAI_API_KEY}, SendGrid=${!!serverEnv.SENDGRID_API_KEY}`
+    )
   } catch {
     console.warn('⚠️ 서버 환경변수 일부 누락 (개발환경에서는 선택사항)')
   }
@@ -222,7 +270,35 @@ export function checkEnvHealth(): void {
 /**
  * 검증된 환경변수 내보내기 (앱 전역 사용)
  */
-export const env = validateFrontendEnv()
+// 서버사이드에서 안전하게 환경변수를 로드
+export const env = (() => {
+  try {
+    return validateFrontendEnv()
+  } catch (error) {
+    console.warn('환경변수 검증 실패, 기본값 사용:', error)
+    return {
+      NEXT_PUBLIC_APP_NAME: 'Video Planet, VLANET',
+      NEXT_PUBLIC_APP: 'VideoPlanet',
+      NEXT_PUBLIC_APP_ENV: 'production' as const,
+      NEXT_PUBLIC_PRODUCTION_DOMAIN: 'videoplanet.up.railway.app',
+      NEXT_PUBLIC_APP_URL: 'https://videoplanet-vlanets-projects.vercel.app',
+      NEXT_PUBLIC_API_BASE: 'https://videoplanet.up.railway.app',
+      NEXT_PUBLIC_BACKEND_API: 'https://videoplanet.up.railway.app',
+      NEXT_PUBLIC_WS_URL: 'wss://videoplanet.up.railway.app',
+      NEXT_PUBLIC_WS_RECONNECT_INTERVAL: 5000,
+      NEXT_PUBLIC_WS_HEARTBEAT_INTERVAL: 30000,
+      NEXT_PUBLIC_WS_MAX_RECONNECT_ATTEMPTS: 5,
+      NEXT_PUBLIC_WS_MESSAGE_QUEUE_SIZE: 1000,
+      NEXT_PUBLIC_GA_ID: undefined,
+      NEXT_PUBLIC_RECAPTCHA_SITE_KEY: undefined,
+      NEXT_PUBLIC_ENABLE_ANALYTICS: undefined,
+      NEXT_PUBLIC_ENABLE_DEBUG: undefined,
+      NEXT_PUBLIC_ENABLE_MAINTENANCE: undefined,
+      NEXT_PUBLIC_ENABLE_PERFORMANCE_MONITORING: undefined,
+      NODE_ENV: 'production' as const,
+    }
+  }
+})()
 
 /**
  * 환경별 설정

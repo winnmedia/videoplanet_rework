@@ -80,6 +80,7 @@
     "_comment_contract_tests": "=== Contract 테스트 ===",
     "test:contracts": "vitest run test/contracts/**/*.test.*",
     "test:api:integration": "vitest run test/integration/api/**/*.test.*",
+    "test:integration:real": "vitest run --config vitest.integration.config.mjs",
     "validate:api-schemas": "node scripts/validate-api-schemas.js",
     "_comment_e2e_deterministic": "=== Deterministic E2E Testing Pipeline ===",
     "e2e:validate-build": "node scripts/build-validation.js",

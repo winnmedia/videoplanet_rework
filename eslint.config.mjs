@@ -18,6 +18,22 @@ const eslintConfig = [
       "out/**",
       "build/**",
       "next-env.d.ts",
+      // Generated files and polyfills
+      "*.min.js",
+      "*-polyfill.js",
+      "global-polyfill.js",
+      "server-polyfill.js",
+      // Test reports and outputs
+      "integration-test-results/**",
+      "coverage/**",
+      "test-results/**",
+      "playwright-report/**",
+      // Generated assets
+      "public/images/**",
+      "public/assets/**",
+      // CSS modules generated types
+      "*.module.scss.d.ts",
+      "scss.d.ts",
     ],
   },
   {
@@ -94,6 +110,16 @@ const eslintConfig = [
             {
               group: ["@shared/*/lib/*", "@shared/*/api/*", "@shared/*/ui/*"],
               message: "CRITICAL: Direct internal imports forbidden. Use @shared/[segment]/index.ts public API only.",
+            },
+            // Block legacy lib/api imports - enforce shared/api usage
+            {
+              group: ["@/lib/api/*", "@lib/api/*"],
+              message: "CRITICAL: Legacy lib/api imports forbidden. Use @shared/api/* instead.",
+            },
+            // Block circular dependency patterns
+            {
+              group: ["../../../*", "../../../../*"],
+              message: "CRITICAL: Deep relative imports may cause circular dependencies. Use absolute imports.",
             },
             // Block cross-slice imports
             {
@@ -355,6 +381,13 @@ const eslintConfig = [
       "@typescript-eslint/no-unsafe-member-access": "off",
       "@typescript-eslint/no-unsafe-return": "off",
       "@typescript-eslint/no-explicit-any": "warn", // Warn instead of error
+    },
+  },
+  // Config files - allow require() for Node.js compatibility
+  {
+    files: [".lintstagedrc.js", "*.config.js", "*.config.mjs", "vitest.config.*", "playwright.config.*"],
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
     },
   },
   // AI Service files - relax strict type checking for new integration
