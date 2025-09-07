@@ -16,6 +16,9 @@ const nextConfig = {
     ignoreDuringBuilds: true
   },
 
+  // Railway 배포를 위한 standalone 출력 설정
+  output: 'standalone',
+
   // Performance optimizations only
   experimental: {
     optimizeCss: true,
