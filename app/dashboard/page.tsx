@@ -99,10 +99,10 @@ export default function DashboardPage() {
       if (!dashboardData?.feedbackSummary?.recentItems) return
       
       // 읽지 않은 피드백들에 대해 일괄 읽음 처리
-      const unreadItems = dashboardData.feedbackSummary.recentItems.filter(item => !item.isRead)
+      const unreadItems = dashboardData.feedbackSummary.recentItems.filter((item: any) => !item.isRead)
       
       await Promise.all(
-        unreadItems.map(item => dashboardApiClient.markFeedbackAsRead(item.id))
+        unreadItems.map((item: any) => dashboardApiClient.markFeedbackAsRead(item.id))
       )
       
       // 대시보드 데이터 갱신
@@ -227,7 +227,7 @@ export default function DashboardPage() {
                     onResendInvitation={handleInvitationAction.resend}
                     onAcceptInvitation={handleInvitationAction.accept}
                     onDeclineInvitation={handleInvitationAction.decline}
-                    onItemClick={(id) => console.log('Invitation clicked:', id)}
+                    onItemClick={(id: string) => console.log('Invitation clicked:', id)}
                   />
                 </div>
               )}

@@ -42,7 +42,7 @@ interface NotificationActions {
 export function useNotifications() {
   const dispatch = useDispatch()
   const wsRef = useRef<WebSocket | null>(null)
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout>()
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
   const reconnectAttempts = useRef(0)
   const maxReconnectAttempts = 5
 

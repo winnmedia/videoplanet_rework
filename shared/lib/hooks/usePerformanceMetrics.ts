@@ -26,7 +26,7 @@ export function usePerformanceMetrics(updateInterval = 5000): PerformanceState {
     isMonitoring: false
   })
 
-  const intervalRef = useRef<NodeJS.Timeout>()
+  const intervalRef = useRef<NodeJS.Timeout | undefined>(undefined)
   const unsubscribeRef = useRef<(() => void) | null>(null)
 
   const updateMetrics = useCallback(() => {

@@ -253,7 +253,11 @@ export const collaborationHandlers = [
   http.post('/api/collaboration/resolve-conflict', async ({ request }) => {
     console.log('🔧 충돌 해결 요청 수신')
     
-    const { conflictId, resolution, mergedData } = await request.json()
+    const { conflictId, resolution, mergedData } = await request.json() as {
+      conflictId: string;
+      resolution: string;
+      mergedData: any;
+    }
     
     // 네트워크 지연 시뮬레이션
     await new Promise(resolve => setTimeout(resolve, 150))
@@ -304,7 +308,11 @@ export const collaborationHandlers = [
 
   // 테스트용 - 사용자 추가/제거
   http.post('/api/collaboration/simulate-user', async ({ request }) => {
-    const { action, userId, userData } = await request.json()
+    const { action, userId, userData } = await request.json() as {
+      action: string;
+      userId: string;
+      userData: any;
+    }
     
     if (action === 'join') {
       const newUser: CollaborationUser = {
@@ -331,7 +339,10 @@ export const collaborationHandlers = [
 
   // 테스트용 - 강제 충돌 생성
   http.post('/api/collaboration/force-conflict', async ({ request }) => {
-    const { resourceId, resourceType } = await request.json()
+    const { resourceId, resourceType } = await request.json() as {
+      resourceId: string;
+      resourceType: string;
+    }
     
     const conflictChange: CollaborationChange = {
       id: `forced-conflict-${Date.now()}`,

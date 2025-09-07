@@ -464,7 +464,7 @@ export async function cachedMockApiCall<T>(
   mockData: T | (() => T),
   options: Parameters<typeof mockApiCall>[1] & { cacheTtl?: number } = {}
 ): Promise<ApiResponse<T>> {
-  const cached = mockCache.get(key)
+  const cached = mockCache.get(key) as ApiResponse<T> | undefined
   if (cached) {
     if (currentConfig.enableLogging) {
       console.log(`💾 Cache hit for key: ${key}`)
