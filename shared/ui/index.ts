@@ -11,13 +11,14 @@ export { EmptyState } from './EmptyState/EmptyState'
 export { Modal } from './Modal'
 export { Dropdown } from './Dropdown'
 export { Form, FormField, FormGroup } from './Form'
+export { Card } from './Card'
 
 // 4개 모듈용 공통 컴포넌트들
 export { LoadingSpinner } from './LoadingSpinner/LoadingSpinner'
 export { ErrorBoundary } from './ErrorBoundary/ErrorBoundary'
 // export { ConfirmModal } from './ConfirmModal/ConfirmModal'
 // export { Toast, ToastContainer, toast } from './Toast/Toast'
-// export { Card } from './Card/Card'
+// Legacy Card는 주석 처리 (Modern Card 사용)
 export { SubMenu } from './SubMenu/SubMenu'
 export { SubMenuImproved } from './SubMenu/SubMenu.improved'
 // export { MenuButton } from './MenuButton/MenuButton'

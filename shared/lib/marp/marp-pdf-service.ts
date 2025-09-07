@@ -9,6 +9,7 @@ import type {
   MarpExportRequest,
   MarpExportResponse
 } from '@/entities/video-planning/model/marp-export.schema'
+
 import { generateMarpTemplate } from './marp-template-generator'
 
 // Dynamic import to avoid SSR issues
@@ -22,12 +23,12 @@ interface MarpOptions {
 }
 
 interface MarpThemeSet {
-  default?: string;
-  [key: string]: string | undefined;
+  default?: string | any;
+  [key: string]: string | any | undefined;
 }
 
 type MarpClass = new (options?: MarpOptions) => {
-  render(markdown: string): Promise<{ html: string; css: string }>;
+  render(markdown: string, env?: any): { html: string; css: string } | Promise<{ html: string; css: string }>;
   themeSet?: MarpThemeSet;
 };
 
@@ -53,7 +54,7 @@ const loadMarp = async (): Promise<MarpClass> => {
       } as MarpClass;
     }
   }
-  return loadedMarpClass;
+  return loadedMarpClass!;
 };
 
 // ============================
@@ -125,7 +126,7 @@ export class MarpPdfService {
 
       // Marp로 HTML 렌더링
       const marp = await this.initializeMarp();
-      const renderResult = await marp.render(markdown)
+      const renderResult = await Promise.resolve(marp.render(markdown))
       const html = this.createFullHtml(renderResult.html, renderResult.css)
 
       // PDF 생성

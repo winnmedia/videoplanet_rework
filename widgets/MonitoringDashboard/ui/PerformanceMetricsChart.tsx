@@ -275,7 +275,7 @@ export const PerformanceMetricsChart: React.FC<PerformanceMetricsChartProps> = (
       <div className={styles.header}>
         <h2 className={styles.title}>실시간 성능 메트릭</h2>
         <div className={styles.legend}>
-          {chartData.lines.map((line) => (
+          {isChartData(chartData) && chartData.lines.map((line: any) => (
             <div 
               key={line.label} 
               className={styles.legendItem}

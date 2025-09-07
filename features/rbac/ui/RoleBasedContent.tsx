@@ -8,6 +8,7 @@
 import type { ReactNode } from 'react'
 
 import { UserRole } from '@/entities/rbac/model/types'
+
 import { useCurrentUserPermissions } from '../model/useUserPermissions'
 
 interface RoleBasedContentProps {

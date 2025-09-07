@@ -145,12 +145,24 @@ class MenuApi {
   // 단순 CRUD 메소드들 - 캐시 제거, 직접적인 HTTP 호출
   async createProject(data: Partial<SubMenuItem>): Promise<SubMenuItem> {
     const response = await httpClient.post('/api/projects', data)
-    return (response.data as Record<string, unknown>)?.items?.[0]
+    const responseData = response.data as { items?: SubMenuItem[] }
+    
+    if (!responseData.items || responseData.items.length === 0) {
+      throw new Error('Invalid API response: No items returned')
+    }
+    
+    return responseData.items[0]
   }
 
   async updateProject(id: string, data: Partial<SubMenuItem>): Promise<SubMenuItem> {
     const response = await httpClient.put(`/api/projects/${id}`, data)
-    return (response.data as Record<string, unknown>)?.items?.[0]
+    const responseData = response.data as { items?: SubMenuItem[] }
+    
+    if (!responseData.items || responseData.items.length === 0) {
+      throw new Error('Invalid API response: No items returned')
+    }
+    
+    return responseData.items[0]
   }
 
   async deleteProject(id: string): Promise<void> {

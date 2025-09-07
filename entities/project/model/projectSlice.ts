@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'
 import { z } from 'zod'
 
 import { CalendarEvent } from '@/entities/calendar/model/types'
+import { AutoScheduleConfig, DEFAULT_AUTO_SCHEDULE, calculateAutoSchedule } from '@/shared/lib/project-scheduler'
 
 import { 
   Project, 
@@ -10,7 +11,6 @@ import {
   ProjectMember,
   AutoScheduleResult
 } from './types'
-import { AutoScheduleConfig, DEFAULT_AUTO_SCHEDULE, calculateAutoSchedule } from '@/shared/lib/project-scheduler'
 
 // ===========================
 // State Interface

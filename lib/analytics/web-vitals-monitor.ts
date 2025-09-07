@@ -4,10 +4,11 @@
  * LCP, INP, CLS, TTFB 등 핵심 성능 지표를 실시간 수집하고 분석
  */
 
-import { alertManager } from '@/lib/api/monitoring'
 import { WebVitals, MonitoringSchemaValidator } from '@/shared/api/monitoring-schemas'
 
 import { realTimeDataCollector } from './real-time-data-collector'
+
+import { alertManager } from '@/lib/api/monitoring'
 
 // Web Vitals 임계값 정의 (Google 기준)
 export const WEB_VITALS_THRESHOLDS = {

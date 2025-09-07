@@ -8,11 +8,12 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import { act } from 'react'
 
-import { server } from '@/lib/api/msw-server'
 
 import { VideoPlanningWizardApi } from '../api/videoPlanningApi'
 import type { PlanningInput, PlanningStage, VideoShot } from '../model/types'
 import { VideoPlanningWizard } from '../ui/VideoPlanningWizard'
+
+import { server } from '@/lib/api/msw-server'
 
 // 테스트용 시드 데이터
 const testSeedData = {

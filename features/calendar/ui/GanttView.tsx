@@ -3,8 +3,8 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 
 // import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
-import type { CalendarEvent, GanttTimelineItem } from '@/entities/project/model/calendar-types'
 import { ColorAssignmentService, CALENDAR_CLASSES } from '@/entities/calendar/lib/colorAssignment'
+import type { CalendarEvent, GanttTimelineItem } from '@/entities/project/model/calendar-types'
 
 interface GanttViewProps {
   events: CalendarEvent[]

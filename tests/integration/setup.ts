@@ -14,8 +14,7 @@ process.env.NEXT_PUBLIC_ENABLE_MSW = 'false'
 process.env.NEXT_PUBLIC_USE_REAL_API = 'true'
 process.env.NEXT_PUBLIC_API_URL = 'http://localhost:3002/api'
 
-// 전역 fetch 설정 (필요한 경우)
-import nodeFetch from 'node-fetch'
-global.fetch = global.fetch || (nodeFetch as typeof fetch)
+// 전역 fetch는 Node.js 18+에서 내장 제공
+// global.fetch는 이미 사용 가능
 
 console.log('✅ Integration test environment configured')

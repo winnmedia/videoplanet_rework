@@ -4,7 +4,6 @@
  * 사용자 행동, API 호출, 성능 지표를 실시간으로 수집하고 처리
  */
 
-import { apiMonitor, AlertManager } from '@/lib/api/monitoring'
 import { 
   BusinessMetric, 
   UserJourneyEvent, 
@@ -14,6 +13,8 @@ import {
   DataQualityMetric,
   MonitoringSchemaValidator 
 } from '@/shared/api/monitoring-schemas'
+
+import { apiMonitor, AlertManager } from '@/lib/api/monitoring'
 
 export interface DataCollectionConfig {
   batchSize: number

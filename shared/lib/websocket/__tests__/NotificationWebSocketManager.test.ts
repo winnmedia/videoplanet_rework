@@ -3,8 +3,10 @@
  */
 
 import { vi, describe, beforeEach, afterEach, it, expect } from 'vitest'
-import { NotificationWebSocketManager } from '../NotificationWebSocketManager'
+
 import type { WebSocketMessage } from '@/entities/notification'
+
+import { NotificationWebSocketManager } from '../NotificationWebSocketManager'
 
 // WebSocket Mock
 class MockWebSocket {

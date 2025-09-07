@@ -19,22 +19,22 @@ import { SideBar } from '@/widgets'
 // } from '@/widgets/Dashboard'
 
 // Temporary placeholder components
-const RecentActivityFeed = ({ activities }: any) => <div className="text-gray-500">활동 피드 준비중...</div>
-const FeedbackSummaryCard = ({ data, onViewDetails, onMarkAllRead, onItemClick }: any) => <div className="text-gray-500">피드백 요약 준비중...</div>
-const InvitationSummaryCard = ({ data, onViewDetails, onResendInvitation, onAcceptInvitation, onDeclineInvitation, onItemClick }: any) => <div className="text-gray-500">초대 요약 준비중...</div>
-const ScheduleSummaryCard = ({ data, viewType, onViewTypeChange, onProjectClick, onViewDetails, onCreateProject }: any) => <div className="text-gray-500">일정 요약 준비중...</div>
-const UnreadBadge = ({ count, priority, size }: any) => <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">{count}</span>
+const RecentActivityFeed = () => <div className="text-gray-500">활동 피드 준비중...</div>
+const FeedbackSummaryCard = () => <div className="text-gray-500">피드백 요약 준비중...</div>
+const InvitationSummaryCard = () => <div className="text-gray-500">초대 요약 준비중...</div>
+const ScheduleSummaryCard = () => <div className="text-gray-500">일정 요약 준비중...</div>
+const UnreadBadge = ({ count }: { count: number }) => <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">{count}</span>
 const QuickActions = () => <div className="text-gray-500">빠른 작업 준비중...</div>
 
 // Mock API client
 const dashboardApiClient = {
   fetchDashboardData: () => Promise.resolve({}),
-  markFeedbackAsRead: (id: string) => Promise.resolve(),
-  resendInvitation: (id: string) => Promise.resolve(),
-  acceptInvitation: (id: string) => Promise.resolve(),
+  markFeedbackAsRead: (_id: string) => Promise.resolve(),
+  resendInvitation: (_id: string) => Promise.resolve(),
+  acceptInvitation: (_id: string) => Promise.resolve(),
 }
 
-type DashboardData = any
+type DashboardData = Record<string, unknown>
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -99,10 +99,10 @@ export default function DashboardPage() {
       if (!dashboardData?.feedbackSummary?.recentItems) return
       
       // 읽지 않은 피드백들에 대해 일괄 읽음 처리
-      const unreadItems = dashboardData.feedbackSummary.recentItems.filter((item: any) => !item.isRead)
+      const unreadItems = (dashboardData as Record<string, unknown>).feedbackSummary?.recentItems?.filter((item: Record<string, unknown>) => !item.isRead) || []
       
       await Promise.all(
-        unreadItems.map((item: any) => dashboardApiClient.markFeedbackAsRead(item.id))
+        unreadItems.map((item: Record<string, unknown>) => dashboardApiClient.markFeedbackAsRead(item.id as string))
       )
       
       // 대시보드 데이터 갱신

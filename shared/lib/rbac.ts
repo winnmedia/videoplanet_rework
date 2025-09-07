@@ -345,9 +345,4 @@ export function calculateContextualPermissions(
 // Exports for Components
 // ===========================
 
-export {
-  type ProjectRole,
-  type Permission,
-  type PermissionAction,
-  type ProjectPermissionContext
-}
+// Export types removed to avoid duplication - types already exported above

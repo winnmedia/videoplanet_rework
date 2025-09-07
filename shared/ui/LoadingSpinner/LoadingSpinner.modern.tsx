@@ -1,6 +1,6 @@
 'use client'
 
-interface LoadingSpinnerProps {
+export interface LoadingSpinnerProps {
   size?: 'sm' | 'md' | 'lg'
   className?: string
   'data-testid'?: string

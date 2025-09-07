@@ -2,14 +2,15 @@
  * @vitest-environment jsdom
  */
 
-import { vi, describe, beforeEach, afterEach, it, expect } from 'vitest'
+import { configureStore } from '@reduxjs/toolkit'
 import { renderHook, act } from '@testing-library/react'
 import { Provider } from 'react-redux'
-import { configureStore } from '@reduxjs/toolkit'
+import { vi, describe, beforeEach, afterEach, it, expect } from 'vitest'
 
-import { useRealtimeNotifications } from '../lib/useRealtimeNotifications'
 import { notificationSlice } from '@/entities/notification'
 import type { WebSocketMessage } from '@/entities/notification'
+
+import { useRealtimeNotifications } from '../lib/useRealtimeNotifications'
 
 // WebSocket Mock
 class MockWebSocket {

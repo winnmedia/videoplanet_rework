@@ -137,8 +137,8 @@ export class PerformanceMonitor {
         this.recordMetric('FCP', fcpEntry.startTime)
       }
 
-      // TTI approximation
-      const tti = navigationTiming.domContentLoadedEventEnd - navigationTiming.navigationStart
+      // TTI approximation (using fetchStart as alternative to deprecated navigationStart)
+      const tti = navigationTiming.domContentLoadedEventEnd - navigationTiming.fetchStart
       this.recordMetric('TTI', tti)
     }
   }

@@ -3,8 +3,8 @@
 import { useState } from 'react'
 
 // import { EyeIcon, EyeSlashIcon, ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline'
-import type { ProjectLegendItem } from '@/entities/project/model/calendar-types'
 import { ColorAssignmentService, CALENDAR_CLASSES } from '@/entities/calendar/lib/colorAssignment'
+import type { ProjectLegendItem } from '@/entities/project/model/calendar-types'
 
 interface ProjectLegendProps {
   legendItems: ProjectLegendItem[]

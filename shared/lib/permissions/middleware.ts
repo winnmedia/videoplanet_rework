@@ -7,14 +7,14 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { z } from 'zod'
 
+import { PermissionChecker } from '@/entities/rbac/lib/permissionChecker'
 import type { 
   RBACUser, 
-  Permission, 
   PermissionCheck, 
   PermissionResult,
   AuditLog 
 } from '@/entities/rbac/model/types'
-import { PermissionChecker } from '@/entities/rbac/lib/permissionChecker'
+import { Permission } from '@/entities/rbac/model/types'
 
 /**
  * 권한 검증 미들웨어 옵션

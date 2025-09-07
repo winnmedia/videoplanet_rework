@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeAll, afterAll } from '@jest/globals';
 import { http, HttpResponse } from 'msw';
 import { setupServer } from 'msw/node';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 
 // API 엔드포인트 테스트
 describe('Production API Integration Tests', () => {

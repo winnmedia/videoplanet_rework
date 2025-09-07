@@ -5,17 +5,19 @@
  */
 
 import { describe, it, expect } from 'vitest'
+
+import type { 
+  MarpExportRequest,
+  FourStagesPlan,
+  TwelveShotsPlan 
+} from '@/entities/video-planning/model/marp-export.schema'
+
 import { 
   MarpTemplateGenerator,
   generateMarpTemplate,
   generateMarpSlides,
   createMarpTheme 
 } from './marp-template-generator'
-import type { 
-  MarpExportRequest,
-  FourStagesPlan,
-  TwelveShotsPlan 
-} from '@/entities/video-planning/model/marp-export.schema'
 
 describe('MarpTemplateGenerator', () => {
   const mockFourStages: FourStagesPlan = {

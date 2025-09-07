@@ -7,6 +7,7 @@
 
 import React, { useEffect, useState, useCallback, useMemo } from 'react'
 
+import { FeedbackEvent } from '@/processes/feedback-collection/lib/notificationEngine'
 import { WorkflowStage } from '@/processes/video-production/model/workflowMachine'
 
 import styles from './MonitoringDashboardWidget.module.scss'
@@ -100,7 +101,7 @@ export const MonitoringDashboardWidget: React.FC<MonitoringDashboardProps> = ({
   }, [])
 
   // 알림 클릭 핸들러
-  const handleEventClick = useCallback((event: { id: string; type: string; message: string }) => {
+  const handleEventClick = useCallback((event: FeedbackEvent) => {
     console.log('이벤트 클릭:', event)
     // TODO: 이벤트 상세 정보 모달 열기
   }, [])

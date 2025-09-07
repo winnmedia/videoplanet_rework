@@ -22,36 +22,36 @@ export const MarpPdfService = async () => {
   return MarpPdfService;
 };
 
-export const generatePdfFromMarkdown = async (...args: any[]) => {
+export const generatePdfFromMarkdown = async (markdown: string, config: any) => {
   if (typeof window !== 'undefined') {
     throw new Error('generatePdfFromMarkdown is server-side only');
   }
   const { generatePdfFromMarkdown } = await import('./marp-pdf-service');
-  return generatePdfFromMarkdown(...args);
+  return generatePdfFromMarkdown(markdown, config);
 };
 
-export const createPdfBuffer = async (...args: any[]) => {
+export const createPdfBuffer = async (html: string, config: any) => {
   if (typeof window !== 'undefined') {
     throw new Error('createPdfBuffer is server-side only');
   }
   const { createPdfBuffer } = await import('./marp-pdf-service');
-  return createPdfBuffer(...args);
+  return createPdfBuffer(html, config);
 };
 
-export const validatePdfOutput = async (...args: any[]) => {
+export const validatePdfOutput = async (pdfBuffer: Buffer) => {
   if (typeof window !== 'undefined') {
     throw new Error('validatePdfOutput is server-side only');
   }
   const { validatePdfOutput } = await import('./marp-pdf-service');
-  return validatePdfOutput(...args);
+  return validatePdfOutput(pdfBuffer);
 };
 
-export const createMarpExportResponse = async (...args: any[]) => {
+export const createMarpExportResponse = async (result: any, downloadUrl?: string) => {
   if (typeof window !== 'undefined') {
     throw new Error('createMarpExportResponse is server-side only');
   }
   const { createMarpExportResponse } = await import('./marp-pdf-service');
-  return createMarpExportResponse(...args);
+  return createMarpExportResponse(result, downloadUrl);
 };
 
 export const getMemoryUsage = async () => {
@@ -62,12 +62,12 @@ export const getMemoryUsage = async () => {
   return getMemoryUsage();
 };
 
-export const logPdfGeneration = async (...args: any[]) => {
+export const logPdfGeneration = async (projectTitle: string, result: any) => {
   if (typeof window !== 'undefined') {
     throw new Error('logPdfGeneration is server-side only');
   }
   const { logPdfGeneration } = await import('./marp-pdf-service');
-  return logPdfGeneration(...args);
+  return logPdfGeneration(projectTitle, result);
 };
 
 // PDF 스토리지

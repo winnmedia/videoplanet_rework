@@ -1,18 +1,18 @@
 import { httpClient } from '@/shared/api'
 
-interface LoginResponse {
+export interface LoginResponse {
   user: string
   vridge_session: string
   message?: string
 }
 
-interface SignupResponse {
+export interface SignupResponse {
   user: string
   vridge_session: string
   message?: string
 }
 
-interface VerificationResponse {
+export interface VerificationResponse {
   message: string
 }
 

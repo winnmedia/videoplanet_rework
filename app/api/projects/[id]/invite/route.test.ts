@@ -6,6 +6,7 @@
 
 import { NextRequest } from 'next/server'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
+
 import { POST } from './route'
 
 // SendGrid 모킹

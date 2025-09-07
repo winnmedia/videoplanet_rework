@@ -144,7 +144,16 @@ export function Form({
   className = '',
   id
 }: FormProps) {
-  const [values, setValues] = useState<FormData>(defaultValues)
+  const [values, setValues] = useState<FormData>(() => {
+    const initialValues: FormData = {}
+    Object.keys(defaultValues).forEach(key => {
+      const value = defaultValues[key]
+      if (value !== undefined) {
+        initialValues[key] = value
+      }
+    })
+    return initialValues
+  })
   const [errors, setErrors] = useState<FormErrors>({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   const formRef = useRef<HTMLFormElement>(null)
@@ -349,7 +358,9 @@ export function FormField({
   const errorId = useId()
   const helpId = useId()
   
+  // React 19 호환 - 값 타입 명확화
   const value = values[name] || ''
+  const stringValue = String(value) // 문자열로 변환
   const error = externalError || errors[name]
 
   // 값 변경 핸들러
@@ -398,12 +409,11 @@ export function FormField({
     'min-h-[100px] resize-y' // textarea는 높이 조절 가능
   )
 
-  // 입력 요소 렌더링
+  // 입력 요소 렌더링 (React 19 호환)
   const renderInput = () => {
-    const commonProps = {
+    const baseProps = {
       id: fieldId,
       name,
-      value,
       onChange: handleChange,
       disabled,
       required,
@@ -412,25 +422,26 @@ export function FormField({
         error && errorId,
         helpText && helpId
       ).trim() || undefined,
-      'aria-invalid': !!error,
-      ...inputProps
+      'aria-invalid': !!error
     }
 
     switch (type) {
       case 'textarea':
         return (
           <textarea
-            {...commonProps}
+            {...baseProps}
+            value={stringValue}
             className={textareaClasses}
             placeholder={placeholder}
-            rows={inputProps.rows || 4}
+            rows={(inputProps as TextareaHTMLAttributes<HTMLTextAreaElement>).rows || 4}
           />
         )
       
       case 'select':
         return (
           <select
-            {...commonProps}
+            {...baseProps}
+            value={stringValue}
             className={inputClasses}
           >
             {placeholder && (
@@ -453,7 +464,9 @@ export function FormField({
       default:
         return (
           <input
-            {...commonProps}
+            {...baseProps}
+            {...(inputProps as InputHTMLAttributes<HTMLInputElement>)}
+            value={stringValue}
             type={type}
             className={inputClasses}
             placeholder={placeholder}

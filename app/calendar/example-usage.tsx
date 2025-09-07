@@ -13,8 +13,7 @@ import {
   type ProjectCalendarEvent,
   type Project,
   type ProjectPhase,
-  ConflictDetectionService,
-  ColorAssignmentService
+  ConflictDetectionService
 } from '@/features/calendar'
 
 // Example data that would typically come from API
@@ -223,7 +222,7 @@ export function CalendarExampleUsage() {
         {/* Calendar Dashboard */}
         <CalendarDashboard
           projects={EXAMPLE_PROJECTS}
-          events={eventsWithConflicts as any}
+          events={eventsWithConflicts as ProjectCalendarEvent[]}
           selectedDate={selectedDate}
           onEventMove={handleEventMove}
           onEventClick={handleEventClick}
@@ -245,7 +244,7 @@ export function CalendarExampleUsage() {
             <div>
               <h3 className="font-medium text-gray-900 mb-2">필터 및 범례</h3>
               <ul className="text-sm text-gray-600 space-y-1">
-                <li>• "충돌만 보기"로 문제 있는 일정만 확인</li>
+                <li>• &quot;충돌만 보기&quot;로 문제 있는 일정만 확인</li>
                 <li>• 프로젝트별 색상으로 구분</li>
                 <li>• 범례에서 프로젝트 표시/숨기기</li>
               </ul>

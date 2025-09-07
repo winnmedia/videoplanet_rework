@@ -4,8 +4,10 @@
  */
 
 import { configureStore } from '@reduxjs/toolkit'
-import { setupServer } from 'msw/node'
 import { http, HttpResponse } from 'msw'
+import { setupServer } from 'msw/node'
+
+import { DEFAULT_AUTO_SCHEDULE } from '@/shared/lib/project-scheduler'
 
 import projectReducer, {
   createProject,
@@ -13,7 +15,6 @@ import projectReducer, {
   updateAutoSchedule,
   type ProjectState
 } from '../projectSlice'
-import { DEFAULT_AUTO_SCHEDULE } from '@/shared/lib/project-scheduler'
 
 // MSW 서버 설정
 const server = setupServer(

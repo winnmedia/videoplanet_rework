@@ -4,8 +4,8 @@
  * @layer shared/lib/marp
  */
 
-import type { IPdfGenerator, PdfServiceOptions } from './types'
 import { MockPdfAdapter } from './adapters/mock-pdf-adapter'
+import type { IPdfGenerator, PdfServiceOptions } from './types'
 
 export class PdfServiceFactory {
   private static instance: IPdfGenerator | null = null

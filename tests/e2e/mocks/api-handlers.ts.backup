@@ -1,0 +1,934 @@
+/**
+ * MSW (Mock Service Worker) API 핸들러 설정
+ * 결정론적 E2E 테스트를 위한 API 모킹
+ * 
+ * @author Grace (QA Lead)
+ * @date 2025-09-06
+ * @purpose 플래키 테스트 방지, 외부 의존성 격리, 테스트 데이터 일관성
+ */
+
+import { http, HttpResponse } from 'msw'
+import type { 
+  HttpRequestResolverExtras,
+  HttpResponseResolver
+} from 'msw'
+
+// 🎯 테스트 데이터 생성기 (결정론적)
+class MockDataGenerator {
+  private static seed = 12345 // 고정 시드로 일관성 보장
+
+  /**
+   * 결정론적 UUID 생성 (테스트용)
+   */
+  static generateId(prefix = ''): string {
+    this.seed = (this.seed * 9301 + 49297) % 233280
+    const id = Math.abs(this.seed).toString(16).padStart(8, '0')
+    return `${prefix}${id}`
+  }
+
+  /**
+   * 결정론적 이메일 생성
+   */
+  static generateEmail(name = 'test'): string {
+    const id = this.generateId()
+    return `${name}.${id}@example.com`
+  }
+
+  /**
+   * 결정론적 날짜 생성
+   */
+  static generateDate(daysFromNow = 0): string {
+    const date = new Date('2025-09-06T10:00:00Z') // 고정 기준 날짜
+    date.setDate(date.getDate() + daysFromNow)
+    return date.toISOString()
+  }
+
+  /**
+   * 테스트용 사용자 데이터
+   */
+  static createUser(overrides: any = {}) {
+    return {
+      id: this.generateId('user_'),
+      email: this.generateEmail('user'),
+      name: 'Test User',
+      avatar: '/assets/default-avatar.png',
+      role: 'user',
+      createdAt: this.generateDate(-30),
+      lastLoginAt: this.generateDate(-1),
+      ...overrides
+    }
+  }
+
+  /**
+   * 테스트용 프로젝트 데이터
+   */
+  static createProject(overrides: any = {}) {
+    return {
+      id: this.generateId('proj_'),
+      name: 'Test Project',
+      description: 'A test project for E2E testing',
+      status: 'active',
+      priority: 'medium',
+      progress: 65,
+      owner: this.createUser(),
+      members: [this.createUser(), this.createUser()],
+      createdAt: this.generateDate(-14),
+      updatedAt: this.generateDate(-1),
+      deadline: this.generateDate(30),
+      ...overrides
+    }
+  }
+
+  /**
+   * 테스트용 댓글 데이터
+   */
+  static createComment(overrides: any = {}) {
+    return {
+      id: this.generateId('comment_'),
+      content: 'This is a test comment for E2E testing',
+      author: this.createUser(),
+      timestamp: '00:01:23',
+      coordinates: { x: 50, y: 25 },
+      reactions: {
+        like: 2,
+        love: 1,
+        laugh: 0
+      },
+      replies: [],
+      createdAt: this.generateDate(-2),
+      ...overrides
+    }
+  }
+
+  /**
+   * 테스트용 캘린더 이벤트 데이터
+   */
+  static createCalendarEvent(overrides: any = {}) {
+    return {
+      id: this.generateId('event_'),
+      title: 'Test Event',
+      type: 'pre-production', // pre-production, production, post-production
+      projectId: this.generateId('proj_'),
+      projectColor: '#3B82F6', // 파란색
+      startDate: this.generateDate(1),
+      endDate: this.generateDate(3),
+      isConflicted: false,
+      conflictWith: null,
+      ...overrides
+    }
+  }
+}
+
+// 🔐 인증 API 핸들러
+const authHandlers = [
+  // 로그인
+  http.post('/api/auth/login', (): Response => {
+    return HttpResponse.json(
+      {
+        success: true,
+        user: MockDataGenerator.createUser({
+          email: 'test@example.com',
+          name: 'Test User'
+        }),
+        token: 'mock-jwt-token',
+        refreshToken: 'mock-refresh-token',
+        expiresIn: 3600
+      },
+      {
+        status: 200,
+        headers: {
+          'Set-Cookie': 'auth-token=mock-jwt-token; HttpOnly; Secure; Max-Age=3600000'
+        }
+      }
+    )
+  }),
+
+  // 회원가입
+  http.post('/api/auth/register', (): Response => {
+    return HttpResponse.json(
+      {
+        success: true,
+        message: 'Registration successful. Please check your email for verification.',
+        user: MockDataGenerator.createUser(),
+        emailSent: true
+      },
+      { status: 201 }
+    )
+  }),
+
+  // 이메일 인증
+  http.post('/api/auth/verify-email', (): Response => {
+    return HttpResponse.json(
+      {
+        success: true,
+        message: 'Email verified successfully',
+        verified: true
+      },
+      { status: 200 }
+    )
+  }),
+
+  // 비밀번호 재설정 요청
+  http.post('/api/auth/forgot-password', (): Response => {
+    return HttpResponse.json(
+      {
+        success: true,
+        message: 'Password reset email sent',
+        emailSent: true,
+        resetToken: 'mock-reset-token'
+      },
+      { status: 200 }
+    )
+  }),
+
+  // 비밀번호 재설정
+  http.post('/api/auth/reset-password', (): Response => {
+    return HttpResponse.json(
+      {
+        success: true,
+        message: 'Password reset successfully'
+      },
+      { status: 200 }
+    )
+  }),
+
+  // 로그아웃
+  http.post('/api/auth/logout', (): Response => {
+    return HttpResponse.json(
+      {
+        success: true,
+        message: 'Logged out successfully'
+      },
+      {
+        status: 200,
+        headers: {
+          'Set-Cookie': 'auth-token=; Max-Age=0'
+        }
+      }
+    )
+  }),
+
+  // 토큰 갱신
+  http.post('/api/auth/refresh', (): Response => {
+    return HttpResponse.json(
+      {
+        success: true,
+        token: 'new-mock-jwt-token',
+        expiresIn: 3600
+      },
+      { status: 200 }
+    )
+  }),
+
+  // 현재 사용자 정보
+  http.get('/api/auth/me', ({ request }: { request: Request }): Response => {
+    const authHeader = request.headers.get('Authorization')
+    
+    if (!authHeader || !authHeader.includes('mock-jwt-token')) {
+      return HttpResponse.json(
+        {
+          success: false,
+          message: 'Unauthorized'
+        },
+        { status: 401 }
+      )
+    }
+
+    return HttpResponse.json(
+      {
+        success: true,
+        user: MockDataGenerator.createUser({
+          email: 'test@example.com',
+          name: 'Test User',
+          role: 'admin'
+        })
+      },
+      { status: 200 }
+    )
+  })
+]
+
+// 📊 대시보드 API 핸들러
+const dashboardHandlers = [
+  // 대시보드 데이터
+  http.get('/api/dashboard', () => {
+    return HttpResponse.json({
+      success: true,
+      data: {
+        projects: {
+          total: 12,
+          active: 8,
+          completed: 4,
+          overdue: 1
+        },
+        recentActivity: [
+          {
+            id: MockDataGenerator.generateId('activity_'),
+            type: 'comment',
+              message: 'New comment on "Brand Video"',
+              user: MockDataGenerator.createUser(),
+              timestamp: MockDataGenerator.generateDate(-1),
+              projectId: MockDataGenerator.generateId('proj_')
+            },
+            {
+              id: MockDataGenerator.generateId('activity_'),
+              type: 'project_update',
+              message: 'Project status updated to "In Review"',
+              user: MockDataGenerator.createUser(),
+              timestamp: MockDataGenerator.generateDate(-2),
+              projectId: MockDataGenerator.generateId('proj_')
+            }
+          ],
+          notifications: {
+            unread: 5,
+            total: 23
+          },
+          stats: {
+            totalVideos: 45,
+            totalComments: 234,
+            activeCollaborators: 15
+          }
+        }
+      })
+    )
+  }),
+
+  // 알림 목록
+  http.get('/api/notifications', ({ request }) => {
+    const url = new URL(request.url)
+    const page = url.searchParams.get('page') || '1'
+    const limit = url.searchParams.get('limit') || '10'
+    
+    const notifications = Array.from({ length: parseInt(limit) }, (_, i) => ({
+      id: MockDataGenerator.generateId('notif_'),
+      type: ['comment', 'project_update', 'invitation', 'deadline'][i % 4],
+      title: `Test Notification ${i + 1}`,
+      message: `This is a test notification message ${i + 1}`,
+      read: i < 3, // 처음 3개는 읽음
+      createdAt: MockDataGenerator.generateDate(-i),
+      actionUrl: '/projects/test-project',
+      user: MockDataGenerator.createUser()
+    }))
+
+    return res(
+      ctx.status(200),
+      ctx.json({
+        success: true,
+        data: notifications,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total: 50,
+          totalPages: 5
+        }
+      })
+    )
+  }),
+
+  // 알림 읽음 처리
+  http.patch('/api/notifications/:id/read', () => {
+    const { id } = req.params
+    
+    return res(
+      ctx.status(200),
+      ctx.json({
+        success: true,
+        message: 'Notification marked as read',
+        notificationId: id
+      })
+    )
+  })
+]
+
+// 📁 프로젝트 API 핸들러
+const projectHandlers = [
+  // 프로젝트 목록
+  http.get('/api/projects', () => {
+    const status = req.url.searchParams.get('status')
+    const page = req.url.searchParams.get('page') || '1'
+    const limit = req.url.searchParams.get('limit') || '12'
+    
+    let projects = [
+      MockDataGenerator.createProject({
+        name: 'Brand Promotion Video',
+        status: 'shooting',
+        progress: 65,
+        priority: 'high'
+      }),
+      MockDataGenerator.createProject({
+        name: 'Product Introduction',
+        status: 'post-production',
+        progress: 80,
+        priority: 'medium'
+      }),
+      MockDataGenerator.createProject({
+        name: 'Event Highlights',
+        status: 'pre-production',
+        progress: 25,
+        priority: 'low'
+      }),
+      MockDataGenerator.createProject({
+        name: 'Corporate Overview',
+        status: 'completed',
+        progress: 100,
+        priority: 'medium'
+      })
+    ]
+
+    // 상태 필터링
+    if (status && status !== 'all') {
+      projects = projects.filter(p => p.status === status)
+    }
+
+    return res(
+      ctx.status(200),
+      ctx.json({
+        success: true,
+        data: projects,
+        pagination: {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total: projects.length,
+          totalPages: Math.ceil(projects.length / parseInt(limit))
+        }
+      })
+    )
+  }),
+
+  // 프로젝트 생성
+  http.post('/api/projects', () => {
+    const projectData = req.body as any
+    
+    const newProject = MockDataGenerator.createProject({
+      name: projectData.name,
+      description: projectData.description,
+      status: 'pre-production',
+      progress: 0,
+      createdAt: MockDataGenerator.generateDate(0)
+    })
+
+    return res(
+      ctx.status(201),
+      ctx.json({
+        success: true,
+        message: 'Project created successfully',
+        data: newProject
+      })
+    )
+  }),
+
+  // 프로젝트 상세
+  http.get('/api/projects/:id', () => {
+    const { id } = req.params
+    
+    const project = MockDataGenerator.createProject({
+      id,
+      name: 'Test Project Detail',
+      description: 'Detailed test project for E2E testing'
+    })
+
+    return res(
+      ctx.status(200),
+      ctx.json({
+        success: true,
+        data: project
+      })
+    )
+  }),
+
+  // 프로젝트 업데이트
+  http.put('/api/projects/:id', () => {
+    const { id } = req.params
+    const updateData = req.body as any
+    
+    const updatedProject = MockDataGenerator.createProject({
+      id,
+      ...updateData,
+      updatedAt: MockDataGenerator.generateDate(0)
+    })
+
+    return res(
+      ctx.status(200),
+      ctx.json({
+        success: true,
+        message: 'Project updated successfully',
+        data: updatedProject
+      })
+    )
+  }),
+
+  // 프로젝트 삭제
+  http.delete('/api/projects/:id', () => {
+    const { id } = req.params
+    
+    return res(
+      ctx.status(200),
+      ctx.json({
+        success: true,
+        message: 'Project deleted successfully',
+        projectId: id
+      })
+    )
+  }),
+
+  // 팀원 초대
+  http.post('/api/projects/:id/invite', () => {
+    const { id } = req.params
+    const { emails, role } = req.body as any
+    
+    const invitations = emails.map((email: string) => ({
+      id: MockDataGenerator.generateId('invite_'),
+      projectId: id,
+      email,
+      role,
+      status: 'pending',
+      token: MockDataGenerator.generateId('token_'),
+      invitedBy: MockDataGenerator.createUser(),
+      invitedAt: MockDataGenerator.generateDate(0),
+      expiresAt: MockDataGenerator.generateDate(7) // 7일 후 만료
+    }))
+
+    return res(
+      ctx.status(200),
+      ctx.json({
+        success: true,
+        message: `${invitations.length} invitations sent successfully`,
+        data: invitations,
+        emailsSent: emails.length
+      })
+    )
+  })
+]
+
+// 📅 캘린더 API 핸들러
+const calendarHandlers = [
+  // 캘린더 이벤트 목록
+  http.get('/api/calendar/events', () => {
+    const start = req.url.searchParams.get('start') || MockDataGenerator.generateDate(-30)
+    const end = req.url.searchParams.get('end') || MockDataGenerator.generateDate(30)
+    const conflictsOnly = req.url.searchParams.get('conflicts_only') === 'true'
+    
+    let events = [
+      MockDataGenerator.createCalendarEvent({
+        title: 'Brand Video Planning',
+        type: 'pre-production',
+        projectColor: '#3B82F6',
+        startDate: MockDataGenerator.generateDate(1),
+        endDate: MockDataGenerator.generateDate(7)
+      }),
+      MockDataGenerator.createCalendarEvent({
+        title: 'Product Shoot',
+        type: 'shooting',
+        projectColor: '#10B981',
+        startDate: MockDataGenerator.generateDate(8),
+        endDate: MockDataGenerator.generateDate(8),
+        isConflicted: true,
+        conflictWith: [MockDataGenerator.generateId('event_')]
+      }),
+      MockDataGenerator.createCalendarEvent({
+        title: 'Event Shoot', // 같은 날짜로 충돌 생성
+        type: 'shooting',
+        projectColor: '#F59E0B',
+        startDate: MockDataGenerator.generateDate(8),
+        endDate: MockDataGenerator.generateDate(8),
+        isConflicted: true,
+        conflictWith: [MockDataGenerator.generateId('event_')]
+      }),
+      MockDataGenerator.createCalendarEvent({
+        title: 'Video Editing',
+        type: 'post-production',
+        projectColor: '#8B5CF6',
+        startDate: MockDataGenerator.generateDate(15),
+        endDate: MockDataGenerator.generateDate(25)
+      })
+    ]
+
+    // 충돌만 보기 필터
+    if (conflictsOnly) {
+      events = events.filter(event => event.isConflicted)
+    }
+
+    return res(
+      ctx.status(200),
+      ctx.json({
+        success: true,
+        data: events,
+        conflicts: events.filter(e => e.isConflicted).length
+      })
+    )
+  }),
+
+  // 캘린더 이벤트 생성
+  http.post('/api/calendar/events', () => {
+    const eventData = req.body as any
+    
+    const newEvent = MockDataGenerator.createCalendarEvent({
+      ...eventData,
+      createdAt: MockDataGenerator.generateDate(0)
+    })
+
+    return res(
+      ctx.status(201),
+      ctx.json({
+        success: true,
+        message: 'Event created successfully',
+        data: newEvent
+      })
+    )
+  }),
+
+  // 캘린더 이벤트 업데이트 (드래그앤드롭)
+  http.put('/api/calendar/events/:id', () => {
+    const { id } = req.params
+    const updateData = req.body as any
+    
+    // 충돌 검사 시뮬레이션
+    const hasConflict = updateData.startDate === MockDataGenerator.generateDate(8)
+    
+    const updatedEvent = MockDataGenerator.createCalendarEvent({
+      id,
+      ...updateData,
+      isConflicted: hasConflict,
+      conflictWith: hasConflict ? [MockDataGenerator.generateId('event_')] : null,
+      updatedAt: MockDataGenerator.generateDate(0)
+    })
+
+    return res(
+      ctx.status(200),
+      ctx.json({
+        success: true,
+        message: hasConflict ? 'Event updated with conflict detected' : 'Event updated successfully',
+        data: updatedEvent,
+        conflicts: hasConflict ? 1 : 0
+      })
+    )
+  })
+]
+
+// 🎬 비디오 피드백 API 핸들러
+const feedbackHandlers = [
+  // 비디오 목록
+  http.get('/api/videos', () => {
+    const videos = [
+      {
+        id: MockDataGenerator.generateId('video_'),
+        title: 'Brand Promotion Video v1.0',
+        filename: 'brand-video-v1.mp4',
+        url: '/mock-videos/sample-video.mp4',
+        duration: 120, // 2분
+        size: 45678901, // bytes
+        thumbnail: '/mock-videos/brand-video-thumb.jpg',
+        uploadedAt: MockDataGenerator.generateDate(-5),
+        uploadedBy: MockDataGenerator.createUser(),
+        project: MockDataGenerator.createProject(),
+        status: 'processing', // uploading, processing, ready, error
+        comments: 12,
+        views: 145
+      }
+    ]
+
+    return res(
+      ctx.status(200),
+      ctx.json({
+        success: true,
+        data: videos
+      })
+    )
+  }),
+
+  // 비디오 업로드
+  http.post('/api/videos/upload', () => {
+    // 업로드 진행률 시뮬레이션을 위한 지연
+    const progress = Math.min(100, Math.random() * 100)
+    
+    return res(
+      ctx.delay(1000), // 1초 지연으로 실제 업로드 시뮬레이션
+      ctx.status(200),
+      ctx.json({
+        success: true,
+        uploadId: MockDataGenerator.generateId('upload_'),
+        progress: Math.round(progress),
+        status: progress >= 100 ? 'complete' : 'uploading',
+        videoId: progress >= 100 ? MockDataGenerator.generateId('video_') : null,
+        estimatedTimeRemaining: progress >= 100 ? 0 : Math.round((100 - progress) * 0.5) // 초
+      })
+    )
+  }),
+
+  // 비디오 상세 및 댓글
+  http.get('/api/videos/:id', () => {
+    const { id } = req.params
+    
+    const video = {
+      id,
+      title: 'Test Video for E2E',
+      filename: 'test-video.mp4',
+      url: '/mock-videos/test-video.mp4',
+      duration: 90,
+      thumbnail: '/mock-videos/test-video-thumb.jpg',
+      project: MockDataGenerator.createProject(),
+      uploadedBy: MockDataGenerator.createUser(),
+      uploadedAt: MockDataGenerator.generateDate(-3),
+      comments: [
+        MockDataGenerator.createComment({
+          content: 'The audio level seems too low at this part',
+          timestamp: '00:01:23'
+        }),
+        MockDataGenerator.createComment({
+          content: 'Logo position needs to be adjusted',
+          timestamp: '00:02:45',
+          coordinates: { x: 80, y: 20 }
+        })
+      ]
+    }
+
+    return res(
+      ctx.status(200),
+      ctx.json({
+        success: true,
+        data: video
+      })
+    )
+  }),
+
+  // 댓글 작성
+  http.post('/api/videos/:id/comments', () => {
+    const { id } = req.params
+    const commentData = req.body as any
+    
+    const newComment = MockDataGenerator.createComment({
+      content: commentData.content,
+      timestamp: commentData.timestamp,
+      coordinates: commentData.coordinates,
+      createdAt: MockDataGenerator.generateDate(0)
+    })
+
+    return res(
+      ctx.status(201),
+      ctx.json({
+        success: true,
+        message: 'Comment added successfully',
+        data: newComment
+      })
+    )
+  }),
+
+  // 댓글 수정
+  http.put('/api/comments/:id', () => {
+    const { id } = req.params
+    const updateData = req.body as any
+    
+    const updatedComment = MockDataGenerator.createComment({
+      id,
+      content: updateData.content,
+      updatedAt: MockDataGenerator.generateDate(0)
+    })
+
+    return res(
+      ctx.status(200),
+      ctx.json({
+        success: true,
+        message: 'Comment updated successfully',
+        data: updatedComment
+      })
+    )
+  }),
+
+  // 댓글 삭제
+  http.delete('/api/comments/:id', () => {
+    const { id } = req.params
+    
+    return res(
+      ctx.status(200),
+      ctx.json({
+        success: true,
+        message: 'Comment deleted successfully',
+        commentId: id
+      })
+    )
+  }),
+
+  // 댓글 반응 (좋아요, 사랑 등)
+  http.post('/api/comments/:id/reactions', () => {
+    const { id } = req.params
+    const { type } = req.body as any // like, love, laugh, wow, sad, angry
+    
+    return res(
+      ctx.status(200),
+      ctx.json({
+        success: true,
+        message: `Reaction '${type}' added`,
+        commentId: id,
+        reactionType: type,
+        newCount: Math.floor(Math.random() * 10) + 1
+      })
+    )
+  })
+]
+
+// 🚨 에러 상황 시뮬레이션 핸들러
+const errorHandlers = [
+  // 500 서버 에러 시뮬레이션
+  http.get('/api/error/server', () => {
+    return res(
+      ctx.status(500),
+      ctx.json({
+        success: false,
+        error: 'Internal Server Error',
+        message: 'Something went wrong on our end. Please try again later.'
+      })
+    )
+  }),
+
+  // 401 인증 에러 시뮬레이션
+  http.get('/api/error/unauthorized', () => {
+    return res(
+      ctx.status(401),
+      ctx.json({
+        success: false,
+        error: 'Unauthorized',
+        message: 'Your session has expired. Please log in again.'
+      })
+    )
+  }),
+
+  // 403 권한 에러 시뮬레이션
+  http.get('/api/error/forbidden', () => {
+    return res(
+      ctx.status(403),
+      ctx.json({
+        success: false,
+        error: 'Forbidden',
+        message: 'You do not have permission to access this resource.'
+      })
+    )
+  }),
+
+  // 404 Not Found 시뮬레이션
+  http.get('/api/error/notfound', () => {
+    return res(
+      ctx.status(404),
+      ctx.json({
+        success: false,
+        error: 'Not Found',
+        message: 'The requested resource could not be found.'
+      })
+    )
+  }),
+
+  // 네트워크 타임아웃 시뮬레이션
+  http.get('/api/error/timeout', () => {
+    return res(
+      ctx.delay(30000), // 30초 지연으로 타임아웃 유발
+      ctx.status(408),
+      ctx.json({
+        success: false,
+        error: 'Request Timeout',
+        message: 'The request timed out. Please try again.'
+      })
+    )
+  })
+]
+
+// 📊 통계 및 분석 API 핸들러
+const analyticsHandlers = [
+  // 프로젝트 통계
+  http.get('/api/analytics/projects', () => {
+    return res(
+      ctx.status(200),
+      ctx.json({
+        success: true,
+        data: {
+          totalProjects: 24,
+          activeProjects: 12,
+          completedProjects: 10,
+          overdueProjects: 2,
+          projectsByStatus: {
+            planning: 5,
+            shooting: 3,
+            editing: 4,
+            review: 2,
+            completed: 10
+          },
+          projectsByPriority: {
+            high: 6,
+            medium: 12,
+            low: 6
+          },
+          averageCompletionTime: 21, // days
+          monthlyCreated: [2, 5, 3, 8, 6] // last 5 months
+        }
+      })
+    )
+  }),
+
+  // 사용자 활동 통계
+  http.get('/api/analytics/activity', () => {
+    return res(
+      ctx.status(200),
+      ctx.json({
+        success: true,
+        data: {
+          totalUsers: 45,
+          activeUsers: 32,
+          newUsers: 8,
+          usersByRole: {
+            admin: 3,
+            manager: 8,
+            editor: 20,
+            reviewer: 14
+          },
+          activityThisWeek: {
+            comments: 156,
+            uploads: 23,
+            projects: 12,
+            collaborations: 89
+          },
+          engagementMetrics: {
+            averageSessionTime: 2.5, // hours
+            dailyActiveUsers: 18,
+            weeklyActiveUsers: 32,
+            monthlyActiveUsers: 42
+          }
+        }
+      })
+    )
+  })
+]
+
+// 🔗 모든 핸들러 통합
+export const handlers = [
+  ...authHandlers,
+  ...dashboardHandlers,
+  ...projectHandlers,
+  ...calendarHandlers,
+  ...feedbackHandlers,
+  ...errorHandlers,
+  ...analyticsHandlers
+]
+
+// 핸들러 그룹별 내보내기 (선택적 사용)
+export {
+  authHandlers,
+  dashboardHandlers,
+  projectHandlers,
+  calendarHandlers,
+  feedbackHandlers,
+  errorHandlers,
+  analyticsHandlers,
+  MockDataGenerator
+}
+
+// 테스트 환경별 핸들러 필터링
+export const getHandlersForEnvironment = (env: 'development' | 'test' | 'production') => {
+  switch (env) {
+    case 'test':
+      return handlers // 모든 핸들러 사용
+    case 'development':
+      return [...authHandlers, ...dashboardHandlers, ...projectHandlers] // 기본 기능만
+    case 'production':
+      return [] // 프로덕션에서는 MSW 사용 안 함
+    default:
+      return handlers
+  }
+}

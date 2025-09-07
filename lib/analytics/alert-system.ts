@@ -4,7 +4,6 @@
  * 비즈니스 크리티컬한 이벤트를 감지하고 다중 채널로 실시간 알림 전송
  */
 
-import { apiMonitor } from '@/lib/api/monitoring'
 import { 
   AlertConfig, 
   BusinessMetric, 
@@ -12,6 +11,8 @@ import {
   ApiPerformanceMetric,
   MonitoringSchemaValidator 
 } from '@/shared/api/monitoring-schemas'
+
+import { apiMonitor } from '@/lib/api/monitoring'
 
 // 알림 채널 타입
 export type AlertChannel = 'email' | 'slack' | 'webhook' | 'dashboard' | 'sms'

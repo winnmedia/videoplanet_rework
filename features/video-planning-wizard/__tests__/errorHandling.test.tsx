@@ -7,7 +7,6 @@ import { render, screen, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 
-import { server } from '@/lib/api/msw-server'
 
 import { VideoPlanningWizardApi } from '../api/videoPlanningApi'
 import type { 
@@ -20,6 +19,8 @@ import type {
 import { FourStagesReview } from '../ui/FourStagesReview'
 import { TwelveShotsEditor } from '../ui/TwelveShotsEditor'
 import { VideoPlanningWizard } from '../ui/VideoPlanningWizard'
+
+import { server } from '@/lib/api/msw-server'
 
 // 테스트용 Mock 데이터
 const mockValidInput: PlanningInput = {

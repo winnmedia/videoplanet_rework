@@ -5,7 +5,7 @@
  */
 
 import { clsx } from 'clsx'
-import type { ProjectPhaseType, Project } from '../model/types'
+
 import {
   PROJECT_COLOR_CLASSES,
   PHASE_TYPE_STYLES,
@@ -18,6 +18,7 @@ import {
   DRAG_DROP_STYLES,
   ANIMATION_STYLES
 } from '../constants/styles'
+import type { ProjectPhaseType, Project } from '../model/types'
 
 /**
  * 프로젝트별 색상 클래스 반환

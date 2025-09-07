@@ -426,8 +426,4 @@ export function getSendGridService(): SendGridService {
 // Exports
 // ===========================
 
-export type {
-  TeamInviteEmailData,
-  EmailTemplate,
-  SendGridConfig
-}
+// Export types removed to avoid duplication - types already exported above

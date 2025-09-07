@@ -4,7 +4,7 @@ import { useState, useMemo, useCallback } from 'react'
 
 import type { Project, ProjectLegendItem } from '@/entities/calendar'
 import type { CalendarFilter, CalendarViewSettings, CalendarEvent } from '@/entities/project'
-import { CalendarFilters, CalendarView, ConflictAlert, GanttView, ProjectLegend, WeekView } from '@/features/calendar'
+import { CalendarFilters, CalendarView, ConflictAlert, ProjectLegend, WeekView } from '@/features/calendar'
 import { DragDropCalendarView } from '@/features/calendar/ui/DragDropCalendarView'
 import { SideBar } from '@/widgets'
 
@@ -153,7 +153,7 @@ export default function CalendarPage() {
       isDraggable: true,
       isResizable: false
     }
-  ], [])
+  ], [mockProjects])
 
   // 필터링된 이벤트 계산
   const filteredEvents = useMemo(() => {
@@ -352,7 +352,7 @@ export default function CalendarPage() {
           <div className="mb-6">
             <CalendarFilters
               filter={filter}
-              projects={mockProjects as any}
+              projects={mockProjects as Project[]}
               organizations={organizations}
               assignees={assignees}
               onFilterChange={setFilter}
@@ -363,7 +363,7 @@ export default function CalendarPage() {
           {/* 프로젝트 범례 */}
           <div className="mb-6">
             <ProjectLegend
-              legendItems={legendItems as any}
+              legendItems={legendItems as ProjectLegendItem[]}
               showMyProjectsOnly={filter.showMyProjectsOnly}
               onToggleProject={handleProjectToggle}
               onToggleMode={handleLegendModeToggle}
@@ -374,36 +374,36 @@ export default function CalendarPage() {
           <div className="mb-8">
             {viewMode === 'month' && (
               <CalendarView
-                events={filteredEvents as any}
+                events={filteredEvents as CalendarEvent[]}
                 viewSettings={viewSettings}
                 selectedDate={selectedDate}
                 onDateSelect={handleDateSelect}
-                onEventClick={handleEventClick as any}
+                onEventClick={handleEventClick}
                 onNavigateMonth={handleNavigateMonth}
               />
             )}
             
             {viewMode === 'week' && (
               <WeekView
-                events={filteredEvents as any}
+                events={filteredEvents as CalendarEvent[]}
                 viewSettings={viewSettings}
                 selectedDate={selectedDate}
                 onDateSelect={handleDateSelect}
-                onEventClick={handleEventClick as any}
+                onEventClick={handleEventClick}
                 onNavigateWeek={handleNavigateWeek}
               />
             )}
             
             {viewMode === 'gantt' && (
               <DragDropCalendarView
-                events={filteredEvents as any}
+                events={filteredEvents as CalendarEvent[]}
                 selectedDate={selectedDate}
-                filters={filter as any}
+                filters={filter}
                 onDateSelect={handleDateSelect}
                 onEventMove={handleEventDrag}
-                onEventClick={handleEventClick as any}
+                onEventClick={handleEventClick}
                 onNavigateMonth={handleNavigateMonth}
-                onFiltersChange={setFilter as any}
+                onFiltersChange={setFilter}
               />
             )}
           </div>

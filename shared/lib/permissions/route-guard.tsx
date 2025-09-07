@@ -5,11 +5,11 @@
 
 'use client'
 
-import { useEffect, useState } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { useSession } from 'next-auth/react'
+import { useEffect, useState } from 'react'
 
-import type { Permission, UserRole } from '@/entities/rbac/model/types'
+import { Permission, UserRole } from '@/entities/rbac/model/types'
 import { useCurrentUserPermissions } from '@/features/rbac/model/useUserPermissions'
 
 /**
@@ -41,31 +41,31 @@ export interface RouteGuardConfig {
 export const ROUTE_PERMISSIONS: Record<string, RouteGuardConfig> = {
   // 관리자 전용 라우트
   '/admin': {
-    roles: ['admin'],
+    roles: [UserRole.ADMIN],
     redirectTo: '/dashboard'
   },
   '/admin/*': {
-    roles: ['admin'],
+    roles: [UserRole.ADMIN],
     redirectTo: '/dashboard'
   },
 
   // 프로젝트 관리 라우트
   '/projects': {
-    permissions: ['project:read']
+    permissions: [Permission.PROJECT_READ]
   },
   '/projects/create': {
-    permissions: ['project:create'],
+    permissions: [Permission.PROJECT_CREATE],
     redirectTo: '/projects'
   },
   '/projects/[id]': {
-    permissions: ['project:read'],
+    permissions: [Permission.PROJECT_READ],
     extractProjectContext: (pathname) => {
       const projectId = pathname.split('/')[2]
       return { projectId }
     }
   },
   '/projects/[id]/edit': {
-    permissions: ['project:update'],
+    permissions: [Permission.PROJECT_UPDATE],
     extractProjectContext: (pathname) => {
       const projectId = pathname.split('/')[2]
       return { projectId }
@@ -73,8 +73,8 @@ export const ROUTE_PERMISSIONS: Record<string, RouteGuardConfig> = {
     redirectTo: '/projects'
   },
   '/projects/[id]/delete': {
-    permissions: ['project:delete'],
-    roles: ['admin', 'manager'],
+    permissions: [Permission.PROJECT_DELETE],
+    roles: [UserRole.ADMIN, UserRole.MANAGER],
     extractProjectContext: (pathname) => {
       const projectId = pathname.split('/')[2]
       return { projectId }
@@ -84,28 +84,28 @@ export const ROUTE_PERMISSIONS: Record<string, RouteGuardConfig> = {
 
   // 팀 관리 라우트
   '/teams': {
-    permissions: ['team:read']
+    permissions: [Permission.TEAM_READ]
   },
   '/teams/invite': {
-    permissions: ['team:invite'],
-    roles: ['admin', 'manager'],
+    permissions: [Permission.TEAM_INVITE],
+    roles: [UserRole.ADMIN, UserRole.MANAGER],
     redirectTo: '/teams'
   },
 
   // 설정 라우트
   '/settings': {
-    permissions: ['settings:read']
+    permissions: [Permission.SETTINGS_READ]
   },
   '/settings/system': {
-    permissions: ['settings:update'],
-    roles: ['admin'],
+    permissions: [Permission.SETTINGS_UPDATE],
+    roles: [UserRole.ADMIN],
     redirectTo: '/settings'
   },
 
   // 분석 라우트
   '/analytics': {
-    permissions: ['analytics:read'],
-    roles: ['admin', 'manager']
+    permissions: [Permission.ANALYTICS_READ],
+    roles: [UserRole.ADMIN, UserRole.MANAGER]
   }
 } as const
 

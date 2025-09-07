@@ -7,8 +7,9 @@
  * @purpose 결정론적 테스트, 외부 의존성 격리, 오프라인 테스트 지원
  */
 
+import { setupWorker } from 'msw/browser'
 import { setupServer } from 'msw/node'
-import { setupWorker } from 'msw'
+
 import { handlers, getHandlersForEnvironment } from './api-handlers'
 
 // 🌍 환경 감지
@@ -157,9 +158,10 @@ export async function setupE2EMocking(options: {
   }
   
   if (mockUploads) {
-    const { feedbackHandlers } = await import('./api-handlers')
-    // 업로드 관련 핸들러만 필터링
-    const uploadHandlers = feedbackHandlers.filter(handler => 
+    const apiHandlers = await import('./api-handlers')
+    // 업로드 관련 핸들러만 필터링 (feedbackHandlers가 없으면 빈 배열 사용)
+    const feedbackHandlers = (apiHandlers as any).feedbackHandlers || []
+    const uploadHandlers = feedbackHandlers.filter((handler: any) => 
       handler.toString().includes('upload')
     )
     selectiveHandlers.push(...uploadHandlers)
@@ -189,7 +191,7 @@ export async function setupE2EMocking(options: {
 export function simulateNetworkError(url: string, errorType: 'timeout' | 'server' | 'network' = 'network') {
   const { rest } = require('msw')
   
-  const errorHandler = rest.all(url, (req, res, ctx) => {
+  const errorHandler = rest.all(url, (req: any, res: any, ctx: any) => {
     switch (errorType) {
       case 'timeout':
         return res(ctx.delay(30000), ctx.status(408))
@@ -212,7 +214,7 @@ export function simulateNetworkError(url: string, errorType: 'timeout' | 'server
 export function simulateSlowAPI(url: string, delay: number = 3000) {
   const { rest } = require('msw')
   
-  const slowHandler = rest.all(url, (req, res, ctx) => {
+  const slowHandler = rest.all(url, (req: any, res: any, ctx: any) => {
     return res(
       ctx.delay(delay),
       ctx.json({ message: `Slow response after ${delay}ms` })

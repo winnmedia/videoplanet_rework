@@ -29,7 +29,7 @@ export async function waitForAppReady(
 
     // 2. Next.js 하이드레이션 완료 대기
     await page.waitForFunction(
-      () => window.__NEXT_HYDRATED || document.readyState === 'complete',
+      () => (window as any).__NEXT_HYDRATED || document.readyState === 'complete',
       { timeout: 10000 }
     ).catch(() => {
       // 하이드레이션 플래그가 없어도 계속 진행 (fallback)

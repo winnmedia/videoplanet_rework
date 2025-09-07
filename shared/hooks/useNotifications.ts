@@ -10,9 +10,9 @@
  * - 새로고침 로직
  */
 
+import { createSelector } from '@reduxjs/toolkit'
 import { useCallback, useEffect, useRef, useMemo } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { createSelector } from '@reduxjs/toolkit'
 
 import type { RootState } from '@/app/store/store'
 import type { Notification } from '@/entities/notification'

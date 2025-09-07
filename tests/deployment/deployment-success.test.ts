@@ -5,9 +5,10 @@
  * 현재 모든 테스트가 실패하므로 Red Phase입니다.
  */
 
-import { describe, test, expect } from '@jest/globals';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+
+import { describe, test, expect } from '@jest/globals';
 
 const execAsync = promisify(exec);
 

@@ -33,17 +33,17 @@
       "@app/*": ["./app/*"],
       "@processes/*": ["./processes/*"],
       
-      // Dual path support for gradual migration
-      "@widgets/*": ["./widgets/*", "./src/widgets/*"],
-      "@features/*": ["./features/*", "./src/features/*"], 
-      "@entities/*": ["./entities/*", "./src/entities/*"],
-      "@shared/*": ["./shared/*", "./src/shared/*"],
+      // FSD Layer aliases (single source)
+      "@widgets/*": ["./widgets/*"],
+      "@features/*": ["./features/*"], 
+      "@entities/*": ["./entities/*"],
+      "@shared/*": ["./shared/*"],
       
       // Layer root imports (for Public API)
-      "@widgets": ["./widgets/index.ts", "./src/widgets/index.ts"],
-      "@features": ["./features/index.ts", "./src/features/index.ts"],
-      "@entities": ["./entities/index.ts", "./src/entities/index.ts"],
-      "@shared": ["./shared/index.ts", "./src/shared/index.ts"]
+      "@widgets": ["./widgets/index.ts"],
+      "@features": ["./features/index.ts"],
+      "@entities": ["./entities/index.ts"],
+      "@shared": ["./shared/index.ts"]
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],

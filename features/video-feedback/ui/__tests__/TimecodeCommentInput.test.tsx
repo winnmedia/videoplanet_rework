@@ -5,9 +5,9 @@
  * 타임코드 자동 삽입 기능이 있는 피드백 입력 컴포넌트의 테스트
  */
 
-import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import React from 'react';
 import '@testing-library/jest-dom';
 import { vi } from 'vitest';
 
