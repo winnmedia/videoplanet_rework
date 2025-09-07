@@ -100,7 +100,7 @@ class ProductionMonitor {
         window: 5,
         cooldown: 15,
         severity: 'high',
-        enabled: true
+        enabled: true,
       },
       {
         id: 'cls-high',
@@ -111,7 +111,7 @@ class ProductionMonitor {
         window: 5,
         cooldown: 15,
         severity: 'medium',
-        enabled: true
+        enabled: true,
       },
       {
         id: 'fid-high',
@@ -122,7 +122,7 @@ class ProductionMonitor {
         window: 5,
         cooldown: 15,
         severity: 'high',
-        enabled: true
+        enabled: true,
       },
       // API 응답시간 알림
       {
@@ -134,7 +134,7 @@ class ProductionMonitor {
         window: 10,
         cooldown: 30,
         severity: 'medium',
-        enabled: true
+        enabled: true,
       },
       {
         id: 'api-spike',
@@ -145,7 +145,7 @@ class ProductionMonitor {
         window: 5,
         cooldown: 15,
         severity: 'critical',
-        enabled: true
+        enabled: true,
       },
       // 비디오 로딩 알림
       {
@@ -157,7 +157,7 @@ class ProductionMonitor {
         window: 10,
         cooldown: 30,
         severity: 'medium',
-        enabled: true
+        enabled: true,
       },
       // 피드백 전달 지연
       {
@@ -169,7 +169,7 @@ class ProductionMonitor {
         window: 5,
         cooldown: 15,
         severity: 'high',
-        enabled: true
+        enabled: true,
       },
       // 에러율 증가
       {
@@ -181,8 +181,8 @@ class ProductionMonitor {
         window: 5,
         cooldown: 10,
         severity: 'critical',
-        enabled: true
-      }
+        enabled: true,
+      },
     ]
 
     defaultAlerts.forEach(alert => {
@@ -193,9 +193,9 @@ class ProductionMonitor {
   private async sendAlert(alert: AlertRule, value: number, context?: unknown): Promise<void> {
     const now = new Date()
     const lastAlert = this.alertHistory.get(alert.id)
-    
+
     // Cooldown 체크
-    if (lastAlert && (now.getTime() - lastAlert.getTime()) < alert.cooldown * 60 * 1000) {
+    if (lastAlert && now.getTime() - lastAlert.getTime() < alert.cooldown * 60 * 1000) {
       return
     }
 
@@ -209,7 +209,7 @@ class ProductionMonitor {
       currentValue: value,
       threshold: alert.threshold,
       timestamp: now,
-      context
+      context,
     }
 
     console.warn(`🚨 [${alert.severity.toUpperCase()}] ${alert.name}: ${value} (임계값: ${alert.threshold})`)
@@ -217,77 +217,106 @@ class ProductionMonitor {
     // 실제 환경에서는 다양한 채널로 알림 전송
     await Promise.all([
       this.sendSlackAlert(alertData),
-      this.sendEmailAlert(alertData),
+      this.sendEmailAlert(),
       this.sendWebhookAlert(alertData),
-      this.createIncidentIfCritical(alertData)
+      this.createIncidentIfCritical(alertData),
     ])
   }
 
-  private async sendSlackAlert(alert: { id: string; name: string; severity: string; metric: string; currentValue: number; threshold: number; timestamp: Date; context?: unknown }): Promise<void> {
+  private async sendSlackAlert(alert: {
+    id: string
+    name: string
+    severity: string
+    metric: string
+    currentValue: number
+    threshold: number
+    timestamp: Date
+    context?: unknown
+  }): Promise<void> {
     if (!process.env.SLACK_WEBHOOK_URL) return
 
     const color = {
       low: '#36a64f',
       medium: '#ff9500',
       high: '#ff4444',
-      critical: '#cc0000'
+      critical: '#cc0000',
     }[alert.severity]
 
     const slackMessage = {
       channel: '#alerts',
       username: 'VRidge Monitor',
       icon_emoji: ':warning:',
-      attachments: [{
-        color,
-        title: alert.name,
-        text: `메트릭: ${alert.metric}\n현재값: ${alert.currentValue}\n임계값: ${alert.threshold}`,
-        timestamp: Math.floor(alert.timestamp.getTime() / 1000),
-        fields: [
-          {
-            title: 'Severity',
-            value: alert.severity.toUpperCase(),
-            short: true
-          },
-          {
-            title: 'Context',
-            value: JSON.stringify(alert.context, null, 2),
-            short: false
-          }
-        ]
-      }]
+      attachments: [
+        {
+          color,
+          title: alert.name,
+          text: `메트릭: ${alert.metric}\n현재값: ${alert.currentValue}\n임계값: ${alert.threshold}`,
+          timestamp: Math.floor(alert.timestamp.getTime() / 1000),
+          fields: [
+            {
+              title: 'Severity',
+              value: alert.severity.toUpperCase(),
+              short: true,
+            },
+            {
+              title: 'Context',
+              value: JSON.stringify(alert.context, null, 2),
+              short: false,
+            },
+          ],
+        },
+      ],
     }
 
     try {
       await fetch(process.env.SLACK_WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(slackMessage)
+        body: JSON.stringify(slackMessage),
       })
     } catch (error) {
       console.error('Slack 알림 전송 실패:', error)
     }
   }
 
-  private async sendEmailAlert(alert: { id: string; name: string; severity: string; metric: string; currentValue: number; threshold: number; timestamp: Date; context?: unknown }): Promise<void> {
+  private async sendEmailAlert(): Promise<void> {
     // SendGrid나 다른 이메일 서비스 사용
     // 기존 이메일 시스템과 연동
   }
 
-  private async sendWebhookAlert(alert: { id: string; name: string; severity: string; metric: string; currentValue: number; threshold: number; timestamp: Date; context?: unknown }): Promise<void> {
+  private async sendWebhookAlert(alert: {
+    id: string
+    name: string
+    severity: string
+    metric: string
+    currentValue: number
+    threshold: number
+    timestamp: Date
+    context?: unknown
+  }): Promise<void> {
     if (!process.env.ALERT_WEBHOOK_URL) return
 
     try {
       await fetch(process.env.ALERT_WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(alert)
+        body: JSON.stringify(alert),
       })
     } catch (error) {
       console.error('Webhook 알림 전송 실패:', error)
     }
   }
 
-  private async createIncidentIfCritical(alert: { id: string; name: string; severity: string; metric: string; currentValue: number; threshold: number; timestamp: Date; context?: unknown }): Promise<void> {
+  private async createIncidentIfCritical(alert: {
+    id: string
+    name: string
+    severity: string
+    metric: string
+    currentValue: number
+    threshold: number
+    timestamp: Date
+    context?: unknown
+  }): Promise<void> {
     if (alert.severity !== 'critical') return
 
     const incident: IncidentReport = {
@@ -298,11 +327,13 @@ class ProductionMonitor {
       startTime: alert.timestamp,
       description: `자동 생성된 인시던트: ${alert.name}\n메트릭: ${alert.metric} = ${alert.currentValue} (임계값: ${alert.threshold})`,
       affectedServices: [alert.metric],
-      timeline: [{
-        timestamp: alert.timestamp,
-        action: '인시던트 자동 생성',
-        author: 'System'
-      }]
+      timeline: [
+        {
+          timestamp: alert.timestamp,
+          action: '인시던트 자동 생성',
+          author: 'System',
+        },
+      ],
     }
 
     this.incidents.set(incident.id, incident)
@@ -320,7 +351,7 @@ class ProductionMonitor {
         expectedStatus: 200,
         timeout: 5000,
         interval: 2, // 2분마다
-        enabled: true
+        enabled: true,
       },
       {
         id: 'database-health',
@@ -330,7 +361,7 @@ class ProductionMonitor {
         expectedStatus: 200,
         timeout: 10000,
         interval: 5, // 5분마다
-        enabled: true
+        enabled: true,
       },
       {
         id: 'redis-health',
@@ -340,7 +371,7 @@ class ProductionMonitor {
         expectedStatus: 200,
         timeout: 3000,
         interval: 3, // 3분마다
-        enabled: true
+        enabled: true,
       },
       {
         id: 'video-upload',
@@ -350,8 +381,8 @@ class ProductionMonitor {
         expectedStatus: 200,
         timeout: 15000,
         interval: 10, // 10분마다
-        enabled: true
-      }
+        enabled: true,
+      },
     ]
 
     defaultHealthChecks.forEach(check => {
@@ -368,10 +399,10 @@ class ProductionMonitor {
         method: check.method,
         headers: {
           'User-Agent': 'VRidge-HealthCheck/1.0',
-          ...check.headers
+          ...check.headers,
         },
         body: check.method !== 'GET' ? JSON.stringify(check.body) : undefined,
-        signal: controller.signal
+        signal: controller.signal,
       })
 
       clearTimeout(timeoutId)
@@ -387,7 +418,7 @@ class ProductionMonitor {
     } catch (error) {
       console.error(`Health check failed for ${check.name}:`, error)
       this.healthStatus.set(check.id, false)
-      await this.handleUnhealthyService(check, 0, error)
+      await this.handleUnhealthyService(check, 0, error instanceof Error ? error : new Error(String(error)))
       return false
     }
   }
@@ -401,7 +432,7 @@ class ProductionMonitor {
       currentValue: status,
       threshold: check.expectedStatus,
       timestamp: new Date(),
-      context: { checkId: check.id, error: error?.message }
+      context: { checkId: check.id, error: error?.message },
     }
 
     await this.sendSlackAlert(alertData)
@@ -419,21 +450,21 @@ class ProductionMonitor {
           {
             action: 'navigate to /login',
             expected: 'login form visible',
-            timeout: 5000
+            timeout: 5000,
           },
           {
             action: 'enter test credentials',
             expected: 'login successful',
-            timeout: 10000
+            timeout: 10000,
           },
           {
             action: 'verify dashboard access',
             expected: 'dashboard loaded',
-            timeout: 5000
-          }
+            timeout: 5000,
+          },
         ],
         enabled: true,
-        schedule: '*/15 * * * *' // 15분마다
+        schedule: '*/15 * * * *', // 15분마다
       },
       {
         id: 'video-upload-api',
@@ -443,21 +474,21 @@ class ProductionMonitor {
           {
             action: 'POST /api/videos/upload',
             expected: 'upload token received',
-            timeout: 5000
+            timeout: 5000,
           },
           {
             action: 'upload test video file',
             expected: 'upload progress 100%',
-            timeout: 30000
+            timeout: 30000,
           },
           {
             action: 'verify video processed',
             expected: 'video status: ready',
-            timeout: 60000
-          }
+            timeout: 60000,
+          },
         ],
         enabled: true,
-        schedule: '0 */2 * * *' // 2시간마다
+        schedule: '0 */2 * * *', // 2시간마다
       },
       {
         id: 'feedback-system',
@@ -467,22 +498,22 @@ class ProductionMonitor {
           {
             action: 'create test project',
             expected: 'project created',
-            timeout: 5000
+            timeout: 5000,
           },
           {
             action: 'add feedback comment',
             expected: 'comment saved',
-            timeout: 3000
+            timeout: 3000,
           },
           {
             action: 'verify real-time notification',
             expected: 'notification received',
-            timeout: 2000
-          }
+            timeout: 2000,
+          },
         ],
         enabled: true,
-        schedule: '*/30 * * * *' // 30분마다
-      }
+        schedule: '*/30 * * * *', // 30분마다
+      },
     ]
 
     defaultSmokeTests.forEach(test => {
@@ -492,37 +523,42 @@ class ProductionMonitor {
 
   private async runSmokeTest(test: SmokeTest): Promise<boolean> {
     console.log(`🧪 Running smoke test: ${test.name}`)
-    
+
     try {
       for (const step of test.steps) {
         const startTime = Date.now()
-        const success = await this.executeTestStep(step)
+        const success = await this.executeTestStep()
         const duration = Date.now() - startTime
-        
+
         if (!success || duration > step.timeout) {
           console.error(`❌ Smoke test failed: ${test.name} at step "${step.action}"`)
           await this.handleFailedSmokeTest(test, step, duration)
           return false
         }
       }
-      
+
       console.log(`✅ Smoke test passed: ${test.name}`)
       return true
     } catch (error) {
       console.error(`❌ Smoke test error: ${test.name}`, error)
-      await this.handleFailedSmokeTest(test, null, 0, error)
+      await this.handleFailedSmokeTest(test, null, 0, error instanceof Error ? error : new Error(String(error)))
       return false
     }
   }
 
-  private async executeTestStep(step: { action: string; expected: string; timeout: number }): Promise<boolean> {
+  private async executeTestStep(): Promise<boolean> {
     // 실제 구현에서는 Playwright나 API 클라이언트 사용
     // 여기서는 모의 구현
     await new Promise(resolve => setTimeout(resolve, Math.random() * 1000))
     return Math.random() > 0.1 // 90% 성공률
   }
 
-  private async handleFailedSmokeTest(test: SmokeTest, step: { action: string; expected: string; timeout: number } | null = null, duration: number, error?: Error): Promise<void> {
+  private async handleFailedSmokeTest(
+    test: SmokeTest,
+    step: { action: string; expected: string; timeout: number } | null = null,
+    duration: number,
+    error?: Error
+  ): Promise<void> {
     const alertData = {
       id: `smoke-test-${test.id}`,
       name: `Smoke Test 실패: ${test.name}`,
@@ -531,7 +567,7 @@ class ProductionMonitor {
       currentValue: 0,
       threshold: 1,
       timestamp: new Date(),
-      context: { testId: test.id, step, duration, error: error?.message }
+      context: { testId: test.id, step, duration, error: error?.message },
     }
 
     await this.sendSlackAlert(alertData)
@@ -541,11 +577,11 @@ class ProductionMonitor {
   // ===== 사용자 행동 분석 =====
   trackUserEvent(event: Omit<UserBehaviorEvent, 'timestamp' | 'sessionId'>): void {
     const sessionId = this.getOrCreateSessionId()
-    
+
     const userEvent: UserBehaviorEvent = {
       ...event,
       timestamp: new Date(),
-      sessionId
+      sessionId,
     }
 
     this.userEvents.push(userEvent)
@@ -561,19 +597,19 @@ class ProductionMonitor {
   private getOrCreateSessionId(): string {
     const sessionKey = 'vridge_session_id'
     let sessionId = sessionStorage.getItem(sessionKey)
-    
+
     if (!sessionId) {
       sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
       sessionStorage.setItem(sessionKey, sessionId)
     }
-    
+
     return sessionId
   }
 
   private analyzeUserBehavior(event: UserBehaviorEvent): void {
     // 에러 발생 패턴 분석
     if (event.eventType === 'error') {
-      this.trackErrorPattern(event)
+      this.trackErrorPattern()
     }
 
     // 성능 저하 패턴 분석
@@ -585,33 +621,39 @@ class ProductionMonitor {
     this.trackEngagementPattern(event)
   }
 
-  private trackErrorPattern(event: UserBehaviorEvent): void {
-    const recentErrors = this.userEvents
-      .filter(e => e.eventType === 'error' && e.timestamp > new Date(Date.now() - 10 * 60 * 1000))
-    
+  private trackErrorPattern(): void {
+    const recentErrors = this.userEvents.filter(
+      e => e.eventType === 'error' && e.timestamp > new Date(Date.now() - 10 * 60 * 1000)
+    )
+
     if (recentErrors.length > 5) {
-      this.sendAlert({
-        id: 'user-error-spike',
-        name: '사용자 에러 급증',
-        metric: 'userErrors',
-        condition: 'gt',
-        threshold: 5,
-        window: 10,
-        cooldown: 15,
-        severity: 'high',
-        enabled: true
-      }, recentErrors.length, { errors: recentErrors.slice(-5) })
+      this.sendAlert(
+        {
+          id: 'user-error-spike',
+          name: '사용자 에러 급증',
+          metric: 'userErrors',
+          condition: 'gt',
+          threshold: 5,
+          window: 10,
+          cooldown: 15,
+          severity: 'high',
+          enabled: true,
+        },
+        recentErrors.length,
+        { errors: recentErrors.slice(-5) }
+      )
     }
   }
 
   private trackPerformancePattern(event: UserBehaviorEvent): void {
-    if (event.data.loadTime > 5000) {
+    const loadTime = event.data.loadTime as number | undefined
+    if (loadTime && loadTime > 5000) {
       this.trackUserEvent({
         eventType: 'performance',
         userId: event.userId,
         url: event.url,
         userAgent: event.userAgent,
-        data: { issue: 'slow_load', loadTime: event.data.loadTime }
+        data: { issue: 'slow_load', loadTime },
       })
     }
   }
@@ -624,15 +666,15 @@ class ProductionMonitor {
     if (sessionDuration > 30 * 60 * 1000 && sessionEvents.length < 5) {
       // 30분 이상 머물렀지만 상호작용이 적음 -> 이탈 위험
       this.trackUserEvent({
-        eventType: 'engagement',
+        eventType: 'page_view', // 'engagement'는 UserBehaviorEvent에 없으므로 'page_view'로 대체
         userId: event.userId,
         url: event.url,
         userAgent: event.userAgent,
-        data: { 
+        data: {
           pattern: 'low_engagement',
           duration: sessionDuration,
-          interactions: sessionEvents.length 
-        }
+          interactions: sessionEvents.length,
+        },
       })
     }
   }
@@ -641,25 +683,25 @@ class ProductionMonitor {
   prepareABTest(testId: string, variants: string[], trafficSplit: number[]): void {
     const userId = this.getCurrentUserId()
     const variant = this.assignUserToVariant(userId, testId, variants, trafficSplit)
-    
+
     // A/B 테스트 참여 기록
     this.trackUserEvent({
-      eventType: 'ab_test',
+      eventType: 'click', // 'ab_test'는 UserBehaviorEvent에 없으므로 'click'으로 대체
       userId,
       url: window.location.href,
       userAgent: navigator.userAgent,
       data: {
         testId,
         variant,
-        timestamp: new Date()
-      }
+        timestamp: new Date(),
+      },
     })
   }
 
   private assignUserToVariant(userId: string, testId: string, variants: string[], splits: number[]): string {
     const hash = this.hashString(`${userId}_${testId}`)
     const bucket = hash % 100
-    
+
     let cumulative = 0
     for (let i = 0; i < splits.length; i++) {
       cumulative += splits[i]
@@ -667,7 +709,7 @@ class ProductionMonitor {
         return variants[i]
       }
     }
-    
+
     return variants[0] // fallback
   }
 
@@ -675,7 +717,7 @@ class ProductionMonitor {
     let hash = 0
     for (let i = 0; i < str.length; i++) {
       const char = str.charCodeAt(i)
-      hash = ((hash << 5) - hash) + char
+      hash = (hash << 5) - hash + char
       hash = hash & hash // Convert to 32bit integer
     }
     return Math.abs(hash)
@@ -696,16 +738,18 @@ class ProductionMonitor {
       startTime: new Date(),
       description,
       affectedServices: [],
-      timeline: [{
-        timestamp: new Date(),
-        action: '인시던트 생성',
-        author: 'System'
-      }]
+      timeline: [
+        {
+          timestamp: new Date(),
+          action: '인시던트 생성',
+          author: 'System',
+        },
+      ],
     }
 
     this.incidents.set(incident.id, incident)
     console.log(`🔥 Incident Created: ${incident.id} - ${title}`)
-    
+
     return incident.id
   }
 
@@ -719,7 +763,7 @@ class ProductionMonitor {
       incident.timeline.push({
         timestamp: new Date(),
         action: `상태 변경: ${update.status}`,
-        author: update.resolution ? 'System' : 'Manual'
+        author: update.resolution ? 'System' : 'Manual',
       })
 
       if (update.status === 'resolved') {
@@ -755,14 +799,17 @@ class ProductionMonitor {
     }, 60 * 1000) // 1분마다 체크
 
     // 주기적 Smoke 테스트 (간단한 구현)
-    setInterval(() => {
-      this.smokeTests.forEach(test => {
-        if (test.enabled) {
-          // 실제로는 cron schedule에 따라 실행
-          this.runSmokeTest(test)
-        }
-      })
-    }, 15 * 60 * 1000) // 15분마다 체크
+    setInterval(
+      () => {
+        this.smokeTests.forEach(test => {
+          if (test.enabled) {
+            // 실제로는 cron schedule에 따라 실행
+            this.runSmokeTest(test)
+          }
+        })
+      },
+      15 * 60 * 1000
+    ) // 15분마다 체크
 
     console.log('🔍 Production Monitor started')
   }
@@ -772,14 +819,13 @@ class ProductionMonitor {
       if (!alert.enabled || alert.metric !== metric.name) return
 
       const windowStart = new Date(Date.now() - alert.window * 60 * 1000)
-      const recentMetrics = performanceMonitor.getMetrics(metric.name)
-        .filter(m => m.timestamp > windowStart)
+      const recentMetrics = performanceMonitor.getMetrics(metric.name).filter(m => m.timestamp > windowStart)
 
       if (recentMetrics.length === 0) return
 
       const currentValue = this.calculateMetricValue(recentMetrics, alert.condition)
-      
-      if (this.shouldTriggerAlert(alert, currentValue, recentMetrics)) {
+
+      if (this.shouldTriggerAlert(alert, currentValue)) {
         this.sendAlert(alert, currentValue, metric.context)
       }
     })
@@ -787,24 +833,24 @@ class ProductionMonitor {
 
   private calculateMetricValue(metrics: PerformanceMetric[], condition: string): number {
     const values = metrics.map(m => m.value)
-    
+
     switch (condition) {
       case 'spike':
         const recent = values.slice(-5).reduce((a, b) => a + b, 0) / 5
         const baseline = values.slice(0, -5).reduce((a, b) => a + b, 0) / (values.length - 5) || recent
         return recent / baseline
-      
+
       case 'drop':
         const recentDrop = values.slice(-5).reduce((a, b) => a + b, 0) / 5
         const baselineDrop = values.slice(0, -5).reduce((a, b) => a + b, 0) / (values.length - 5) || recentDrop
         return baselineDrop / recentDrop
-      
+
       default:
         return values.reduce((a, b) => a + b, 0) / values.length
     }
   }
 
-  private shouldTriggerAlert(alert: AlertRule, value: number, metrics: PerformanceMetric[]): boolean {
+  private shouldTriggerAlert(alert: AlertRule, value: number): boolean {
     switch (alert.condition) {
       case 'gt':
         return value > alert.threshold
@@ -832,7 +878,7 @@ class ProductionMonitor {
       health: Object.fromEntries(this.healthStatus),
       alerts: Array.from(this.alerts.values()).filter(a => a.enabled),
       incidents: this.listActiveIncidents(),
-      performance: performanceMonitor.getCoreWebVitals()
+      performance: performanceMonitor.getCoreWebVitals(),
     }
   }
 
@@ -848,10 +894,13 @@ class ProductionMonitor {
 
     const pageViews = this.userEvents
       .filter(e => e.eventType === 'page_view')
-      .reduce((acc, event) => {
-        acc[event.url] = (acc[event.url] || 0) + 1
-        return acc
-      }, {} as Record<string, number>)
+      .reduce(
+        (acc, event) => {
+          acc[event.url] = (acc[event.url] || 0) + 1
+          return acc
+        },
+        {} as Record<string, number>
+      )
 
     const topPages = Object.entries(pageViews)
       .sort(([, a], [, b]) => b - a)
@@ -862,7 +911,7 @@ class ProductionMonitor {
       totalEvents,
       errorRate,
       engagementScore: Math.max(0, 100 - errorRate * 2),
-      topPages
+      topPages,
     }
   }
 
@@ -894,6 +943,6 @@ export function useProductionMonitor() {
     getStatus,
     getInsights,
     createIncident: productionMonitor.createIncident.bind(productionMonitor),
-    updateIncident: productionMonitor.updateIncident.bind(productionMonitor)
+    updateIncident: productionMonitor.updateIncident.bind(productionMonitor),
   }
 }

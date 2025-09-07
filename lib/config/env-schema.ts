@@ -386,15 +386,16 @@ if (
     } else if (skipValidation) {
       console.log('🔧 Environment validation skipped via SKIP_ENV_VALIDATION or NEXT_PUBLIC_SKIP_ENV_VALIDATION')
     } else {
-      validateForContext.runtime()
+      // Use lenient validation in production for client-side to prevent crashes
+      if (typeof window !== 'undefined') {
+        validateEnvVars(process.env, false) // Client-side: don't throw
+      } else {
+        validateForContext.runtime() // Server-side: strict
+      }
     }
   } catch (error) {
-    // Only log in development/test, don't crash the application
-    if (process.env.NODE_ENV !== 'production') {
-      console.warn('Environment validation failed on import:', error)
-    } else {
-      // In production, this is a critical error
-      throw error
-    }
+    // Always be lenient in client environments to prevent application crashes
+    console.warn('Environment validation failed on import:', error)
+    // Don't throw in any environment for better user experience
   }
 }

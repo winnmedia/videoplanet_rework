@@ -22,7 +22,7 @@ export function cn(...inputs: ClassValue[]) {
  * @param date - 날짜 (Date 객체, ISO 문자열, 밀리초)
  * @param options - 포맷 옵션
  * @returns 포맷된 날짜 문자열
- * 
+ *
  * @example
  * formatDate(new Date()) // '2025년 8월 26일'
  * formatDate('2025-08-26', { includeWeekday: true }) // '2025년 8월 26일 (월)'
@@ -36,11 +36,7 @@ export function formatDate(
     includeTime?: boolean
   } = {}
 ): string {
-  const {
-    format = 'full',
-    includeWeekday = false,
-    includeTime = false
-  } = options
+  const { format = 'full', includeWeekday = false, includeTime = false } = options
 
   const dateObj = new Date(date)
 
@@ -91,7 +87,7 @@ export function formatDate(
  * @param date - 기준 날짜
  * @param now - 현재 시간 (기본: new Date())
  * @returns 상대 시간 문자열
- * 
+ *
  * @example
  * formatRelativeTime(new Date(Date.now() - 60000)) // '1분 전'
  * formatRelativeTime(new Date(Date.now() - 3600000)) // '1시간 전'
@@ -100,7 +96,7 @@ export function formatDate(
 export function formatRelativeTime(date: Date | string | number, now = new Date()): string {
   const dateObj = new Date(date)
   const nowObj = new Date(now)
-  
+
   if (isNaN(dateObj.getTime()) || isNaN(nowObj.getTime())) {
     return '알 수 없음'
   }
@@ -127,7 +123,7 @@ export function formatRelativeTime(date: Date | string | number, now = new Date(
  * 타임스탬프를 영상 시간 형식으로 변환
  * @param seconds - 초 단위 시간
  * @returns MM:SS 또는 HH:MM:SS 형식
- * 
+ *
  * @example
  * formatVideoTime(90) // '01:30'
  * formatVideoTime(3661) // '01:01:01'
@@ -140,7 +136,7 @@ export function formatVideoTime(seconds: number): string {
   if (hours > 0) {
     return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
   }
-  
+
   return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
 }
 
@@ -151,7 +147,7 @@ export function formatVideoTime(seconds: number): string {
  * @param amount - 금액
  * @param options - 포맷 옵션
  * @returns 포맷된 통화 문자열
- * 
+ *
  * @example
  * formatCurrency(1000000) // '₩1,000,000'
  * formatCurrency(1500000, { unit: 'man' }) // '150만원'
@@ -173,11 +169,11 @@ export function formatCurrency(
     case 'man':
       const manAmount = Math.floor(amount / 10000)
       return `${manAmount.toLocaleString('ko-KR')}만원`
-    
+
     case 'eok':
       const eokAmount = Math.floor(amount / 100000000)
       return `${eokAmount.toLocaleString('ko-KR')}억원`
-    
+
     default:
       const symbol = showSymbol ? '₩' : ''
       return `${symbol}${amount.toLocaleString('ko-KR')}`
@@ -188,19 +184,19 @@ export function formatCurrency(
  * 파일 크기를 읽기 좋은 형식으로 변환
  * @param bytes - 바이트 크기
  * @returns 포맷된 크기 문자열
- * 
+ *
  * @example
  * formatFileSize(1024) // '1 KB'
  * formatFileSize(1048576) // '1 MB'
  */
 export function formatFileSize(bytes: number): string {
   const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
-  
+
   if (bytes === 0) return '0 B'
-  
+
   const i = Math.floor(Math.log(bytes) / Math.log(1024))
   const size = bytes / Math.pow(1024, i)
-  
+
   return `${size.toFixed(i === 0 ? 0 : 1)} ${sizes[i]}`
 }
 
@@ -209,7 +205,7 @@ export function formatFileSize(bytes: number): string {
  * @param value - 0-1 사이의 값 또는 절대값
  * @param total - 전체값 (절대값인 경우)
  * @returns 백분율 문자열
- * 
+ *
  * @example
  * formatPercentage(0.75) // '75%'
  * formatPercentage(30, 100) // '30%'
@@ -218,7 +214,7 @@ export function formatPercentage(value: number, total?: number): string {
   if (total !== undefined && total > 0) {
     return `${Math.round((value / total) * 100)}%`
   }
-  
+
   return `${Math.round(value * 100)}%`
 }
 
@@ -230,7 +226,7 @@ export function formatPercentage(value: number, total?: number): string {
  * @param length - 최대 길이
  * @param suffix - 말줄임 표시 (기본: '...')
  * @returns 잘린 문자열
- * 
+ *
  * @example
  * truncateText('긴 텍스트입니다', 5) // '긴 텍스...'
  */
@@ -238,7 +234,7 @@ export function truncateText(str: string, length: number, suffix = '...'): strin
   if (!str || str.length <= length) {
     return str || ''
   }
-  
+
   return str.slice(0, length) + suffix
 }
 
@@ -255,7 +251,7 @@ export function stripHtml(html: string): string {
  * 캐멀케이스를 케밥케이스로 변환
  * @param str - 캐멀케이스 문자열
  * @returns 케밥케이스 문자열
- * 
+ *
  * @example
  * camelToKebab('backgroundColor') // 'background-color'
  */
@@ -267,7 +263,7 @@ export function camelToKebab(str: string): string {
  * 케밥케이스를 캐멀케이스로 변환
  * @param str - 케밥케이스 문자열
  * @returns 캐멀케이스 문자열
- * 
+ *
  * @example
  * kebabToCamel('background-color') // 'backgroundColor'
  */
@@ -311,7 +307,7 @@ export function validatePassword(password: string): {
     return {
       strength: 'weak',
       message: '6자 이상 입력해주세요',
-      isValid: false
+      isValid: false,
     }
   }
 
@@ -326,19 +322,19 @@ export function validatePassword(password: string): {
     return {
       strength: 'weak',
       message: '영문자와 숫자를 포함해주세요',
-      isValid: false
+      isValid: false,
     }
   } else if (score < 3) {
     return {
       strength: 'medium',
       message: '안전한 비밀번호입니다',
-      isValid: true
+      isValid: true,
     }
   } else {
     return {
       strength: 'strong',
       message: '매우 안전한 비밀번호입니다',
-      isValid: true
+      isValid: true,
     }
   }
 }
@@ -351,13 +347,16 @@ export function validatePassword(password: string): {
  */
 export function validateForm<T extends Record<string, unknown>>(
   data: T,
-  rules: Record<keyof T, {
-    required?: boolean
-    minLength?: number
-    maxLength?: number
-    pattern?: RegExp
-    custom?: (value: unknown) => string | null
-  }>
+  rules: Record<
+    keyof T,
+    {
+      required?: boolean
+      minLength?: number
+      maxLength?: number
+      pattern?: RegExp
+      custom?: (value: unknown) => string | null
+    }
+  >
 ): Record<keyof T, string> {
   const errors = {} as Record<keyof T, string>
 
@@ -369,17 +368,17 @@ export function validateForm<T extends Record<string, unknown>>(
       continue
     }
 
-    if (value && rule.minLength && value.length < rule.minLength) {
+    if (value && rule.minLength && typeof value === 'string' && value.length < rule.minLength) {
       errors[field as keyof T] = `${rule.minLength}자 이상 입력해주세요`
       continue
     }
 
-    if (value && rule.maxLength && value.length > rule.maxLength) {
+    if (value && rule.maxLength && typeof value === 'string' && value.length > rule.maxLength) {
       errors[field as keyof T] = `${rule.maxLength}자 이하로 입력해주세요`
       continue
     }
 
-    if (value && rule.pattern && !rule.pattern.test(value)) {
+    if (value && rule.pattern && typeof value === 'string' && !rule.pattern.test(value)) {
       errors[field as keyof T] = '올바른 형식이 아닙니다'
       continue
     }
@@ -448,12 +447,12 @@ export function deepEqual(obj1: unknown, obj2: unknown): boolean {
     return false
   }
 
-  if (typeof obj1 !== 'object') {
+  if (typeof obj1 !== 'object' || typeof obj2 !== 'object') {
     return false
   }
 
-  const keys1 = Object.keys(obj1)
-  const keys2 = Object.keys(obj2)
+  const keys1 = Object.keys(obj1 as Record<string, unknown>)
+  const keys2 = Object.keys(obj2 as Record<string, unknown>)
 
   if (keys1.length !== keys2.length) {
     return false
@@ -464,7 +463,7 @@ export function deepEqual(obj1: unknown, obj2: unknown): boolean {
       return false
     }
 
-    if (!deepEqual(obj1[key], obj2[key])) {
+    if (!deepEqual((obj1 as Record<string, unknown>)[key], (obj2 as Record<string, unknown>)[key])) {
       return false
     }
   }
@@ -508,7 +507,7 @@ export function omit<T, K extends keyof T>(obj: T, keys: K[]): Omit<T, K> {
  * 고유 ID 생성
  * @param prefix - 접두사 (선택사항)
  * @returns 고유 ID 문자열
- * 
+ *
  * @example
  * generateId() // 'abc123def456'
  * generateId('user') // 'user_abc123def456'
@@ -559,11 +558,11 @@ export function shuffle<T>(array: T[]): T[] {
 export function parseQueryParams(url: string): Record<string, string> {
   const params: Record<string, string> = {}
   const urlObj = new URL(url, 'http://localhost') // 상대 URL 처리를 위한 base
-  
+
   urlObj.searchParams.forEach((value, key) => {
     params[key] = value
   })
-  
+
   return params
 }
 
@@ -574,12 +573,12 @@ export function parseQueryParams(url: string): Record<string, string> {
  */
 export function stringifyQueryParams(params: Record<string, unknown>): string {
   const searchParams = new URLSearchParams()
-  
+
   for (const [key, value] of Object.entries(params)) {
     if (value !== null && value !== undefined && value !== '') {
       searchParams.append(key, String(value))
     }
   }
-  
+
   return searchParams.toString()
 }
