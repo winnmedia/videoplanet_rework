@@ -22,6 +22,11 @@ const EXAMPLE_PROJECTS: Project[] = [
     id: 'proj-1',
     name: '삼성 갤럭시 광고',
     color: '#3B82F6', // Will be overridden by ColorAssignmentService
+    hue: 217, // Blue hue
+    startDate: '2025-01-20',
+    endDate: '2025-02-05',
+    organization: '삼성전자',
+    manager: '김영수',
     description: 'Samsung Galaxy commercial production',
     status: 'active',
     phases: [],
@@ -32,6 +37,11 @@ const EXAMPLE_PROJECTS: Project[] = [
     id: 'proj-2', 
     name: 'LG 홈어플라이언스 홍보영상',
     color: '#10B981',
+    hue: 160, // Emerald hue
+    startDate: '2025-01-22',
+    endDate: '2025-02-06',
+    organization: 'LG전자',
+    manager: '박민지',
     description: 'LG home appliances promotional video',
     status: 'active',
     phases: [],
@@ -42,6 +52,11 @@ const EXAMPLE_PROJECTS: Project[] = [
     id: 'proj-3',
     name: '현대자동차 신차 런칭',
     color: '#F59E0B',
+    hue: 45, // Amber hue
+    startDate: '2025-02-05',
+    endDate: '2025-02-25',
+    organization: '현대자동차',
+    manager: '이준호',
     description: 'Hyundai new car launch video',
     status: 'active',
     phases: [],
@@ -61,7 +76,12 @@ const EXAMPLE_PHASES: ProjectPhase[] = [
     startDate: '2025-01-20',
     endDate: '2025-01-24',
     duration: 5,
-    isMovable: true
+    isMovable: true,
+    status: 'in-progress',
+    conflictLevel: 'none',
+    isEditable: true,
+    assignedTo: ['user-1'],
+    resources: ['기획팀', '디자인팀']
   },
   {
     id: 'phase-1-filming',
@@ -71,7 +91,12 @@ const EXAMPLE_PHASES: ProjectPhase[] = [
     startDate: '2025-01-25',
     endDate: '2025-01-27',
     duration: 3,
-    isMovable: true
+    isMovable: true,
+    status: 'pending',
+    conflictLevel: 'warning',
+    isEditable: true,
+    assignedTo: ['user-1', 'user-2'],
+    resources: ['촬영팀', '장비팀']
   },
   {
     id: 'phase-1-editing',
@@ -81,7 +106,12 @@ const EXAMPLE_PHASES: ProjectPhase[] = [
     startDate: '2025-01-28',
     endDate: '2025-02-02',
     duration: 6,
-    isMovable: true
+    isMovable: true,
+    status: 'pending',
+    conflictLevel: 'none',
+    isEditable: true,
+    assignedTo: ['user-3'],
+    resources: ['편집팀']
   },
   
   // LG 홈어플라이언스 프로젝트 페이즈
@@ -93,7 +123,12 @@ const EXAMPLE_PHASES: ProjectPhase[] = [
     startDate: '2025-01-22',
     endDate: '2025-01-25',
     duration: 4,
-    isMovable: true
+    isMovable: true,
+    status: 'in-progress',
+    conflictLevel: 'none',
+    isEditable: true,
+    assignedTo: ['user-4'],
+    resources: ['기획팀']
   },
   {
     id: 'phase-2-filming', // CONFLICT: Overlaps with proj-1 filming
@@ -103,7 +138,12 @@ const EXAMPLE_PHASES: ProjectPhase[] = [
     startDate: '2025-01-26', // Overlaps with Samsung filming
     endDate: '2025-01-28',
     duration: 3,
-    isMovable: true
+    isMovable: true,
+    status: 'pending',
+    conflictLevel: 'critical',
+    isEditable: true,
+    assignedTo: ['user-2'],
+    resources: ['촬영팀', '장비팀']
   },
   {
     id: 'phase-2-editing',
@@ -113,7 +153,12 @@ const EXAMPLE_PHASES: ProjectPhase[] = [
     startDate: '2025-01-29',
     endDate: '2025-02-04',
     duration: 7,
-    isMovable: true
+    isMovable: true,
+    status: 'pending',
+    conflictLevel: 'none',
+    isEditable: true,
+    assignedTo: ['user-3'],
+    resources: ['편집팀']
   },
   
   // 현대자동차 프로젝트 페이즈
@@ -125,7 +170,12 @@ const EXAMPLE_PHASES: ProjectPhase[] = [
     startDate: '2025-02-05',
     endDate: '2025-02-08',
     duration: 4,
-    isMovable: true
+    isMovable: true,
+    status: 'pending',
+    conflictLevel: 'none',
+    isEditable: true,
+    assignedTo: ['user-5'],
+    resources: ['기획팀']
   },
   {
     id: 'phase-3-filming',
@@ -135,7 +185,12 @@ const EXAMPLE_PHASES: ProjectPhase[] = [
     startDate: '2025-02-10',
     endDate: '2025-02-12',
     duration: 3,
-    isMovable: true
+    isMovable: true,
+    status: 'pending',
+    conflictLevel: 'none',
+    isEditable: true,
+    assignedTo: ['user-2'],
+    resources: ['촬영팀', '장비팀']
   }
 ]
 
@@ -160,7 +215,9 @@ export function CalendarExampleUsage() {
         isCompleted: false,
         project,
         phase,
-        isConflicting: false // Will be calculated below
+        isConflicting: false, // Will be calculated below
+        isDraggable: true,
+        isResizable: true
       }
     })
   }, [])

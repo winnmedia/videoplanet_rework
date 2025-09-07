@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react'
 
 // Emergency deployment - temporarily disable missing imports
 // import { QuickActions } from '@/features/projects'
+import type { DashboardData } from '@/entities/dashboard/model/types'
 import { SideBar } from '@/widgets'
 // import { 
 //   RecentActivityFeed,
@@ -15,26 +16,87 @@ import { SideBar } from '@/widgets'
 //   ScheduleSummaryCard,
 //   UnreadBadge,
 //   dashboardApiClient,
-//   type DashboardData
 // } from '@/widgets/Dashboard'
 
-// Temporary placeholder components
-const RecentActivityFeed = () => <div className="text-gray-500">활동 피드 준비중...</div>
-const FeedbackSummaryCard = () => <div className="text-gray-500">피드백 요약 준비중...</div>
-const InvitationSummaryCard = () => <div className="text-gray-500">초대 요약 준비중...</div>
-const ScheduleSummaryCard = () => <div className="text-gray-500">일정 요약 준비중...</div>
-const UnreadBadge = ({ count }: { count: number }) => <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">{count}</span>
+// Temporary placeholder components with proper props
+const RecentActivityFeed = ({ activities: _ }: { activities?: unknown[] }) => <div className="text-gray-500">활동 피드 준비중...</div>
+const FeedbackSummaryCard = ({ data: _, onViewDetails: __, onMarkAllRead: ___, onItemClick: ____ }: { 
+  data?: Record<string, unknown>
+  onViewDetails?: () => void
+  onMarkAllRead?: () => Promise<void>
+  onItemClick?: (itemId: string) => Promise<void>
+}) => <div className="text-gray-500">피드백 요약 준비중...</div>
+const InvitationSummaryCard = ({ data: _, onViewDetails: __, onResendInvitation: ___, onAcceptInvitation: ____, onDeclineInvitation: _____, onItemClick: ______ }: { 
+  data?: Record<string, unknown>
+  onViewDetails?: () => void
+  onResendInvitation?: (invitationId: string) => Promise<void>
+  onAcceptInvitation?: (invitationId: string) => Promise<void>
+  onDeclineInvitation?: (invitationId: string) => Promise<void>
+  onItemClick?: (id: string) => void
+}) => <div className="text-gray-500">초대 요약 준비중...</div>
+const ScheduleSummaryCard = ({ data: _, viewType: __, onViewTypeChange: ___, onProjectClick: ____, onViewDetails: _____, onCreateProject: ______ }: { 
+  data?: Record<string, unknown>
+  viewType?: 'month' | 'week'
+  onViewTypeChange?: (type: 'month' | 'week') => void
+  onProjectClick?: (projectId: string) => void
+  onViewDetails?: () => void
+  onCreateProject?: () => void
+}) => <div className="text-gray-500">일정 요약 준비중...</div>
+const UnreadBadge = ({ count, priority: _, size: __ }: { 
+  count: number
+  priority?: string
+  size?: string
+}) => <span className="inline-flex items-center px-2 py-1 text-xs font-medium bg-red-100 text-red-800 rounded-full">{count}</span>
 const QuickActions = () => <div className="text-gray-500">빠른 작업 준비중...</div>
 
-// Mock API client
+// Mock API client with proper types
 const dashboardApiClient = {
-  fetchDashboardData: () => Promise.resolve({}),
-  markFeedbackAsRead: (_id: string) => Promise.resolve(),
-  resendInvitation: (_id: string) => Promise.resolve(),
-  acceptInvitation: (_id: string) => Promise.resolve(),
+  fetchDashboardData: (): Promise<DashboardData> => Promise.resolve({
+    stats: {
+      totalProjects: 15,
+      activeProjects: 8,
+      completedProjects: 7,
+      totalTeamMembers: 12,
+      pendingTasks: 24,
+    },
+    recentProjects: [],
+    recentActivity: [],
+    upcomingDeadlines: [],
+    feedbackSummary: {
+      totalUnread: 5,
+      newComments: 3,
+      newReplies: 1,
+      emotionChanges: 1,
+      recentItems: [],
+    },
+    invitationStats: {
+      sentPending: 2,
+      sentAccepted: 8,
+      sentDeclined: 1,
+      receivedPending: 1,
+      receivedUnread: 1,
+      recentInvitations: [],
+    },
+    scheduleStats: {
+      totalProjects: 15,
+      onTimeProjects: 12,
+      delayedProjects: 3,
+      completedThisWeek: 2,
+      upcomingDeadlines: [],
+      currentProjects: [],
+    },
+    unreadStats: {
+      totalUnread: 8,
+      feedbackUnread: 5,
+      invitationUnread: 1,
+      notificationUnread: 2,
+      badges: [],
+    },
+  }),
+  markFeedbackAsRead: (_: string) => Promise.resolve(),
+  resendInvitation: (_: string) => Promise.resolve(),
+  acceptInvitation: (_: string) => Promise.resolve(),
 }
-
-type DashboardData = Record<string, unknown>
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -99,10 +161,10 @@ export default function DashboardPage() {
       if (!dashboardData?.feedbackSummary?.recentItems) return
       
       // 읽지 않은 피드백들에 대해 일괄 읽음 처리
-      const unreadItems = (dashboardData as Record<string, unknown>).feedbackSummary?.recentItems?.filter((item: Record<string, unknown>) => !item.isRead) || []
+      const unreadItems = dashboardData.feedbackSummary?.recentItems?.filter(item => !item.isRead) || []
       
       await Promise.all(
-        unreadItems.map((item: Record<string, unknown>) => dashboardApiClient.markFeedbackAsRead(item.id as string))
+        unreadItems.map(item => dashboardApiClient.markFeedbackAsRead(item.id))
       )
       
       // 대시보드 데이터 갱신

@@ -2,29 +2,32 @@
 
 import { useState, useMemo, useCallback } from 'react'
 
-import type { Project, ProjectLegendItem } from '@/entities/calendar'
-import type { CalendarFilter, CalendarViewSettings, CalendarEvent } from '@/entities/project'
+import type { 
+  Project, 
+  ProjectLegendItem, 
+  CalendarFilterOptions, 
+  CalendarViewMode,
+  ProjectCalendarEvent
+} from '@/entities/calendar'
 import { CalendarFilters, CalendarView, ConflictAlert, ProjectLegend, WeekView } from '@/features/calendar'
 import { DragDropCalendarView } from '@/features/calendar/ui/DragDropCalendarView'
 import { SideBar } from '@/widgets'
 
 export default function CalendarPage() {
   // 상태 관리
-  const [viewMode, setViewMode] = useState<'month' | 'week' | 'gantt'>('month')
+  const [viewMode, setViewMode] = useState<CalendarViewMode>('month')
   const [selectedDate, setSelectedDate] = useState(new Date())
-  const [filter, setFilter] = useState<CalendarFilter>({
-    projects: [],
-    organizations: [],
-    assignees: [],
-    phaseTypes: [],
+  const [filter, setFilter] = useState<CalendarFilterOptions>({
+    selectedProjects: [],
+    selectedOrganizations: [],
+    selectedAssignees: [],
+    selectedPhaseTypes: [],
     showConflictsOnly: false,
-    showMyProjectsOnly: false
-  })
-  const [viewSettings] = useState<CalendarViewSettings>({
-    mode: 'month',
-    showWeekends: true,
-    showWeekNumbers: false,
-    timeZone: 'Asia/Seoul'
+    showMyProjectsOnly: false,
+    dateRange: {
+      start: new Date().toISOString(),
+      end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+    }
   })
   const [projectVisibility, setProjectVisibility] = useState<Record<string, boolean>>({})
   
@@ -35,6 +38,9 @@ export default function CalendarPage() {
       name: 'VRidge 웹 플랫폼',
       status: 'active',
       color: '#3B82F6',
+      hue: 217,
+      startDate: '2025-08-01',
+      endDate: '2025-12-31',
       description: 'VRidge 웹 플랫폼 개발 프로젝트',
       phases: [],
       createdAt: '2025-08-01T00:00:00.000Z',
@@ -45,6 +51,9 @@ export default function CalendarPage() {
       name: '홍보 영상 제작',
       status: 'active',
       color: '#10B981',
+      hue: 160,
+      startDate: '2025-08-15',
+      endDate: '2025-10-31',
       description: '회사 홍보 영상 제작',
       phases: [],
       createdAt: '2025-08-15T00:00:00.000Z',
@@ -55,6 +64,9 @@ export default function CalendarPage() {
       name: '클라이언트 프레젠테이션',
       status: 'on-hold',
       color: '#F59E0B',
+      hue: 43,
+      startDate: '2025-07-01',
+      endDate: '2025-11-30',
       description: '신규 클라이언트 대상 프레젠테이션 준비',
       phases: [],
       createdAt: '2025-09-01T00:00:00.000Z',
@@ -62,12 +74,18 @@ export default function CalendarPage() {
     }
   ], [])
 
-  const mockEvents: CalendarEvent[] = useMemo(() => [
+  const mockEvents: ProjectCalendarEvent[] = useMemo(() => [
     {
       id: 'event1',
       title: '프로젝트 킥오프',
       startDate: '2025-08-28',
       endDate: '2025-08-28',
+      priority: 'high' as const,
+      createdBy: 'user1',
+      category: 'project-deadline' as const,
+      isAllDay: false,
+      recurrence: 'none' as const,
+      isCompleted: true,
       project: {
         ...mockProjects[0],
         hue: 210,
@@ -81,6 +99,8 @@ export default function CalendarPage() {
         type: 'pre-production' as const,
         startDate: '2025-08-28',
         endDate: '2025-08-28',
+        duration: 1,
+        isMovable: true,
         status: 'completed' as const,
         conflictLevel: 'none',
         isEditable: true
@@ -94,6 +114,12 @@ export default function CalendarPage() {
       title: '영상 촬영',
       startDate: '2025-08-29',
       endDate: '2025-08-30',
+      priority: 'medium' as const,
+      createdBy: 'user2',
+      category: 'filming' as const,
+      isAllDay: false,
+      recurrence: 'none' as const,
+      isCompleted: false,
       project: {
         ...mockProjects[1],
         hue: 140,
@@ -107,6 +133,8 @@ export default function CalendarPage() {
         type: 'production',
         startDate: '2025-08-29',
         endDate: '2025-08-30',
+        duration: 2,
+        isMovable: true,
         status: 'in-progress',
         conflictLevel: 'warning',
         isEditable: true,
@@ -126,6 +154,12 @@ export default function CalendarPage() {
       title: '클라이언트 미팅',
       startDate: '2025-08-30',
       endDate: '2025-08-30',
+      priority: 'high' as const,
+      createdBy: 'user3',
+      category: 'meeting' as const,
+      isAllDay: false,
+      recurrence: 'none' as const,
+      isCompleted: false,
       project: {
         ...mockProjects[2],
         hue: 45,
@@ -139,6 +173,8 @@ export default function CalendarPage() {
         type: 'review',
         startDate: '2025-08-30',
         endDate: '2025-08-30',
+        duration: 1,
+        isMovable: true,
         status: 'pending',
         conflictLevel: 'warning',
         isEditable: true,
@@ -160,20 +196,20 @@ export default function CalendarPage() {
     let events = mockEvents
     
     // 프로젝트 필터
-    if (filter.projects.length > 0) {
-      events = events.filter(event => filter.projects.includes(event.project.id))
+    if (filter.selectedProjects.length > 0) {
+      events = events.filter(event => filter.selectedProjects.includes(event.project.id))
     }
     
     // 조직 필터
-    if (filter.organizations.length > 0) {
+    if ((filter.selectedOrganizations || []).length > 0) {
       events = events.filter(event => 
-        event.project.organization && filter.organizations.includes(event.project.organization)
+        event.project.organization && (filter.selectedOrganizations || []).includes(event.project.organization)
       )
     }
     
     // 페이즈 타입 필터
-    if (filter.phaseTypes.length > 0) {
-      events = events.filter(event => filter.phaseTypes.includes(event.phase.type))
+    if (filter.selectedPhaseTypes.length > 0) {
+      events = events.filter(event => filter.selectedPhaseTypes.includes(event.phase.type))
     }
     
     // 충돌만 보기
@@ -194,6 +230,14 @@ export default function CalendarPage() {
     return events
   }, [mockEvents, filter, projectVisibility])
   
+  // ViewSettings 정의 추가
+  const viewSettings = useMemo(() => ({
+    mode: 'month' as const,
+    showWeekends: true,
+    showWeekNumbers: false,
+    timeZone: 'Asia/Seoul'
+  }), [])
+
   // 범례 아이템 계산
   const legendItems = useMemo((): ProjectLegendItem[] => {
     return mockProjects.map(project => ({
@@ -205,7 +249,7 @@ export default function CalendarPage() {
         text: '#FFFFFF'
       },
       isVisible: projectVisibility[project.id] !== false,
-      phaseCount: project.phases.length
+      phaseCount: project.phases.length || 0
     }))
   }, [mockProjects, projectVisibility])
   
@@ -215,7 +259,7 @@ export default function CalendarPage() {
   }, [filteredEvents])
   
   // 이벤트 핸들러들
-  const handleEventClick = useCallback((event: CalendarEvent) => {
+  const handleEventClick = useCallback((event: ProjectCalendarEvent) => {
     console.log('Event clicked:', event)
   }, [])
   
@@ -254,12 +298,16 @@ export default function CalendarPage() {
   
   const handleFilterReset = useCallback(() => {
     setFilter({
-      projects: [],
-      organizations: [],
-      assignees: [],
-      phaseTypes: [],
+      selectedProjects: [],
+      selectedOrganizations: [],
+      selectedAssignees: [],
+      selectedPhaseTypes: [],
       showConflictsOnly: false,
-      showMyProjectsOnly: false
+      showMyProjectsOnly: false,
+      dateRange: {
+        start: new Date().toISOString(),
+        end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+      }
     })
   }, [])
   
@@ -351,11 +399,31 @@ export default function CalendarPage() {
           {/* 필터링 */}
           <div className="mb-6">
             <CalendarFilters
-              filter={filter}
-              projects={mockProjects as Project[]}
+              filter={{
+                projects: filter.selectedProjects,
+                organizations: filter.selectedOrganizations || [],
+                assignees: filter.selectedAssignees || [],
+                phaseTypes: filter.selectedPhaseTypes,
+                showConflictsOnly: filter.showConflictsOnly,
+                showMyProjectsOnly: filter.showMyProjectsOnly || false,
+                startDate: filter.dateRange.start,
+                endDate: filter.dateRange.end
+              }}
+              projects={mockProjects}
               organizations={organizations}
               assignees={assignees}
-              onFilterChange={setFilter}
+              onFilterChange={(newFilter) => setFilter({
+                selectedProjects: newFilter.projects,
+                selectedOrganizations: newFilter.organizations,
+                selectedAssignees: newFilter.assignees,
+                selectedPhaseTypes: newFilter.phaseTypes,
+                showConflictsOnly: newFilter.showConflictsOnly,
+                showMyProjectsOnly: newFilter.showMyProjectsOnly,
+                dateRange: {
+                  start: newFilter.startDate || new Date().toISOString(),
+                  end: newFilter.endDate || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+                }
+              })}
               onReset={handleFilterReset}
             />
           </div>
@@ -363,8 +431,11 @@ export default function CalendarPage() {
           {/* 프로젝트 범례 */}
           <div className="mb-6">
             <ProjectLegend
-              legendItems={legendItems as ProjectLegendItem[]}
-              showMyProjectsOnly={filter.showMyProjectsOnly}
+              legendItems={legendItems.map(item => ({
+                ...item,
+                phaseCount: item.phaseCount || 0
+              }))}
+              showMyProjectsOnly={filter.showMyProjectsOnly || false}
               onToggleProject={handleProjectToggle}
               onToggleMode={handleLegendModeToggle}
             />
@@ -374,7 +445,7 @@ export default function CalendarPage() {
           <div className="mb-8">
             {viewMode === 'month' && (
               <CalendarView
-                events={filteredEvents as CalendarEvent[]}
+                events={filteredEvents}
                 viewSettings={viewSettings}
                 selectedDate={selectedDate}
                 onDateSelect={handleDateSelect}
@@ -385,7 +456,7 @@ export default function CalendarPage() {
             
             {viewMode === 'week' && (
               <WeekView
-                events={filteredEvents as CalendarEvent[]}
+                events={filteredEvents}
                 viewSettings={viewSettings}
                 selectedDate={selectedDate}
                 onDateSelect={handleDateSelect}
@@ -396,7 +467,7 @@ export default function CalendarPage() {
             
             {viewMode === 'gantt' && (
               <DragDropCalendarView
-                events={filteredEvents as CalendarEvent[]}
+                events={filteredEvents}
                 selectedDate={selectedDate}
                 filters={filter}
                 onDateSelect={handleDateSelect}

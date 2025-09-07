@@ -12,9 +12,10 @@
  * - 캐싱 및 성능 최적화
  */
 
-import { z } from 'zod'
+// import { z } from 'zod' // TODO: Add runtime validation later
 
-import { VideoPlanetPrompt, VideoPlanetPromptSchema, parsePrompt, createDefaultPrompt, ShotBreakdown } from '../../../entities/prompt'
+import { VideoPlanetPrompt, ShotBreakdown } from '../../../entities/prompt'
+// TODO: Add back schema validation: VideoPlanetPromptSchema, parsePrompt, createDefaultPrompt
 
 // =============================================================================
 // 타입 정의
@@ -190,7 +191,7 @@ export class PromptWorkflowEngine {
         if (!analysisResult.success) {
           throw new Error(`Story analysis failed: ${analysisResult.error?.message}`)
         }
-        currentData = { ...currentData, ...analysisResult.data }
+        currentData = { ...currentData, ...(analysisResult.data as Record<string, unknown>) }
       }
 
       // 2단계: 4막 구조 생성
@@ -199,7 +200,7 @@ export class PromptWorkflowEngine {
         if (!fourActResult.success) {
           throw new Error(`Four act generation failed: ${fourActResult.error?.message}`)
         }
-        currentData = { ...currentData, ...fourActResult.data }
+        currentData = { ...currentData, ...(fourActResult.data as Record<string, unknown>) }
       }
 
       // 3단계: 12샷 상세 계획 생성
@@ -208,7 +209,7 @@ export class PromptWorkflowEngine {
         if (!shotResult.success) {
           throw new Error(`Shot breakdown failed: ${shotResult.error?.message}`)
         }
-        currentData = { ...currentData, ...shotResult.data }
+        currentData = { ...currentData, ...(shotResult.data as Record<string, unknown>) }
       }
 
       // 4단계: VideoPlanet 프롬프트 생성
@@ -217,7 +218,7 @@ export class PromptWorkflowEngine {
         if (!promptResult.success) {
           throw new Error(`Prompt generation failed: ${promptResult.error?.message}`)
         }
-        currentData = { ...currentData, ...promptResult.data }
+        currentData = { ...currentData, ...(promptResult.data as Record<string, unknown>) }
       }
 
       // 5단계: 품질 검증 및 최적화
@@ -227,10 +228,11 @@ export class PromptWorkflowEngine {
         if (!qualityResult.success) {
           throw new Error(`Quality validation failed: ${qualityResult.error?.message}`)
         }
-        qualityMetrics = qualityResult.data.qualityReport
-        currentData = { ...currentData, optimizedPrompt: qualityResult.data.optimizedPrompt }
+        const qualityData = qualityResult.data as { qualityReport: QualityReport; optimizedPrompt: VideoPlanetPrompt }
+        qualityMetrics = qualityData.qualityReport
+        currentData = { ...currentData, optimizedPrompt: qualityData.optimizedPrompt }
       } else {
-        qualityMetrics = this.generateBasicQualityReport(currentData.videoPlanetPrompt)
+        qualityMetrics = this.generateBasicQualityReport(currentData.videoPlanetPrompt as VideoPlanetPrompt)
       }
 
       const totalExecutionTime = performance.now() - startTime
@@ -238,7 +240,7 @@ export class PromptWorkflowEngine {
       return {
         success: true,
         data: {
-          finalPrompt: currentData.optimizedPrompt || currentData.videoPlanetPrompt,
+          finalPrompt: (currentData.optimizedPrompt || currentData.videoPlanetPrompt) as VideoPlanetPrompt,
           executionLog: {
             steps: this.executionLog,
             totalExecutionTime,
@@ -254,7 +256,7 @@ export class PromptWorkflowEngine {
     } catch (error) {
       return {
         success: false,
-        data: {} as any,
+        data: {} as Record<string, unknown>,
         error: {
           code: 'WORKFLOW_ERROR',
           message: error instanceof Error ? error.message : 'Unknown workflow error',
@@ -268,7 +270,7 @@ export class PromptWorkflowEngine {
   /**
    * 단일 워크플로우 단계 실행
    */
-  async executeStep(stepName: string, inputData: any): Promise<WorkflowResult> {
+  async executeStep(stepName: string, inputData: Record<string, unknown>): Promise<WorkflowResult<unknown>> {
     const stepStartTime = performance.now()
     let retryCount = 0
     const maxRetries = 3
@@ -286,13 +288,17 @@ export class PromptWorkflowEngine {
           fromCache: true
         }
         this.executionLog.push(step)
-        return { ...cachedResult, fromCache: true }
+        return { 
+          success: true,
+          data: cachedResult,
+          fromCache: true 
+        }
       }
     }
 
     while (retryCount <= maxRetries) {
       try {
-        let result: any
+        let result: WorkflowResult<unknown>
 
         switch (stepName) {
           case 'storyAnalysis':
@@ -402,7 +408,7 @@ export class PromptWorkflowEngine {
         const processedResults = batchResults.map(result => 
           result.status === 'fulfilled' ? result.value : {
             success: false,
-            data: {} as any,
+            data: {} as Record<string, unknown>,
             error: {
               code: 'BATCH_PROCESSING_ERROR',
               message: 'Failed during batch processing'
@@ -425,7 +431,7 @@ export class PromptWorkflowEngine {
     if (!input.title || input.targetDuration <= 0) {
       return {
         success: false,
-        data: null as any,
+        data: null as unknown,
         error: {
           code: 'VALIDATION_ERROR',
           message: 'Invalid story input: title and targetDuration are required'
@@ -469,7 +475,7 @@ export class PromptWorkflowEngine {
     } catch (error) {
       return {
         success: false,
-        data: null as any,
+        data: null as unknown,
         error: {
           code: 'ANALYSIS_ERROR',
           message: error instanceof Error ? error.message : 'Story analysis failed'
@@ -478,7 +484,7 @@ export class PromptWorkflowEngine {
     }
   }
 
-  private async executeFourActGeneration(input: any): Promise<WorkflowResult<{ fourActStructure: FourActStructure }>> {
+  private async executeFourActGeneration(input: Record<string, unknown>): Promise<WorkflowResult<{ fourActStructure: FourActStructure }>> {
     try {
       const storyInput = input as StoryInput
       const analyzedStory = input.analyzedStory as AnalyzedStory
@@ -541,7 +547,7 @@ export class PromptWorkflowEngine {
     } catch (error) {
       return {
         success: false,
-        data: null as any,
+        data: null as unknown,
         error: {
           code: 'FOUR_ACT_GENERATION_ERROR',
           message: error instanceof Error ? error.message : 'Four act generation failed'
@@ -550,7 +556,7 @@ export class PromptWorkflowEngine {
     }
   }
 
-  private async executeShotBreakdown(input: any): Promise<WorkflowResult<{ shotBreakdown: ShotBreakdown[] }>> {
+  private async executeShotBreakdown(input: Record<string, unknown>): Promise<WorkflowResult<{ shotBreakdown: ShotBreakdown[] }>> {
     try {
       const storyInput = input as StoryInput
       const fourActStructure = input.fourActStructure as FourActStructure
@@ -598,7 +604,7 @@ export class PromptWorkflowEngine {
     } catch (error) {
       return {
         success: false,
-        data: null as any,
+        data: null as unknown,
         error: {
           code: 'SHOT_BREAKDOWN_ERROR',
           message: error instanceof Error ? error.message : 'Shot breakdown failed'
@@ -607,7 +613,7 @@ export class PromptWorkflowEngine {
     }
   }
 
-  private async executePromptGeneration(input: any): Promise<WorkflowResult<{ videoPlanetPrompt: VideoPlanetPrompt }>> {
+  private async executePromptGeneration(input: Record<string, unknown>): Promise<WorkflowResult<{ videoPlanetPrompt: VideoPlanetPrompt }>> {
     try {
       const storyInput = input as StoryInput
       const shotBreakdown = input.shotBreakdown as ShotBreakdown[]
@@ -713,7 +719,7 @@ export class PromptWorkflowEngine {
       if (!videoPlanetPrompt.id || !videoPlanetPrompt.projectId) {
         return {
           success: false,
-          data: null as any,
+          data: null as unknown,
           error: {
             code: 'VALIDATION_ERROR',
             message: 'Generated prompt missing required fields: id, projectId'
@@ -729,7 +735,7 @@ export class PromptWorkflowEngine {
     } catch (error) {
       return {
         success: false,
-        data: null as any,
+        data: null as unknown,
         error: {
           code: 'PROMPT_GENERATION_ERROR',
           message: error instanceof Error ? error.message : 'Prompt generation failed'
@@ -738,7 +744,7 @@ export class PromptWorkflowEngine {
     }
   }
 
-  private async executeQualityValidation(input: any): Promise<WorkflowResult<{ qualityReport: QualityReport; optimizedPrompt: VideoPlanetPrompt }>> {
+  private async executeQualityValidation(input: Record<string, unknown>): Promise<WorkflowResult<{ qualityReport: QualityReport; optimizedPrompt: VideoPlanetPrompt }>> {
     try {
       const videoPlanetPrompt = input.videoPlanetPrompt as VideoPlanetPrompt
 
@@ -759,7 +765,7 @@ export class PromptWorkflowEngine {
     } catch (error) {
       return {
         success: false,
-        data: null as any,
+        data: null as unknown,
         error: {
           code: 'QUALITY_VALIDATION_ERROR',
           message: error instanceof Error ? error.message : 'Quality validation failed'
@@ -772,7 +778,7 @@ export class PromptWorkflowEngine {
   // 헬퍼 메서드들
   // =============================================================================
 
-  private generateCacheKey(stepName: string, inputData: any): string {
+  private generateCacheKey(stepName: string, inputData: Record<string, unknown>): string {
     const relevantData = {
       step: stepName,
       title: inputData.title,
@@ -851,7 +857,7 @@ export class PromptWorkflowEngine {
     return 'fast'
   }
 
-  private generateActDescription(template: any, storyInput: StoryInput, analyzedStory: AnalyzedStory): string {
+  private generateActDescription(template: Record<string, unknown>, storyInput: StoryInput, _: AnalyzedStory): string {
     const baseDescriptions = {
       establish_setting_characters: `${storyInput.setting.location}의 분위기를 설정하고 주요 인물들을 소개합니다.`,
       introduce_conflict: '주인공들 사이의 만남과 초기 갈등 또는 긴장감을 조성합니다.',
@@ -862,7 +868,7 @@ export class PromptWorkflowEngine {
     return baseDescriptions[template.purpose as keyof typeof baseDescriptions] || template.title
   }
 
-  private generateKeyEvents(template: any, analyzedStory: AnalyzedStory, actIndex: number): string[] {
+  private generateKeyEvents(template: Record<string, unknown>, analyzedStory: AnalyzedStory, actIndex: number): string[] {
     const eventsByAct = [
       ['환경_설정', '캐릭터_등장', '분위기_조성'],
       ['첫_만남', '초기_상호작용', '긴장감_조성'],
@@ -873,7 +879,7 @@ export class PromptWorkflowEngine {
     return eventsByAct[actIndex] || []
   }
 
-  private generateVisualFocus(template: any, storyInput: StoryInput): string {
+  private generateVisualFocus(template: Record<string, unknown>, storyInput: StoryInput): string {
     const focusByPurpose = {
       establish_setting_characters: `${storyInput.setting.location}의 시각적 특징과 캐릭터 소개`,
       introduce_conflict: '캐릭터 간의 상호작용과 감정 표현',
@@ -884,7 +890,7 @@ export class PromptWorkflowEngine {
     return focusByPurpose[template.purpose as keyof typeof focusByPurpose] || '일반적인 시각적 구성'
   }
 
-  private generateShotDescription(act: any, shotIndex: number, storyInput: StoryInput): string {
+  private generateShotDescription(act: FourActStructure['acts'][0], shotIndex: number, storyInput: StoryInput): string {
     const shotTypes = ['establishing', 'character_focus', 'interaction']
     const shotType = shotTypes[shotIndex % shotTypes.length]
     
@@ -897,17 +903,17 @@ export class PromptWorkflowEngine {
     return `${act.title} - ${descriptions[shotType as keyof typeof descriptions]}`
   }
 
-  private selectCameraAngle(act: any, shotIndex: number, shotsPerAct: number): ShotBreakdown['cameraAngle'] {
+  private selectCameraAngle(act: FourActStructure['acts'][0], shotIndex: number, _: number): ShotBreakdown['cameraAngle'] {
     const angles: ShotBreakdown['cameraAngle'][] = ['wide', 'medium', 'close']
     return angles[shotIndex % angles.length]
   }
 
-  private selectCameraMovement(act: any, shotIndex: number): 'static' | 'pan' | 'tilt' | 'zoom' | 'dolly' {
+  private selectCameraMovement(act: FourActStructure['acts'][0], shotIndex: number): 'static' | 'pan' | 'tilt' | 'zoom' | 'dolly' {
     const movements = ['static', 'pan', 'zoom']
-    return movements[shotIndex % movements.length] as any
+    return movements[shotIndex % movements.length] as 'static' | 'pan' | 'zoom'
   }
 
-  private selectLighting(storyInput: StoryInput, act: any): 'natural' | 'artificial' | 'dramatic' | 'soft' {
+  private selectLighting(storyInput: StoryInput, _: FourActStructure['acts'][0]): 'natural' | 'artificial' | 'dramatic' | 'soft' {
     if (storyInput.setting.timeOfDay === 'morning' || storyInput.setting.timeOfDay === 'afternoon') {
       return 'natural'
     }
@@ -918,7 +924,7 @@ export class PromptWorkflowEngine {
     return shotIndex === Math.floor(shotsPerAct / 2) ? 'shallow' : 'deep'
   }
 
-  private generateVisualElements(act: any, storyInput: StoryInput, shotIndex: number): string[] {
+  private generateVisualElements(act: FourActStructure['acts'][0], storyInput: StoryInput, _: number): string[] {
     const elements: string[] = []
     
     elements.push(storyInput.setting.location)
@@ -934,7 +940,7 @@ export class PromptWorkflowEngine {
     return elements
   }
 
-  private generateShotPrompt(act: any, storyInput: StoryInput, shotIndex: number): string {
+  private generateShotPrompt(act: FourActStructure['acts'][0], storyInput: StoryInput, _: number): string {
     const basePrompt = `${storyInput.setting.location}, ${storyInput.stylePreferences.artStyle} style, ${storyInput.stylePreferences.colorPalette} colors, ${storyInput.setting.timeOfDay} lighting`
     
     const moodAddition = storyInput.stylePreferences.visualMood !== 'happy' ? `, ${storyInput.stylePreferences.visualMood} mood` : ''
@@ -1046,7 +1052,7 @@ export class PromptWorkflowEngine {
     if (qualityReport.overallScore < this.config.qualityGates.minConsistencyScore) {
       // 프롬프트 길이 최적화
       if (optimized.promptStructure?.shotBreakdown) {
-        optimized.promptStructure.shotBreakdown = optimized.promptStructure.shotBreakdown.map((shot: any) => ({
+        optimized.promptStructure.shotBreakdown = optimized.promptStructure.shotBreakdown.map((shot: ShotBreakdown) => ({
           ...shot,
           generationPrompt: this.optimizePromptText(shot.generationPrompt)
         }))
