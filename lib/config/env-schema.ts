@@ -41,15 +41,36 @@ const optionalUrlSchema = urlSchema.optional().or(z.literal(''))
 
 // Port validation - removed unused variable to fix ESLint warning
 
-// Boolean from string validation with proper transformation logic
+// Enhanced boolean from string validation with Vercel compatibility
 const booleanFromString = z
-  .union([z.boolean(), z.string()])
+  .union([
+    z.boolean(),
+    z.string(),
+    z.number(), // Vercel sometimes sends numbers
+    z.null(),
+    z.undefined(),
+  ])
   .optional()
   .transform(val => {
+    // Handle undefined, null, or empty values
+    if (val === undefined || val === null || val === '') return false
+
+    // Handle native boolean
     if (typeof val === 'boolean') return val
-    if (val === undefined || val === null) return false
+
+    // Handle numeric boolean (0/1)
+    if (typeof val === 'number') return val > 0
+
+    // Handle string boolean with comprehensive patterns
     const lowerVal = String(val).toLowerCase().trim()
-    return lowerVal === 'true' || lowerVal === '1' || lowerVal === 'yes'
+    const truthyValues = ['true', '1', 'yes', 'on', 'enable', 'enabled']
+    const falsyValues = ['false', '0', 'no', 'off', 'disable', 'disabled']
+
+    if (truthyValues.includes(lowerVal)) return true
+    if (falsyValues.includes(lowerVal)) return false
+
+    // Default to false for unrecognized values
+    return false
   })
 
 // Public environment variables schema (NEXT_PUBLIC_*)
@@ -116,6 +137,9 @@ const PublicEnvSchema = z.object({
     .regex(/^0?\.\d+$|^1$|^0$/)
     .transform(Number)
     .default('0.1'),
+
+  // Build Configuration (moved to public for client access)
+  NEXT_PUBLIC_SKIP_ENV_VALIDATION: booleanFromString.default(false),
 })
 
 // Private/Server-side environment variables schema
@@ -144,7 +168,7 @@ const PrivateEnvSchema = z.object({
   // Server Logging
   LOG_LEVEL: z.enum(['error', 'warn', 'info', 'debug']).default('info'),
 
-  // Build Configuration
+  // Legacy Build Configuration (use NEXT_PUBLIC_SKIP_ENV_VALIDATION instead)
   SKIP_ENV_VALIDATION: booleanFromString.default(false),
 })
 
@@ -174,7 +198,8 @@ export function validateEnvVars(
 ): EnvVars {
   try {
     // Skip validation if explicitly disabled (build time only)
-    if (env.SKIP_ENV_VALIDATION === 'true') {
+    const skipValidation = env.SKIP_ENV_VALIDATION === 'true' || env.NEXT_PUBLIC_SKIP_ENV_VALIDATION === 'true'
+    if (skipValidation) {
       console.warn('⚠️  Environment validation skipped (SKIP_ENV_VALIDATION=true)')
       return env as unknown as EnvVars
     }
@@ -344,14 +369,22 @@ export const validateForContext = {
 export { PublicEnvSchema, PrivateEnvSchema }
 
 // Auto-validate on import (runtime only, not during build)
-if (typeof window !== 'undefined' || (process.env.NODE_ENV !== undefined && !process.env.SKIP_ENV_VALIDATION)) {
+if (
+  typeof window !== 'undefined' ||
+  (process.env.NODE_ENV !== undefined &&
+    !process.env.SKIP_ENV_VALIDATION &&
+    !process.env.NEXT_PUBLIC_SKIP_ENV_VALIDATION)
+) {
   try {
+    const skipValidation =
+      process.env.SKIP_ENV_VALIDATION === 'true' || process.env.NEXT_PUBLIC_SKIP_ENV_VALIDATION === 'true'
+
     // Use lenient validation in development
     if (process.env.NODE_ENV === 'development') {
       console.log('🔧 Development mode: Using lenient environment validation')
       validateEnvVars(process.env, false) // Don't throw on errors in development
-    } else if (process.env.SKIP_ENV_VALIDATION === 'true') {
-      console.log('🔧 Environment validation skipped via SKIP_ENV_VALIDATION')
+    } else if (skipValidation) {
+      console.log('🔧 Environment validation skipped via SKIP_ENV_VALIDATION or NEXT_PUBLIC_SKIP_ENV_VALIDATION')
     } else {
       validateForContext.runtime()
     }
