@@ -166,7 +166,7 @@ class ApiClient {
 }
 
 const apiClient = new ApiClient({
-  baseUrl: process.env.NEXT_PUBLIC_API_URL || 'https://api.vlanet.net',
+  baseUrl: process.env.NEXT_PUBLIC_API_URL || 'https://videoplanet.up.railway.app',
 });
 
 // Named export for named imports

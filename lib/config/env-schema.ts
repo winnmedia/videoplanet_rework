@@ -55,10 +55,10 @@ const PublicEnvSchema = z.object({
   NEXT_PUBLIC_APP_VERSION: z.string().min(1).default('0.1.0'),
   
   // API Configuration
-  NEXT_PUBLIC_API_URL: urlSchema.default(isDevelopment() ? 'http://localhost:8000' : 'https://api.vlanet.net'),
+  NEXT_PUBLIC_API_URL: urlSchema.default(isDevelopment() ? 'http://localhost:8000' : 'https://videoplanet.up.railway.app'),
   NEXT_PUBLIC_API_VERSION: z.string().optional().default('v1'),
   NEXT_PUBLIC_API_TIMEOUT: z.string().regex(/^\d+$/).transform(Number).default('30000'),
-  NEXT_PUBLIC_BACKEND_URL: urlSchema.default(isDevelopment() ? 'http://localhost:8000' : 'https://api.vlanet.net'),
+  NEXT_PUBLIC_BACKEND_URL: urlSchema.default(isDevelopment() ? 'http://localhost:8000' : 'https://videoplanet.up.railway.app'),
   NEXT_PUBLIC_BACKEND_API_KEY: z.string().optional(),
   
   // Authentication
@@ -89,7 +89,7 @@ const PublicEnvSchema = z.object({
   // WebSocket
   NEXT_PUBLIC_WS_URL: z.string().refine((val) => 
     val.startsWith('ws://') || val.startsWith('wss://') || val.startsWith('http')
-  ).default(isDevelopment() ? 'ws://localhost:8000/ws' : 'wss://api.vlanet.net/ws'),
+  ).default(isDevelopment() ? 'ws://localhost:8000/ws' : 'wss://videoplanet.up.railway.app/ws'),
   NEXT_PUBLIC_WS_RECONNECT_INTERVAL: z.string().regex(/^\d+$/).transform(Number).default('5000'),
   
   // Rate Limiting

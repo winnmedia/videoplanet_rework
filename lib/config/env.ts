@@ -186,10 +186,10 @@ class ConfigManager {
       appVersion: env.NEXT_PUBLIC_APP_VERSION || '2.1.0',
       
       // API Configuration - Railway 통합 백엔드
-      apiUrl: env.NEXT_PUBLIC_API_URL || 'https://api.vlanet.net',
+      apiUrl: env.NEXT_PUBLIC_API_URL || 'https://videoplanet.up.railway.app',
       apiVersion: env.NEXT_PUBLIC_API_VERSION || '',
       apiTimeout: env.NEXT_PUBLIC_API_TIMEOUT || 30000,
-      backendUrl: env.NEXT_PUBLIC_BACKEND_URL || 'https://api.vlanet.net',
+      backendUrl: env.NEXT_PUBLIC_BACKEND_URL || 'https://videoplanet.up.railway.app',
       backendApiKey: env.NEXT_PUBLIC_BACKEND_API_KEY,
       
       // Authentication
@@ -226,7 +226,7 @@ class ConfigManager {
       imageDomains: (env.NEXT_PUBLIC_IMAGE_DOMAINS || 'localhost').split(','),
       
       // WebSocket - Railway 통합 백엔드
-      wsUrl: env.NEXT_PUBLIC_WS_URL || 'wss://api.vlanet.net/ws',
+      wsUrl: env.NEXT_PUBLIC_WS_URL || 'wss://videoplanet.up.railway.app/ws',
       wsReconnectInterval: env.NEXT_PUBLIC_WS_RECONNECT_INTERVAL || 5000,
       
       // Rate Limiting

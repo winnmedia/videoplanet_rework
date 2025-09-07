@@ -50,10 +50,24 @@ const nextConfig = {
           {
             key: 'X-Frame-Options',
             value: 'DENY'
-          },
+          }
+        ]
+      },
+      {
+        source: '/_next/static/css/(.*)',
+        headers: [
           {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff'
+            key: 'Content-Type',
+            value: 'text/css'
+          }
+        ]
+      },
+      {
+        source: '/images/(.*)',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=86400'
           }
         ]
       }
