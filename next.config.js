@@ -65,6 +65,10 @@ const nextConfig = {
         source: '/_next/static/css/(.*)',
         headers: [
           {
+            key: 'Content-Type',
+            value: 'text/css; charset=utf-8',
+          },
+          {
             key: 'Cache-Control',
             value: 'public, max-age=31536000, immutable',
           },

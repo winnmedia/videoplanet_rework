@@ -55,7 +55,7 @@ const booleanFromString = z
     // Handle undefined, null, or empty values
     if (val === undefined || val === null || val === '') return false
 
-    // Handle native boolean
+    // Handle native boolean - CRITICAL FIX for Vercel
     if (typeof val === 'boolean') return val
 
     // Handle numeric boolean (0/1)
@@ -72,6 +72,7 @@ const booleanFromString = z
     // Default to false for unrecognized values
     return false
   })
+  .default(false)
 
 // Public environment variables schema (NEXT_PUBLIC_*)
 const PublicEnvSchema = z.object({
