@@ -155,6 +155,83 @@ export async function deleteUser(id: string): Promise<boolean> {
 }
 
 /**
+ * 비밀번호 재설정 토큰 저장소
+ */
+interface ResetToken {
+  token: string
+  email: string
+  expiresAt: string
+  used: boolean
+}
+
+let resetTokens: ResetToken[] = []
+
+/**
+ * 비밀번호 재설정 토큰 생성 및 저장
+ */
+export function createPasswordResetToken(email: string): string {
+  const token = `reset_${Date.now()}_${Math.random().toString(36).substring(2)}`
+  const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24시간 후
+
+  resetTokens.push({
+    token,
+    email,
+    expiresAt,
+    used: false,
+  })
+
+  return token
+}
+
+/**
+ * 비밀번호 재설정 토큰 검증
+ */
+export function verifyPasswordResetToken(token: string): { valid: boolean; email?: string } {
+  const resetToken = resetTokens.find(t => t.token === token && !t.used)
+
+  if (!resetToken) {
+    return { valid: false }
+  }
+
+  if (new Date() > new Date(resetToken.expiresAt)) {
+    return { valid: false }
+  }
+
+  return { valid: true, email: resetToken.email }
+}
+
+/**
+ * 비밀번호 재설정 토큰 사용 처리
+ */
+export function markPasswordResetTokenAsUsed(token: string): boolean {
+  const resetToken = resetTokens.find(t => t.token === token)
+
+  if (resetToken) {
+    resetToken.used = true
+    return true
+  }
+
+  return false
+}
+
+/**
+ * 사용자 비밀번호 업데이트
+ */
+export async function updateUserPassword(email: string, newHashedPassword: string): Promise<boolean> {
+  const userIndex = users.findIndex(u => u.email === email)
+
+  if (userIndex === -1) return false
+
+  users[userIndex] = {
+    ...users[userIndex],
+    password: newHashedPassword,
+    updatedAt: new Date().toISOString(),
+  }
+
+  return true
+}
+
+/**
  * 데이터베이스 초기화 (테스트용)
  */
 export function resetDatabase(): void {
@@ -200,6 +277,9 @@ export function resetDatabase(): void {
       updatedAt: '2024-01-01T00:00:00Z',
     },
   ]
+
+  // 토큰 배열도 초기화
+  resetTokens = []
 
   projects = [
     {

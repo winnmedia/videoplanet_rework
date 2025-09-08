@@ -219,9 +219,29 @@ export const UserSchema = z.object({
   updatedAt: z.string().datetime().optional(),
 })
 
+// 비밀번호 재설정 관련 스키마
+export const PasswordResetRequestSchema = z.object({
+  email: z
+    .string({ required_error: '이메일을 입력해주세요.' })
+    .min(1, '이메일을 입력해주세요.')
+    .email('올바른 이메일 형식을 입력해주세요.')
+    .max(254),
+})
+
+export const PasswordResetVerifySchema = z.object({
+  token: z.string({ required_error: '토큰이 필요합니다.' }).min(1, '토큰이 필요합니다.'),
+  newPassword: z
+    .string({ required_error: '새 비밀번호를 입력해주세요.' })
+    .min(8, '비밀번호는 최소 8자 이상이어야 합니다.')
+    .max(128)
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, '비밀번호는 대문자, 소문자, 숫자를 포함해야 합니다.'),
+})
+
 // 인증 관련 타입 추출
 export type LoginRequestType = z.infer<typeof LoginRequestSchema>
 export type SignupRequestType = z.infer<typeof SignupRequestSchema>
+export type PasswordResetRequestType = z.infer<typeof PasswordResetRequestSchema>
+export type PasswordResetVerifyType = z.infer<typeof PasswordResetVerifySchema>
 export type UserType = z.infer<typeof UserSchema>
 
 // 단순화된 스키마 검증 유틸리티 함수

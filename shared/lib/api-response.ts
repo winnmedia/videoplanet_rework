@@ -39,6 +39,7 @@ export const API_ERROR_CODES = {
   AUTH_REQUIRED: 'AUTH_REQUIRED',
   AUTH_INVALID_CREDENTIALS: 'AUTH_INVALID_CREDENTIALS',
   AUTH_TOKEN_EXPIRED: 'AUTH_TOKEN_EXPIRED',
+  AUTH_INVALID_TOKEN: 'AUTH_INVALID_TOKEN',
   AUTH_INSUFFICIENT_PERMISSIONS: 'AUTH_INSUFFICIENT_PERMISSIONS',
 
   // 검증 관련 (VALIDATION_*)
@@ -65,6 +66,7 @@ export const API_ERROR_CODES = {
   SERVER_INTERNAL_ERROR: 'SERVER_INTERNAL_ERROR',
   SERVER_SERVICE_UNAVAILABLE: 'SERVER_SERVICE_UNAVAILABLE',
   SERVER_TIMEOUT: 'SERVER_TIMEOUT',
+  INTERNAL_ERROR: 'INTERNAL_ERROR',
 
   // 외부 서비스 관련 (EXTERNAL_*)
   EXTERNAL_SERVICE_ERROR: 'EXTERNAL_SERVICE_ERROR',
@@ -216,4 +218,30 @@ export function isApiSuccessResponse<T>(response: any): response is ApiSuccessRe
 
 export function isApiErrorResponse(response: any): response is ApiErrorResponse {
   return response && response.success === false && 'error' in response
+}
+
+/**
+ * 간단한 API 응답 생성 (데이터 없는 성공 응답용)
+ */
+export function createApiResponse(options: { message?: string; data?: unknown } = {}) {
+  return {
+    success: true,
+    timestamp: new Date().toISOString(),
+    message: options.message,
+    data: options.data,
+  }
+}
+
+/**
+ * 간단한 API 에러 생성 (객체 반환용)
+ */
+export function createApiError(options: { code: string; message: string; statusCode: number; details?: unknown }) {
+  return {
+    success: false,
+    error: options.message,
+    timestamp: new Date().toISOString(),
+    code: options.code,
+    statusCode: options.statusCode,
+    details: options.details,
+  }
 }
