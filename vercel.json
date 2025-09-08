@@ -32,11 +32,6 @@
     "SENDGRID_FROM_EMAIL": "service@vlanet.net",
     "SENDGRID_FROM_NAME": "VideoPlanet",
     "VERIFIED_SENDER": "service@vlanet.net",
-    "NEXT_PUBLIC_ENABLE_ANALYTICS": "false",
-    "NEXT_PUBLIC_ENABLE_DEBUG": "false",
-    "NEXT_PUBLIC_ENABLE_MAINTENANCE": "false",
-    "NEXT_PUBLIC_ENABLE_PERFORMANCE_MONITORING": "false",
-    "SKIP_ENV_VALIDATION": "false",
     "NEXT_TELEMETRY_DISABLED": "1"
   },
   "build": {
@@ -49,11 +44,6 @@
       "SENDGRID_FROM_EMAIL": "service@vlanet.net",
       "SENDGRID_FROM_NAME": "VideoPlanet",
       "VERIFIED_SENDER": "service@vlanet.net",
-      "NEXT_PUBLIC_ENABLE_ANALYTICS": "false",
-      "NEXT_PUBLIC_ENABLE_DEBUG": "false",
-      "NEXT_PUBLIC_ENABLE_MAINTENANCE": "false",
-      "NEXT_PUBLIC_ENABLE_PERFORMANCE_MONITORING": "false",
-      "SKIP_ENV_VALIDATION": "false",
       "NEXT_TELEMETRY_DISABLED": "1",
       "NODE_OPTIONS": "--max-old-space-size=4096"
     }

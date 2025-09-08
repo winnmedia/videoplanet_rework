@@ -100,14 +100,10 @@ const PublicEnvSchema = z.object({
   NEXT_PUBLIC_MAX_FILE_SIZE: z.string().regex(/^\d+$/).transform(Number).default('10485760'), // 10MB
   NEXT_PUBLIC_ALLOWED_FILE_TYPES: z.string().default('image/jpeg,image/png,image/gif,video/mp4'),
 
-  // Feature Flags
-  NEXT_PUBLIC_ENABLE_ANALYTICS: booleanFromString.default(false),
-  NEXT_PUBLIC_ENABLE_DEBUG: booleanFromString.default(false),
-  NEXT_PUBLIC_ENABLE_MAINTENANCE: booleanFromString.default(false),
-  NEXT_PUBLIC_ENABLE_PERFORMANCE_MONITORING: booleanFromString.default(true),
-  NEXT_PUBLIC_ENABLE_AUTH: booleanFromString.default(true),
-  NEXT_PUBLIC_ENABLE_VIDEO_UPLOAD: booleanFromString.default(true),
-  NEXT_PUBLIC_ENABLE_AI_STORY: booleanFromString.default(true),
+  // Feature Flags (필요한 것만 유지)
+  NEXT_PUBLIC_ENABLE_AUTH: booleanFromString.optional().default(true),
+  NEXT_PUBLIC_ENABLE_VIDEO_UPLOAD: booleanFromString.optional().default(true),
+  NEXT_PUBLIC_ENABLE_AI_STORY: booleanFromString.optional().default(true),
 
   // Third-party Services
   NEXT_PUBLIC_GA_TRACKING_ID: z.string().optional(),
@@ -138,9 +134,6 @@ const PublicEnvSchema = z.object({
     .regex(/^0?\.\d+$|^1$|^0$/)
     .transform(Number)
     .default('0.1'),
-
-  // Build Configuration (moved to public for client access)
-  NEXT_PUBLIC_SKIP_ENV_VALIDATION: booleanFromString.default(false),
 })
 
 // Private/Server-side environment variables schema
@@ -168,9 +161,6 @@ const PrivateEnvSchema = z.object({
 
   // Server Logging
   LOG_LEVEL: z.enum(['error', 'warn', 'info', 'debug']).default('info'),
-
-  // Legacy Build Configuration (use NEXT_PUBLIC_SKIP_ENV_VALIDATION instead)
-  SKIP_ENV_VALIDATION: booleanFromString.default(false),
 })
 
 // Combined schema for all environment variables
@@ -198,13 +188,6 @@ export function validateEnvVars(
   throwOnError: boolean = true
 ): EnvVars {
   try {
-    // Skip validation if explicitly disabled (build time only)
-    const skipValidation = env.SKIP_ENV_VALIDATION === 'true' || env.NEXT_PUBLIC_SKIP_ENV_VALIDATION === 'true'
-    if (skipValidation) {
-      console.warn('⚠️  Environment validation skipped (SKIP_ENV_VALIDATION=true)')
-      return env as unknown as EnvVars
-    }
-
     // Apply more lenient parsing for development
     const currentEnv = env.NODE_ENV || env.NEXT_PUBLIC_APP_ENV || 'development'
     const isDev = currentEnv === 'development'
@@ -276,9 +259,7 @@ export function validateEnvVars(
       }
 
       // Security checks
-      if (parsedEnv.NEXT_PUBLIC_ENABLE_DEBUG) {
-        console.warn('⚠️  Debug mode enabled in production')
-      }
+      // NEXT_PUBLIC_ENABLE_DEBUG 변수가 제거되어 보안 체크 생략
     } else if (environment === 'staging') {
       console.log('🧪 Applying staging-specific validations...')
       StagingRequiredFields.parse(env)
@@ -358,7 +339,6 @@ export const validateForContext = {
       ...process.env,
       NODE_ENV: 'test',
       NEXT_PUBLIC_APP_ENV: 'test',
-      SKIP_ENV_VALIDATION: 'false',
     }
     return validateEnvVars(testEnv, false)
   },
@@ -370,22 +350,12 @@ export const validateForContext = {
 export { PublicEnvSchema, PrivateEnvSchema }
 
 // Auto-validate on import (runtime only, not during build)
-if (
-  typeof window !== 'undefined' ||
-  (process.env.NODE_ENV !== undefined &&
-    !process.env.SKIP_ENV_VALIDATION &&
-    !process.env.NEXT_PUBLIC_SKIP_ENV_VALIDATION)
-) {
+if (typeof window !== 'undefined' || process.env.NODE_ENV !== undefined) {
   try {
-    const skipValidation =
-      process.env.SKIP_ENV_VALIDATION === 'true' || process.env.NEXT_PUBLIC_SKIP_ENV_VALIDATION === 'true'
-
     // Use lenient validation in development
     if (process.env.NODE_ENV === 'development') {
       console.log('🔧 Development mode: Using lenient environment validation')
       validateEnvVars(process.env, false) // Don't throw on errors in development
-    } else if (skipValidation) {
-      console.log('🔧 Environment validation skipped via SKIP_ENV_VALIDATION or NEXT_PUBLIC_SKIP_ENV_VALIDATION')
     } else {
       // Use lenient validation in production for client-side to prevent crashes
       if (typeof window !== 'undefined') {

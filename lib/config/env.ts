@@ -85,11 +85,8 @@ interface AppConfig {
   maxFileSize: number
   allowedFileTypes: string[]
 
-  // Feature Flags
-  enableAnalytics: boolean
-  enableDebug: boolean
-  enableMaintenance: boolean
-  enablePerformanceMonitoring: boolean
+  // Feature Flags (필요한 것만 유지)
+  // enableAnalytics, enableDebug, enableMaintenance, enablePerformanceMonitoring 제거됨
 
   // Third-party Services
   gaTrackingId?: string
@@ -161,10 +158,9 @@ class ConfigManager {
       NEXT_PUBLIC_MAX_FILE_SIZE: parseInt(process.env.NEXT_PUBLIC_MAX_FILE_SIZE || '10485760'),
       NEXT_PUBLIC_ALLOWED_FILE_TYPES:
         process.env.NEXT_PUBLIC_ALLOWED_FILE_TYPES || 'image/jpeg,image/png,image/gif,video/mp4',
-      NEXT_PUBLIC_ENABLE_ANALYTICS: parseBoolean(process.env.NEXT_PUBLIC_ENABLE_ANALYTICS),
-      NEXT_PUBLIC_ENABLE_DEBUG: parseBoolean(process.env.NEXT_PUBLIC_ENABLE_DEBUG),
-      NEXT_PUBLIC_ENABLE_MAINTENANCE: parseBoolean(process.env.NEXT_PUBLIC_ENABLE_MAINTENANCE),
-      NEXT_PUBLIC_ENABLE_PERFORMANCE_MONITORING: parseBoolean(process.env.NEXT_PUBLIC_ENABLE_PERFORMANCE_MONITORING),
+      NEXT_PUBLIC_ENABLE_AUTH: parseBoolean(process.env.NEXT_PUBLIC_ENABLE_AUTH) ?? true,
+      NEXT_PUBLIC_ENABLE_VIDEO_UPLOAD: parseBoolean(process.env.NEXT_PUBLIC_ENABLE_VIDEO_UPLOAD) ?? true,
+      NEXT_PUBLIC_ENABLE_AI_STORY: parseBoolean(process.env.NEXT_PUBLIC_ENABLE_AI_STORY) ?? true,
       NEXT_PUBLIC_GA_TRACKING_ID: process.env.NEXT_PUBLIC_GA_TRACKING_ID,
       NEXT_PUBLIC_SENTRY_DSN: process.env.NEXT_PUBLIC_SENTRY_DSN,
       NEXT_PUBLIC_STRIPE_PUBLIC_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY,
@@ -176,7 +172,8 @@ class ConfigManager {
       NEXT_PUBLIC_API_RATE_WINDOW: parseInt(process.env.NEXT_PUBLIC_API_RATE_WINDOW || '60000'),
       NEXT_PUBLIC_LOG_LEVEL: (process.env.NEXT_PUBLIC_LOG_LEVEL || 'debug') as 'error' | 'warn' | 'info' | 'debug',
       NEXT_PUBLIC_PERFORMANCE_SAMPLE_RATE: parseFloat(process.env.NEXT_PUBLIC_PERFORMANCE_SAMPLE_RATE || '0.1'),
-      NEXT_PUBLIC_SKIP_ENV_VALIDATION: parseBoolean(process.env.NEXT_PUBLIC_SKIP_ENV_VALIDATION),
+      NODE_ENV: (process.env.NODE_ENV || 'development') as Environment,
+      LOG_LEVEL: (process.env.LOG_LEVEL || 'info') as 'error' | 'warn' | 'info' | 'debug',
     } as EnvVars
   }
 
@@ -217,11 +214,8 @@ class ConfigManager {
       maxFileSize: env.NEXT_PUBLIC_MAX_FILE_SIZE || 10485760,
       allowedFileTypes: (env.NEXT_PUBLIC_ALLOWED_FILE_TYPES || 'image/jpeg,image/png,image/gif,video/mp4').split(','),
 
-      // Feature Flags
-      enableAnalytics: env.NEXT_PUBLIC_ENABLE_ANALYTICS || false,
-      enableDebug: env.NEXT_PUBLIC_ENABLE_DEBUG || false,
-      enableMaintenance: env.NEXT_PUBLIC_ENABLE_MAINTENANCE || false,
-      enablePerformanceMonitoring: env.NEXT_PUBLIC_ENABLE_PERFORMANCE_MONITORING || false,
+      // Feature Flags (필요한 것만 유지)
+      // 불필요한 feature flags 제거됨 (enableAnalytics, enableDebug, enableMaintenance, enablePerformanceMonitoring)
 
       // Third-party Services
       gaTrackingId: env.NEXT_PUBLIC_GA_TRACKING_ID,
