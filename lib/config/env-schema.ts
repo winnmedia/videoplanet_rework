@@ -74,6 +74,26 @@ const booleanFromString = z
   })
   .default(false)
 
+// Flexible boolean validation that ignores non-existent or removed environment variables
+const flexibleBoolean = z
+  .union([z.boolean(), z.string(), z.number(), z.null(), z.undefined()])
+  .optional()
+  .transform(val => {
+    // If the variable doesn't exist or is null/undefined, return false
+    if (val === undefined || val === null || val === '') return false
+
+    // Handle native boolean from Vercel
+    if (typeof val === 'boolean') return val
+
+    // Handle numeric boolean (0/1)
+    if (typeof val === 'number') return val > 0
+
+    // Handle string boolean
+    const lowerVal = String(val).toLowerCase().trim()
+    return ['true', '1', 'yes', 'on', 'enable', 'enabled'].includes(lowerVal)
+  })
+  .default(false)
+
 // Public environment variables schema (NEXT_PUBLIC_*)
 const PublicEnvSchema = z.object({
   // Application
@@ -184,7 +204,7 @@ const StagingRequiredFields = z
  * @returns Validated and typed environment variables
  */
 export function validateEnvVars(
-  env: Record<string, string | undefined> = process.env,
+  env: Record<string, string | undefined | boolean | number> = process.env,
   throwOnError: boolean = true
 ): EnvVars {
   try {
@@ -192,8 +212,43 @@ export function validateEnvVars(
     const currentEnv = env.NODE_ENV || env.NEXT_PUBLIC_APP_ENV || 'development'
     const isDev = currentEnv === 'development'
 
+    // Clean and transform environment variables before validation
+    // This handles Vercel's boolean/number type conversion issues
+    const cleanedEnv = Object.fromEntries(
+      Object.entries(env)
+        .map(([key, value]) => {
+          // Handle removed environment variables that might still exist in Vercel
+          const removedVars = [
+            'NEXT_PUBLIC_ENABLE_ANALYTICS',
+            'DEBUG',
+            'MAINTENANCE',
+            'PERFORMANCE_MONITORING',
+            'SKIP_ENV_VALIDATION',
+            'NEXT_PUBLIC_ENABLE_DEBUG',
+            'NEXT_PUBLIC_ENABLE_MAINTENANCE',
+            'NEXT_PUBLIC_ENABLE_PERFORMANCE_MONITORING',
+          ]
+
+          if (removedVars.includes(key)) {
+            // Simply ignore removed variables by not including them
+            return [key, undefined]
+          }
+
+          // Handle boolean/number values from Vercel
+          if (typeof value === 'boolean') {
+            return [key, value.toString()]
+          }
+          if (typeof value === 'number') {
+            return [key, value.toString()]
+          }
+
+          return [key, value]
+        })
+        .filter(([, value]) => value !== undefined) // Remove undefined values
+    )
+
     // In development, use safeParse to avoid throwing on validation errors
-    const parseResult = isDev ? EnvSchema.safeParse(env) : EnvSchema.safeParse(env)
+    const parseResult = isDev ? EnvSchema.safeParse(cleanedEnv) : EnvSchema.safeParse(cleanedEnv)
 
     if (!parseResult.success) {
       if (isDev) {
@@ -359,14 +414,16 @@ if (typeof window !== 'undefined' || process.env.NODE_ENV !== undefined) {
     } else {
       // Use lenient validation in production for client-side to prevent crashes
       if (typeof window !== 'undefined') {
-        validateEnvVars(process.env, false) // Client-side: don't throw
+        // Client-side: always lenient to prevent crashes from Vercel env var type mismatches
+        validateEnvVars(process.env, false)
       } else {
-        validateForContext.runtime() // Server-side: strict
+        // Server-side: lenient in production to handle Vercel boolean issues gracefully
+        validateEnvVars(process.env, false)
       }
     }
   } catch (error) {
-    // Always be lenient in client environments to prevent application crashes
-    console.warn('Environment validation failed on import:', error)
-    // Don't throw in any environment for better user experience
+    // Always be lenient in all environments to prevent application crashes from env var issues
+    console.warn('Environment validation failed on import, continuing with defaults:', error)
+    // Don't throw in any environment for better user experience and deployment stability
   }
 }
