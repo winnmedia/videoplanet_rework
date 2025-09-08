@@ -102,16 +102,21 @@ const PublicEnvSchema = z.object({
   NEXT_PUBLIC_APP_URL: urlSchema.default('http://localhost:3000'),
   NEXT_PUBLIC_APP_VERSION: z.string().min(1).default('0.1.0'),
 
-  // API Configuration
-  NEXT_PUBLIC_API_URL: urlSchema.default(
-    isDevelopment() ? 'http://localhost:8000' : 'https://videoplanet.up.railway.app'
-  ),
+  // API Configuration - Railway failover
+  NEXT_PUBLIC_API_URL: urlSchema.default(isDevelopment() ? 'http://localhost:8001' : 'https://api.vlanet.net'),
   NEXT_PUBLIC_API_VERSION: z.string().optional().default('v1'),
   NEXT_PUBLIC_API_TIMEOUT: z.string().regex(/^\d+$/).transform(Number).default('30000'),
-  NEXT_PUBLIC_BACKEND_URL: urlSchema.default(
-    isDevelopment() ? 'http://localhost:8000' : 'https://videoplanet.up.railway.app'
-  ),
+  NEXT_PUBLIC_BACKEND_URL: urlSchema.default(isDevelopment() ? 'http://localhost:8001' : 'https://api.vlanet.net'),
   NEXT_PUBLIC_BACKEND_API_KEY: z.string().optional(),
+
+  // Fallback URLs for Railway outage
+  NEXT_PUBLIC_FALLBACK_API_URL: urlSchema.optional(),
+  NEXT_PUBLIC_LOCAL_API_URL: urlSchema.optional().default('http://localhost:8001'),
+
+  // Health check configuration
+  NEXT_PUBLIC_ENABLE_HEALTH_CHECK: booleanFromString.default(true),
+  NEXT_PUBLIC_HEALTH_CHECK_INTERVAL: z.string().regex(/^\d+$/).transform(Number).default('30000'),
+  NEXT_PUBLIC_RETRY_ATTEMPTS: z.string().regex(/^\d+$/).transform(Number).default('2'),
 
   // Authentication
   NEXT_PUBLIC_AUTH_PROVIDER: z.enum(['credentials', 'google', 'oauth']).default('credentials'),
@@ -134,12 +139,16 @@ const PublicEnvSchema = z.object({
   NEXT_PUBLIC_CDN_URL: optionalUrlSchema,
   NEXT_PUBLIC_IMAGE_DOMAINS: z.string().default('localhost'),
 
-  // WebSocket
+  // WebSocket with fallback
   NEXT_PUBLIC_WS_URL: z
     .string()
     .refine(val => val.startsWith('ws://') || val.startsWith('wss://') || val.startsWith('http'))
-    .default(isDevelopment() ? 'ws://localhost:8000/ws' : 'wss://videoplanet.up.railway.app/ws'),
+    .default(isDevelopment() ? 'ws://localhost:8001/ws' : 'wss://api.vlanet.net/ws'),
   NEXT_PUBLIC_WS_RECONNECT_INTERVAL: z.string().regex(/^\d+$/).transform(Number).default('5000'),
+  NEXT_PUBLIC_FALLBACK_WS_URL: z
+    .string()
+    .refine(val => val.startsWith('ws://') || val.startsWith('wss://') || val.startsWith('http'))
+    .optional(),
 
   // Rate Limiting
   NEXT_PUBLIC_API_RATE_LIMIT: z.string().regex(/^\d+$/).transform(Number).default('100'),

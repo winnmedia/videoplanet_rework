@@ -89,7 +89,7 @@ export const ProjectSchema = z.object({
   id: z.string().min(1, 'ID는 필수입니다'),
   name: z.string().min(1, '프로젝트명은 필수입니다').max(100),
   description: z.string().max(500).optional(),
-  status: ProjectStatusSchema.default('ACTIVE'),
+  status: ProjectStatusSchema, // 필수 필드로 변경
   clientName: z.string().min(1, '클라이언트명은 필수입니다').max(100),
   budget: z.number().min(0, '예산은 0 이상이어야 합니다'),
   startDate: z.string().datetime(),
@@ -123,16 +123,16 @@ export const FeedbackSchema = z.object({
   id: z.string().min(1, 'ID는 필수입니다'),
   title: z.string().min(1, '피드백 제목은 필수입니다').max(200, '제목은 200자 이하여야 합니다'),
   content: z.string().min(1, '피드백 내용은 필수입니다').max(2000, '피드백은 2000자를 초과할 수 없습니다'),
-  type: FeedbackTypeSchema.default('comment'),
-  status: FeedbackStatusSchema.default('open'),
-  priority: FeedbackPrioritySchema.default('medium'),
+  type: FeedbackTypeSchema, // 필수 필드로 변경
+  status: FeedbackStatusSchema, // 필수 필드로 변경
+  priority: FeedbackPrioritySchema, // 필수 필드로 변경
   projectId: z.string().optional(),
   authorId: z.string().optional(),
   assigneeId: z.string().optional(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
   resolvedAt: z.string().datetime().optional(),
-  tags: z.array(z.string().max(50)).max(10).default([]),
+  tags: z.array(z.string().max(50)).max(10), // 필수 필드로 변경
 })
 
 export const FeedbackListResponseSchema = z.object({
@@ -213,8 +213,8 @@ export const UserSchema = z.object({
   id: z.string().min(1, 'ID는 필수입니다'),
   email: z.string().email('올바른 이메일 형식이 아닙니다.'),
   name: z.string().min(1, '이름이 필요합니다.'),
-  role: z.enum(['user', 'admin', 'moderator']).default('user'),
-  isEmailVerified: z.boolean().default(false),
+  role: z.enum(['user', 'admin', 'moderator']), // 필수 필드로 변경
+  isEmailVerified: z.boolean(), // 필수 필드로 변경
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime().optional(),
 })

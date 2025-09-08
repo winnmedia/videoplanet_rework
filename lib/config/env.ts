@@ -67,6 +67,13 @@ interface AppConfig {
   backendUrl: string
   backendApiKey?: string
 
+  // Failover Configuration
+  fallbackApiUrl?: string
+  localApiUrl: string
+  enableHealthCheck: boolean
+  healthCheckInterval: number
+  retryAttempts: number
+
   // Authentication
   nextAuthUrl: string
   nextAuthSecret?: string
@@ -100,6 +107,7 @@ interface AppConfig {
   // WebSocket
   wsUrl: string
   wsReconnectInterval: number
+  fallbackWsUrl?: string
 
   // Rate Limiting
   apiRateLimit: number
@@ -146,11 +154,16 @@ class ConfigManager {
       NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME || 'Video Planet, VLANET',
       NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
       NEXT_PUBLIC_APP_VERSION: process.env.NEXT_PUBLIC_APP_VERSION || '0.1.0',
-      NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://videoplanet.up.railway.app',
+      NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'https://api.vlanet.net',
       NEXT_PUBLIC_API_VERSION: process.env.NEXT_PUBLIC_API_VERSION || '',
       NEXT_PUBLIC_API_TIMEOUT: parseInt(process.env.NEXT_PUBLIC_API_TIMEOUT || '30000'),
-      NEXT_PUBLIC_BACKEND_URL: process.env.NEXT_PUBLIC_BACKEND_URL || 'https://videoplanet.up.railway.app',
+      NEXT_PUBLIC_BACKEND_URL: process.env.NEXT_PUBLIC_BACKEND_URL || 'https://api.vlanet.net',
       NEXT_PUBLIC_BACKEND_API_KEY: process.env.NEXT_PUBLIC_BACKEND_API_KEY,
+      NEXT_PUBLIC_FALLBACK_API_URL: process.env.NEXT_PUBLIC_FALLBACK_API_URL,
+      NEXT_PUBLIC_LOCAL_API_URL: process.env.NEXT_PUBLIC_LOCAL_API_URL || 'http://localhost:8001',
+      NEXT_PUBLIC_ENABLE_HEALTH_CHECK: parseBoolean(process.env.NEXT_PUBLIC_ENABLE_HEALTH_CHECK) ?? true,
+      NEXT_PUBLIC_HEALTH_CHECK_INTERVAL: parseInt(process.env.NEXT_PUBLIC_HEALTH_CHECK_INTERVAL || '30000'),
+      NEXT_PUBLIC_RETRY_ATTEMPTS: parseInt(process.env.NEXT_PUBLIC_RETRY_ATTEMPTS || '2'),
       NEXT_PUBLIC_AUTH_PROVIDER: (process.env.NEXT_PUBLIC_AUTH_PROVIDER || 'credentials') as
         | 'credentials'
         | 'google'
@@ -166,8 +179,9 @@ class ConfigManager {
       NEXT_PUBLIC_STRIPE_PUBLIC_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY,
       NEXT_PUBLIC_CDN_URL: process.env.NEXT_PUBLIC_CDN_URL,
       NEXT_PUBLIC_IMAGE_DOMAINS: process.env.NEXT_PUBLIC_IMAGE_DOMAINS || 'localhost',
-      NEXT_PUBLIC_WS_URL: process.env.NEXT_PUBLIC_WS_URL || 'wss://videoplanet.up.railway.app/ws',
+      NEXT_PUBLIC_WS_URL: process.env.NEXT_PUBLIC_WS_URL || 'wss://api.vlanet.net/ws',
       NEXT_PUBLIC_WS_RECONNECT_INTERVAL: parseInt(process.env.NEXT_PUBLIC_WS_RECONNECT_INTERVAL || '5000'),
+      NEXT_PUBLIC_FALLBACK_WS_URL: process.env.NEXT_PUBLIC_FALLBACK_WS_URL,
       NEXT_PUBLIC_API_RATE_LIMIT: parseInt(process.env.NEXT_PUBLIC_API_RATE_LIMIT || '1000'),
       NEXT_PUBLIC_API_RATE_WINDOW: parseInt(process.env.NEXT_PUBLIC_API_RATE_WINDOW || '60000'),
       NEXT_PUBLIC_LOG_LEVEL: (process.env.NEXT_PUBLIC_LOG_LEVEL || 'debug') as 'error' | 'warn' | 'info' | 'debug',
@@ -189,12 +203,19 @@ class ConfigManager {
       appUrl: env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
       appVersion: env.NEXT_PUBLIC_APP_VERSION || '2.1.0',
 
-      // API Configuration - Railway 통합 백엔드
-      apiUrl: env.NEXT_PUBLIC_API_URL || 'https://videoplanet.up.railway.app',
+      // API Configuration - Railway with failover
+      apiUrl: env.NEXT_PUBLIC_API_URL || 'https://api.vlanet.net',
       apiVersion: env.NEXT_PUBLIC_API_VERSION || '',
       apiTimeout: env.NEXT_PUBLIC_API_TIMEOUT || 30000,
-      backendUrl: env.NEXT_PUBLIC_BACKEND_URL || 'https://videoplanet.up.railway.app',
+      backendUrl: env.NEXT_PUBLIC_BACKEND_URL || 'https://api.vlanet.net',
       backendApiKey: env.NEXT_PUBLIC_BACKEND_API_KEY,
+
+      // Failover configuration
+      fallbackApiUrl: env.NEXT_PUBLIC_FALLBACK_API_URL,
+      localApiUrl: env.NEXT_PUBLIC_LOCAL_API_URL || 'http://localhost:8001',
+      enableHealthCheck: env.NEXT_PUBLIC_ENABLE_HEALTH_CHECK ?? true,
+      healthCheckInterval: env.NEXT_PUBLIC_HEALTH_CHECK_INTERVAL || 30000,
+      retryAttempts: env.NEXT_PUBLIC_RETRY_ATTEMPTS || 2,
 
       // Authentication
       nextAuthUrl: env.NEXTAUTH_URL || env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
@@ -226,9 +247,10 @@ class ConfigManager {
       cdnUrl: env.NEXT_PUBLIC_CDN_URL,
       imageDomains: (env.NEXT_PUBLIC_IMAGE_DOMAINS || 'localhost').split(','),
 
-      // WebSocket - Railway 통합 백엔드
-      wsUrl: env.NEXT_PUBLIC_WS_URL || 'wss://videoplanet.up.railway.app/ws',
+      // WebSocket with failover
+      wsUrl: env.NEXT_PUBLIC_WS_URL || 'wss://api.vlanet.net/ws',
       wsReconnectInterval: env.NEXT_PUBLIC_WS_RECONNECT_INTERVAL || 5000,
+      fallbackWsUrl: env.NEXT_PUBLIC_FALLBACK_WS_URL,
 
       // Rate Limiting
       apiRateLimit: env.NEXT_PUBLIC_API_RATE_LIMIT || 1000,
