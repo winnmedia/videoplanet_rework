@@ -7,6 +7,16 @@
 
 import { z } from 'zod'
 
+// 호환성을 위한 ID 검증 스키마 (긴급 패치)
+const UserIdSchema = z
+  .string()
+  .min(1, 'ID는 필수입니다')
+  .refine(val => {
+    // UUID 형식이거나 일반 문자열 허용
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    return uuidRegex.test(val) || /^[a-zA-Z0-9\-_]+$/.test(val)
+  }, '유효하지 않은 ID 형식입니다')
+
 /**
  * 로그인 요청 스키마
  */
@@ -54,7 +64,7 @@ export const signupRequestSchema = z
  * 사용자 정보 스키마
  */
 export const userSchema = z.object({
-  id: z.string().uuid('올바른 사용자 ID 형식이 아닙니다.'),
+  id: UserIdSchema,
   email: z.string().email('올바른 이메일 형식이 아닙니다.'),
   name: z.string().min(1, '이름이 필요합니다.'),
   role: z.enum(['user', 'admin', 'moderator']).default('user'),

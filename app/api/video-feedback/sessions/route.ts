@@ -20,8 +20,18 @@ const VideoMetadataSchema = z.object({
 // Types & Schemas
 // ============================================================
 
+// 호환성을 위한 ID 검증 스키마 (긴급 패치)
+const ProjectIdSchema = z
+  .string()
+  .min(1, 'ID는 필수입니다')
+  .refine(val => {
+    // UUID 형식이거나 일반 문자열 허용
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    return uuidRegex.test(val) || /^[a-zA-Z0-9\-_]+$/.test(val)
+  }, '유효하지 않은 ID 형식입니다')
+
 const CreateSessionSchema = z.object({
-  projectId: z.string().uuid('유효하지 않은 프로젝트 ID입니다.'),
+  projectId: ProjectIdSchema,
   title: z.string().min(1, '제목은 필수입니다.').max(200, '제목은 200자를 초과할 수 없습니다.'),
   description: z.string().max(2000, '설명은 2000자를 초과할 수 없습니다.').optional(),
   video: VideoMetadataSchema,
