@@ -228,9 +228,12 @@ function coreMiddleware(request: NextRequest) {
 export default coreMiddleware
 export { coreMiddleware as middleware }
 
-// 완전히 middleware 비활성화하여 window.location 오류 해결
+// Core 보안 기능 활성화 (NextAuth 제외)
 export const config = {
   matcher: [
-    // 완전히 비활성화 - 매칭할 경로 없음
+    // API 보안 적용
+    '/api/((?!auth).)*',
+    // 정적 파일 제외하고 모든 페이지에 Rate Limiting 적용
+    '/((?!_next/static|_next/image|images|favicon.ico).*)',
   ],
 }

@@ -18,7 +18,7 @@ const nextConfig = {
   // Railway 배포를 위한 standalone 출력 설정
   output: 'standalone',
 
-  // Performance optimizations only
+  // Performance optimizations with proper asset handling
   experimental: {
     optimizeCss: true,
     serverSourceMaps: false,
@@ -39,7 +39,7 @@ const nextConfig = {
     unoptimized: false,
   },
 
-  // Basic security headers
+  // Enhanced security headers and MIME type enforcement
   async headers() {
     return [
       {
@@ -53,6 +53,10 @@ const nextConfig = {
             key: 'X-Content-Type-Options',
             value: 'nosniff',
           },
+          {
+            key: 'X-XSS-Protection',
+            value: '1; mode=block',
+          },
         ],
       },
       {
@@ -65,6 +69,23 @@ const nextConfig = {
           {
             key: 'X-Content-Type-Options',
             value: 'nosniff',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+      {
+        source: '/_next/static/js/(.*)',
+        headers: [
+          {
+            key: 'Content-Type',
+            value: 'application/javascript; charset=utf-8',
+          },
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
           },
         ],
       },

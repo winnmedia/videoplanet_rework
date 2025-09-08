@@ -4,12 +4,12 @@
  * 비즈니스 크리티컬한 이벤트를 감지하고 다중 채널로 실시간 알림 전송
  */
 
-import { 
-  AlertConfig, 
-  BusinessMetric, 
-  UserJourneyEvent, 
+import {
+  AlertConfig,
+  BusinessMetric,
+  UserJourneyEvent,
   ApiPerformanceMetric,
-  MonitoringSchemaValidator 
+  MonitoringSchemaValidator,
 } from '@/shared/api/monitoring-schemas'
 
 import { apiMonitor } from '@/lib/api/monitoring'
@@ -79,11 +79,14 @@ interface AlertStats {
   totalResolved: number
   totalSuppressed: number
   averageResolutionTime: number
-  channelStats: Record<AlertChannel, {
-    sent: number
-    failed: number
-    successRate: number
-  }>
+  channelStats: Record<
+    AlertChannel,
+    {
+      sent: number
+      failed: number
+      successRate: number
+    }
+  >
   severityBreakdown: Record<AlertPriority, number>
 }
 
@@ -103,7 +106,7 @@ export class AlertSystem {
   private alertRules: Map<string, AlertRule> = new Map()
   private suppressionRules: Map<string, SuppressionRule> = new Map()
   private alertStats: AlertStats
-  private subscribers: Map<string, Function[]> = new Map()
+  private subscribers: Map<string, ((...args: any[]) => void)[]> = new Map()
   private processingQueue: Alert[] = []
   private isProcessing: boolean = false
   private debugMode: boolean
@@ -111,11 +114,11 @@ export class AlertSystem {
   private constructor() {
     this.debugMode = process.env.NODE_ENV !== 'production'
     this.alertStats = this.initializeStats()
-    
+
     this.initializeDefaultRules()
     this.initializeDefaultSuppressionRules()
     this.startProcessingQueue()
-    
+
     if (this.debugMode) {
       console.log('[AlertSystem] Initialized with', this.alertRules.size, 'alert rules')
     }
@@ -141,14 +144,14 @@ export class AlertSystem {
         slack: { sent: 0, failed: 0, successRate: 1 },
         webhook: { sent: 0, failed: 0, successRate: 1 },
         dashboard: { sent: 0, failed: 0, successRate: 1 },
-        sms: { sent: 0, failed: 0, successRate: 1 }
+        sms: { sent: 0, failed: 0, successRate: 1 },
       },
       severityBreakdown: {
         low: 0,
         medium: 0,
         high: 0,
-        critical: 0
-      }
+        critical: 0,
+      },
     }
   }
 
@@ -169,12 +172,8 @@ export class AlertSystem {
       template: {
         title: 'API 에러율 임계치 초과',
         description: 'API 엔드포인트에서 높은 에러율이 감지되었습니다.',
-        actionItems: [
-          '서버 로그 확인',
-          '데이터베이스 연결 상태 점검',
-          '외부 서비스 의존성 확인'
-        ]
-      }
+        actionItems: ['서버 로그 확인', '데이터베이스 연결 상태 점검', '외부 서비스 의존성 확인'],
+      },
     })
 
     // 응답 시간 알림
@@ -192,12 +191,8 @@ export class AlertSystem {
       template: {
         title: '응답 시간 지연 감지',
         description: 'API 응답 시간이 예상보다 오래 걸리고 있습니다.',
-        actionItems: [
-          '서버 리소스 사용률 확인',
-          '데이터베이스 쿼리 성능 점검',
-          '캐시 동작 상태 확인'
-        ]
-      }
+        actionItems: ['서버 리소스 사용률 확인', '데이터베이스 쿼리 성능 점검', '캐시 동작 상태 확인'],
+      },
     })
 
     // 사용자 여정 중단율 알림
@@ -216,13 +211,8 @@ export class AlertSystem {
       template: {
         title: '사용자 여정 중단율 급증',
         description: '핵심 사용자 여정에서 높은 중단율이 감지되었습니다.',
-        actionItems: [
-          'UX/UI 이슈 확인',
-          '서브메뉴 동작 상태 점검',
-          '사용자 피드백 분석',
-          '페이지 로딩 속도 확인'
-        ]
-      }
+        actionItems: ['UX/UI 이슈 확인', '서브메뉴 동작 상태 점검', '사용자 피드백 분석', '페이지 로딩 속도 확인'],
+      },
     })
 
     // 서브메뉴 오류 알림
@@ -241,13 +231,8 @@ export class AlertSystem {
       template: {
         title: '서브메뉴 기능 오류 발생',
         description: '서브메뉴에서 오류가 빈번하게 발생하고 있습니다.',
-        actionItems: [
-          '프론트엔드 콘솔 에러 확인',
-          'API 연결 상태 점검',
-          '권한 설정 확인',
-          '긴급 패치 준비'
-        ]
-      }
+        actionItems: ['프론트엔드 콘솔 에러 확인', 'API 연결 상태 점검', '권한 설정 확인', '긴급 패치 준비'],
+      },
     })
 
     // Core Web Vitals 임계치 초과
@@ -270,9 +255,9 @@ export class AlertSystem {
           '리소스 로딩 최적화',
           '레이아웃 시프트 원인 조사',
           '이미지 압축 및 지연 로딩 적용',
-          'JavaScript 번들 크기 최적화'
-        ]
-      }
+          'JavaScript 번들 크기 최적화',
+        ],
+      },
     })
 
     // 데이터 품질 이슈
@@ -294,9 +279,9 @@ export class AlertSystem {
           '데이터 파이프라인 상태 확인',
           '소스 시스템 연결 점검',
           '변환 로직 검증',
-          '백업 데이터 복구 준비'
-        ]
-      }
+          '백업 데이터 복구 준비',
+        ],
+      },
     })
   }
 
@@ -307,7 +292,7 @@ export class AlertSystem {
       pattern: 'severity:(low|medium)',
       duration: 60, // 1시간
       reason: '야간 시간대 저우선순위 알림 억제',
-      enabled: true
+      enabled: true,
     })
 
     // 유지보수 시간 알림 억제
@@ -316,7 +301,7 @@ export class AlertSystem {
       pattern: 'businessSlice:.*',
       duration: 120, // 2시간
       reason: '예정된 유지보수 시간',
-      enabled: false // 기본적으로 비활성화, 필요시 수동 활성화
+      enabled: false, // 기본적으로 비활성화, 필요시 수동 활성화
     })
   }
 
@@ -325,7 +310,7 @@ export class AlertSystem {
    */
   addAlertRule(rule: AlertRule): void {
     this.alertRules.set(rule.ruleId, rule)
-    
+
     if (this.debugMode) {
       console.log(`[AlertSystem] Alert rule ${rule.enabled ? 'enabled' : 'disabled'}:`, rule.name)
     }
@@ -336,7 +321,7 @@ export class AlertSystem {
    */
   addSuppressionRule(rule: SuppressionRule): void {
     this.suppressionRules.set(rule.ruleId, rule)
-    
+
     if (this.debugMode) {
       console.log(`[AlertSystem] Suppression rule ${rule.enabled ? 'enabled' : 'disabled'}:`, rule.pattern)
     }
@@ -345,18 +330,14 @@ export class AlertSystem {
   /**
    * 이벤트 기반 알림 트리거
    */
-  async triggerAlert(
-    eventType: string,
-    data: any,
-    context: Record<string, any> = {}
-  ): Promise<string | null> {
+  async triggerAlert(eventType: string, data: any, context: Record<string, any> = {}): Promise<string | null> {
     try {
       // 해당 이벤트에 적용되는 규칙 찾기
       const applicableRules = this.findApplicableRules(eventType, data)
-      
+
       for (const rule of applicableRules) {
         if (!rule.enabled) continue
-        
+
         // 조건 검사
         if (rule.condition(data)) {
           const alertId = await this.createAlert(rule, data, context)
@@ -365,7 +346,7 @@ export class AlertSystem {
           }
         }
       }
-      
+
       return null
     } catch (error) {
       console.error('[AlertSystem] Failed to trigger alert:', error)
@@ -377,13 +358,9 @@ export class AlertSystem {
   /**
    * 직접 알림 생성
    */
-  async createAlert(
-    rule: AlertRule,
-    data: any,
-    context: Record<string, any> = {}
-  ): Promise<string | null> {
+  async createAlert(rule: AlertRule, data: any, context: Record<string, any> = {}): Promise<string | null> {
     const alertId = this.generateAlertId()
-    
+
     // 중복 알림 및 억제 규칙 검사
     if (this.isDuplicate(rule, data) || this.isSuppressed(rule, data)) {
       this.alertStats.totalSuppressed++
@@ -406,9 +383,9 @@ export class AlertSystem {
         threshold: this.extractThreshold(data),
         businessSlice: rule.businessSlice || 'general',
         context,
-        ...this.extractMetadata(data)
+        ...this.extractMetadata(data),
       },
-      attempts: []
+      attempts: [],
     }
 
     this.activeAlerts.set(alertId, alert)
@@ -444,9 +421,9 @@ export class AlertSystem {
    */
   private async processAlertQueue(): Promise<void> {
     if (this.isProcessing) return
-    
+
     this.isProcessing = true
-    
+
     try {
       const alert = this.processingQueue.shift()
       if (alert) {
@@ -466,12 +443,12 @@ export class AlertSystem {
     for (const channel of alert.channels) {
       try {
         const success = await this.sendToChannel(alert, channel)
-        
+
         alert.attempts.push({
           channel,
           status: success ? 'success' : 'failed',
           timestamp: new Date().toISOString(),
-          error: success ? undefined : 'Delivery failed'
+          error: success ? undefined : 'Delivery failed',
         })
 
         if (success) {
@@ -480,19 +457,18 @@ export class AlertSystem {
         } else {
           this.alertStats.channelStats[channel].failed++
         }
-        
+
         // 성공률 업데이트
         const channelStats = this.alertStats.channelStats[channel]
         channelStats.successRate = channelStats.sent / (channelStats.sent + channelStats.failed)
-        
       } catch (error) {
         console.error(`[AlertSystem] Failed to send alert to ${channel}:`, error)
-        
+
         alert.attempts.push({
           channel,
           status: 'failed',
           timestamp: new Date().toISOString(),
-          error: (error as Error).message
+          error: (error as Error).message,
         })
       }
     }
@@ -545,39 +521,39 @@ export class AlertSystem {
               {
                 title: 'Description',
                 value: alert.description,
-                short: false
+                short: false,
               },
               {
                 title: 'Severity',
                 value: alert.severity.toUpperCase(),
-                short: true
+                short: true,
               },
               {
                 title: 'Business Slice',
                 value: alert.metadata.businessSlice,
-                short: true
+                short: true,
               },
               {
                 title: 'Current Value',
                 value: `${alert.metadata.currentValue}`,
-                short: true
+                short: true,
               },
               {
                 title: 'Threshold',
                 value: `${alert.metadata.threshold}`,
-                short: true
-              }
+                short: true,
+              },
             ],
             footer: 'VideoPlanet Monitoring',
-            ts: Math.floor(new Date(alert.triggeredAt).getTime() / 1000)
-          }
-        ]
+            ts: Math.floor(new Date(alert.triggeredAt).getTime() / 1000),
+          },
+        ],
       }
 
       const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       })
 
       return response.ok
@@ -597,8 +573,8 @@ export class AlertSystem {
           title: alert.title,
           description: alert.description,
           severity: alert.severity,
-          metadata: alert.metadata
-        })
+          metadata: alert.metadata,
+        }),
       })
 
       return response.ok
@@ -615,7 +591,7 @@ export class AlertSystem {
       const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(alert)
+        body: JSON.stringify(alert),
       })
 
       return response.ok
@@ -632,8 +608,8 @@ export class AlertSystem {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: `${alert.title}: ${alert.description}`,
-          severity: alert.severity
-        })
+          severity: alert.severity,
+        }),
       })
 
       return response.ok
@@ -706,39 +682,38 @@ export class AlertSystem {
   }
 
   private isDuplicate(rule: AlertRule, data: any): boolean {
-    const recentAlerts = Array.from(this.activeAlerts.values())
-      .filter(alert => {
-        const timeDiff = Date.now() - new Date(alert.triggeredAt).getTime()
-        return alert.configId === rule.ruleId && timeDiff < rule.cooldownMinutes * 60 * 1000
-      })
-    
+    const recentAlerts = Array.from(this.activeAlerts.values()).filter(alert => {
+      const timeDiff = Date.now() - new Date(alert.triggeredAt).getTime()
+      return alert.configId === rule.ruleId && timeDiff < rule.cooldownMinutes * 60 * 1000
+    })
+
     return recentAlerts.length > 0
   }
 
   private isSuppressed(rule: AlertRule, data: any): boolean {
     for (const suppressionRule of this.suppressionRules.values()) {
       if (!suppressionRule.enabled) continue
-      
+
       // 패턴 매칭 로직 (정규식 또는 키워드 매칭)
       const pattern = new RegExp(suppressionRule.pattern, 'i')
       const ruleString = `severity:${rule.severity} businessSlice:${rule.businessSlice || 'general'}`
-      
+
       if (pattern.test(ruleString)) {
         return true
       }
     }
-    
+
     return false
   }
 
   private formatTemplate(template: string, data: any, context: Record<string, any>): string {
     let formatted = template
-    
+
     // 변수 치환 로직
     formatted = formatted.replace(/\{(\w+)\}/g, (match, key) => {
       return data[key] || context[key] || match
     })
-    
+
     return formatted
   }
 
@@ -756,21 +731,21 @@ export class AlertSystem {
 
   private extractMetadata(data: any): Record<string, any> {
     const metadata: Record<string, any> = {}
-    
+
     if (data.userId) metadata.userId = data.userId
     if (data.sessionId) metadata.sessionId = data.sessionId
     if (data.endpoint) metadata.endpoint = data.endpoint
     if (data.page) metadata.page = data.page
-    
+
     return metadata
   }
 
   private getSeverityColor(severity: AlertPriority): string {
     const colors = {
-      low: '#36a64f',      // 녹색
-      medium: '#ff9500',   // 주황색
-      high: '#e91e63',     // 분홍색
-      critical: '#ff0000'  // 빨간색
+      low: '#36a64f', // 녹색
+      medium: '#ff9500', // 주황색
+      high: '#e91e63', // 분홍색
+      critical: '#ff0000', // 빨간색
     }
     return colors[severity]
   }
@@ -782,11 +757,11 @@ export class AlertSystem {
   /**
    * 구독 관리
    */
-  subscribe(channel: string, callback: Function): () => void {
+  subscribe(channel: string, callback: (...args: any[]) => void): () => void {
     const callbacks = this.subscribers.get(channel) || []
     callbacks.push(callback)
     this.subscribers.set(channel, callbacks)
-    
+
     return () => {
       const updatedCallbacks = this.subscribers.get(channel)?.filter(cb => cb !== callback) || []
       this.subscribers.set(channel, updatedCallbacks)
@@ -797,8 +772,7 @@ export class AlertSystem {
    * 상태 조회 메서드들
    */
   getActiveAlerts(): Alert[] {
-    return Array.from(this.activeAlerts.values())
-      .filter(alert => alert.status !== 'resolved')
+    return Array.from(this.activeAlerts.values()).filter(alert => alert.status !== 'resolved')
   }
 
   getAlertStats(): AlertStats {
@@ -839,7 +813,7 @@ export class AlertSystem {
     this.activeAlerts.clear()
     this.processingQueue.length = 0
     this.subscribers.clear()
-    
+
     if (this.debugMode) {
       console.log('[AlertSystem] Destroyed')
     }
