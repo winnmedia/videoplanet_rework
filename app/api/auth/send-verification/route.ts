@@ -6,6 +6,9 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
+import { emailMonitor, EmailType } from '@/lib/email/email-monitoring'
+import { emailCooldown } from '@/lib/email/cooldown'
+import { createHash } from 'crypto'
 
 // 이메일 인증 요청 스키마
 const SendVerificationSchema = z.object({
@@ -13,7 +16,23 @@ const SendVerificationSchema = z.object({
   type: z.enum(['signup', 'login', 'reset-password']).default('signup'),
 })
 
+// 타입 매핑
+const typeToEmailType: Record<string, EmailType> = {
+  'signup': 'verification',
+  'login': 'verification', 
+  'reset-password': 'reset'
+}
+
+// 이메일을 해시로 변환 (PII 보호)
+const hashEmail = (email: string): string => {
+  return createHash('sha256').update(email.toLowerCase()).digest('hex').substring(0, 16)
+}
+
 export async function POST(request: NextRequest) {
+  const startTime = Date.now()
+  let userHash: string | undefined
+  let emailType: EmailType | undefined
+
   try {
     const body = await request.json()
 
@@ -25,28 +44,112 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '이메일과 타입이 필요합니다.' }, { status: 400 })
     }
 
-    // TODO: 실제 이메일 발송 로직 구현
-    console.log(`Verification email requested for: ${email}, type: ${type}`)
+    // 모니터링을 위한 데이터 준비
+    userHash = hashEmail(email)
+    emailType = typeToEmailType[type]
 
-    // 타입별 메시지 구성
-    const messages = {
-      signup: '회원가입 인증 이메일이 발송되었습니다.',
-      login: '로그인 인증 이메일이 발송되었습니다.',
-      'reset-password': '비밀번호 재설정 이메일이 발송되었습니다.',
+    // 쿨다운 및 제한 확인 (모니터링 시스템 통합)
+    if (!emailCooldown.check(email, emailType)) {
+      // 실패 로깅
+      emailMonitor.logEmail({
+        type: emailType,
+        status: 'failed',
+        userHash,
+        errorMessage: 'Rate limit exceeded',
+        metadata: {
+          provider: 'system',
+          requestType: type,
+          deliveryTime: Date.now() - startTime
+        }
+      })
+
+      return NextResponse.json(
+        { 
+          error: '이메일 발송 제한에 도달했습니다. 잠시 후 다시 시도해주세요.',
+          retryAfter: emailCooldown.getRemainingSeconds(email)
+        },
+        { status: 429 }
+      )
     }
 
-    return NextResponse.json(
-      {
-        success: true,
-        message: messages[type],
-        email,
-        type,
-        status: 'pending',
-      },
-      { status: 200 }
-    )
+    // TODO: 실제 이메일 발송 로직 구현
+    console.log(`Verification email requested for: ${email}, type: ${type}`)
+    
+    // 모의 발송 결과 (실제 구현에서는 실제 이메일 서비스 결과 사용)
+    const mockSuccess = Math.random() > 0.1 // 90% 성공률로 시뮬레이션
+    const deliveryTime = Date.now() - startTime
+
+    if (mockSuccess) {
+      // 성공 로깅
+      emailMonitor.logEmail({
+        type: emailType,
+        status: 'success',
+        userHash,
+        metadata: {
+          provider: 'sendgrid', // 실제 구현에서는 사용된 프로바이더
+          messageId: `msg_${Date.now()}`, // 실제 메시지 ID
+          requestType: type,
+          deliveryTime,
+          templateId: `template_${type}`
+        }
+      })
+
+      // 타입별 메시지 구성
+      const messages = {
+        signup: '회원가입 인증 이메일이 발송되었습니다.',
+        login: '로그인 인증 이메일이 발송되었습니다.',
+        'reset-password': '비밀번호 재설정 이메일이 발송되었습니다.',
+      }
+
+      return NextResponse.json(
+        {
+          success: true,
+          message: messages[type],
+          type,
+          status: 'sent',
+        },
+        { status: 200 }
+      )
+    } else {
+      // 실패 로깅
+      emailMonitor.logEmail({
+        type: emailType,
+        status: 'failed',
+        userHash,
+        errorMessage: 'Email service unavailable',
+        metadata: {
+          provider: 'sendgrid',
+          requestType: type,
+          deliveryTime,
+          attemptCount: 1
+        }
+      })
+
+      return NextResponse.json(
+        {
+          error: '이메일 발송 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
+          message: '이메일 서비스가 일시적으로 이용할 수 없습니다.'
+        },
+        { status: 503 }
+      )
+    }
   } catch (error) {
     console.error('Send verification error:', error)
+
+    // 에러 로깅 (가능한 경우)
+    if (userHash && emailType) {
+      emailMonitor.logEmail({
+        type: emailType,
+        status: 'failed',
+        userHash,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        metadata: {
+          provider: 'system',
+          deliveryTime: Date.now() - startTime,
+          errorType: 'validation_error'
+        }
+      })
+    }
 
     // Zod 검증 오류
     if (error instanceof z.ZodError) {

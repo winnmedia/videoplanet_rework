@@ -16,6 +16,7 @@ export { Card } from './Card'
 // 4개 모듈용 공통 컴포넌트들
 export { LoadingSpinner } from './LoadingSpinner/LoadingSpinner'
 export { ErrorBoundary } from './ErrorBoundary/ErrorBoundary'
+export { EnvValidator } from './EnvValidator'
 // export { ConfirmModal } from './ConfirmModal/ConfirmModal'
 // export { Toast, ToastContainer, toast } from './Toast/Toast'
 // Legacy Card는 주석 처리 (Modern Card 사용)

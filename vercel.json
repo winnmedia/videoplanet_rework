@@ -28,6 +28,10 @@
     "NEXT_PUBLIC_API_URL": "https://api.vlanet.net",
     "NEXT_PUBLIC_BACKEND_URL": "https://api.vlanet.net",
     "NEXTAUTH_SECRET": "vridge-nextauth-secret-production-2025-very-secure-key-for-deployment",
+    "SENDGRID_API_KEY": "@sendgrid_api_key",
+    "SENDGRID_FROM_EMAIL": "@sendgrid_from_email",
+    "SENDGRID_FROM_NAME": "VideoPlanet",
+    "VERIFIED_SENDER": "@sendgrid_verified_sender",
     "SKIP_ENV_VALIDATION": "false",
     "NEXT_TELEMETRY_DISABLED": "1"
   },
@@ -37,6 +41,10 @@
       "NEXT_PUBLIC_APP_ENV": "production",
       "NEXT_PUBLIC_API_URL": "https://api.vlanet.net",
       "NEXT_PUBLIC_BACKEND_URL": "https://api.vlanet.net",
+      "SENDGRID_API_KEY": "@sendgrid_api_key",
+      "SENDGRID_FROM_EMAIL": "@sendgrid_from_email",
+      "SENDGRID_FROM_NAME": "VideoPlanet",
+      "VERIFIED_SENDER": "@sendgrid_verified_sender",
       "SKIP_ENV_VALIDATION": "false",
       "NEXT_TELEMETRY_DISABLED": "1",
       "NODE_OPTIONS": "--max-old-space-size=4096"

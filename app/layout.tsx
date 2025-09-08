@@ -4,6 +4,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { NavigationProvider } from "@/features/navigation/ui/NavigationProvider";
 import { StoreProvider } from "@/shared/ui/StoreProvider/StoreProvider";
+import { EnvValidator } from "@/shared/ui/EnvValidator";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -23,11 +24,13 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body className={`${inter.variable} antialiased`}>
-        <StoreProvider>
-          <NavigationProvider>
-            {children}
-          </NavigationProvider>
-        </StoreProvider>
+        <EnvValidator>
+          <StoreProvider>
+            <NavigationProvider>
+              {children}
+            </NavigationProvider>
+          </StoreProvider>
+        </EnvValidator>
       </body>
     </html>
   );

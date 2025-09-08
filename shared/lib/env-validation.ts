@@ -5,6 +5,7 @@
  */
 
 import { z } from 'zod'
+import { checkSendGridHealth, validateSendGridEnv } from './env-validation/sendgrid'
 
 /**
  * 프론트엔드 환경변수 Zod 스키마
@@ -71,30 +72,52 @@ const serverEnvSchema = z.object({
   GOOGLE_API_KEY: z.string().optional(),
   HUGGINGFACE_API_KEY: z.string().optional(),
 
-  // 메일 서비스 (프로덕션에서 필수)
+  // SendGrid 메일 서비스 (강화된 검증 - sendgrid.ts 모듈과 통합)
+  SENDGRID_API_KEY: z
+    .string()
+    .min(1, 'SendGrid API 키가 필요합니다')
+    .refine(
+      val => {
+        // 개발환경에서는 더미 키도 허용
+        if (process.env.NODE_ENV === 'development') {
+          return val.length > 0
+        }
+        // 프로덕션에서는 실제 SendGrid API 키 형식 검증
+        return val.startsWith('SG.') && val.length >= 69
+      },
+      { message: '프로덕션에서는 유효한 SendGrid API 키(SG.로 시작)가 필요합니다' }
+    ),
   SENDGRID_FROM_EMAIL: z
     .string()
-    .email()
+    .email('올바른 이메일 형식이 필요합니다')
     .refine(
       val => {
-        return process.env.NODE_ENV === 'development' || val?.length > 0
+        // 프로덕션에서는 실제 도메인만 허용
+        if (process.env.NODE_ENV === 'production') {
+          return !val.includes('example.com') && !val.includes('test.com') && !val.includes('localhost')
+        }
+        return val?.length > 0
       },
-      { message: '프로덕션에서 SendGrid 발신 이메일이 필요합니다' }
+      { message: '프로덕션에서는 실제 도메인의 SendGrid 발신 이메일이 필요합니다' }
     ),
-  SENDGRID_API_KEY: z.string().refine(
-    val => {
-      return process.env.NODE_ENV === 'development' || val?.length > 0
-    },
-    { message: '프로덕션에서 SendGrid API 키가 필요합니다' }
-  ),
+  SENDGRID_FROM_NAME: z
+    .string()
+    .min(1, '발신자 이름이 필요합니다')
+    .max(100, '발신자 이름은 100자를 초과할 수 없습니다')
+    .optional()
+    .default('VideoPlanet'),
   VERIFIED_SENDER: z
     .string()
-    .email()
+    .email('올바른 검증된 발신자 이메일 형식이 필요합니다')
     .refine(
       val => {
+        // 프로덕션에서는 실제 검증된 도메인만 허용
+        if (process.env.NODE_ENV === 'production') {
+          return !val.includes('example.com') && !val.includes('test.com') && !val.includes('localhost')
+        }
         return process.env.NODE_ENV === 'development' || val?.length > 0
       },
-      { message: '프로덕션에서 검증된 발신자 이메일이 필요합니다' }
+      { message: '프로덕션에서는 SendGrid에서 검증된 실제 발신자 이메일이 필요합니다' }
     ),
 
   // 기타 설정
@@ -250,12 +273,14 @@ export function checkEnvHealth(): void {
 
   console.log('🔧 환경변수 상태 확인:')
 
+  // 프론트엔드 환경변수 검증
   const frontendEnv = validateFrontendEnv()
   console.log('✅ 프론트엔드 환경변수 검증 통과')
   console.log(`📱 앱: ${frontendEnv.NEXT_PUBLIC_APP_NAME} (${frontendEnv.NEXT_PUBLIC_APP_ENV})`)
   console.log(`🌐 API: ${frontendEnv.NEXT_PUBLIC_API_BASE}`)
   console.log(`🔌 WebSocket: ${frontendEnv.NEXT_PUBLIC_WS_URL}`)
 
+  // 서버 환경변수 검증
   try {
     const serverEnv = validateServerEnv()
     console.log('✅ 서버 환경변수 검증 통과')
@@ -264,6 +289,13 @@ export function checkEnvHealth(): void {
     )
   } catch {
     console.warn('⚠️ 서버 환경변수 일부 누락 (개발환경에서는 선택사항)')
+  }
+
+  // SendGrid 전용 상세 검증
+  try {
+    checkSendGridHealth()
+  } catch (error) {
+    console.warn('⚠️ SendGrid 환경변수 검증 중 오류:', error)
   }
 }
 

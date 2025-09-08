@@ -1,4 +1,7 @@
-// 단순 메모리 기반 쿨다운 시스템
+import { emailMonitor, EmailType } from './email-monitoring'
+import { createHash } from 'crypto'
+
+// 단순 메모리 기반 쿨다운 시스템 (모니터링 통합)
 export class SimpleCooldown {
   private cooldowns = new Map<string, number>()
   private readonly cooldownMs: number
@@ -8,13 +11,29 @@ export class SimpleCooldown {
   }
 
   /**
-   * 쿨다운 확인 및 설정
+   * 쿨다운 확인 및 설정 (모니터링 통합)
    * @param key - 쿨다운 키 (예: 이메일 주소)
+   * @param emailType - 이메일 타입 (모니터링용)
    * @returns true if allowed, false if in cooldown
    */
-  check(key: string): boolean {
+  check(key: string, emailType?: EmailType): boolean {
     const now = Date.now()
     const lastSent = this.cooldowns.get(key)
+
+    // 모니터링 시스템과 연동된 추가 검증
+    if (emailType) {
+      const userHash = this.hashKey(key)
+      
+      // 모니터링 시스템의 사용자별 제한 확인
+      if (!emailMonitor.canSendToUser(userHash, emailType)) {
+        return false
+      }
+      
+      // 타입별 전역 제한 확인
+      if (!emailMonitor.canSendType(emailType)) {
+        return false
+      }
+    }
 
     if (lastSent && (now - lastSent) < this.cooldownMs) {
       return false // 쿨다운 중
@@ -22,6 +41,13 @@ export class SimpleCooldown {
 
     this.cooldowns.set(key, now)
     return true // 전송 허용
+  }
+
+  /**
+   * 키를 안전한 해시로 변환 (PII 보호)
+   */
+  private hashKey(key: string): string {
+    return createHash('sha256').update(key).digest('hex').substring(0, 16)
   }
 
   /**

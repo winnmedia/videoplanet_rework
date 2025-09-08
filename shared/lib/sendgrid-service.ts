@@ -5,11 +5,13 @@
  */
 
 import { z } from 'zod'
+import { sendGridConfig, type SendGridEnv } from './env-validation/sendgrid'
 
 // ===========================
-// Environment Validation
+// Environment Validation (Updated)
 // ===========================
 
+// 기존 스키마는 호환성을 위해 유지하되, 새로운 검증 시스템을 우선 사용
 const SendGridConfigSchema = z.object({
   apiKey: z.string().min(1, 'SendGrid API 키가 필요합니다'),
   fromEmail: z.string().email('유효한 발신자 이메일이 필요합니다'),
@@ -51,16 +53,27 @@ export class SendGridService {
   private cooldownMap: Map<string, number> = new Map()
   private readonly COOLDOWN_MS = 60 * 1000 // 60초
 
-  constructor(config: Partial<SendGridConfig>) {
-    // 환경 변수에서 기본값 로드
+  constructor(config: Partial<SendGridConfig> = {}) {
+    // 새로운 검증된 환경 변수 시스템 사용
+    const validatedEnv = sendGridConfig
+
+    // 검증된 환경 변수를 기본값으로 사용
     const defaultConfig = {
-      apiKey: process.env.SENDGRID_API_KEY || '',
-      fromEmail: process.env.SENDGRID_FROM_EMAIL || 'noreply@vladnet.kr',
-      fromName: process.env.SENDGRID_FROM_NAME || 'VideoPlanet',
-      baseUrl: process.env.NEXT_PUBLIC_BASE_URL || 'https://vridge-web.vercel.app'
+      apiKey: validatedEnv.SENDGRID_API_KEY,
+      fromEmail: validatedEnv.SENDGRID_FROM_EMAIL,
+      fromName: validatedEnv.SENDGRID_FROM_NAME,
+      baseUrl: process.env.NEXT_PUBLIC_APP_URL || 'https://vridge-web.vercel.app'
     }
 
+    // 기존 스키마로 최종 검증 (호환성 유지)
     this.config = SendGridConfigSchema.parse({ ...defaultConfig, ...config })
+
+    // 개발환경에서 설정 상태 로깅
+    if (process.env.NODE_ENV === 'development') {
+      console.log('📧 SendGridService 초기화됨')
+      console.log(`  - 발신자: ${this.config.fromName} <${this.config.fromEmail}>`)
+      console.log(`  - API 키 설정 상태: ${validatedEnv.isConfigured ? '✅ 설정됨' : '❌ 미설정'}`)
+    }
   }
 
   /**
@@ -199,9 +212,12 @@ export class SendGridService {
 
   /**
    * 팀 초대 이메일 템플릿 생성
+   * 새로운 HTML 템플릿 시스템 사용
    */
   private generateTeamInviteTemplate(data: TeamInviteEmailData): EmailTemplate {
     const { 
+      recipientEmail,
+      recipientName,
       inviterName, 
       projectTitle, 
       role, 
@@ -211,113 +227,28 @@ export class SendGridService {
       expiresAt 
     } = data
 
-    const roleDisplayName = this.getRoleDisplayName(role)
-    const inviteUrl = `${this.config.baseUrl}/invite/accept?token=${inviteToken}&project=${projectId}`
-    const expiresDate = new Date(expiresAt).toLocaleDateString('ko-KR')
-
-    const subject = `[VideoPlanet] ${inviterName}님이 "${projectTitle}" 프로젝트에 초대하셨습니다`
-
-    const htmlContent = `
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>프로젝트 초대</title>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f8f9fa; }
-    .container { max-width: 600px; margin: 0 auto; background-color: white; }
-    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
-    .content { padding: 40px; }
-    .btn { display: inline-block; background: #667eea; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: 600; margin: 20px 0; }
-    .btn:hover { background: #5a6fd8; }
-    .info-box { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 6px; padding: 20px; margin: 20px 0; }
-    .footer { background: #f8f9fa; padding: 20px; text-align: center; font-size: 14px; color: #6c757d; border-top: 1px solid #e9ecef; }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <h1>🎬 VideoPlanet</h1>
-      <p>프로젝트 협업 초대</p>
-    </div>
+    // 새로운 HTML 템플릿 시스템 사용
+    const { createTeamInviteEmail } = require('../../lib/email/templates')
     
-    <div class="content">
-      <h2>안녕하세요!</h2>
-      
-      <p><strong>${inviterName}</strong>님이 VideoPlanet에서 "<strong>${projectTitle}</strong>" 프로젝트에 당신을 초대했습니다.</p>
-      
-      <div class="info-box">
-        <h3>초대 정보</h3>
-        <ul>
-          <li><strong>프로젝트:</strong> ${projectTitle}</li>
-          <li><strong>역할:</strong> ${roleDisplayName}</li>
-          <li><strong>초대한 사람:</strong> ${inviterName}</li>
-          <li><strong>만료일:</strong> ${expiresDate}</li>
-        </ul>
-      </div>
-      
-      ${message ? `
-        <div class="info-box">
-          <h4>초대 메시지</h4>
-          <p>"${message}"</p>
-        </div>
-      ` : ''}
-      
-      <div style="text-align: center; margin: 30px 0;">
-        <a href="${inviteUrl}" class="btn">초대 수락하기</a>
-      </div>
-      
-      <p style="font-size: 14px; color: #6c757d;">
-        위 버튼이 작동하지 않는다면 아래 링크를 복사하여 브라우저에 붙여넣어 주세요:<br>
-        <a href="${inviteUrl}">${inviteUrl}</a>
-      </p>
-      
-      <div class="info-box">
-        <h4>🔒 보안 안내</h4>
-        <p>이 초대 링크는 <strong>${expiresDate}까지</strong> 유효하며, 한 번만 사용할 수 있습니다.</p>
-        <p>만약 이 초대를 요청하지 않으셨다면, 이 이메일을 무시하셔도 됩니다.</p>
-      </div>
-    </div>
-    
-    <div class="footer">
-      <p>© 2024 VideoPlanet. 모든 권리 보유.</p>
-      <p>이 이메일은 자동으로 발송되었습니다. 회신하지 마세요.</p>
-    </div>
-  </div>
-</body>
-</html>
-    `
+    const teamInviteData = {
+      recipientEmail,
+      recipientName,
+      inviterName,
+      projectTitle,
+      role,
+      message,
+      inviteToken,
+      projectId,
+      expiresAt,
+      baseUrl: this.config.baseUrl
+    }
 
-    const plainTextContent = `
-VideoPlanet 프로젝트 초대
-
-안녕하세요!
-
-${inviterName}님이 "${projectTitle}" 프로젝트에 당신을 ${roleDisplayName} 역할로 초대했습니다.
-
-초대 정보:
-- 프로젝트: ${projectTitle}
-- 역할: ${roleDisplayName}  
-- 초대한 사람: ${inviterName}
-- 만료일: ${expiresDate}
-
-${message ? `초대 메시지: "${message}"` : ''}
-
-초대를 수락하려면 아래 링크를 클릭하세요:
-${inviteUrl}
-
-이 초대 링크는 ${expiresDate}까지 유효하며, 한 번만 사용할 수 있습니다.
-
-만약 이 초대를 요청하지 않으셨다면, 이 이메일을 무시하셔도 됩니다.
-
-© 2024 VideoPlanet
-    `
+    const emailTemplate = createTeamInviteEmail(teamInviteData)
 
     return {
-      subject,
-      htmlContent,
-      plainTextContent
+      subject: emailTemplate.subject,
+      htmlContent: emailTemplate.htmlContent,
+      plainTextContent: emailTemplate.plainTextContent
     }
   }
 

@@ -12,6 +12,7 @@ export interface SimpleEmailData {
   to: string
   subject: string
   text: string
+  html?: string
 }
 
 // 전송 결과
@@ -76,12 +77,19 @@ class SimpleSendGrid {
       let lastError: Error | null = null
       for (let attempt = 1; attempt <= 3; attempt++) {
         try {
-          await sgMail.send({
+          const emailPayload: any = {
             to: data.to,
             from: this.fromEmail,
             subject: data.subject,
             text: data.text,
-          })
+          }
+
+          // HTML 콘텐츠가 있으면 추가
+          if (data.html) {
+            emailPayload.html = data.html
+          }
+
+          await sgMail.send(emailPayload)
 
           console.log(`✅ Email sent to ${data.to}`)
           return { success: true }
@@ -115,14 +123,28 @@ class SimpleSendGrid {
 export const simpleSendGrid = new SimpleSendGrid()
 
 /**
- * 인증 이메일 발송 헬퍼 함수
+ * 인증 이메일 발송 헬퍼 함수 (HTML 템플릿 사용)
  */
-export async function sendVerificationEmail(email: string, verificationToken: string): Promise<boolean> {
+export async function sendVerificationEmail(email: string, verificationCode: string, userName?: string): Promise<boolean> {
   try {
+    // 새로운 HTML 템플릿 시스템 사용
+    const { createSignupVerificationEmail } = require('./templates')
+    
+    const signupData = {
+      userEmail: email,
+      verificationCode,
+      userName: userName || email,
+      expiryMinutes: 10,
+      baseUrl: process.env.NEXT_PUBLIC_APP_URL || 'https://videoplanet.kr'
+    }
+
+    const emailTemplate = createSignupVerificationEmail(signupData)
+
     const result = await simpleSendGrid.send({
       to: email,
-      subject: 'VideoPlanet 이메일 인증',
-      text: `안녕하세요! VideoPlanet 회원가입을 완료하려면 다음 링크를 클릭해주세요:\n\n${process.env.NEXT_PUBLIC_APP_URL}/auth/verify?token=${verificationToken}\n\n감사합니다.`,
+      subject: emailTemplate.subject,
+      text: emailTemplate.plainTextContent,
+      html: emailTemplate.htmlContent,
     })
 
     return result.success
@@ -133,14 +155,28 @@ export async function sendVerificationEmail(email: string, verificationToken: st
 }
 
 /**
- * 비밀번호 재설정 이메일 발송 헬퍼 함수
+ * 비밀번호 재설정 이메일 발송 헬퍼 함수 (HTML 템플릿 사용)
  */
-export async function sendPasswordResetEmail(email: string, resetToken: string): Promise<boolean> {
+export async function sendPasswordResetEmail(email: string, resetCode: string, userName?: string): Promise<boolean> {
   try {
+    // 새로운 HTML 템플릿 시스템 사용
+    const { createPasswordResetEmail } = require('./templates')
+    
+    const resetData = {
+      userEmail: email,
+      resetCode,
+      userName: userName || email,
+      expiryMinutes: 10,
+      baseUrl: process.env.NEXT_PUBLIC_APP_URL || 'https://videoplanet.kr'
+    }
+
+    const emailTemplate = createPasswordResetEmail(resetData)
+
     const result = await simpleSendGrid.send({
       to: email,
-      subject: 'VideoPlanet 비밀번호 재설정',
-      text: `안녕하세요! 비밀번호를 재설정하려면 다음 링크를 클릭해주세요:\n\n${process.env.NEXT_PUBLIC_APP_URL}/auth/reset-password?token=${resetToken}\n\n이 링크는 24시간 동안 유효합니다.\n\n감사합니다.`,
+      subject: emailTemplate.subject,
+      text: emailTemplate.plainTextContent,
+      html: emailTemplate.htmlContent,
     })
 
     return result.success
