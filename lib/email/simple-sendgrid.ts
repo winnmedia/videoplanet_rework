@@ -113,3 +113,39 @@ class SimpleSendGrid {
 
 // 싱글톤 인스턴스
 export const simpleSendGrid = new SimpleSendGrid()
+
+/**
+ * 인증 이메일 발송 헬퍼 함수
+ */
+export async function sendVerificationEmail(email: string, verificationToken: string): Promise<boolean> {
+  try {
+    const result = await simpleSendGrid.send({
+      to: email,
+      subject: 'VideoPlanet 이메일 인증',
+      text: `안녕하세요! VideoPlanet 회원가입을 완료하려면 다음 링크를 클릭해주세요:\n\n${process.env.NEXT_PUBLIC_APP_URL}/auth/verify?token=${verificationToken}\n\n감사합니다.`,
+    })
+
+    return result.success
+  } catch (error) {
+    console.error('인증 이메일 발송 실패:', error)
+    return false
+  }
+}
+
+/**
+ * 비밀번호 재설정 이메일 발송 헬퍼 함수
+ */
+export async function sendPasswordResetEmail(email: string, resetToken: string): Promise<boolean> {
+  try {
+    const result = await simpleSendGrid.send({
+      to: email,
+      subject: 'VideoPlanet 비밀번호 재설정',
+      text: `안녕하세요! 비밀번호를 재설정하려면 다음 링크를 클릭해주세요:\n\n${process.env.NEXT_PUBLIC_APP_URL}/auth/reset-password?token=${resetToken}\n\n이 링크는 24시간 동안 유효합니다.\n\n감사합니다.`,
+    })
+
+    return result.success
+  } catch (error) {
+    console.error('비밀번호 재설정 이메일 발송 실패:', error)
+    return false
+  }
+}

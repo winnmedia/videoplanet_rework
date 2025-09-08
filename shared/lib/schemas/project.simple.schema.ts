@@ -5,9 +5,14 @@
 
 import { z } from 'zod'
 
+// UUID 검증을 위한 헬퍼 스키마
+export const ProjectIdSchema = z.string().uuid('유효하지 않은 프로젝트 ID 형식입니다')
+
+export type ProjectId = z.infer<typeof ProjectIdSchema>
+
 // 기본 프로젝트 스키마 (단순화)
 export const SimpleProjectSchema = z.object({
-  id: z.string(),
+  id: ProjectIdSchema,
   name: z.string().min(1).max(100),
   description: z.string().max(500).optional(),
   status: z.enum(['ACTIVE', 'COMPLETED', 'CANCELLED']).default('ACTIVE'),

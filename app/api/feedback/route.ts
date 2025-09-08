@@ -7,45 +7,95 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
-// 댓글 생성 스키마
-const CreateFeedbackSchema = z.object({
-  projectId: z.string().min(1, '프로젝트 ID는 필수입니다'),
-  videoId: z.string().min(1, '비디오 ID는 필수입니다'),
-  timecode: z.number().min(0, '타임코드는 0 이상이어야 합니다'),
-  content: z.string().min(1, '댓글 내용을 입력해주세요').max(1000),
-  type: z.enum(['comment', 'suggestion', 'issue', 'approval']).default('comment'),
-  priority: z.enum(['low', 'medium', 'high', 'critical']).default('medium'),
-  tags: z.array(z.string()).optional(),
-})
+import {
+  CreateFeedbackRequestSchema,
+  FeedbackQuerySchema,
+  validateFeedbackData,
+  FeedbackErrorResponseSchema,
+  type Feedback,
+  type FeedbackAuthor,
+} from '@/shared/lib/schemas/feedback.schema'
 
 // 임시 댓글 저장소 (실제로는 데이터베이스 연결 필요)
-const feedbacks: Record<string, unknown>[] = []
-let nextFeedbackId = 1
+const feedbacks: Feedback[] = []
+const nextFeedbackId = 1
+
+// UUID v4 생성 함수 (임시)
+function generateUUID(): string {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    const r = (Math.random() * 16) | 0
+    const v = c === 'x' ? r : (r & 0x3) | 0x8
+    return v.toString(16)
+  })
+}
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
 
-    // Zod 검증
-    const validatedData = CreateFeedbackSchema.parse(body)
+    // 통합 스키마를 사용한 검증
+    const validation = validateFeedbackData(CreateFeedbackRequestSchema, body)
 
-    // 댓글 생성
-    const newFeedback = {
-      id: String(nextFeedbackId++),
-      ...validatedData,
-      author: 'test-user', // 실제로는 인증된 사용자
-      authorName: 'Test User',
+    if (!validation.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Validation failed',
+          message: '입력 데이터가 올바르지 않습니다.',
+          details: validation.errors.map(err => ({
+            code: err.code,
+            message: err.message,
+            path: err.path,
+          })),
+        },
+        { status: 400 }
+      )
+    }
+
+    const validatedData = validation.data
+
+    // 임시 작성자 정보 (실제로는 인증된 사용자 정보)
+    const author: FeedbackAuthor = {
+      id: generateUUID(),
+      name: 'Test User',
+      email: 'test@example.com',
+      role: 'reviewer',
+    }
+
+    // 피드백 생성
+    const newFeedback: Feedback = {
+      id: generateUUID(),
+      projectId: validatedData.projectId,
+      videoId: validatedData.videoId,
+      timecode: validatedData.timecode,
+      content: validatedData.content,
+      type: validatedData.type || 'comment',
+      priority: validatedData.priority || 'medium',
       status: 'open',
+      tags: validatedData.tags,
+      author,
+      assignee: validatedData.assigneeId
+        ? {
+            id: validatedData.assigneeId,
+            name: 'Assignee User',
+            role: 'reviewer',
+          }
+        : undefined,
+      reactions: [],
+      replies: [],
+      attachments: [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      replies: [],
-      reactions: [],
     }
 
     feedbacks.push(newFeedback)
 
-    // 타임코드 기준으로 정렬
-    feedbacks.sort((a, b) => (a.timecode as number) - (b.timecode as number))
+    // 타임코드 기준으로 정렬 (null/undefined 안전 처리)
+    feedbacks.sort((a, b) => {
+      const aTimecode = a.timecode ?? 0
+      const bTimecode = b.timecode ?? 0
+      return aTimecode - bTimecode
+    })
 
     console.log('Feedback created:', newFeedback)
 
@@ -53,28 +103,28 @@ export async function POST(request: NextRequest) {
       {
         success: true,
         feedback: newFeedback,
-        message: '댓글이 성공적으로 추가되었습니다.',
+        message: '피드백이 성공적으로 추가되었습니다.',
       },
       { status: 201 }
     )
   } catch (error) {
     console.error('Feedback creation error:', error)
 
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        {
-          error: 'Validation failed',
-          details: error.errors,
-          message: '입력 데이터가 올바르지 않습니다.',
-        },
-        { status: 400 }
-      )
-    }
-
+    // 알려지지 않은 서버 에러를 방지하기 위한 안전한 에러 핸들링
     return NextResponse.json(
       {
-        error: 'Failed to create feedback',
-        message: error instanceof Error ? error.message : 'Unknown error',
+        success: false,
+        error: 'Internal server error',
+        message: '서버에서 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
+        details:
+          process.env.NODE_ENV === 'development'
+            ? [
+                {
+                  code: 'INTERNAL_ERROR',
+                  message: error instanceof Error ? error.message : 'Unknown error',
+                },
+              ]
+            : undefined,
       },
       { status: 500 }
     )
@@ -84,33 +134,114 @@ export async function POST(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
-    const projectId = searchParams.get('projectId')
-    const videoId = searchParams.get('videoId')
 
-    if (!projectId) {
-      return NextResponse.json({ error: 'Project ID is required' }, { status: 400 })
+    // URL 파라미터를 객체로 변환
+    const queryParams = Object.fromEntries(searchParams.entries())
+
+    // 쿼리 파라미터 검증
+    const validation = validateFeedbackData(FeedbackQuerySchema, queryParams)
+
+    if (!validation.success) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Invalid query parameters',
+          message: '쿼리 파라미터가 올바르지 않습니다.',
+          details: validation.errors.map(err => ({
+            code: err.code,
+            message: err.message,
+            path: err.path,
+          })),
+        },
+        { status: 400 }
+      )
     }
 
-    // 프로젝트/비디오별 댓글 조회 및 타임코드 기준 정렬
-    let filteredFeedbacks = feedbacks.filter(feedback => feedback.projectId === projectId)
+    const query = validation.data
 
-    if (videoId) {
-      filteredFeedbacks = filteredFeedbacks.filter(feedback => feedback.videoId === videoId)
+    // 필터링 로직
+    let filteredFeedbacks = feedbacks
+
+    if (query.projectId) {
+      filteredFeedbacks = filteredFeedbacks.filter(feedback => feedback.projectId === query.projectId)
     }
 
-    // 타임코드 기준 오름차순 정렬
-    filteredFeedbacks.sort((a, b) => (a.timecode as number) - (b.timecode as number))
+    if (query.videoId) {
+      filteredFeedbacks = filteredFeedbacks.filter(feedback => feedback.videoId === query.videoId)
+    }
+
+    if (query.type) {
+      filteredFeedbacks = filteredFeedbacks.filter(feedback => feedback.type === query.type)
+    }
+
+    if (query.priority) {
+      filteredFeedbacks = filteredFeedbacks.filter(feedback => feedback.priority === query.priority)
+    }
+
+    if (query.status) {
+      filteredFeedbacks = filteredFeedbacks.filter(feedback => feedback.status === query.status)
+    }
+
+    if (query.authorId) {
+      filteredFeedbacks = filteredFeedbacks.filter(feedback => feedback.author.id === query.authorId)
+    }
+
+    if (query.tag) {
+      filteredFeedbacks = filteredFeedbacks.filter(feedback => feedback.tags?.includes(query.tag!))
+    }
+
+    // 정렬 로직
+    filteredFeedbacks.sort((a, b) => {
+      let aValue: any, bValue: any
+
+      switch (query.sortBy) {
+        case 'timecode':
+          aValue = a.timecode ?? 0
+          bValue = b.timecode ?? 0
+          break
+        case 'priority':
+          const priorityOrder = { low: 0, medium: 1, high: 2, critical: 3 }
+          aValue = priorityOrder[a.priority]
+          bValue = priorityOrder[b.priority]
+          break
+        case 'updatedAt':
+          aValue = new Date(a.updatedAt).getTime()
+          bValue = new Date(b.updatedAt).getTime()
+          break
+        case 'createdAt':
+        default:
+          aValue = new Date(a.createdAt).getTime()
+          bValue = new Date(b.createdAt).getTime()
+          break
+      }
+
+      return query.sortOrder === 'asc' ? aValue - bValue : bValue - aValue
+    })
+
+    // 페이지네이션
+    const total = filteredFeedbacks.length
+    const limit = query.limit ?? 20
+    const page = query.page ?? 1
+    const totalPages = Math.ceil(total / limit)
+    const startIndex = (page - 1) * limit
+    const paginatedFeedbacks = filteredFeedbacks.slice(startIndex, startIndex + limit)
 
     console.log(
-      `Retrieved ${filteredFeedbacks.length} feedbacks for project: ${projectId}${videoId ? `, video: ${videoId}` : ''}`
+      `Retrieved ${total} feedbacks (page ${page}/${totalPages}) with filters:`,
+      Object.fromEntries(Object.entries(query).filter(([_, value]) => value !== undefined))
     )
 
     return NextResponse.json(
       {
         success: true,
-        feedbacks: filteredFeedbacks,
-        total: filteredFeedbacks.length,
-        sorted: 'timecode_asc',
+        feedbacks: paginatedFeedbacks,
+        pagination: {
+          total,
+          page,
+          limit,
+          totalPages,
+        },
+        message: `${total}개의 피드백을 조회했습니다.`,
       },
       { status: 200 }
     )
@@ -119,8 +250,18 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(
       {
-        error: 'Failed to retrieve feedbacks',
-        message: error instanceof Error ? error.message : 'Unknown error',
+        success: false,
+        error: 'Internal server error',
+        message: '피드백 조회 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
+        details:
+          process.env.NODE_ENV === 'development'
+            ? [
+                {
+                  code: 'INTERNAL_ERROR',
+                  message: error instanceof Error ? error.message : 'Unknown error',
+                },
+              ]
+            : undefined,
       },
       { status: 500 }
     )
