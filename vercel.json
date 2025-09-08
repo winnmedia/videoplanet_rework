@@ -28,7 +28,7 @@
     "NEXT_PUBLIC_API_URL": "https://api.vlanet.net",
     "NEXT_PUBLIC_BACKEND_URL": "https://api.vlanet.net",
     "NEXTAUTH_SECRET": "vridge-nextauth-secret-production-2025-very-secure-key-for-deployment",
-    "SKIP_ENV_VALIDATION": "true",
+    "SKIP_ENV_VALIDATION": "false",
     "NEXT_TELEMETRY_DISABLED": "1"
   },
   "build": {
@@ -37,12 +37,13 @@
       "NEXT_PUBLIC_APP_ENV": "production",
       "NEXT_PUBLIC_API_URL": "https://api.vlanet.net",
       "NEXT_PUBLIC_BACKEND_URL": "https://api.vlanet.net",
-      "SKIP_ENV_VALIDATION": "true",
+      "SKIP_ENV_VALIDATION": "false",
       "NEXT_TELEMETRY_DISABLED": "1",
       "NODE_OPTIONS": "--max-old-space-size=4096"
     }
   },
   "headers": [
+    // API 응답 캐싱 방지 - 데이터 실시간성 보장
     {
       "source": "/api/(.*)",
       "headers": [
@@ -52,56 +53,10 @@
         }
       ]
     },
-    {
-      "source": "/_next/static/css/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
-    },
-    {
-      "source": "/_next/static/js/(.*)",
-      "headers": [
-        {
-          "key": "Content-Type",
-          "value": "application/javascript; charset=utf-8"
-        },
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
-    },
-    {
-      "source": "/images/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=86400"
-        },
-        {
-          "key": "Content-Type",
-          "value": "image/*"
-        }
-      ]
-    },
+    // Vercel 전용 보안 헤더 (next.config.js와 중복 제거됨)
     {
       "source": "/(.*)",
       "headers": [
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "X-Frame-Options",
-          "value": "DENY"
-        },
-        {
-          "key": "X-XSS-Protection",
-          "value": "1; mode=block"
-        },
         {
           "key": "Referrer-Policy",
           "value": "strict-origin-when-cross-origin"
@@ -109,15 +64,6 @@
         {
           "key": "Permissions-Policy",
           "value": "camera=(), microphone=(), geolocation=()"
-        }
-      ]
-    },
-    {
-      "source": "/_next/static/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
         }
       ]
     }
@@ -136,16 +82,27 @@
     }
   ],
   "functions": {
-    "app/api/auth/[...nextauth]/route.ts": {
-      "maxDuration": 10
+    // 인증 관련 함수 타임아웃
+    "app/api/auth/*": {
+      "maxDuration": 15
     },
+    // 자동 스케줄링 함수 - 긴 처리시간 필요
+    "app/api/projects/*/auto-schedule/route.ts": {
+      "maxDuration": 45
+    },
+    // 비디오 피드백 관련 함수
+    "app/api/video-feedback/*": {
+      "maxDuration": 30
+    },
+    // 기본 API 함수 타임아웃
     "app/api/*": {
       "maxDuration": 30
     }
   },
   "crons": [
+    // 시스템 상태 확인 - 6시간마다 실행
     {
-      "path": "/api/cron/health-check",
+      "path": "/api/health",
       "schedule": "0 */6 * * *"
     }
   ]

@@ -7,12 +7,14 @@ const path = require('path')
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // TypeScript and ESLint validation
+  // TypeScript and ESLint validation - 런타임 오류 사전 차단
   typescript: {
-    ignoreBuildErrors: true, // 임시로 배포를 위해 비활성화
+    // 빌드 시 TypeScript 오류 검증 활성화 (런타임 500 오류 예방)
+    ignoreBuildErrors: false,
   },
   eslint: {
-    ignoreDuringBuilds: true,
+    // 빌드 시 ESLint 검증 활성화 (코드 품질 보장)
+    ignoreDuringBuilds: false,
   },
 
   // Railway 배포를 위한 standalone 출력 설정
@@ -95,15 +97,27 @@ const nextConfig = {
 
   // Simplified webpack configuration
   webpack: config => {
-    // Basic FSD path aliases only
+    // FSD path aliases matching tsconfig.json structure
     config.resolve.alias = {
       ...config.resolve.alias,
+      // Legacy compatibility
+      '@': path.resolve(__dirname),
+
+      // FSD Layer aliases (with wildcard support)
       '@app': path.resolve(__dirname, 'app'),
       '@processes': path.resolve(__dirname, 'processes'),
       '@widgets': path.resolve(__dirname, 'widgets'),
       '@features': path.resolve(__dirname, 'features'),
       '@entities': path.resolve(__dirname, 'entities'),
       '@shared': path.resolve(__dirname, 'shared'),
+
+      // Standard FSD aliases (@ prefix 없는 형태)
+      app: path.resolve(__dirname, 'app'),
+      processes: path.resolve(__dirname, 'processes'),
+      widgets: path.resolve(__dirname, 'widgets'),
+      features: path.resolve(__dirname, 'features'),
+      entities: path.resolve(__dirname, 'entities'),
+      shared: path.resolve(__dirname, 'shared'),
     }
 
     return config
