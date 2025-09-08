@@ -254,7 +254,7 @@ jobs:
     
     steps:
       - name: Send deployment notification
-        uses: actions/github-script@v7
+        uses: actions/github-script@v8
         with:
           script: |
             const qualityStatus = '${{ needs.quality-validation-complete.result }}' === 'success' ? '✅' : '❌';
