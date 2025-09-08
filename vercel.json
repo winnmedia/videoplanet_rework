@@ -80,25 +80,20 @@
     }
   ],
   "functions": {
-    // 인증 관련 함수 타임아웃
     "app/api/auth/*": {
       "maxDuration": 15
     },
-    // 자동 스케줄링 함수 - 긴 처리시간 필요
     "app/api/projects/*/auto-schedule/route.ts": {
       "maxDuration": 45
     },
-    // 비디오 피드백 관련 함수
     "app/api/video-feedback/*": {
       "maxDuration": 30
     },
-    // 기본 API 함수 타임아웃
     "app/api/*": {
       "maxDuration": 30
     }
   },
   "crons": [
-    // 시스템 상태 확인 - 6시간마다 실행
     {
       "path": "/api/health",
       "schedule": "0 */6 * * *"
