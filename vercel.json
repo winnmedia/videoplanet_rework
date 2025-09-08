@@ -27,6 +27,11 @@
     "NEXT_PUBLIC_APP_ENV": "production",
     "NEXT_PUBLIC_API_URL": "https://api.vlanet.net",
     "NEXT_PUBLIC_BACKEND_URL": "https://api.vlanet.net",
+    "NEXT_PUBLIC_FALLBACK_API_URL": "http://localhost:8001",
+    "NEXT_PUBLIC_LOCAL_API_URL": "http://localhost:8001",
+    "NEXT_PUBLIC_ENABLE_HEALTH_CHECK": "true",
+    "NEXT_PUBLIC_HEALTH_CHECK_INTERVAL": "30000",
+    "NEXT_PUBLIC_RETRY_ATTEMPTS": "2",
     "NEXTAUTH_SECRET": "vridge-nextauth-secret-production-2025-very-secure-key-for-deployment",
     "SENDGRID_API_KEY": "@sendgrid_api_key",
     "SENDGRID_FROM_EMAIL": "service@vlanet.net",
@@ -40,6 +45,11 @@
       "NEXT_PUBLIC_APP_ENV": "production",
       "NEXT_PUBLIC_API_URL": "https://api.vlanet.net",
       "NEXT_PUBLIC_BACKEND_URL": "https://api.vlanet.net",
+      "NEXT_PUBLIC_FALLBACK_API_URL": "http://localhost:8001",
+      "NEXT_PUBLIC_LOCAL_API_URL": "http://localhost:8001",
+      "NEXT_PUBLIC_ENABLE_HEALTH_CHECK": "true",
+      "NEXT_PUBLIC_HEALTH_CHECK_INTERVAL": "30000",
+      "NEXT_PUBLIC_RETRY_ATTEMPTS": "2",
       "SENDGRID_API_KEY": "@sendgrid_api_key",
       "SENDGRID_FROM_EMAIL": "service@vlanet.net",
       "SENDGRID_FROM_NAME": "VideoPlanet",
@@ -55,6 +65,19 @@
         {
           "key": "Cache-Control",
           "value": "no-store, max-age=0"
+        }
+      ]
+    },
+    {
+      "source": "/api/health",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        },
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
         }
       ]
     },
