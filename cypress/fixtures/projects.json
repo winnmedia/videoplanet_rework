@@ -1,0 +1,17 @@
+{
+  "projects": [
+    {
+      "id": "1",
+      "title": "Sample Project",
+      "description": "Test project for E2E testing",
+      "status": "active",
+      "created_at": "2025-01-01T00:00:00Z",
+      "updated_at": "2025-01-01T00:00:00Z"
+    }
+  ],
+  "pagination": {
+    "total": 1,
+    "page": 1,
+    "limit": 10
+  }
+}

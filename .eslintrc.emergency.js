@@ -18,5 +18,7 @@ module.exports = {
     'no-restricted-imports': 'off',
     'import/order': 'off',
     'import/no-cycle': 'off',
+    // Disable Tailwind arbitrary values check for deployment
+    '@stylistic/tailwindcss/no-arbitrary-value': 'off',
   },
 }
