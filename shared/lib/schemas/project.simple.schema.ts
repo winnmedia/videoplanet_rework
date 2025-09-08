@@ -5,8 +5,15 @@
 
 import { z } from 'zod'
 
-// UUID 검증을 위한 헬퍼 스키마
-export const ProjectIdSchema = z.string().uuid('유효하지 않은 프로젝트 ID 형식입니다')
+// 호환성을 위한 ID 스키마 (UUID 또는 일반 문자열 모두 허용)
+export const ProjectIdSchema = z
+  .string()
+  .min(1, 'ID는 필수입니다')
+  .refine(val => {
+    // UUID 형식이거나 일반 문자열 허용 (긴급 패치)
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    return uuidRegex.test(val) || /^[a-zA-Z0-9\-_]+$/.test(val)
+  }, '유효하지 않은 ID 형식입니다')
 
 export type ProjectId = z.infer<typeof ProjectIdSchema>
 

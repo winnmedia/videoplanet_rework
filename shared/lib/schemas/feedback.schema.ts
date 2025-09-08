@@ -17,9 +17,17 @@ import { z } from 'zod'
 // ============================================================
 
 /**
- * UUID v4 검증 스키마
+ * 호환성을 위한 ID 검증 스키마 (긴급 패치)
+ * UUID 형식과 일반 문자열 모두 허용
  */
-export const UUIDSchema = z.string().uuid('유효한 UUID 형식이 아닙니다')
+export const UUIDSchema = z
+  .string()
+  .min(1, 'ID는 필수입니다')
+  .refine(val => {
+    // UUID 형식이거나 일반 문자열 허용
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    return uuidRegex.test(val) || /^[a-zA-Z0-9\-_]+$/.test(val)
+  }, '유효하지 않은 ID 형식입니다')
 
 /**
  * 비어있지 않은 문자열 스키마
