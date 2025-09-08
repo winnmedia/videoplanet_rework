@@ -7,7 +7,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 
-import { VideoMetadataSchema } from '@/features/video-feedback/model/feedback.schema'
+// 비디오 메타데이터 스키마 (임시 정의)
+const VideoMetadataSchema = z.object({
+  filename: z.string().min(1),
+  duration: z.number().min(0),
+  size: z.number().min(0),
+  format: z.string().min(1),
+  url: z.string().url().optional(),
+})
 
 // ============================================================
 // Types & Schemas
