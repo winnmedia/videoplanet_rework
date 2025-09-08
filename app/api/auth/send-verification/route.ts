@@ -4,11 +4,13 @@
  * @layer app/api
  */
 
+import { createHash } from 'crypto'
+
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { emailMonitor, EmailType } from '@/lib/email/email-monitoring'
+
 import { emailCooldown } from '@/lib/email/cooldown'
-import { createHash } from 'crypto'
+import { emailMonitor, EmailType } from '@/lib/email/email-monitoring'
 
 // 이메일 인증 요청 스키마
 const SendVerificationSchema = z.object({
@@ -18,9 +20,9 @@ const SendVerificationSchema = z.object({
 
 // 타입 매핑
 const typeToEmailType: Record<string, EmailType> = {
-  'signup': 'verification',
-  'login': 'verification', 
-  'reset-password': 'reset'
+  signup: 'verification',
+  login: 'verification',
+  'reset-password': 'reset',
 }
 
 // 이메일을 해시로 변환 (PII 보호)
@@ -59,78 +61,110 @@ export async function POST(request: NextRequest) {
         metadata: {
           provider: 'system',
           requestType: type,
-          deliveryTime: Date.now() - startTime
-        }
+          deliveryTime: Date.now() - startTime,
+        },
       })
 
       return NextResponse.json(
-        { 
+        {
           error: '이메일 발송 제한에 도달했습니다. 잠시 후 다시 시도해주세요.',
-          retryAfter: emailCooldown.getRemainingSeconds(email)
+          retryAfter: emailCooldown.getRemainingSeconds(email),
         },
         { status: 429 }
       )
     }
 
-    // TODO: 실제 이메일 발송 로직 구현
+    // 실제 이메일 발송 로직
     console.log(`Verification email requested for: ${email}, type: ${type}`)
-    
-    // 모의 발송 결과 (실제 구현에서는 실제 이메일 서비스 결과 사용)
-    const mockSuccess = Math.random() > 0.1 // 90% 성공률로 시뮬레이션
-    const deliveryTime = Date.now() - startTime
 
-    if (mockSuccess) {
-      // 성공 로깅
-      emailMonitor.logEmail({
-        type: emailType,
-        status: 'success',
-        userHash,
-        metadata: {
-          provider: 'sendgrid', // 실제 구현에서는 사용된 프로바이더
-          messageId: `msg_${Date.now()}`, // 실제 메시지 ID
-          requestType: type,
-          deliveryTime,
-          templateId: `template_${type}`
+    try {
+      // SimpleSendGrid를 사용한 실제 이메일 발송
+      const { sendVerificationEmail } = await import('@/lib/email/simple-sendgrid')
+
+      // 기본 인증 코드 생성
+      const verificationCode = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
+
+      const emailResult = await sendVerificationEmail(email, verificationCode)
+
+      const deliveryTime = Date.now() - startTime
+
+      if (emailResult) {
+        // 성공 로깅
+        emailMonitor.logEmail({
+          type: emailType,
+          status: 'success',
+          userHash,
+          metadata: {
+            provider: 'sendgrid',
+            messageId: `msg_${Date.now()}`,
+            requestType: type,
+            deliveryTime,
+            templateId: `template_${type}`,
+          },
+        })
+
+        // 타입별 메시지 구성
+        const messages = {
+          signup: '회원가입 인증 이메일이 발송되었습니다.',
+          login: '로그인 인증 이메일이 발송되었습니다.',
+          'reset-password': '비밀번호 재설정 이메일이 발송되었습니다.',
         }
-      })
 
-      // 타입별 메시지 구성
-      const messages = {
-        signup: '회원가입 인증 이메일이 발송되었습니다.',
-        login: '로그인 인증 이메일이 발송되었습니다.',
-        'reset-password': '비밀번호 재설정 이메일이 발송되었습니다.',
+        return NextResponse.json(
+          {
+            success: true,
+            message: messages[type],
+            type,
+            status: 'sent',
+          },
+          { status: 200 }
+        )
+      } else {
+        // 실패 로깅
+        emailMonitor.logEmail({
+          type: emailType,
+          status: 'failed',
+          userHash,
+          errorMessage: 'Email service unavailable',
+          metadata: {
+            provider: 'sendgrid',
+            requestType: type,
+            deliveryTime,
+            attemptCount: 1,
+          },
+        })
+
+        return NextResponse.json(
+          {
+            error: '이메일 발송 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
+            message: '이메일 서비스가 일시적으로 이용할 수 없습니다.',
+          },
+          { status: 503 }
+        )
       }
+    } catch (emailError) {
+      console.error('Email sending failed:', emailError)
 
-      return NextResponse.json(
-        {
-          success: true,
-          message: messages[type],
-          type,
-          status: 'sent',
-        },
-        { status: 200 }
-      )
-    } else {
-      // 실패 로깅
+      const deliveryTime = Date.now() - startTime
       emailMonitor.logEmail({
         type: emailType,
         status: 'failed',
         userHash,
-        errorMessage: 'Email service unavailable',
+        errorMessage: emailError instanceof Error ? emailError.message : 'Email sending failed',
         metadata: {
           provider: 'sendgrid',
           requestType: type,
           deliveryTime,
-          attemptCount: 1
-        }
+          errorType: 'send_error',
+        },
       })
 
       return NextResponse.json(
         {
-          error: '이메일 발송 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.',
-          message: '이메일 서비스가 일시적으로 이용할 수 없습니다.'
+          error: '이메일 발송 서비스 오류가 발생했습니다.',
+          message: emailError instanceof Error ? emailError.message : 'Unknown email error',
         },
-        { status: 503 }
+        { status: 500 }
       )
     }
   } catch (error) {
@@ -146,8 +180,8 @@ export async function POST(request: NextRequest) {
         metadata: {
           provider: 'system',
           deliveryTime: Date.now() - startTime,
-          errorType: 'validation_error'
-        }
+          errorType: 'validation_error',
+        },
       })
     }
 
