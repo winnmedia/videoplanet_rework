@@ -108,3 +108,15 @@ export async function POST(request: NextRequest) {
     )
   }
 }
+
+// GET 메소드 추가 (405 오류 방지)
+export async function GET() {
+  return createSuccessResponse(
+    {
+      message: 'Signup endpoint',
+      methods: ['POST'],
+      description: 'Use POST method with email, password, and name fields',
+    },
+    '회원가입 엔드포인트입니다.'
+  )
+}
