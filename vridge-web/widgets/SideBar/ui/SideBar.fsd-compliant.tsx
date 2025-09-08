@@ -7,7 +7,7 @@ import React, { useState, useEffect, useCallback } from 'react'
 // FSD 준수: Public API만 사용
 import { menuApi, createMenuItem, createSubMenuItem, type MenuItem, type SubMenuItem } from '@/entities/menu'
 import { useNavigation, useSubMenuKeyboard, useFocusTrap, NavigationProvider } from '@/features/navigation'
-import { MenuButton, SubMenu } from '@/shared/ui'
+import { MenuButtonImproved as MenuButton, SubMenu } from '@/shared/ui'
 
 import type { SideBarItem } from '../model/types'
 

@@ -24,6 +24,19 @@ interface ChartLine {
   budget?: number
 }
 
+interface ChartData {
+  lines: ChartLine[]
+  width: number
+  height: number
+  padding: { top: number; right: number; bottom: number; left: number }
+  timeRange: { min: number; max: number }
+}
+
+// 타입 가드 함수
+function isChartData(data: any): data is ChartData {
+  return data && !Array.isArray(data) && 'lines' in data && 'padding' in data && 'timeRange' in data
+}
+
 export const PerformanceMetricsChart: React.FC<PerformanceMetricsChartProps> = ({
   data,
   budgets,
@@ -117,7 +130,7 @@ export const PerformanceMetricsChart: React.FC<PerformanceMetricsChartProps> = (
   // 캠버스 그리기
   useEffect(() => {
     const canvas = canvasRef.current
-    if (!canvas || !chartData.lines.length) return
+    if (!canvas || !isChartData(chartData) || !chartData.lines.length) return
 
     const ctx = canvas.getContext('2d')
     if (!ctx) return
@@ -262,7 +275,7 @@ export const PerformanceMetricsChart: React.FC<PerformanceMetricsChartProps> = (
       <div className={styles.header}>
         <h2 className={styles.title}>실시간 성능 메트릭</h2>
         <div className={styles.legend}>
-          {chartData.lines.map((line) => (
+          {isChartData(chartData) && chartData.lines.map((line: any) => (
             <div 
               key={line.label} 
               className={styles.legendItem}

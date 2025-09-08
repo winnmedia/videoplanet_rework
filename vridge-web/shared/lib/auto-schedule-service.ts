@@ -4,8 +4,8 @@
  * @layer shared/lib
  */
 
-import { addDays, addWeeks, format, isWeekend } from 'date-fns'
-import { ko } from 'date-fns/locale'
+import { addDays, addWeeks, isWeekend } from 'date-fns'
+// import { format, ko } from 'date-fns/locale' // TODO: Add date formatting later
 
 import { ConflictDetectionService } from '@/entities/calendar/lib/conflictDetection'
 import type { 
@@ -71,7 +71,7 @@ export class AutoScheduleService {
       config = DEFAULT_AUTO_SCHEDULE,
       existingEvents = [],
       skipWeekends = true,
-      bufferDays = 0
+      // bufferDays = 0 // TODO: Add buffer logic later
     } = options
 
     // 1. 기본 자동 일정 계산
@@ -134,17 +134,19 @@ export class AutoScheduleService {
       category: 'project-deadline',
       priority: 'high',
       type: 'pre-production',
-      projectId,
-      projectTitle,
-      projectColor: this.generateProjectColor(projectId),
       recurrence: 'none',
       createdBy: 'system',
       isCompleted: false,
       isConflicting: false,
+      isDraggable: true,
+      isResizable: false,
       project: {
         id: projectId,
         name: projectTitle,
         color: this.generateProjectColor(projectId),
+        hue: 210,
+        startDate: schedule.planning.startDate.toISOString(),
+        endDate: schedule.planning.endDate.toISOString(),
         description: '',
         status: 'active',
         phases: [],
@@ -159,7 +161,10 @@ export class AutoScheduleService {
         startDate: schedule.planning.startDate.toISOString(),
         endDate: schedule.planning.endDate.toISOString(),
         duration: schedule.planning.duration * 7,
-        isMovable: true
+        isMovable: true,
+        status: 'pending' as const,
+        conflictLevel: 'none' as const,
+        isEditable: true
       }
     })
     
@@ -174,17 +179,19 @@ export class AutoScheduleService {
       category: 'filming',
       priority: 'high',
       type: 'production',
-      projectId,
-      projectTitle,
-      projectColor: this.generateProjectColor(projectId),
       recurrence: 'none',
       createdBy: 'system',
       isCompleted: false,
       isConflicting: false,
+      isDraggable: true,
+      isResizable: false,
       project: {
         id: projectId,
         name: projectTitle,
         color: this.generateProjectColor(projectId),
+        hue: 140,
+        startDate: schedule.filming.startDate.toISOString(),
+        endDate: schedule.filming.endDate.toISOString(),
         description: '',
         status: 'active',
         phases: [],
@@ -199,7 +206,10 @@ export class AutoScheduleService {
         startDate: schedule.filming.startDate.toISOString(),
         endDate: schedule.filming.endDate.toISOString(),
         duration: schedule.filming.duration,
-        isMovable: true
+        isMovable: true,
+        status: 'pending' as const,
+        conflictLevel: 'none' as const,
+        isEditable: true
       }
     })
     
@@ -214,17 +224,19 @@ export class AutoScheduleService {
       category: 'project-deadline',
       priority: 'medium',
       type: 'post-production',
-      projectId,
-      projectTitle,
-      projectColor: this.generateProjectColor(projectId),
       recurrence: 'none',
       createdBy: 'system',
       isCompleted: false,
       isConflicting: false,
+      isDraggable: true,
+      isResizable: false,
       project: {
         id: projectId,
         name: projectTitle,
         color: this.generateProjectColor(projectId),
+        hue: 45,
+        startDate: schedule.editing.startDate.toISOString(),
+        endDate: schedule.editing.endDate.toISOString(),
         description: '',
         status: 'active',
         phases: [],
@@ -239,7 +251,10 @@ export class AutoScheduleService {
         startDate: schedule.editing.startDate.toISOString(),
         endDate: schedule.editing.endDate.toISOString(),
         duration: schedule.editing.duration * 7,
-        isMovable: true
+        isMovable: true,
+        status: 'pending' as const,
+        conflictLevel: 'none' as const,
+        isEditable: true
       }
     })
     
@@ -285,7 +300,7 @@ export class AutoScheduleService {
    */
   private static generateAlternativeSchedules(
     originalOptions: AutoScheduleOptions,
-    conflicts: EnhancedCalendarConflict[]
+    _: EnhancedCalendarConflict[]
   ): AutoScheduleResult[] {
     const alternatives: AutoScheduleResult[] = []
     const { startDate, config = DEFAULT_AUTO_SCHEDULE } = originalOptions
@@ -454,9 +469,4 @@ export function generateConflictSummaryText(result: ConflictAwareScheduleResult)
 // ===========================
 // Exports
 // ===========================
-
-export type {
-  ConflictAwareScheduleResult,
-  ScheduleConflictCheck,
-  AutoScheduleOptions
-}
+// Note: Types are already exported at declaration

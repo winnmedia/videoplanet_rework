@@ -5,20 +5,17 @@
  */
 
 import { useCallback, useEffect, useRef, useMemo } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
+import { useSelector } from 'react-redux'
+
+import { useAppDispatch } from '@/app/store/store'
+import { performanceMonitor } from '@/shared/lib/performance-monitor'
 
 import { useDebounce } from '../../hooks/useDebounce'
-import { performanceMonitor } from '../../performance-monitor'
 import {
   pollCollaborationData,
   submitChange,
   performOptimisticUpdate,
   resolveConflict,
-  showConflictModal,
-  hideConflictModal,
-  showActivityFeed,
-  hideActivityFeed,
-  clearPollingError,
   selectActiveUsers,
   selectRecentChanges,
   selectConflicts,
@@ -102,7 +99,7 @@ const DEFAULT_OPTIONS: UseCollaborationOptions = {
 
 export function useCollaboration(options: Partial<UseCollaborationOptions> = {}): UseCollaborationReturn {
   const config = useMemo(() => ({ ...DEFAULT_OPTIONS, ...options }), [options])
-  const dispatch = useDispatch()
+  const dispatch = useAppDispatch()
   
   // 성능 추적 관련
   const performanceMetrics = useRef({
@@ -143,7 +140,8 @@ export function useCollaboration(options: Partial<UseCollaborationOptions> = {})
     if (typeof navigator !== 'undefined' && 'connection' in navigator) {
       const connection = (navigator as any).connection
       const effectiveType = connection?.effectiveType || '4g'
-      const networkMultiplier = config.adaptivePolling!.networkAdjustments[effectiveType as keyof typeof config.adaptivePolling.networkAdjustments] || 1.0
+      const networkAdjustments = config.adaptivePolling!.networkAdjustments
+      const networkMultiplier = networkAdjustments[effectiveType as keyof typeof networkAdjustments] || 1.0
       interval *= networkMultiplier
     }
     
@@ -193,13 +191,13 @@ export function useCollaboration(options: Partial<UseCollaborationOptions> = {})
     const startTime = performance.now()
     
     try {
-      const pollPromise = dispatch(pollCollaborationData())
+      const pollAction = dispatch(pollCollaborationData())
       
       if (config.requestDeduplication) {
-        lastPollRequest.current = pollPromise
+        lastPollRequest.current = Promise.resolve(pollAction)
       }
       
-      const result = await pollPromise
+      const result = pollAction
       
       // 성공 시 재시도 카운터 리셋
       retryCount.current = 0
@@ -261,7 +259,7 @@ export function useCollaboration(options: Partial<UseCollaborationOptions> = {})
   
   // 수동 폴링 (새로고침 버튼용)
   const poll = useCallback(async () => {
-    await dispatch(pollCollaborationData())
+    dispatch(pollCollaborationData())
   }, [dispatch])
   
   // ===========================
@@ -301,7 +299,7 @@ export function useCollaboration(options: Partial<UseCollaborationOptions> = {})
   const debouncedSubmit = useDebounce(
     useCallback(async (change: CollaborationChange) => {
       try {
-        await dispatch(submitChange(change))
+        dispatch(submitChange(change))
       } finally {
         pendingSubmissions.current.delete(change.id)
       }
@@ -319,7 +317,7 @@ export function useCollaboration(options: Partial<UseCollaborationOptions> = {})
     // 충돌이 모두 해결되었으면 모달 닫기
     const remainingConflicts = conflicts.filter(c => c.id !== payload.conflictId)
     if (remainingConflicts.length === 0) {
-      dispatch(hideConflictModal())
+      dispatch({ type: 'collaboration/hideConflictModal' })
     }
   }, [dispatch, conflicts])
   
@@ -328,19 +326,19 @@ export function useCollaboration(options: Partial<UseCollaborationOptions> = {})
   // ===========================
   
   const showConflicts = useCallback(() => {
-    dispatch(showConflictModal())
+    dispatch({ type: 'collaboration/showConflictModal' })
   }, [dispatch])
   
   const hideConflicts = useCallback(() => {
-    dispatch(hideConflictModal())
+    dispatch({ type: 'collaboration/hideConflictModal' })
   }, [dispatch])
   
   const showActivity = useCallback(() => {
-    dispatch(showActivityFeed())
+    dispatch({ type: 'collaboration/showActivityFeed' })
   }, [dispatch])
   
   const hideActivity = useCallback(() => {
-    dispatch(hideActivityFeed())
+    dispatch({ type: 'collaboration/hideActivityFeed' })
   }, [dispatch])
   
   // ===========================
@@ -361,7 +359,7 @@ export function useCollaboration(options: Partial<UseCollaborationOptions> = {})
   // 새로운 충돌 발생 시 모달 자동 표시
   useEffect(() => {
     if (config.detectConflicts && conflicts.length > 0 && !showConflictModal) {
-      dispatch(showConflictModal())
+      dispatch({ type: 'collaboration/showConflictModal' })
     }
   }, [conflicts.length, config.detectConflicts, showConflictModal, dispatch])
   
@@ -451,7 +449,13 @@ export function useCollaboration(options: Partial<UseCollaborationOptions> = {})
           startPolling()
         }
       },
-      getPerformanceMetrics: () => ({ ...performanceMetrics.current })
+      getPerformanceMetrics: () => ({ 
+        ...performanceMetrics.current,
+        currentInterval: currentInterval.current,
+        errorRate: performanceMetrics.current.pollCount > 0 
+          ? performanceMetrics.current.errorCount / performanceMetrics.current.pollCount 
+          : 0
+      })
     }
   }
 }

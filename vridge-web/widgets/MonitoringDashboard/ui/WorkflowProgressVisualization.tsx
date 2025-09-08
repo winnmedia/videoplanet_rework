@@ -12,6 +12,12 @@ import { WorkflowStage } from '@/processes/video-production/model/workflowMachin
 import styles from './WorkflowProgressVisualization.module.scss'
 import { WorkflowProgressProps, WorkflowStageData } from '../model/types'
 
+// 헬퍼 함수: 단계별 예상 시간 계산
+const getEstimatedTime = (stage: string, metadata: Record<string, any>): number => {
+  const baseTime = metadata.estimatedMinutes || 30 // 기본 30분
+  return baseTime
+}
+
 const STAGE_INFO: Record<WorkflowStage, { label: string; icon: string; color: string; description: string }> = {
   planning: {
     label: '기획',
@@ -89,8 +95,8 @@ export const WorkflowProgressVisualization: React.FC<WorkflowProgressProps> = ({
         isCompleted,
         isCurrent,
         progress,
-        metadata: workflow.stageMetadata[stage],
-        estimatedTime: this.getEstimatedTime(stage, workflow.stageMetadata[stage])
+        metadata: workflow.stageMetadata?.[stage] || {},
+        estimatedTime: getEstimatedTime(stage, workflow.stageMetadata?.[stage] || {})
       }
     })
   }, [workflow])
@@ -278,14 +284,14 @@ export const WorkflowProgressVisualization: React.FC<WorkflowProgressProps> = ({
                 {/* 메타데이터 */}
                 {stage.metadata && (
                   <div className={styles.stageMetadata}>
-                    {stage.stage === 'scripting' && stage.metadata.scriptLength && (
-                      <span>대본 길이: {stage.metadata.scriptLength}줄</span>
+                    {stage.stage === 'scripting' && (stage.metadata as any)?.scriptLength && (
+                      <span>대본 길이: {(stage.metadata as any).scriptLength}줄</span>
                     )}
-                    {stage.stage === 'shooting' && stage.metadata.footageHours && (
-                      <span>촬영 시간: {stage.metadata.footageHours}시간</span>
+                    {stage.stage === 'shooting' && (stage.metadata as any)?.footageHours && (
+                      <span>촬영 시간: {(stage.metadata as any).footageHours}시간</span>
                     )}
-                    {stage.stage === 'editing' && stage.metadata.cuts && (
-                      <span>컷 수: {stage.metadata.cuts}개</span>
+                    {stage.stage === 'editing' && (stage.metadata as any)?.cuts && (
+                      <span>컷 수: {(stage.metadata as any).cuts}개</span>
                     )}
                   </div>
                 )}

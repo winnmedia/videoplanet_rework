@@ -45,26 +45,20 @@ export const authOptions: NextAuthOptions = {
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        // 임시 인증 로직 (실제 구현에서는 데이터베이스 연동 필요)
-        if (credentials?.email && credentials?.password) {
-          // 개발용 임시 사용자
-          if (credentials.email === 'admin@vlanet.net' && credentials.password === 'admin123') {
-            return {
-              id: '1',
-              email: credentials.email,
-              name: 'Admin User',
-              role: 'admin',
-            }
-          }
-          if (credentials.email === 'user@vlanet.net' && credentials.password === 'user123') {
-            return {
-              id: '2',
-              email: credentials.email,
-              name: 'Test User',
-              role: 'user',
-            }
-          }
+        // TODO(human): 실제 사용자 검증 로직 구현
+        // 현재는 하드코딩된 인증이 보안 위험을 초래하므로 개선이 필요합니다.
+        // 다음 중 하나를 선택하여 구현해주세요:
+        // 1. 환경 변수 기반 임시 인증 (ADMIN_EMAIL, ADMIN_PASSWORD_HASH)
+        // 2. 실제 데이터베이스 연동 (PostgreSQL/Django API 호출)
+        // 3. bcrypt를 사용한 패스워드 해싱 검증
+        // 4. JWT 토큰 검증 시스템
+
+        if (!credentials?.email || !credentials?.password) {
+          return null
         }
+
+        // 임시로 비활성화 - 보안 위험 방지
+        console.warn('🔒 Authentication is temporarily disabled for security reasons')
         return null
       },
     }),
@@ -122,7 +116,7 @@ export const authOptions: NextAuthOptions = {
 
   // 보안 설정
   secret: env.NEXTAUTH_SECRET,
-  
+
   // 디버그 모드 설정 (프로덕션에서는 비활성화)
   debug: process.env.NODE_ENV === 'development' && process.env.NEXTAUTH_DEBUG !== 'false',
 }

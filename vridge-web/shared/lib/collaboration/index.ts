@@ -4,6 +4,19 @@
  */
 
 // ===========================
+// 타입들 export
+// ===========================
+export type {
+  CollaborationUser,
+  CollaborationChange,
+  CollaborationState,
+  CollaborationConflict,
+  OptimisticUpdatePayload,
+  PollingResponsePayload,
+  ConflictResolutionPayload
+} from './types'
+
+// ===========================
 // 핵심 훅들
 // ===========================
 export {
@@ -38,16 +51,9 @@ export {
 } from './slice'
 
 // ===========================
-// 타입 정의들
+// 훅 타입 정의들
 // ===========================
 export type {
-  CollaborationUser,
-  CollaborationChange,
-  CollaborationState,
-  CollaborationConflict,
-  OptimisticUpdatePayload,
-  PollingResponsePayload,
-  ConflictResolutionPayload,
   UseCollaborationOptions,
   UseCollaborationReturn,
   CollaborationIndicatorProps,
@@ -117,7 +123,7 @@ export const isCalendarResource = (resourceType: string): boolean => {
 /**
  * 변경사항 우선순위 계산
  */
-export const getChangePriority = (change: CollaborationChange): 'low' | 'medium' | 'high' => {
+export const getChangePriority = (change: import('./types').CollaborationChange): 'low' | 'medium' | 'high' => {
   const timeDiff = Date.now() - new Date(change.timestamp).getTime()
   
   if (timeDiff < 60000) return 'high'      // 1분 이내
@@ -128,7 +134,7 @@ export const getChangePriority = (change: CollaborationChange): 'low' | 'medium'
 /**
  * 사용자 상태 체크
  */
-export const getUserStatus = (user: CollaborationUser): 'active' | 'idle' | 'offline' => {
+export const getUserStatus = (user: import('./types').CollaborationUser): 'active' | 'idle' | 'offline' => {
   if (!user.isOnline) return 'offline'
   
   const lastActivity = new Date(user.lastActivity).getTime()
@@ -146,7 +152,7 @@ export const getUserStatus = (user: CollaborationUser): 'active' | 'idle' | 'off
 /**
  * 협업 상태 디버깅 정보 출력
  */
-export const debugCollaborationState = (state: CollaborationState): void => {
+export const debugCollaborationState = (state: import('./types').CollaborationState): void => {
   if (process.env.NODE_ENV !== 'development') return
   
   console.group('🔄 Collaboration State Debug')
@@ -212,4 +218,3 @@ export const simulateUser = async (
 // ===========================
 // Re-export 타입들 (import 편의성을 위해)
 // ===========================
-import type { CollaborationChange } from './types'

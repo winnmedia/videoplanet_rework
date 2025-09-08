@@ -80,7 +80,7 @@ test.describe('기본 페이지 접근성 확인', () => {
       'input[type="password"]'
     ]
     
-    let formElementsFound = []
+    const formElementsFound = []
     for (const selector of possibleLoginForms) {
       const count = await page.locator(selector).count()
       if (count > 0) {
@@ -117,7 +117,7 @@ test.describe('기본 페이지 접근성 확인', () => {
       '.skeleton'
     ]
     
-    let statusElements = []
+    const statusElements = []
     for (const selector of possibleErrorElements) {
       const count = await page.locator(selector).count()
       if (count > 0) {
@@ -139,7 +139,7 @@ test.describe('기본 페이지 접근성 확인', () => {
       'main'
     ]
     
-    let contentFound = []
+    const contentFound = []
     for (const selector of possibleDashboardElements) {
       const count = await page.locator(selector).count()
       if (count > 0) {
@@ -170,7 +170,7 @@ test.describe('기본 페이지 접근성 확인', () => {
       '[role="grid"]'
     ]
     
-    let calendarElements = []
+    const calendarElements = []
     for (const selector of possibleCalendarElements) {
       const count = await page.locator(selector).count()
       if (count > 0) {
@@ -200,7 +200,7 @@ test.describe('기본 페이지 접근성 확인', () => {
       '[data-testid*="create"]'
     ]
     
-    let projectElements = []
+    const projectElements = []
     for (const selector of possibleProjectElements) {
       const count = await page.locator(selector).count()
       if (count > 0) {

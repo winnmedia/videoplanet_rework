@@ -3,8 +3,8 @@
  * FSD Architecture: widgets/MonitoringDashboard/api/monitoringApi.ts
  */
 
-import { notificationEngine } from '@/processes/feedback-collection/lib/notificationEngine'
-import { videoProductionMachine } from '@/processes/video-production/model/workflowMachine'
+import { notificationEngine, FeedbackEvent } from '@/processes/feedback-collection/lib/notificationEngine'
+import { videoProductionMachine, WorkflowContext } from '@/processes/video-production/model/workflowMachine'
 import { performanceMonitor } from '@/shared/lib/performance-monitor'
 
 import { 
@@ -233,13 +233,20 @@ export class MonitoringDashboardApi {
     }
   }
 
-  private convertLogEntryToEvent = (entry: EventLogEntry): { id: string; type: string; projectId: string; timestamp: Date; data: Record<string, unknown> | undefined } => ({
+  private convertLogEntryToEvent = (entry: EventLogEntry): FeedbackEvent => ({
     id: entry.id,
-    type: entry.type,
+    type: this.mapEventTypeToFeedbackType(entry.type),
     projectId: entry.source || 'unknown',
     timestamp: entry.timestamp,
-    data: entry.details
+    data: entry.details || {}
   })
+
+  private mapEventTypeToFeedbackType(eventType: string): FeedbackEvent['type'] {
+    if (eventType.includes('feedback')) return 'feedback_added'
+    if (eventType.includes('stage')) return 'stage_completed'
+    if (eventType.includes('user')) return 'user_online'
+    return 'feedback_updated' // 기본값
+  }
 
   private mapEventType(eventType: string): EventLogEntry['type'] {
     if (eventType.includes('feedback')) return 'workflow'
@@ -276,7 +283,7 @@ export class MonitoringDashboardApi {
     return true
   }
 
-  private getMockWorkflowStates() {
+  private getMockWorkflowStates(): WorkflowContext[] {
     // 실제 구현에서는 XState 액터들의 상태 수집
     return [
       {
@@ -285,9 +292,14 @@ export class MonitoringDashboardApi {
         completedStages: ['planning', 'scripting'],
         currentProgress: 25,
         estimatedCompletionDays: 12,
-        stageMetadata: {},
+        stageMetadata: {
+          planning: { approved: true },
+          scripting: { scriptLength: 120 }
+        },
         connectedWidgets: ['videoPlanning'],
-        widgetData: {}
+        widgetData: {
+          videoPlanning: { completionRate: 0.75, tasks: 8, completed: 6 }
+        }
       }
     ]
   }

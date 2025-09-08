@@ -395,7 +395,7 @@ export const DashboardWidget: React.FC<DashboardWidgetProps> = ({
                 recentProjects.map(project => (
                   <ProjectStatusCard
                     key={project.id}
-                    project={project}
+                    project={project as any}
                     onClick={onProjectClick}
                     showProgress={true}
                   />
@@ -420,7 +420,7 @@ export const DashboardWidget: React.FC<DashboardWidgetProps> = ({
             <Card variant="default" padding="default">
               {recentActivity.length > 0 ? (
                 <RecentActivityFeed
-                  activities={recentActivity}
+                  activities={recentActivity as any}
                   maxItems={5}
                   showTimestamp={true}
                 />

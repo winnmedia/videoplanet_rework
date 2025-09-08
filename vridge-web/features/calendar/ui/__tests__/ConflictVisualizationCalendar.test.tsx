@@ -8,8 +8,9 @@ import userEvent from '@testing-library/user-event'
 import { axe, toHaveNoViolations } from 'jest-axe'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-import { ConflictVisualizationCalendar } from '../ConflictVisualizationCalendar'
 import type { ProjectCalendarEvent, Project, ProjectPhase } from '@/entities/calendar'
+
+import { ConflictVisualizationCalendar } from '../ConflictVisualizationCalendar'
 
 // Extend Jest matchers
 expect.extend(toHaveNoViolations)

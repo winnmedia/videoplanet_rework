@@ -65,6 +65,11 @@ export function useAuth() {
     const result = await authApi.resetPassword(userData)
     return result
   }
+
+  const requestPasswordReset = async (email: string) => {
+    const result = await authApi.requestPasswordReset(email)
+    return result
+  }
   
   const logout = async () => {
     // NextAuth 로그아웃
@@ -79,6 +84,7 @@ export function useAuth() {
     login,
     signup,
     resetPassword,
+    requestPasswordReset,
     logout
   }
 }

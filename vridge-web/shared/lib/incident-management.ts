@@ -480,7 +480,7 @@ export class IncidentManager {
   // 근본 원인 분석 추가
   addRootCauseAnalysis(
     incidentId: string,
-    category: IncidentResponse['rootCause']['category'],
+    category: 'infrastructure' | 'application' | 'external' | 'human_error' | 'process',
     description: string,
     contributingFactors: string[],
     author: string

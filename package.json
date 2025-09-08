@@ -2,7 +2,9 @@
   "name": "vlanet-monorepo",
   "version": "1.0.0",
   "private": true,
-  "workspaces": ["vridge-web"],
+  "workspaces": [
+    "vridge-web"
+  ],
   "scripts": {
     "build": "cd vridge-web && npm run build",
     "start": "cd vridge-web && npm run start",
@@ -10,5 +12,8 @@
   },
   "engines": {
     "node": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.1.13"
   }
 }

@@ -6,11 +6,10 @@
 import type { 
   AppError, 
   ErrorContext, 
-  ErrorCategory, 
-  ErrorSeverity,
   ErrorDisplayOptions,
   ErrorReportData 
 } from './types';
+import { ErrorCategory, ErrorSeverity } from './types';
 
 export class ErrorHandler {
   private static instance: ErrorHandler;

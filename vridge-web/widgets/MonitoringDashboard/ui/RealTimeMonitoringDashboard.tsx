@@ -17,6 +17,7 @@ import {
   acknowledgeAlert,
   resolveAlert
 } from '@/lib/analytics/alert-system'
+import { apiMonitor } from '@/lib/analytics/monitoring-system'
 import { 
   userJourneyMonitor,
   CriticalJourneyType,
@@ -26,10 +27,9 @@ import {
   webVitalsMonitor,
   getCurrentWebVitals 
 } from '@/lib/analytics/web-vitals-monitor'
-import { apiMonitor } from '@/lib/api/monitoring'
-import { Card } from '@/shared/ui/Card/Card'
-import { LoadingSpinner } from '@/shared/ui/LoadingSpinner/LoadingSpinner'
-import { Toast } from '@/shared/ui/Toast/Toast'
+import { Card } from '@/shared/ui/Card/Card.modern'
+import { LoadingSpinner } from '@/shared/ui/LoadingSpinner/LoadingSpinner.modern'
+import { Toast } from '@/shared/ui/Toast/Toast.modern'
 
 // 대시보드 탭
 type DashboardTab = 'overview' | 'alerts' | 'journeys' | 'performance' | 'api'
@@ -606,7 +606,7 @@ export const RealTimeMonitoringDashboard: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-96">
-        <LoadingSpinner size="large" />
+        <LoadingSpinner size="lg" />
       </div>
     )
   }
@@ -668,7 +668,7 @@ export const RealTimeMonitoringDashboard: React.FC = () => {
       {toast && (
         <Toast
           message={toast.message}
-          type={toast.type}
+          variant={toast.type}
           onClose={() => setToast(null)}
         />
       )}

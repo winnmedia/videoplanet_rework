@@ -1,7 +1,7 @@
 'use client'
 
-import { useMemo, useCallback, useState, useRef, useEffect } from 'react'
 import { clsx } from 'clsx'
+import { useMemo, useCallback, useState, useRef, useEffect } from 'react'
 
 import type {
   ProjectCalendarEvent,
@@ -9,9 +9,10 @@ import type {
   CalendarFilterOptions
 } from '@/entities/calendar'
 import { ColorAssignmentService } from '@/entities/calendar'
-import { useConflictDetection } from './hooks/useConflictDetection'
-import { useCalendarAccessibility } from './hooks/useCalendarAccessibility'
+
 import { EnhancedConflictAlert } from './EnhancedConflictAlert'
+import { useCalendarAccessibility } from './hooks/useCalendarAccessibility'
+import { useConflictDetection } from './hooks/useConflictDetection'
 
 interface ConflictVisualizationCalendarProps {
   events: ProjectCalendarEvent[]

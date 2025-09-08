@@ -89,6 +89,14 @@ export function SubMenu({
       pending: { 
         label: '대기', 
         className: 'bg-warning-50 dark:bg-warning-900/30 text-warning-600 dark:text-warning-400' 
+      },
+      draft: { 
+        label: '초안', 
+        className: 'bg-neutral-50 dark:bg-neutral-900/30 text-neutral-600 dark:text-neutral-400' 
+      },
+      'in-progress': { 
+        label: '작업중', 
+        className: 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' 
       }
     }
     

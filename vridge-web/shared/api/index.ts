@@ -2,11 +2,21 @@
 // FSD Architecture: Centralized API exports
 
 // RTK Query API Slice for state management
-export { apiSlice } from './apiSlice';
+export { apiSlice } from './apiSlice'
 
-// Custom API Client for direct HTTP calls
-export { apiClient } from './client';
-export { default as apiClientDefault } from './client';
+// HTTP Client - 단순하고 직접적인 HTTP 통신
+export {
+  httpClient,
+  createHttpClient,
+  type HttpConfig,
+  type HttpResponse,
+  type HttpError,
+  SimpleHttpClient,
+} from './http-client'
+
+// Legacy API Client for backward compatibility
+export { apiClient } from './client'
+export { default as apiClientDefault } from './client'
 
 // API Types and Interfaces
-export type { ApiConfig, ApiResponse } from './client';
+export type { ApiConfig, ApiResponse } from './client'

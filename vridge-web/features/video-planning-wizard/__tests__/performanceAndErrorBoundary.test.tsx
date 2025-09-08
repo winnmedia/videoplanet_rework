@@ -8,12 +8,13 @@ import userEvent from '@testing-library/user-event'
 import { http, HttpResponse } from 'msw'
 import React, { ErrorInfo, ReactNode } from 'react'
 
-import { server } from '@/lib/api/msw-server'
 
 import { VideoPlanningWizardApi } from '../api/videoPlanningApi'
 import type { VideoShot, InsertShot, TwelveShotsEditorProps } from '../model/types'
 import { TwelveShotsEditor } from '../ui/TwelveShotsEditor'
 import { VideoPlanningWizard } from '../ui/VideoPlanningWizard'
+
+import { server } from '@/lib/api/msw-server'
 
 // 테스트용 에러 바운더리
 interface TestErrorBoundaryState {

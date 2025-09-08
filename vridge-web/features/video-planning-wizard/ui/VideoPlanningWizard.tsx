@@ -179,7 +179,7 @@ export const VideoPlanningWizard = ({
   // 이전 단계로 이동
   const handleBackStep = useCallback(() => {
     if (currentStep > 1) {
-      dispatch(setStep((currentStep - 1) as WizardStep))
+      dispatch(setStep((currentStep - 1) as (1 | 2 | 3)))
     }
   }, [dispatch, currentStep])
 
@@ -260,7 +260,7 @@ export const VideoPlanningWizard = ({
             onSubmitWithAI={handleInputSubmitWithAI}
             onPresetSelect={handlePresetSelect}
             isLoading={wizardState.isLoading}
-            error={wizardState.error}
+            error={wizardState.error || undefined}
           />
         )}
 

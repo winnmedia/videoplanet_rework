@@ -1,176 +1,73 @@
-export interface ApiConfig {
-  baseUrl: string;
-  timeout?: number;
-  headers?: Record<string, string>;
+/**
+ * 레거시 호환성을 위한 래퍼 - http-client.ts로 위임
+ * 단일 책임: 기존 API와의 호환성 유지
+ */
+
+import { httpClient, HttpResponse, HttpError, HttpConfig } from './http-client'
+
+// 레거시 인터페이스 호환성
+export interface ApiConfig extends HttpConfig {
+  timeout?: number
 }
 
 export interface ApiResponse<T = unknown> {
-  data?: T;
+  data?: T
   error?: {
-    message: string;
-    code?: string;
-    details?: unknown;
-  };
-  status: number;
+    message: string
+    code?: string
+    details?: unknown
+  }
+  status: number
 }
 
-class ApiClient {
-  private config: ApiConfig;
-
-  constructor(config: ApiConfig) {
-    this.config = {
-      timeout: 30000,
-      ...config,
-    };
-  }
-
-  private async getAuthToken(): Promise<string | null> {
-    if (typeof window === 'undefined') {
-      // Server-side: safely import next/headers
-      try {
-        const { cookies } = await import('next/headers');
-        const cookieStore = await cookies();
-        return cookieStore.get('auth-token')?.value || null;
-      } catch (error) {
-        console.warn('Unable to access server-side cookies:', error);
-        return null;
-      }
-    }
-    
-    // Client-side: use document.cookie
-    return document.cookie
-      .split('; ')
-      .find(row => row.startsWith('auth-token='))
-      ?.split('=')[1] || null;
-  }
-
-  private async request<T>(
-    endpoint: string,
-    options: RequestInit = {}
-  ): Promise<ApiResponse<T>> {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(
-      () => controller.abort(),
-      this.config.timeout
-    );
-
-    try {
-      const token = await this.getAuthToken();
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        ...this.config.headers,
-        ...(options.headers as Record<string, string>),
-      };
-
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
-      const response = await fetch(`${this.config.baseUrl}${endpoint}`, {
-        ...options,
-        headers,
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-
-      const data = await response.json().catch(() => null);
-
-      if (!response.ok) {
-        // HTTP 에러 핸들러 통합
-        const { handleHttpError, HttpStatusCodeSchema } = await import('../lib/error-handler');
-        const statusCode = HttpStatusCodeSchema.safeParse(response.status);
-        
-        if (statusCode.success) {
-          const standardizedError = await handleHttpError(
-            statusCode.data,
-            data?.message || `HTTP ${response.status}`,
-            { endpoint, method: options.method || 'GET', responseData: data }
-          );
-          
-          return {
-            error: {
-              message: standardizedError.userMessage,
-              code: data?.code,
-              details: standardizedError,
-            },
-            status: response.status,
-          };
-        }
-
-        return {
-          error: {
-            message: data?.message || `HTTP ${response.status}`,
-            code: data?.code,
-            details: data,
-          },
-          status: response.status,
-        };
-      }
-
-      return {
-        data: data as T,
-        status: response.status,
-      };
-    } catch (error) {
-      clearTimeout(timeoutId);
-
-      if (error instanceof Error) {
-        if (error.name === 'AbortError' || error.message.includes('aborted')) {
-          return {
-            error: { message: 'Request timeout' },
-            status: 408,
-          };
-        }
-        return {
-          error: { message: error.message },
-          status: 0,
-        };
-      }
-
-      return {
-        error: { message: 'Unknown error occurred' },
-        status: 0,
-      };
-    }
-  }
-
+/**
+ * 레거시 API 형식으로 변환하는 래퍼
+ */
+class LegacyApiClient {
   async get<T>(endpoint: string): Promise<ApiResponse<T>> {
-    return this.request<T>(endpoint, { method: 'GET' });
+    return this.convertResponse(() => httpClient.get<T>(endpoint))
   }
 
   async post<T>(endpoint: string, body?: unknown): Promise<ApiResponse<T>> {
-    return this.request<T>(endpoint, {
-      method: 'POST',
-      body: body ? JSON.stringify(body) : undefined,
-    });
+    return this.convertResponse(() => httpClient.post<T>(endpoint, body))
   }
 
   async put<T>(endpoint: string, body?: unknown): Promise<ApiResponse<T>> {
-    return this.request<T>(endpoint, {
-      method: 'PUT',
-      body: body ? JSON.stringify(body) : undefined,
-    });
+    return this.convertResponse(() => httpClient.put<T>(endpoint, body))
   }
 
   async delete<T>(endpoint: string): Promise<ApiResponse<T>> {
-    return this.request<T>(endpoint, { method: 'DELETE' });
+    return this.convertResponse(() => httpClient.delete<T>(endpoint))
   }
 
   async patch<T>(endpoint: string, body?: unknown): Promise<ApiResponse<T>> {
-    return this.request<T>(endpoint, {
-      method: 'PATCH',
-      body: body ? JSON.stringify(body) : undefined,
-    });
+    return this.convertResponse(() => httpClient.patch<T>(endpoint, body))
+  }
+
+  private async convertResponse<T>(request: () => Promise<HttpResponse<T>>): Promise<ApiResponse<T>> {
+    try {
+      const response = await request()
+      return {
+        data: response.data,
+        status: response.status,
+      }
+    } catch (error) {
+      const httpError = error as HttpError
+      return {
+        error: {
+          message: httpError.message,
+          details: httpError.data,
+        },
+        status: httpError.status,
+      }
+    }
   }
 }
 
-const apiClient = new ApiClient({
-  baseUrl: process.env.NEXT_PUBLIC_API_URL || 'https://api.vlanet.net',
-});
+const apiClient = new LegacyApiClient()
 
 // Named export for named imports
-export { apiClient };
+export { apiClient }
 
 // Default export for default imports (backward compatibility)
-export default apiClient;
+export default apiClient

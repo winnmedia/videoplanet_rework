@@ -9,7 +9,6 @@
  * 4. 에러 시나리오 처리
  */
 
-import { PermissionChecker } from '../permissionChecker'
 import { 
   UserRole, 
   Permission, 
@@ -17,6 +16,7 @@ import {
   DEFAULT_ROLE_PERMISSIONS,
   ROLE_HIERARCHY 
 } from '../../model/types'
+import { PermissionChecker } from '../permissionChecker'
 
 describe('Enhanced Permission Checker (DEVPLAN Requirements)', () => {
   // 테스트 사용자 데이터

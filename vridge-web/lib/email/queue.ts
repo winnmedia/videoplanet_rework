@@ -246,7 +246,7 @@ class EmailQueue {
     pending: number
     processing: boolean
     rateLimits: RateLimitConfig
-    sentCount: typeof this.sentCount
+    sentCount: { minute: number; hour: number; day: number }
   } {
     return {
       pending: this.queue.length,

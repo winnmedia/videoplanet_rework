@@ -1,231 +1,142 @@
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
+import { useForm } from 'react-hook-form'
 
-import styles from './ResetPasswordForm.module.scss'
+import { resetPasswordRequestSchema, type ResetPasswordRequestInput } from '../model/auth.schema'
 import { useAuth } from '../model/useAuth'
 
 export function ResetPasswordForm() {
-  const router = useRouter()
-  const { resetPassword } = useAuth()
-  const [email, setEmail] = useState('')
-  const [authNumber, setAuthNumber] = useState('')
-  const [password, setPassword] = useState('')
-  const [passwordConfirm, setPasswordConfirm] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [validEmail, setValidEmail] = useState(false)
-  const [emailVerificationSent, setEmailVerificationSent] = useState(false)
-  const [emailSendLoading, setEmailSendLoading] = useState(false)
-
-  const handleSendVerification = async () => {
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setError('올바른 이메일 주소를 입력해주세요.')
-      return
+  const { requestPasswordReset } = useAuth()
+  const [isSuccess, setIsSuccess] = useState(false)
+  
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    setError: setFormError
+  } = useForm<ResetPasswordRequestInput>({
+    resolver: zodResolver(resetPasswordRequestSchema),
+    defaultValues: {
+      email: ''
     }
+  })
 
-    setEmailSendLoading(true)
-    setError('')
-
+  const onSubmit = async (data: ResetPasswordRequestInput) => {
     try {
-      const response = await fetch('/api/auth/send-verification', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          type: 'reset'
-        }),
+      await requestPasswordReset(data.email)
+      setIsSuccess(true)
+    } catch (error) {
+      setFormError('root', {
+        message: error instanceof Error ? error.message : '비밀번호 재설정 요청에 실패했습니다. 다시 시도해주세요.'
       })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || '이메일 발송에 실패했습니다.')
-      }
-
-      setEmailVerificationSent(true)
-      setError('')
-      
-      // 개발 모드에서 코드가 반환된 경우
-      if (data.devCode) {
-        console.log('🔑 개발 모드 인증번호:', data.devCode)
-      }
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : '이메일 발송에 실패했습니다. 다시 시도해주세요.')
-    } finally {
-      setEmailSendLoading(false)
     }
   }
 
-  const handleVerifyEmail = async () => {
-    if (!authNumber) {
-      setError('인증번호를 입력해주세요.')
-      return
-    }
-
-    try {
-      const response = await fetch('/api/auth/send-verification', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email,
-          code: authNumber,
-          type: 'reset'
-        }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || '인증번호가 올바르지 않습니다.')
-      }
-
-      setValidEmail(true)
-      setError('')
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : '인증번호가 올바르지 않습니다.')
-    }
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (!validEmail) {
-      setError('이메일 인증을 완료해주세요.')
-      return
-    }
-
-    if (password.length < 10) {
-      setError('비밀번호는 최소 10자 이상 입력해주세요.')
-      return
-    }
-
-    if (password !== passwordConfirm) {
-      setError('비밀번호가 일치하지 않습니다.')
-      return
-    }
-
-    setLoading(true)
-    setError('')
-    
-    try {
-      await resetPassword({
-        email,
-        auth_number: authNumber,
-        password
-      })
-      alert('비밀번호가 성공적으로 변경되었습니다.')
-      router.push('/login')
-    } catch {
-      setError('비밀번호 변경에 실패했습니다. 다시 시도해주세요.')
-    } finally {
-      setLoading(false)
-    }
+  if (isSuccess) {
+    return (
+      <div className="space-y-6">
+        <div 
+          className="p-4 rounded-lg bg-green-50 border border-green-200 text-green-700 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400"
+          role="status"
+          aria-live="polite"
+        >
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.857-9.809a.75.75 0 00-1.214-.882l-3.236 4.53L7.53 10.53a.75.75 0 00-1.06 1.061l2.5 2.5a.75.75 0 001.137-.089l4-5.5z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium">비밀번호 재설정 이메일이 발송되었습니다</h3>
+              <p className="mt-1 text-sm">
+                이메일을 확인하시고 링크를 클릭하여 비밀번호를 재설정해주세요.
+              </p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="text-center">
+          <span className="text-sm text-gray-600 dark:text-gray-400">
+            이메일을 받지 못하셨나요?{' '}
+          </span>
+          <button
+            type="button"
+            onClick={() => setIsSuccess(false)}
+            className="text-sm font-medium text-primary hover:text-primary-dark dark:text-primary-light dark:hover:text-primary transition-colors"
+          >
+            다시 요청하기
+          </button>
+        </div>
+        
+        <div className="text-center">
+          <a href="/login" className="text-sm font-medium text-primary hover:text-primary-dark dark:text-primary-light dark:hover:text-primary">
+            로그인으로 돌아가기
+          </a>
+        </div>
+      </div>
+    )
   }
 
   return (
-    <form onSubmit={handleSubmit} className={styles.form}>
-      {!validEmail ? (
-        <>
-          {/* 이메일 인증 단계 */}
-          <div className={styles.inputWrapper}>
-            <input
-              type="email"
-              className={styles.input}
-              placeholder="가입하신 이메일을 입력해주세요"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={emailVerificationSent || emailSendLoading}
-              required
-            />
-            {!emailVerificationSent && (
-              <button
-                type="button"
-                className={styles.verifyButton}
-                onClick={handleSendVerification}
-                disabled={emailSendLoading || !email}
-              >
-                {emailSendLoading ? '발송 중...' : '인증번호 발송'}
-              </button>
-            )}
-          </div>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+      <div>
+        <label htmlFor="email" className="sr-only">
+          이메일 주소
+        </label>
+        <input
+          id="email"
+          type="email"
+          autoComplete="email"
+          placeholder="이메일 주소를 입력하세요"
+          className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-primary focus:border-transparent transition-colors disabled:bg-gray-50 disabled:text-gray-500 dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:focus:ring-primary-dark"
+          aria-label="이메일 주소"
+          aria-required="true"
+          aria-invalid={!!errors.email || !!errors.root}
+          aria-describedby={errors.email ? 'email-error' : errors.root ? 'error-message' : 'email-description'}
+          disabled={isSubmitting}
+          {...register('email')}
+        />
+        <p id="email-description" className="mt-1 text-sm text-gray-600 dark:text-gray-400">
+          가입하신 이메일 주소를 입력하시면 비밀번호 재설정 링크를 보내드립니다.
+        </p>
+        {errors.email && (
+          <p id="email-error" className="mt-1 text-sm text-red-600 dark:text-red-400" role="alert">
+            {errors.email.message}
+          </p>
+        )}
+      </div>
 
-          {emailVerificationSent && (
-            <div className={styles.inputWrapper}>
-              <input
-                type="text"
-                className={styles.input}
-                placeholder="인증번호 입력"
-                value={authNumber}
-                onChange={(e) => setAuthNumber(e.target.value)}
-                maxLength={6}
-              />
-              <button
-                type="button"
-                className={styles.verifyButton}
-                onClick={handleVerifyEmail}
-                disabled={!authNumber}
-              >
-                인증 확인
-              </button>
-            </div>
-          )}
-        </>
-      ) : (
-        <>
-          {/* 새 비밀번호 입력 단계 */}
-          <div className={styles.inputWrapper}>
-            <input
-              type="password"
-              className={styles.input}
-              placeholder="새 비밀번호 입력 (최소 10자)"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              maxLength={20}
-              required
-            />
-          </div>
-
-          <div className={styles.inputWrapper}>
-            <input
-              type="password"
-              className={styles.input}
-              placeholder="새 비밀번호 확인"
-              value={passwordConfirm}
-              onChange={(e) => setPasswordConfirm(e.target.value)}
-              maxLength={20}
-              required
-            />
-          </div>
-        </>
-      )}
-
-      {error && (
+      {errors.root && (
         <div 
-          className={styles.error}
+          id="error-message"
+          className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400"
           role="alert"
           aria-live="polite"
         >
-          {error}
+          {errors.root.message}
         </div>
       )}
 
-      {validEmail && (
-        <button
-          type="submit"
-          className={`${styles.button} ${loading ? styles.loading : ''}`}
-          disabled={loading || password.length < 10 || password !== passwordConfirm}
-          aria-busy={loading}
-          aria-label={loading ? '비밀번호 변경 처리 중' : '비밀번호 변경'}
-        >
-          {loading ? '변경 중...' : '비밀번호 변경'}
-        </button>
-      )}
+      <button
+        type="submit"
+        className="w-full px-4 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed dark:bg-primary-dark dark:hover:bg-primary dark:disabled:bg-gray-700"
+        disabled={isSubmitting}
+        aria-busy={isSubmitting}
+        aria-label={isSubmitting ? '비밀번호 재설정 요청 처리 중' : '비밀번호 재설정 요청'}
+      >
+        {isSubmitting ? '요청 처리 중...' : '비밀번호 재설정 요청'}
+      </button>
+      
+      <div className="text-center">
+        <span className="text-sm text-gray-600 dark:text-gray-400">
+          비밀번호가 기억나셨나요?{' '}
+          <a href="/login" className="font-medium text-primary hover:text-primary-dark dark:text-primary-light dark:hover:text-primary">
+            로그인
+          </a>
+        </span>
+      </div>
     </form>
   )
 }

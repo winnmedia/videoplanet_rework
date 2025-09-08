@@ -1,36 +1,17 @@
 'use client'
 
 import { useParams } from 'next/navigation'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 import { SideBar } from '@/widgets'
 
-export default function FeedbackDetailPage() {
-  const params = useParams()
-  const id = params?.id as string
+function FeedbackPageContent({ id }: { id: string }) {
   const [activeTab, setActiveTab] = useState<'comments' | 'team' | 'project'>('comments')
   const [currentTime, setCurrentTime] = useState('00:00.000')
   const [commentInput, setCommentInput] = useState('')
   const [showScreenshotModal, setShowScreenshotModal] = useState(false)
   const [showShareModal, setShowShareModal] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
-  
-  // params가 없거나 id가 없을 경우 에러 처리
-  if (!id) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex">
-        <SideBar />
-        <main className="flex-1 ml-sidebar pt-20 transition-all duration-300">
-          <div className="container mx-auto px-4 py-8 max-w-7xl">
-            <div className="text-center">
-              <h1 className="text-2xl font-bold text-gray-900 mb-4">잘못된 접근</h1>
-              <p className="text-gray-600">피드백 ID가 필요합니다.</p>
-            </div>
-          </div>
-        </main>
-      </div>
-    )
-  }
   
   // Mock 비디오 피드백 프로젝트 데이터
   const mockProjects = {
@@ -56,29 +37,13 @@ export default function FeedbackDetailPage() {
 
   const project = mockProjects[id as keyof typeof mockProjects]
 
-  if (!project) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex">
-        <SideBar />
-        <main className="flex-1 ml-sidebar pt-20 transition-all duration-300">
-          <div className="container mx-auto px-4 py-8 max-w-7xl">
-            <div className="text-center">
-              <h1 className="text-2xl font-bold text-gray-900 mb-4">피드백을 찾을 수 없습니다</h1>
-              <p className="text-gray-600">요청하신 피드백이 존재하지 않습니다.</p>
-            </div>
-          </div>
-        </main>
-      </div>
-    )
-  }
-
-  const handleTimecodeComment = () => {
+  const handleTimecodeComment = useCallback(() => {
     // 중복 방지: 이미 타임코드가 있으면 추가하지 않음
     if (!commentInput.startsWith('[')) {
       const newComment = `[${currentTime}] ${commentInput}`
       setCommentInput(newComment)
     }
-  }
+  }, [commentInput, currentTime])
 
   const handleScreenshot = () => {
     setShowScreenshotModal(true)
@@ -162,7 +127,24 @@ export default function FeedbackDetailPage() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [commentInput, currentTime, isPlaying])
+  }, [commentInput, currentTime, isPlaying, handleTimecodeComment])
+
+  // project가 없으면 에러 표시
+  if (!project) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex">
+        <SideBar />
+        <main className="flex-1 ml-sidebar pt-20 transition-all duration-300">
+          <div className="container mx-auto px-4 py-8 max-w-7xl">
+            <div className="text-center">
+              <h1 className="text-2xl font-bold text-gray-900 mb-4">피드백을 찾을 수 없습니다</h1>
+              <p className="text-gray-600">요청하신 피드백이 존재하지 않습니다.</p>
+            </div>
+          </div>
+        </main>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -476,4 +458,28 @@ export default function FeedbackDetailPage() {
       </main>
     </div>
   )
+}
+
+export default function FeedbackDetailPage() {
+  const params = useParams()
+  const id = params?.id as string
+  
+  // params가 없거나 id가 없을 경우 에러 처리
+  if (!id) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex">
+        <SideBar />
+        <main className="flex-1 ml-sidebar pt-20 transition-all duration-300">
+          <div className="container mx-auto px-4 py-8 max-w-7xl">
+            <div className="text-center">
+              <h1 className="text-2xl font-bold text-gray-900 mb-4">잘못된 접근</h1>
+              <p className="text-gray-600">피드백 ID가 필요합니다.</p>
+            </div>
+          </div>
+        </main>
+      </div>
+    )
+  }
+  
+  return <FeedbackPageContent id={id} />
 }

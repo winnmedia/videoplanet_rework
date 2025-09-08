@@ -193,10 +193,10 @@ export const PlanningInputForm = ({
           <h3 className="text-lg font-semibold text-gray-900 mb-4">기본 정보</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">영상 제목</label>
               <Input
-                label="제목"
                 value={formData.title || ''}
-                onChange={(e) => handleFieldChange('title', e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFieldChange('title', e.target.value)}
                 placeholder="영상 제목을 입력하세요"
                 required
                 aria-required="true"
@@ -205,10 +205,10 @@ export const PlanningInputForm = ({
               />
             </div>
             <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">핵심 메시지</label>
               <Input
-                label="한 줄 스토리(로그라인)"
                 value={formData.logline || ''}
-                onChange={(e) => handleFieldChange('logline', e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFieldChange('logline', e.target.value)}
                 placeholder="핵심 메시지를 한 문장으로 표현해주세요"
                 required
                 aria-required="true"
@@ -224,10 +224,10 @@ export const PlanningInputForm = ({
           <h3 className="text-lg font-semibold text-gray-900 mb-4">스타일 설정</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">톤앤매너</label>
               <Select
-                label="톤앤매너"
                 value={formData.toneManner}
-                onValueChange={(value) => handleFieldChange('toneManner', value as ToneManner)}
+                onChange={(value) => handleFieldChange('toneManner', value as ToneManner)}
                 disabled={isLoading}
                 options={TONE_MANNER_OPTIONS.map(option => ({
                   value: option,
@@ -236,10 +236,10 @@ export const PlanningInputForm = ({
               />
             </div>
             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">장르</label>
               <Select
-                label="장르"
                 value={formData.genre}
-                onValueChange={(value) => handleFieldChange('genre', value as Genre)}
+                onChange={(value) => handleFieldChange('genre', value as Genre)}
                 disabled={isLoading}
                 options={GENRE_OPTIONS.map(option => ({
                   value: option,
@@ -248,10 +248,10 @@ export const PlanningInputForm = ({
               />
             </div>
             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">타겟</label>
               <Select
-                label="타겟"
                 value={formData.target}
-                onValueChange={(value) => handleFieldChange('target', value as Target)}
+                onChange={(value) => handleFieldChange('target', value as Target)}
                 disabled={isLoading}
                 options={TARGET_OPTIONS.map(option => ({
                   value: option,
@@ -260,10 +260,10 @@ export const PlanningInputForm = ({
               />
             </div>
             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">시간</label>
               <Select
-                label="분량"
                 value={formData.duration}
-                onValueChange={(value) => handleFieldChange('duration', value as Duration)}
+                onChange={(value) => handleFieldChange('duration', value as Duration)}
                 disabled={isLoading}
                 options={DURATION_OPTIONS.map(option => ({
                   value: option,
@@ -272,10 +272,10 @@ export const PlanningInputForm = ({
               />
             </div>
             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">형식</label>
               <Select
-                label="포맷"
                 value={formData.format}
-                onValueChange={(value) => handleFieldChange('format', value as Format)}
+                onChange={(value) => handleFieldChange('format', value as Format)}
                 disabled={isLoading}
                 options={FORMAT_OPTIONS.map(option => ({
                   value: option,
@@ -284,10 +284,10 @@ export const PlanningInputForm = ({
               />
             </div>
             <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">템포</label>
               <Select
-                label="템포"
                 value={formData.tempo}
-                onValueChange={(value) => handleFieldChange('tempo', value as Tempo)}
+                onChange={(value) => handleFieldChange('tempo', value as Tempo)}
                 disabled={isLoading}
                 options={TEMPO_OPTIONS.map(option => ({
                   value: option,
@@ -440,7 +440,7 @@ export const PlanningInputForm = ({
               disabled={!isFormValid || isLoading}
               size="lg"
               className="min-w-32"
-              variant={onSubmitWithAI ? "outline" : "default"}
+              variant={onSubmitWithAI ? "outline" : "primary"}
             >
               {isLoading ? (
                 <div className="flex items-center gap-2">

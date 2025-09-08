@@ -1,9 +1,0 @@
-[build]
-cmds = ["npm ci", "npm run build"]
-
-[start]
-cmd = "npm run start"
-
-[variables]
-NODE_ENV = "production"
-NEXT_TELEMETRY_DISABLED = "1"

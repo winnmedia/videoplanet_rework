@@ -1,7 +1,6 @@
 import { useEffect, useRef, useCallback } from 'react'
 import { useDispatch } from 'react-redux'
 
-import { NotificationWebSocketManager } from '@/shared/lib/websocket'
 import { 
   addNotification, 
   markAsRead, 
@@ -9,6 +8,7 @@ import {
   type WebSocketMessage,
   type ConnectionStatus
 } from '@/entities/notification'
+import { NotificationWebSocketManager } from '@/shared/lib/websocket'
 
 export interface UseRealtimeNotificationsConfig {
   wsUrl: string

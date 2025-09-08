@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * Cypress WebSocket Tasks
  * 실시간 협업 테스트를 위한 WebSocket 관련 태스크들
@@ -49,11 +50,11 @@ export const websocketTasks: WebSocketTask = {
       try {
         // HTTP 서버 생성
         httpServer = createServer()
-        
+
         // WebSocket 서버 생성
         wsServer = new WebSocketServer({
           server: httpServer,
-          path: config.endpoint
+          path: config.endpoint,
         })
 
         wsServer.on('connection', (ws, req) => {
@@ -61,18 +62,20 @@ export const websocketTasks: WebSocketTask = {
           connectedClients.add(ws)
 
           // 연결 환영 메시지
-          ws.send(JSON.stringify({
-            id: 'welcome',
-            type: 'connection',
-            payload: {
-              type: 'welcome',
-              message: 'Connected to test WebSocket server'
-            },
-            timestamp: Date.now()
-          }))
+          ws.send(
+            JSON.stringify({
+              id: 'welcome',
+              type: 'connection',
+              payload: {
+                type: 'welcome',
+                message: 'Connected to test WebSocket server',
+              },
+              timestamp: Date.now(),
+            })
+          )
 
           // 메시지 처리
-          ws.on('message', async (data) => {
+          ws.on('message', async data => {
             try {
               const message = JSON.parse(data.toString())
               await handleWebSocketMessage(ws, message)
@@ -88,7 +91,7 @@ export const websocketTasks: WebSocketTask = {
           })
 
           // 에러 처리
-          ws.on('error', (error) => {
+          ws.on('error', error => {
             console.error('WebSocket error:', error)
             connectedClients.delete(ws)
           })
@@ -99,7 +102,6 @@ export const websocketTasks: WebSocketTask = {
           console.log(`WebSocket test server started on port ${config.port}`)
           resolve()
         })
-
       } catch (error) {
         console.error('Failed to setup WebSocket server:', error)
         reject(error)
@@ -111,12 +113,12 @@ export const websocketTasks: WebSocketTask = {
    * WebSocket 서버 정리
    */
   async cleanupWebSocketServer() {
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       if (wsServer) {
         wsServer.close()
         wsServer = null
       }
-      
+
       if (httpServer) {
         httpServer.close(() => {
           httpServer = null
@@ -135,14 +137,14 @@ export const websocketTasks: WebSocketTask = {
    */
   async simulateNetworkDisconnection() {
     networkDisconnected = true
-    
+
     // 모든 클라이언트 연결 강제 종료
-    connectedClients.forEach((ws) => {
+    connectedClients.forEach(ws => {
       if (ws.readyState === ws.OPEN) {
         ws.close(1006, 'Network disconnection simulation')
       }
     })
-    
+
     console.log('Network disconnection simulated')
   },
 
@@ -159,7 +161,7 @@ export const websocketTasks: WebSocketTask = {
    */
   async simulateMultipleUsers(config) {
     const { userCount, projectId } = config
-    
+
     // 가상 사용자들의 참여 이벤트 브로드캐스트
     for (let i = 1; i <= userCount; i++) {
       const userJoinedEvent = {
@@ -172,15 +174,15 @@ export const websocketTasks: WebSocketTask = {
             userName: `테스트 사용자 ${i}`,
             userColor: `hsl(${(i * 360) / userCount}, 70%, 50%)`,
             projectId,
-            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${i}`
-          }
+            avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${i}`,
+          },
         },
         timestamp: Date.now(),
-        projectId
+        projectId,
       }
 
       await broadcastToAllClients(userJoinedEvent)
-      
+
       // 사용자 간 간격 두기
       await delay(100)
     }
@@ -197,27 +199,27 @@ export const websocketTasks: WebSocketTask = {
       id: 'offline-mode',
       type: 'system',
       payload: {
-        type: 'offline_mode_enabled'
+        type: 'offline_mode_enabled',
       },
-      timestamp: Date.now()
+      timestamp: Date.now(),
     })
-    
+
     console.log('Offline mode simulation activated')
   },
 
   /**
-   * 온라인 모드 복구 시뮬레이션  
+   * 온라인 모드 복구 시뮬레이션
    */
   async restoreOnlineMode() {
     await broadcastToAllClients({
       id: 'online-mode',
-      type: 'system', 
+      type: 'system',
       payload: {
-        type: 'online_mode_restored'
+        type: 'online_mode_restored',
       },
-      timestamp: Date.now()
+      timestamp: Date.now(),
     })
-    
+
     console.log('Online mode simulation restored')
   },
 
@@ -226,7 +228,7 @@ export const websocketTasks: WebSocketTask = {
    */
   async simulateCollaborativeEdit(config) {
     const { user1, user2 } = config
-    
+
     // 두 사용자의 동시 편집 연산 생성
     const operation1 = {
       id: 'op-1',
@@ -239,34 +241,31 @@ export const websocketTasks: WebSocketTask = {
           projectId: 'test-project',
           operation: user1,
           timestamp: Date.now(),
-          vectorClock: { user1: 1, user2: 0 }
-        }
+          vectorClock: { user1: 1, user2: 0 },
+        },
       },
-      timestamp: Date.now()
+      timestamp: Date.now(),
     }
 
     const operation2 = {
-      id: 'op-2', 
+      id: 'op-2',
       type: 'collaboration_event',
       payload: {
         type: 'document_operation',
         data: {
           operationId: 'op-user2-1',
           userId: 'user2',
-          projectId: 'test-project', 
+          projectId: 'test-project',
           operation: user2,
           timestamp: Date.now() + 10, // 약간의 시간차
-          vectorClock: { user1: 0, user2: 1 }
-        }
+          vectorClock: { user1: 0, user2: 1 },
+        },
       },
-      timestamp: Date.now() + 10
+      timestamp: Date.now() + 10,
     }
 
     // 동시 전송
-    await Promise.all([
-      broadcastToAllClients(operation1),
-      broadcastToAllClients(operation2)
-    ])
+    await Promise.all([broadcastToAllClients(operation1), broadcastToAllClients(operation2)])
 
     console.log('Collaborative edit simulation completed')
   },
@@ -276,7 +275,7 @@ export const websocketTasks: WebSocketTask = {
    */
   async simulateRemoteCursor(config) {
     const { userId, userName, userColor, position } = config
-    
+
     const cursorEvent = {
       id: `cursor-${userId}`,
       type: 'collaboration_event',
@@ -287,10 +286,10 @@ export const websocketTasks: WebSocketTask = {
           userName,
           userColor,
           projectId: 'test-project',
-          position
-        }
+          position,
+        },
       },
-      timestamp: Date.now()
+      timestamp: Date.now(),
     }
 
     await broadcastToAllClients(cursorEvent)
@@ -302,7 +301,7 @@ export const websocketTasks: WebSocketTask = {
    */
   async simulateEditConflict(config) {
     const { conflictType, operations } = config
-    
+
     // 충돌하는 연산들을 거의 동시에 전송
     const conflictEvents = operations.map((op: any, index: number) => ({
       id: `conflict-op-${index}`,
@@ -315,16 +314,14 @@ export const websocketTasks: WebSocketTask = {
           projectId: 'test-project',
           operation: op,
           timestamp: Date.now() + index, // 미세한 시간차
-          vectorClock: { [op.userId]: 1 }
-        }
+          vectorClock: { [op.userId]: 1 },
+        },
       },
-      timestamp: Date.now() + index
+      timestamp: Date.now() + index,
     }))
 
     // 동시 전송으로 충돌 유발
-    await Promise.all(
-      conflictEvents.map(event => broadcastToAllClients(event))
-    )
+    await Promise.all(conflictEvents.map(event => broadcastToAllClients(event)))
 
     console.log(`Edit conflict simulation completed: ${conflictType}`)
   },
@@ -334,7 +331,7 @@ export const websocketTasks: WebSocketTask = {
    */
   async verifyRealtimeCommentSync(config) {
     const { commentId, expectedTimecode } = config
-    
+
     // 실제 구현에서는 데이터베이스나 상태 확인
     // 여기서는 시뮬레이션된 검증
     const verificationEvent = {
@@ -343,13 +340,13 @@ export const websocketTasks: WebSocketTask = {
       payload: {
         commentId,
         timecode: expectedTimecode,
-        synced: true
+        synced: true,
       },
-      timestamp: Date.now()
+      timestamp: Date.now(),
     }
 
     await broadcastToAllClients(verificationEvent)
-    
+
     console.log(`Comment sync verified: ${commentId}`)
     return true
   },
@@ -359,7 +356,7 @@ export const websocketTasks: WebSocketTask = {
    */
   async simulateUserTyping(config) {
     const { userId, isTyping } = config
-    
+
     const typingEvent = {
       id: `typing-${userId}`,
       type: 'collaboration_event',
@@ -368,10 +365,10 @@ export const websocketTasks: WebSocketTask = {
         data: {
           userId,
           projectId: 'test-project',
-          isTyping
-        }
+          isTyping,
+        },
       },
-      timestamp: Date.now()
+      timestamp: Date.now(),
     }
 
     await broadcastToAllClients(typingEvent)
@@ -383,7 +380,7 @@ export const websocketTasks: WebSocketTask = {
    */
   async simulateIncomingComment(config) {
     const { commentId, content, authorId, timestamp } = config
-    
+
     const commentEvent = {
       id: commentId,
       type: 'collaboration_event',
@@ -395,10 +392,10 @@ export const websocketTasks: WebSocketTask = {
           authorId,
           projectId: 'test-project',
           timestamp,
-          videoTimestamp: 45.0
-        }
+          videoTimestamp: 45.0,
+        },
       },
-      timestamp
+      timestamp,
     }
 
     await broadcastToAllClients(commentEvent)
@@ -410,9 +407,9 @@ export const websocketTasks: WebSocketTask = {
    */
   async sendBulkMessages(config) {
     const { count, interval } = config
-    
+
     console.log(`Sending ${count} bulk messages with ${interval}ms interval`)
-    
+
     for (let i = 1; i <= count; i++) {
       const message = {
         id: `bulk-msg-${i}`,
@@ -425,15 +422,15 @@ export const websocketTasks: WebSocketTask = {
             authorId: 'bulk-user',
             projectId: 'test-project',
             timestamp: Date.now(),
-            videoTimestamp: i * 1.5
-          }
+            videoTimestamp: i * 1.5,
+          },
         },
         timestamp: Date.now(),
-        sequenceNumber: i
+        sequenceNumber: i,
       }
 
       await broadcastToAllClients(message)
-      
+
       if (interval > 0) {
         await delay(interval)
       }
@@ -448,7 +445,7 @@ export const websocketTasks: WebSocketTask = {
   async simulateNetworkLatency(config) {
     const { latency } = config
     networkLatency = latency
-    
+
     console.log(`Network latency simulation set to ${latency}ms`)
   },
 
@@ -457,25 +454,23 @@ export const websocketTasks: WebSocketTask = {
    */
   async generateMassiveEvents(config) {
     const { count } = config
-    
+
     const events = Array.from({ length: count }, (_, i) => ({
       id: `massive-event-${i}`,
       type: 'test_event',
       payload: {
         data: `Event data ${i}`,
         timestamp: Date.now() + i,
-        largeData: 'x'.repeat(1000) // 1KB 데이터
+        largeData: 'x'.repeat(1000), // 1KB 데이터
       },
-      timestamp: Date.now() + i
+      timestamp: Date.now() + i,
     }))
 
     // 이벤트들을 배치로 전송
     const batchSize = 50
     for (let i = 0; i < events.length; i += batchSize) {
       const batch = events.slice(i, i + batchSize)
-      await Promise.all(
-        batch.map(event => broadcastToAllClients(event))
-      )
+      await Promise.all(batch.map(event => broadcastToAllClients(event)))
       await delay(10) // 작은 간격
     }
 
@@ -487,16 +482,16 @@ export const websocketTasks: WebSocketTask = {
    */
   async simulateNetworkError(config) {
     const { errorType, duration } = config
-    
+
     const errorEvent = {
       id: 'network-error',
       type: 'system_error',
       payload: {
         errorType,
         message: 'Simulated network error',
-        duration
+        duration,
       },
-      timestamp: Date.now()
+      timestamp: Date.now(),
     }
 
     await broadcastToAllClients(errorEvent)
@@ -508,11 +503,11 @@ export const websocketTasks: WebSocketTask = {
         type: 'system_recovery',
         payload: {
           message: 'Network recovered from simulation',
-          previousError: errorType
+          previousError: errorType,
         },
-        timestamp: Date.now()
+        timestamp: Date.now(),
       }
-      
+
       broadcastToAllClients(recoveryEvent)
     }, duration)
 
@@ -530,10 +525,10 @@ export const websocketTasks: WebSocketTask = {
         type: 'test_message',
         payload: {
           content: msg.content,
-          sequence: msg.sequence
+          sequence: msg.sequence,
         },
         timestamp: Date.now(),
-        sequenceNumber: msg.sequence
+        sequenceNumber: msg.sequence,
       }
 
       await broadcastToAllClients(message)
@@ -548,7 +543,7 @@ export const websocketTasks: WebSocketTask = {
    */
   async sendDuplicateMessage(config) {
     const { message, count } = config
-    
+
     const duplicateMessage = {
       id: message.id,
       type: 'collaboration_event',
@@ -559,16 +554,14 @@ export const websocketTasks: WebSocketTask = {
           content: message.content,
           authorId: 'duplicate-user',
           projectId: 'test-project',
-          timestamp: Date.now()
-        }
+          timestamp: Date.now(),
+        },
       },
-      timestamp: Date.now()
+      timestamp: Date.now(),
     }
 
     // 동일한 메시지를 여러 번 전송
-    const promises = Array.from({ length: count }, () => 
-      broadcastToAllClients(duplicateMessage)
-    )
+    const promises = Array.from({ length: count }, () => broadcastToAllClients(duplicateMessage))
 
     await Promise.all(promises)
     console.log(`Sent duplicate message ${count} times: ${message.id}`)
@@ -579,21 +572,23 @@ export const websocketTasks: WebSocketTask = {
    */
   async simulateConcurrentUsers(config) {
     const { userCount, actionsPerUser, duration } = config
-    
-    console.log(`Starting concurrent user simulation: ${userCount} users, ${actionsPerUser} actions each, ${duration}ms duration`)
-    
+
+    console.log(
+      `Starting concurrent user simulation: ${userCount} users, ${actionsPerUser} actions each, ${duration}ms duration`
+    )
+
     const startTime = Date.now()
     const endTime = startTime + duration
-    
+
     // 각 사용자별 액션 실행
     const userPromises = Array.from({ length: userCount }, async (_, userIndex) => {
       const userId = `concurrent-user-${userIndex}`
-      
+
       while (Date.now() < endTime) {
         // 랜덤 액션 실행
         const actions = ['comment', 'cursor', 'typing', 'selection']
         const randomAction = actions[Math.floor(Math.random() * actions.length)]
-        
+
         switch (randomAction) {
           case 'comment':
             await broadcastToAllClients({
@@ -607,13 +602,13 @@ export const websocketTasks: WebSocketTask = {
                   authorId: userId,
                   projectId: 'load-test-project',
                   timestamp: Date.now(),
-                  videoTimestamp: Math.random() * 120
-                }
+                  videoTimestamp: Math.random() * 120,
+                },
               },
-              timestamp: Date.now()
+              timestamp: Date.now(),
             })
             break
-            
+
           case 'cursor':
             await broadcastToAllClients({
               id: `cursor-${userId}-${Date.now()}`,
@@ -625,14 +620,14 @@ export const websocketTasks: WebSocketTask = {
                   projectId: 'load-test-project',
                   position: {
                     x: Math.random() * 1000,
-                    y: Math.random() * 800
-                  }
-                }
+                    y: Math.random() * 800,
+                  },
+                },
               },
-              timestamp: Date.now()
+              timestamp: Date.now(),
             })
             break
-            
+
           case 'typing':
             await broadcastToAllClients({
               id: `typing-${userId}-${Date.now()}`,
@@ -642,14 +637,14 @@ export const websocketTasks: WebSocketTask = {
                 data: {
                   userId,
                   projectId: 'load-test-project',
-                  isTyping: Math.random() > 0.5
-                }
+                  isTyping: Math.random() > 0.5,
+                },
               },
-              timestamp: Date.now()
+              timestamp: Date.now(),
             })
             break
         }
-        
+
         // 액션 간 간격
         await delay(Math.random() * 1000 + 100)
       }
@@ -664,10 +659,10 @@ export const websocketTasks: WebSocketTask = {
    */
   async simulateMobileNetwork(config) {
     const { bandwidth, latency } = config
-    
+
     // 네트워크 조건 설정
     networkLatency = latency
-    
+
     const networkEvent = {
       id: 'mobile-network',
       type: 'system',
@@ -675,14 +670,14 @@ export const websocketTasks: WebSocketTask = {
         type: 'network_condition_changed',
         bandwidth,
         latency,
-        mobile: true
+        mobile: true,
       },
-      timestamp: Date.now()
+      timestamp: Date.now(),
     }
 
     await broadcastToAllClients(networkEvent)
     console.log(`Mobile network simulation: ${bandwidth}, ${latency}ms latency`)
-  }
+  },
 }
 
 /**
@@ -700,8 +695,8 @@ async function broadcastToAllClients(message: any): Promise<void> {
   }
 
   const messageString = JSON.stringify(message)
-  
-  connectedClients.forEach((ws) => {
+
+  connectedClients.forEach(ws => {
     if (ws.readyState === ws.OPEN) {
       try {
         ws.send(messageString)
@@ -718,23 +713,25 @@ async function broadcastToAllClients(message: any): Promise<void> {
  */
 async function handleWebSocketMessage(ws: any, message: any): Promise<void> {
   console.log('Received WebSocket message:', message.type)
-  
+
   switch (message.type) {
     case 'heartbeat':
       // 하트비트 응답
-      ws.send(JSON.stringify({
-        id: 'heartbeat-response',
-        type: 'heartbeat',
-        payload: { pong: true },
-        timestamp: Date.now()
-      }))
+      ws.send(
+        JSON.stringify({
+          id: 'heartbeat-response',
+          type: 'heartbeat',
+          payload: { pong: true },
+          timestamp: Date.now(),
+        })
+      )
       break
-      
+
     case 'collaboration_event':
       // 협업 이벤트를 다른 클라이언트들에게 브로드캐스트
       await broadcastToOtherClients(ws, message)
       break
-      
+
     default:
       console.log(`Unknown message type: ${message.type}`)
   }
@@ -745,8 +742,8 @@ async function handleWebSocketMessage(ws: any, message: any): Promise<void> {
  */
 async function broadcastToOtherClients(sender: any, message: any): Promise<void> {
   const messageString = JSON.stringify(message)
-  
-  connectedClients.forEach((ws) => {
+
+  connectedClients.forEach(ws => {
     if (ws !== sender && ws.readyState === ws.OPEN) {
       try {
         ws.send(messageString)

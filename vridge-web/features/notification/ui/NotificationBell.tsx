@@ -2,10 +2,10 @@
 
 import { useState, useCallback, memo } from 'react'
 
+import type { Notification } from '@/entities/notification'
+import { useNotifications } from '@/shared/hooks/useNotifications'
 import { NotificationCenter } from '@/shared/ui'
 import type { Notification as UINotification } from '@/shared/ui'
-import { useNotifications } from '@/shared/hooks/useNotifications'
-import type { Notification } from '@/entities/notification'
 
 // 엔티티 Notification을 UI Notification으로 변환하는 어댑터
 const adaptNotificationForUI = (notification: Notification): UINotification => ({

@@ -67,7 +67,7 @@ export interface ReactionBarProps {
 // DoD 규격: 3종 리액션 (좋아요/싫어요/질문)
 const REACTION_CONFIG: Record<ReactionType, {
   label: string;
-  icon: JSX.Element;
+  icon: React.ReactElement;
   color: string;
   bgColor: string;
   hoverBgColor: string;

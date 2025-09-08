@@ -10,6 +10,7 @@
  */
 
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { useParams } from 'next/navigation'
 import { vi } from 'vitest'
 
 import FeedbackDetailPage from './page'
@@ -29,7 +30,7 @@ describe('Video Feedback Page', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     // Reset params to default
-    vi.mocked(require('next/navigation').useParams).mockReturnValue({ id: '1' })
+    vi.mocked(useParams).mockReturnValue({ id: '1' })
   })
 
   describe('Layout Structure', () => {
@@ -281,7 +282,7 @@ describe('Video Feedback Page', () => {
 
   describe('Error Scenarios', () => {
     test('should handle missing ID parameter', () => {
-      vi.mocked(require('next/navigation').useParams).mockReturnValue({})
+      vi.mocked(useParams).mockReturnValue({})
       
       render(<FeedbackDetailPage />)
       
@@ -290,7 +291,7 @@ describe('Video Feedback Page', () => {
     })
 
     test('should handle non-existent feedback ID', () => {
-      vi.mocked(require('next/navigation').useParams).mockReturnValue({ id: '999' })
+      vi.mocked(useParams).mockReturnValue({ id: '999' })
       
       render(<FeedbackDetailPage />)
       

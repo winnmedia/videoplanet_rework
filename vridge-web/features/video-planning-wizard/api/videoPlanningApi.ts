@@ -118,7 +118,7 @@ export class VideoPlanningWizardApi {
       if (!response || !response.success) {
         const errorMessage = typeof response?.error === 'string' 
           ? response.error 
-          : response?.message || '4단계 기획 생성에 실패했습니다.'
+          : '4단계 기획 생성에 실패했습니다.'
         throw new Error(errorMessage)
       }
 
@@ -157,7 +157,7 @@ export class VideoPlanningWizardApi {
       if (!response || !response.success) {
         const errorMessage = typeof response?.error === 'string' 
           ? response.error 
-          : response?.message || '12개 숏 생성에 실패했습니다.'
+          : '12개 숏 생성에 실패했습니다.'
         throw new Error(errorMessage)
       }
 
@@ -183,21 +183,20 @@ export class VideoPlanningWizardApi {
     const request: GenerateStoryboardRequest = { shot }
 
     try {
-      const response = await apiClient.post<GenerateStoryboardResponse>(
+      const apiResponse = await apiClient.post<GenerateStoryboardResponse>(
         `${this.BASE_PATH}/generate-storyboard`,
-        request,
-        {
-          timeout: 60000, // 60초 타임아웃 (이미지 생성)
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        }
+        request
       )
 
-      if (!response.success) {
-        const errorMessage = typeof response.error === 'string' 
+      if (apiResponse.error) {
+        throw new Error(apiResponse.error.message || '스토리보드 생성에 실패했습니다.')
+      }
+
+      const response = apiResponse.data
+      if (!response || !response.success) {
+        const errorMessage = typeof response?.error === 'string' 
           ? response.error 
-          : response.message || '스토리보드 생성에 실패했습니다.'
+          : '스토리보드 생성에 실패했습니다.'
         throw new Error(errorMessage)
       }
 
@@ -231,21 +230,20 @@ export class VideoPlanningWizardApi {
     }
 
     try {
-      const response = await apiClient.post<ExportPlanResponse>(
+      const apiResponse = await apiClient.post<ExportPlanResponse>(
         `${this.BASE_PATH}/export-plan`,
-        request,
-        {
-          timeout: 120000, // 120초 타임아웃 (PDF 생성)
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        }
+        request
       )
 
-      if (!response.success) {
-        const errorMessage = typeof response.error === 'string' 
+      if (apiResponse.error) {
+        throw new Error(apiResponse.error.message || '기획서 내보내기에 실패했습니다.')
+      }
+
+      const response = apiResponse.data
+      if (!response || !response.success) {
+        const errorMessage = typeof response?.error === 'string' 
           ? response.error 
-          : response.message || '기획서 내보내기에 실패했습니다.'
+          : '기획서 내보내기에 실패했습니다.'
         throw new Error(errorMessage)
       }
 
@@ -272,25 +270,24 @@ export class VideoPlanningWizardApi {
     insertShots: InsertShot[]
   }): Promise<string> {
     try {
-      const response = await apiClient.post<{ success: boolean; projectId: string; error?: string }>(
+      const apiResponse = await apiClient.post<{ success: boolean; projectId: string; error?: string }>(
         `${this.BASE_PATH}/save-project`,
-        projectData,
-        {
-          timeout: 10000,
-          headers: {
-            'Content-Type': 'application/json'
-          }
-        }
+        projectData
       )
 
-      if (!response.data.success) {
-        const errorMessage = typeof response.data.error === 'string' 
-          ? response.data.error 
+      if (apiResponse.error) {
+        throw new Error(apiResponse.error.message || '프로젝트 저장에 실패했습니다.')
+      }
+
+      const response = apiResponse.data
+      if (!response || !response.success) {
+        const errorMessage = typeof response?.error === 'string' 
+          ? response.error 
           : '프로젝트 저장에 실패했습니다.'
         throw new Error(errorMessage)
       }
 
-      return response.data.projectId
+      return response.projectId
     } catch (error) {
       console.error('Save planning project error:', error)
       
@@ -313,7 +310,7 @@ export class VideoPlanningWizardApi {
     insertShots: InsertShot[]
   }> {
     try {
-      const response = await apiClient.get<{
+      const apiResponse = await apiClient.get<{
         success: boolean
         project?: {
           title: string
@@ -325,11 +322,16 @@ export class VideoPlanningWizardApi {
         error?: string
       }>(`${this.BASE_PATH}/load-project/${projectId}`)
 
-      if (!response.data.success || !response.data.project) {
-        throw new Error(response.data.error || '프로젝트를 찾을 수 없습니다.')
+      if (apiResponse.error) {
+        throw new Error(apiResponse.error.message || '프로젝트를 불러올 수 없습니다.')
       }
 
-      return response.data.project
+      const response = apiResponse.data
+      if (!response || !response.success || !response.project) {
+        throw new Error(response?.error || '프로젝트를 찾을 수 없습니다.')
+      }
+
+      return response.project
     } catch (error) {
       console.error('Load planning project error:', error)
       
@@ -352,7 +354,7 @@ export class VideoPlanningWizardApi {
     progress: number
   }>> {
     try {
-      const response = await apiClient.get<{
+      const apiResponse = await apiClient.get<{
         success: boolean
         projects?: Array<{
           id: string
@@ -364,11 +366,16 @@ export class VideoPlanningWizardApi {
         error?: string
       }>(`${this.BASE_PATH}/user-projects`)
 
-      if (!response.data.success || !response.data.projects) {
-        throw new Error(response.data.error || '프로젝트 목록을 가져올 수 없습니다.')
+      if (apiResponse.error) {
+        throw new Error(apiResponse.error.message || '프로젝트 목록을 가져올 수 없습니다.')
       }
 
-      return response.data.projects
+      const response = apiResponse.data
+      if (!response || !response.success || !response.projects) {
+        throw new Error(response?.error || '프로젝트 목록을 가져올 수 없습니다.')
+      }
+
+      return response.projects
     } catch (error) {
       console.error('Get user projects error:', error)
       

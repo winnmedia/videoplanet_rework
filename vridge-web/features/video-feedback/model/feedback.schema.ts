@@ -109,33 +109,16 @@ export const UploadProgressSchema = z.object({
  */
 export const MentionSchema = z.object({
   id: z.string().uuid(),
-  username: z.string(),
-  displayName: z.string(),
+  name: z.string(), // username/displayName을 name으로 통일
   avatarUrl: z.string().url().optional()
 });
 
-// Comment 타입을 미리 정의 (순환 참조 해결용)
-export interface Comment {
-  id: string;
-  content: string;
-  timestamp?: number;
-  status: 'active' | 'edited' | 'deleted' | 'resolved';
-  mentions?: Array<{ id: string; name: string; }>;
-  createdAt: string;
-  createdBy: {
-    id: string;
-    name: string;
-    avatarUrl?: string;
-  };
-  updatedAt?: string;
-  parentId?: string;
-  replies?: Comment[];
-}
+// Comment 타입은 CommentSchema에서 z.infer로 추론하여 사용
 
 /**
  * 코멘트 스레드
  */
-export const CommentSchema = z.object({
+export const CommentSchema: z.ZodType<any, any, any> = z.object({
   id: z.string().uuid(),
   content: z.string().min(1).max(1000),
   timestamp: z.number().min(0).optional(), // 비디오 타임스탬프 (초)
@@ -150,7 +133,7 @@ export const CommentSchema = z.object({
   updatedAt: z.string().datetime().optional(),
   parentId: z.string().uuid().optional(), // 대댓글용
   replies: z.lazy(() => z.array(CommentSchema)).optional()
-}) satisfies z.ZodType<Comment>;
+});
 
 /**
  * 감정 반응

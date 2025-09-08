@@ -6,7 +6,6 @@
 import { render } from '@testing-library/react'
 import { http, HttpResponse } from 'msw'
 
-import { server } from '@/lib/api/msw-server'
 
 import { VideoPlanningWizardApi } from '../api/videoPlanningApi'
 import type {
@@ -15,6 +14,8 @@ import type {
   InsertShot,
   ExportOptions
 } from '../model/types'
+
+import { server } from '@/lib/api/msw-server'
 
 // PDF 생성을 위한 Mock 데이터
 const mockCompleteProject = {

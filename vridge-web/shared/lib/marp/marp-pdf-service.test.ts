@@ -5,16 +5,18 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+
+import type { 
+  MarpPdfConfig,
+  MarpExportRequest 
+} from '@/entities/video-planning/model/marp-export.schema'
+
 import { 
   MarpPdfService,
   generatePdfFromMarkdown,
   createPdfBuffer,
   validatePdfOutput 
 } from './marp-pdf-service'
-import type { 
-  MarpPdfConfig,
-  MarpExportRequest 
-} from '@/entities/video-planning/model/marp-export.schema'
 
 // Puppeteer 모킹
 vi.mock('puppeteer', () => ({

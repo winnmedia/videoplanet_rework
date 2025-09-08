@@ -13,8 +13,8 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 
-import { useTimecodeSync, useTimecodeRenderer } from '../lib/useTimecodeSync';
 import { normalizeTimecodeSpacing } from '../lib/timecodeUtils';
+import { useTimecodeSync, useTimecodeRenderer } from '../lib/useTimecodeSync';
 
 // ============================================================
 // Types

@@ -12,9 +12,9 @@
 import { useCallback, useRef, useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { updatePlayerState } from '../model/feedbackSlice';
 import { formatTimecode, parseTimecode, insertTimecode, extractTimecodes } from './timecodeUtils';
 import type { PlayerState } from '../model/feedback.schema';
+import { updatePlayerState } from '../model/feedbackSlice';
 
 // ============================================================
 // Types

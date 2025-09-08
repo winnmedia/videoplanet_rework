@@ -188,7 +188,7 @@ export function withCollaboration<P extends object>(
 // 사용 예시를 위한 타입 가드
 // ===========================
 
-export function hasCollaborationProps<P>(
+export function hasCollaborationProps<P extends object>(
   props: P
 ): props is P & CollaborationInjectedProps {
   return 'collaborationState' in props && 'collaborationActions' in props

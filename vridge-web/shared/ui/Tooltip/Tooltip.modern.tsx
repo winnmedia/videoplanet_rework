@@ -3,9 +3,9 @@
 import React, { useState, useRef, useId, useCallback, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 
-interface TooltipProps {
+export interface TooltipProps {
   content: React.ReactNode
-  children: React.ReactElement
+  children: React.ReactElement<any, any>
   position?: 'top' | 'bottom' | 'left' | 'right'
   delay?: number
   disabled?: boolean
@@ -111,25 +111,37 @@ export const Tooltip = React.memo(function Tooltip({
   }, [])
 
   // 트리거 요소에 이벤트 핸들러 추가
+  const childProps = children.props as Record<string, any>
+  const originalRef = (children as any).ref
+  
   const clonedChildren = React.cloneElement(children, {
-    ref: triggerRef,
+    ...childProps,
+    ref: (element: HTMLElement | null) => {
+      // React 19 ref 합성 처리
+      triggerRef.current = element
+      if (typeof originalRef === 'function') {
+        originalRef(element)
+      } else if (originalRef && typeof originalRef === 'object') {
+        originalRef.current = element
+      }
+    },
     onMouseEnter: (event: React.MouseEvent) => {
-      children.props.onMouseEnter?.(event)
+      childProps?.onMouseEnter?.(event)
       showTooltip()
     },
     onMouseLeave: (event: React.MouseEvent) => {
-      children.props.onMouseLeave?.(event)
+      childProps?.onMouseLeave?.(event)
       hideTooltip()
     },
     onFocus: (event: React.FocusEvent) => {
-      children.props.onFocus?.(event)
+      childProps?.onFocus?.(event)
       showTooltip()
     },
     onBlur: (event: React.FocusEvent) => {
-      children.props.onBlur?.(event)
+      childProps?.onBlur?.(event)
       hideTooltip()
     },
-    'aria-describedby': isVisible ? tooltipId : children.props['aria-describedby']
+    'aria-describedby': isVisible ? tooltipId : childProps?.['aria-describedby']
   })
 
   // 툴팁 스타일

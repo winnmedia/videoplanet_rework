@@ -10,9 +10,9 @@
  * - 새로고침 로직
  */
 
+import { createSelector } from '@reduxjs/toolkit'
 import { useCallback, useEffect, useRef, useMemo } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { createSelector } from '@reduxjs/toolkit'
 
 import type { RootState } from '@/app/store/store'
 import type { Notification } from '@/entities/notification'
@@ -42,7 +42,7 @@ interface NotificationActions {
 export function useNotifications() {
   const dispatch = useDispatch()
   const wsRef = useRef<WebSocket | null>(null)
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout>()
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
   const reconnectAttempts = useRef(0)
   const maxReconnectAttempts = 5
 

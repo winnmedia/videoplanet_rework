@@ -9,10 +9,26 @@
  */
 
 import { Page, Locator, expect, BrowserContext } from '@playwright/test'
-import { MockDataGenerator } from '../mocks/api-handlers'
+
+// 사용자 데이터 타입 정의
+interface TestUser {
+  id: string
+  email: string
+  name: string
+}
+
+// 전역 객체 타입 확장 (테스트 환경용)
+declare global {
+  interface Window {
+    __testStableText?: {
+      previousText: string
+      stableCount: number
+    }
+  }
+}
 
 // ⏰ 시간 제어 및 결정론적 타이밍
-export class DeterministicTimeController {
+class DeterministicTimeController {
   private static fixedTime = new Date('2025-09-06T10:00:00.000Z')
   
   /**
@@ -23,11 +39,11 @@ export class DeterministicTimeController {
       // Date 객체 모킹
       const originalDate = Date
       Date = class extends originalDate {
-        constructor(...args: any[]) {
+        constructor(...args: unknown[]) {
           if (args.length === 0) {
             super(time)
           } else {
-            super(...args)
+            super(...(args as ConstructorParameters<typeof originalDate>))
           }
         }
         
@@ -37,7 +53,7 @@ export class DeterministicTimeController {
       } as any
       
       // performance.now() 모킹
-      let startTime = performance.now()
+      const startTime = performance.now()
       const originalPerformanceNow = performance.now
       performance.now = () => {
         return originalPerformanceNow.call(performance) - startTime
@@ -54,7 +70,7 @@ export class DeterministicTimeController {
       if (window.setTimeout) {
         const callbacks = []
         const originalSetTimeout = window.setTimeout
-        window.setTimeout = ((callback, delay) => {
+        window.setTimeout = ((callback: () => void, delay: number) => {
           if (delay <= ms) {
             setTimeout(callback, 0) // 즉시 실행
           }
@@ -66,7 +82,7 @@ export class DeterministicTimeController {
 }
 
 // 🎯 확정적 대기 패턴 (No More Race Conditions)
-export class StableWaitPatterns {
+class StableWaitPatterns {
   /**
    * 네트워크 유휴 상태까지 안전하게 대기
    */
@@ -144,32 +160,39 @@ export class StableWaitPatterns {
    * 텍스트 콘텐츠 안정화 대기 (동적 로딩 콘텐츠)
    */
   static async forTextContent(locator: Locator, expectedPattern?: RegExp, timeout = 10000) {
-    let previousText = ''
-    let stableCount = 0
+    const previousText = ''
+    const stableCount = 0
     const requiredStableChecks = 3
     
     await locator.page().waitForFunction(
-      (element, pattern, previousTextRef, stableCountRef, required) => {
+      (args) => {
+        const { element, pattern, required } = args
+        if (!element) return false
         const currentText = element.textContent?.trim() || ''
         
-        if (currentText === previousTextRef.value) {
-          stableCountRef.value++
-        } else {
-          stableCountRef.value = 0
-          previousTextRef.value = currentText
+        // 상태 추적을 위한 전역 변수 사용 (테스트 환경에서만)
+        if (!window.__testStableText) {
+          window.__testStableText = { previousText: '', stableCount: 0 }
         }
         
-        const isStable = stableCountRef.value >= required
-        const matchesPattern = pattern ? pattern.test(currentText) : true
+        if (currentText === window.__testStableText.previousText) {
+          window.__testStableText.stableCount++
+        } else {
+          window.__testStableText.stableCount = 0
+          window.__testStableText.previousText = currentText
+        }
+        
+        const isStable = window.__testStableText.stableCount >= required
+        const matchesPattern = pattern ? new RegExp(pattern).test(currentText) : true
         
         return isStable && matchesPattern && currentText.length > 0
       },
-      await locator.elementHandle(),
-      expectedPattern,
-      { value: previousText },
-      { value: stableCount },
-      requiredStableChecks,
-      { timeout, polling: 100 }
+      {
+        element: await locator.elementHandle(),
+        pattern: expectedPattern?.source || null,
+        required: requiredStableChecks
+      },
+      { timeout }
     )
   }
 
@@ -206,7 +229,7 @@ export class StableWaitPatterns {
 }
 
 // 🧪 테스트 상태 격리 관리자
-export class TestStateManager {
+class TestStateManager {
   private static testData: Map<string, any> = new Map()
   
   /**
@@ -278,12 +301,12 @@ export class TestStateManager {
   /**
    * 결정론적 테스트 사용자 생성
    */
-  static createDeterministicUser(testName: string) {
-    const user = MockDataGenerator.createUser({
+  static createDeterministicUser(testName: string): TestUser {
+    const user: TestUser = {
       email: `${testName.replace(/\s+/g, '-').toLowerCase()}@e2etest.com`,
       name: `Test User for ${testName}`,
       id: `user_${testName.replace(/\s+/g, '_').toLowerCase()}`
-    })
+    }
     
     this.setTestData(`user_${testName}`, user)
     return user
@@ -291,7 +314,7 @@ export class TestStateManager {
 }
 
 // 🔍 정확한 요소 선택 도구
-export class PreciseElementSelector {
+class PreciseElementSelector {
   /**
    * 텍스트 내용으로 정확한 요소 찾기
    */
@@ -344,7 +367,7 @@ export class PreciseElementSelector {
 }
 
 // 🎭 사용자 상호작용 시뮬레이터
-export class ReliableUserActions {
+class ReliableUserActions {
   /**
    * 안전한 클릭 (오버레이, 로딩 상태 고려)
    */
@@ -360,7 +383,7 @@ export class ReliableUserActions {
     
     // 2. 네비게이션 예상 시 대기 준비
     const navigationPromise = waitForNavigation 
-      ? locator.page().waitForNavigation({ timeout: timeout })
+      ? locator.page().waitForLoadState('networkidle', { timeout })
       : Promise.resolve()
     
     // 3. 클릭 실행
@@ -423,7 +446,7 @@ export class ReliableUserActions {
 }
 
 // 📊 테스트 메트릭 수집기
-export class TestMetricsCollector {
+class TestMetricsCollector {
   private static metrics: Map<string, any> = new Map()
   
   /**
@@ -506,13 +529,22 @@ export class TestMetricsCollector {
 }
 
 // 🌍 환경 일관성 보장
-export class EnvironmentNormalizer {
+class EnvironmentNormalizer {
   /**
    * 브라우저 환경 정규화
    */
   static async normalizeBrowserEnvironment(page: Page) {
-    // 1. 타임존 고정 (UTC)
-    await page.emulateTimezone('UTC')
+    // 1. 언어 및 지역 설정 고정 (타임존은 addInitScript로 처리)
+    await page.addInitScript(() => {
+      // UTC 타임존 고정
+      const originalDate = Date
+      const utcOffset = 0
+      Date = class extends originalDate {
+        getTimezoneOffset() {
+          return utcOffset
+        }
+      } as any
+    })
     
     // 2. 언어 및 지역 설정 고정
     await page.setExtraHTTPHeaders({
@@ -559,7 +591,7 @@ export class EnvironmentNormalizer {
 }
 
 // 🔄 재시도 및 복구 전략
-export class RetryStrategy {
+class RetryStrategy {
   /**
    * 지수 백오프를 사용한 재시도
    */
@@ -574,7 +606,7 @@ export class RetryStrategy {
       try {
         return await operation()
       } catch (error) {
-        lastError = error
+        lastError = error as Error
         
         if (attempt === maxRetries) {
           throw error
@@ -627,7 +659,7 @@ export class RetryStrategy {
   }
 }
 
-// 내보내기
+// 내보내기 (중복 제거)
 export {
   DeterministicTimeController,
   StableWaitPatterns, 
@@ -638,3 +670,6 @@ export {
   EnvironmentNormalizer,
   RetryStrategy
 }
+
+// 기본 인터페이스 내보내기
+export type { TestUser }

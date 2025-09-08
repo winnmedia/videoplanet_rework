@@ -8,7 +8,7 @@
 // Core Domain Types
 // ===========================
 
-export type CalendarViewMode = 'month' | 'week' | 'day'
+export type CalendarViewMode = 'month' | 'week' | 'day' | 'gantt'
 
 export type EventCategory = 'project-deadline' | 'milestone' | 'meeting' | 'personal' | 'holiday' | 'filming'
 
@@ -164,15 +164,26 @@ export interface ProjectPhase {
   color?: string    // inherited from project
   isMovable: boolean // drag-drop permission
   dependencies?: string[] // phase IDs this depends on
+  // Required properties for compatibility with project/calendar-types
+  status: 'pending' | 'in-progress' | 'completed' | 'blocked'
+  conflictLevel: 'none' | 'warning' | 'critical'
+  isEditable: boolean
+  assignedTo?: string[]
+  resources?: string[]
 }
 
 /**
- * Project Domain Model
+ * Project Domain Model - Aliased from entities/project
  */
 export interface Project {
   id: string
   name: string
   color: string     // unique color per project
+  hue: number      // HSL hue value for consistent theming
+  startDate: string // ISO date string
+  endDate: string   // ISO date string
+  organization?: string // 조직 정보
+  manager?: string     // 프로젝트 관리자
   description?: string
   status: 'active' | 'completed' | 'on-hold' | 'cancelled'
   phases: ProjectPhase[]
@@ -186,7 +197,13 @@ export interface Project {
 export interface ProjectCalendarEvent extends Omit<CalendarEvent, 'projectId' | 'projectTitle' | 'projectColor'> {
   project: Project
   phase: ProjectPhase
+  priority: EventPriority
+  createdBy: string
+  category: EventCategory
+  isAllDay: boolean
   isConflicting: boolean
+  isDraggable: boolean
+  isResizable: boolean
   conflictDetails?: CalendarConflict[]
 }
 
@@ -252,6 +269,9 @@ export interface CalendarFilterOptions {
   showConflictsOnly: boolean
   selectedProjects: string[]
   selectedPhaseTypes: ProjectPhaseType[]
+  selectedOrganizations?: string[]
+  selectedAssignees?: string[]
+  showMyProjectsOnly?: boolean
   dateRange: {
     start: string
     end: string

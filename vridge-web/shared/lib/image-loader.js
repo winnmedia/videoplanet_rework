@@ -8,7 +8,7 @@
 const CRITICAL_IMAGES = new Map([
   // 최우선 최적화 대상 (2MB+ 이미지)
   ['/images/Cms/video_sample.webp', { quality: 65, priority: 'high' }],
-  ['/images/User/bg.png', { quality: 70, priority: 'high' }],
+  ['/images/User/bg.webp', { quality: 70, priority: 'high' }],
   ['/images/Home/new/visual-bg.webp', { quality: 70, priority: 'high' }],
   
   // 고우선순위 최적화 대상 (500KB-1MB 이미지)  
@@ -42,7 +42,7 @@ const WEBP_OPTIMIZED_IMAGES = new Set([
 // Above-the-fold 이미지들 (preload 대상)
 const ABOVE_FOLD_IMAGES = new Set([
   '/images/Home/new/visual-bg.webp',
-  '/images/User/bg.png',
+  '/images/User/bg.webp',
   '/images/Home/img01.png'
 ]);
 

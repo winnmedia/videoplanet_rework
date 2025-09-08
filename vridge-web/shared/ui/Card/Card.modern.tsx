@@ -207,8 +207,8 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
       }
     }
 
-    // 접근성 속성 설정
-    const accessibilityProps = isInteractive ? {
+    // 접근성 속성 설정 (React 19 호환)
+    const accessibilityProps: React.HTMLAttributes<HTMLDivElement> = isInteractive ? {
       role: 'button',
       tabIndex: 0,
       onKeyDown: handleKeyDown,
@@ -216,12 +216,12 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
     } : {}
 
     if (isDisabled) {
-      accessibilityProps['aria-disabled'] = 'true'
+      accessibilityProps['aria-disabled'] = true
       accessibilityProps.tabIndex = -1
     }
 
     if (loading) {
-      accessibilityProps['aria-busy'] = 'true'
+      accessibilityProps['aria-busy'] = true
     }
 
     return (

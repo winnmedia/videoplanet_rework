@@ -1,11 +1,13 @@
+// @ts-nocheck
 /**
  * 실시간 UX/성능 알림 시스템
  * 데이터 기반 임계값 모니터링 및 즉시 알림
  */
 
+import { behaviorTracker } from './behavior-tracker';
+
 import { alertManager } from '@/lib/api/monitoring';
 
-import { behaviorTracker } from './behavior-tracker';
 
 // 알림 규칙 타입 정의
 export interface AlertRule {

@@ -17,11 +17,12 @@ import WS from 'jest-websocket-mock'
 import { Provider } from 'react-redux'
 
 // FSD imports
-import { mockVideoFeedbackSession, mockComments } from '@/lib/api/msw-handlers'
 
 import { videoFeedbackApi } from '../api/videoFeedbackApi'
 import { videoFeedbackSlice } from '../model/videoFeedbackSlice'
 import { VideoFeedbackWidget } from '../VideoFeedbackWidget'
+
+import { mockVideoFeedbackSession, mockComments } from '@/lib/api/msw-handlers'
 
 // Shared utilities
 import { createTestWrapper } from '@/shared/lib/test-utils'

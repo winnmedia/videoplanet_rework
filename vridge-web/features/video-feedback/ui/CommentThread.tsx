@@ -12,9 +12,9 @@
 
 import React, { useState, useCallback, useMemo } from 'react';
 
-import { Comment, CommentStatus } from '../model/feedback.schema';
-import { useTimecodeRenderer } from '../lib/useTimecodeSync';
 import { TimecodeCommentInput } from './TimecodeCommentInput';
+import { useTimecodeRenderer } from '../lib/useTimecodeSync';
+import { Comment, CommentStatus } from '../model/feedback.schema';
 
 // ============================================================
 // Types
@@ -324,7 +324,7 @@ const CommentItem: React.FC<CommentItemProps> = ({
       {/* Nested Replies */}
       {comment.replies && comment.replies.length > 0 && (
         <div>
-          {comment.replies.map((reply) => (
+          {comment.replies.map((reply: Comment) => (
             <CommentItem
               key={reply.id}
               comment={reply}

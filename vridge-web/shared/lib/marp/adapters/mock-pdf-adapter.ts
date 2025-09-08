@@ -28,7 +28,15 @@ export class MockPdfAdapter implements IPdfGenerator {
     this.mockMemoryUsage = options.memoryUsage ?? 50 * 1024 * 1024 // 50MB
   }
 
-  async generatePdf(markdown: string, config: MarpPdfConfig = {}): Promise<PdfGenerationResult> {
+  async generatePdf(markdown: string, config: MarpPdfConfig = {
+    quality: 100,
+    timeout: 30000,
+    margin: { top: '1cm', bottom: '1cm', left: '1cm', right: '1cm' },
+    scale: 1,
+    format: 'A4',
+    orientation: 'portrait',
+    enableBackground: true
+  }): Promise<PdfGenerationResult> {
     this.requestCount++
 
     // 지연 시뮬레이션

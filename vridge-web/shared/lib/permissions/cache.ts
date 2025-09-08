@@ -3,13 +3,13 @@
  * 성능 최적화를 위한 메모리 기반 권한 캐시
  */
 
+import { PermissionChecker } from '@/entities/rbac/lib/permissionChecker'
 import type { 
   RBACUser, 
   Permission, 
   PermissionCache,
   UserRole 
 } from '@/entities/rbac/model/types'
-import { PermissionChecker } from '@/entities/rbac/lib/permissionChecker'
 
 /**
  * 캐시 설정
@@ -38,7 +38,7 @@ const DEFAULT_CONFIG: CacheConfig = {
 class PermissionCacheManager {
   private cache = new Map<string, PermissionCache>()
   private config: CacheConfig
-  private cleanupTimer?: NodeJS.Timer
+  private cleanupTimer?: NodeJS.Timeout
 
   constructor(config: Partial<CacheConfig> = {}) {
     this.config = { ...DEFAULT_CONFIG, ...config }
@@ -151,8 +151,10 @@ class PermissionCacheManager {
    * 정기 캐시 정리 시작
    */
   private startCleanup(): void {
-    this.cleanupTimer = setInterval(() => {
+    this.cleanupTimer = setTimeout(() => {
       this.cleanup()
+      // Recursive scheduling for continuous cleanup
+      this.startCleanup()
     }, this.config.cleanupInterval)
   }
 
@@ -161,7 +163,7 @@ class PermissionCacheManager {
    */
   stopCleanup(): void {
     if (this.cleanupTimer) {
-      clearInterval(this.cleanupTimer)
+      clearTimeout(this.cleanupTimer)
       this.cleanupTimer = undefined
     }
   }

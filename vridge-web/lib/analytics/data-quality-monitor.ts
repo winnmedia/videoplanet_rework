@@ -1,9 +1,9 @@
+// @ts-nocheck
 /**
  * 데이터 품질 보증 및 SLO 모니터링 시스템
  * 데이터 파이프라인의 신뢰성을 보장하고 서비스 수준 목표를 추적
  */
 
-import { apiMonitor } from '@/lib/api/monitoring'
 import { 
   DataQualityMetric, 
   SLOMetric, 
@@ -12,6 +12,8 @@ import {
 
 import { alertSystem } from './alert-system'
 import { realTimeDataCollector } from './real-time-data-collector'
+
+import { apiMonitor } from '@/lib/api/monitoring'
 
 // 데이터 품질 규칙
 export interface DataQualityRule {

@@ -15,7 +15,7 @@ enum NetworkStatus {
   UNKNOWN = 'unknown'
 }
 
-interface Props {
+export interface ErrorBoundaryProps {
   children: ReactNode;
   fallback?: React.ComponentType<ErrorBoundaryFallbackProps>;
   onError?: (error: Error) => void;
@@ -41,11 +41,11 @@ export interface ErrorBoundaryFallbackProps {
   networkStatus: NetworkStatus;
 }
 
-export class ErrorBoundary extends Component<Props, State> {
+export class ErrorBoundary extends Component<ErrorBoundaryProps, State> {
   private maxRetries = 3;
   private retryTimeouts: NodeJS.Timeout[] = [];
 
-  constructor(props: Props) {
+  constructor(props: ErrorBoundaryProps) {
     super(props);
 
     this.state = {

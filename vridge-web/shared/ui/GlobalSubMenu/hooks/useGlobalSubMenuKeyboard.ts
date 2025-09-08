@@ -82,12 +82,12 @@ export function useGlobalSubMenuKeyboard({
           // Shift+Tab (역방향)
           event.preventDefault()
           const prevIndex = (currentIndex - 1 + focusableElements.length) % focusableElements.length
-          focusableElements[prevIndex]?.focus()
+          ;(focusableElements[prevIndex] as HTMLElement)?.focus()
         } else {
           // Tab (정방향)
           event.preventDefault()
           const nextIndex = (currentIndex + 1) % focusableElements.length
-          focusableElements[nextIndex]?.focus()
+          ;(focusableElements[nextIndex] as HTMLElement)?.focus()
         }
         break
     }

@@ -59,12 +59,7 @@ export function ProjectForm({ onSubmit, isLoading = false }: ProjectFormProps) {
       }
       const result = await createProject({
         title: data.title,
-        description: data.description,
-        autoSchedule: {
-          planning: { duration: data.planningDuration || 7 },
-          shooting: { duration: data.shootingDuration || 1 },
-          editing: { duration: data.editingDuration || 14 }
-        }
+        description: data.description
       })
       
       if (result && result.unwrap) {

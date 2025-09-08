@@ -5,6 +5,7 @@
  */
 
 import { test, expect } from '@playwright/test'
+
 import { waitForAppReady, waitForComponent, waitForApiResponse, waitForFormSubmission, waitForModal } from './helpers/wait-utils'
 
 test.describe('종합 사용자 여정 시나리오', () => {

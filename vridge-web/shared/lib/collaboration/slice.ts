@@ -6,6 +6,8 @@
 
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'
 
+import { performanceMonitor } from '@/shared/lib/performance-monitor'
+
 import {
   CollaborationState,
   CollaborationUser,
@@ -16,7 +18,6 @@ import {
   ConflictResolutionPayload,
   CollaborationApiResponse
 } from './types'
-import { performanceMonitor } from '../../performance-monitor'
 
 
 // ===========================
@@ -302,7 +303,8 @@ export const {
   clearPollingError
 } = collaborationSlice.actions
 
-export default collaborationSlice.reducer
+export { collaborationSlice as default }
+export const collaborationReducer = collaborationSlice.reducer
 
 // 셀렉터들
 export const selectActiveUsers = (state: { collaboration: CollaborationState }) => 

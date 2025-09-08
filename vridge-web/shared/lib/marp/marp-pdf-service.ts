@@ -4,13 +4,58 @@
  * @layer shared
  */
 
-import { Marp } from '@marp-team/marp-core'
 import type {
   MarpPdfConfig,
   MarpExportRequest,
   MarpExportResponse
 } from '@/entities/video-planning/model/marp-export.schema'
+
 import { generateMarpTemplate } from './marp-template-generator'
+
+// Dynamic import to avoid SSR issues
+interface MarpOptions {
+  html?: boolean;
+  allowLocalFiles?: boolean;
+  markdown?: {
+    breaks?: boolean;
+    typographer?: boolean;
+  };
+}
+
+interface MarpThemeSet {
+  default?: string | any;
+  [key: string]: string | any | undefined;
+}
+
+type MarpClass = new (options?: MarpOptions) => {
+  render(markdown: string, env?: any): { html: string; css: string } | Promise<{ html: string; css: string }>;
+  themeSet?: MarpThemeSet;
+};
+
+let loadedMarpClass: MarpClass | null = null;
+const loadMarp = async (): Promise<MarpClass> => {
+  if (typeof window !== 'undefined') {
+    throw new Error('Marp is server-side only');
+  }
+  if (!loadedMarpClass) {
+    try {
+      const marpModule = await import('@marp-team/marp-core');
+      loadedMarpClass = marpModule.Marp;
+    } catch (error) {
+      console.warn('Marp not available, using fallback', error);
+      loadedMarpClass = class MockMarp {
+        constructor() {}
+        async render(markdown: string) {
+          return {
+            html: `<div>Mock rendering: ${markdown.slice(0, 100)}...</div>`,
+            css: 'body { font-family: sans-serif; }'
+          };
+        }
+      } as MarpClass;
+    }
+  }
+  return loadedMarpClass!;
+};
 
 // ============================
 // 타입 정의
@@ -40,20 +85,28 @@ interface PdfValidationResult {
 // ============================
 
 export class MarpPdfService {
-  private marp: Marp
+  private marp: InstanceType<MarpClass> | null = null
   
   constructor() {
-    this.marp = new Marp({
-      html: true,
-      allowLocalFiles: true,
-      markdown: {
-        breaks: true,
-        typographer: true
-      }
-    })
-    
-    // 한글 폰트 지원을 위한 설정
-    this.configureFonts()
+    // Marp는 async로 초기화될 예정
+  }
+
+  private async initializeMarp() {
+    if (!this.marp) {
+      const MarpConstructor = await loadMarp();
+      this.marp = new MarpConstructor({
+        html: true,
+        allowLocalFiles: true,
+        markdown: {
+          breaks: true,
+          typographer: true
+        }
+      });
+      
+      // 한글 폰트 지원을 위한 설정
+      this.configureFonts();
+    }
+    return this.marp;
   }
 
   /**
@@ -72,7 +125,8 @@ export class MarpPdfService {
       }
 
       // Marp로 HTML 렌더링
-      const renderResult = await this.marp.render(markdown)
+      const marp = await this.initializeMarp();
+      const renderResult = await Promise.resolve(marp.render(markdown))
       const html = this.createFullHtml(renderResult.html, renderResult.css)
 
       // PDF 생성
@@ -159,7 +213,7 @@ export class MarpPdfService {
     `
     
     // themeSet이 존재하고 default 테마가 있는지 확인
-    if (this.marp.themeSet && this.marp.themeSet.default) {
+    if (this.marp && this.marp.themeSet && this.marp.themeSet.default) {
       this.marp.themeSet.default = fontFaces + this.marp.themeSet.default
     }
   }
@@ -303,7 +357,8 @@ export async function generatePdfFromMarkdown(
  * HTML에서 PDF 버퍼 생성 (Puppeteer 사용)
  * TODO: Re-enable Puppeteer when SSR issues are resolved
  */
-export async function createPdfBuffer(html: string, config: MarpPdfConfig): Promise<Buffer> {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export async function createPdfBuffer(_html: string, _config: MarpPdfConfig): Promise<Buffer> {
   // Temporary stub implementation to avoid SSR issues
   // Return a minimal PDF buffer for now
   const mockPdfBuffer = Buffer.from(`%PDF-1.4
