@@ -1,5 +1,5 @@
 import { httpClient } from '@/shared/api'
-import { validateRequest, SubMenuResponseSchema, MenuItemsResponseSchema } from '@/shared/api/schemas'
+import { validateData, SubMenuResponseSchema, MenuItemsResponseSchema } from '@/shared/api/schemas'
 
 import type { MenuApiResponse, SubMenuItem } from '../model/types'
 
@@ -12,7 +12,11 @@ class MenuApi {
       const response = await httpClient.get(`${this.baseUrl}/submenu?type=${menuType}`)
 
       // 스키마 검증
-      const validatedResponse = validateRequest(SubMenuResponseSchema, response.data)
+      const validationResult = validateData(SubMenuResponseSchema, response.data)
+      if (!validationResult.success) {
+        throw new Error(`Schema validation failed: ${validationResult.error}`)
+      }
+      const validatedResponse = validationResult.data
 
       return validatedResponse.data.items
     } catch (error) {
@@ -125,7 +129,11 @@ class MenuApi {
       const response = await httpClient.get(`${this.baseUrl}/items?includeInactive=${includeInactive}`)
 
       // 스키마 검증
-      const validatedResponse = validateRequest(MenuItemsResponseSchema, response.data)
+      const validationResult = validateData(MenuItemsResponseSchema, response.data)
+      if (!validationResult.success) {
+        throw new Error(`Schema validation failed: ${validationResult.error}`)
+      }
+      const validatedResponse = validationResult.data
 
       return validatedResponse.data.items
     } catch (error) {
@@ -146,22 +154,22 @@ class MenuApi {
   async createProject(data: Partial<SubMenuItem>): Promise<SubMenuItem> {
     const response = await httpClient.post('/api/projects', data)
     const responseData = response.data as { items?: SubMenuItem[] }
-    
+
     if (!responseData.items || responseData.items.length === 0) {
       throw new Error('Invalid API response: No items returned')
     }
-    
+
     return responseData.items[0]
   }
 
   async updateProject(id: string, data: Partial<SubMenuItem>): Promise<SubMenuItem> {
     const response = await httpClient.put(`/api/projects/${id}`, data)
     const responseData = response.data as { items?: SubMenuItem[] }
-    
+
     if (!responseData.items || responseData.items.length === 0) {
       throw new Error('Invalid API response: No items returned')
     }
-    
+
     return responseData.items[0]
   }
 

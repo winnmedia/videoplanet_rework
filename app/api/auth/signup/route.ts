@@ -9,6 +9,7 @@ import { NextRequest } from 'next/server'
 import { ZodError } from 'zod'
 
 import { sendVerificationEmail } from '@/lib/email/simple-sendgrid'
+import { SignupRequestSchema, type SignupRequestType } from '@/shared/api/schemas'
 import {
   createSuccessResponse,
   createErrorResponse,
@@ -18,7 +19,7 @@ import {
 } from '@/shared/lib/api-response'
 import { generateAccessToken } from '@/shared/lib/auth/jwt'
 import { findUserByEmail, createUser, hashPassword } from '@/shared/lib/db/mock-db'
-import { signupRequestSchema, SignupResponse } from '@/shared/lib/schemas/auth.schema'
+import { type SignupResponse } from '@/shared/lib/schemas/auth.schema'
 
 /**
  * POST /api/auth/signup
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 입력 데이터 검증
-    const validationResult = signupRequestSchema.safeParse(requestBody)
+    const validationResult = SignupRequestSchema.safeParse(requestBody)
     if (!validationResult.success) {
       return createValidationErrorResponse(validationResult.error)
     }

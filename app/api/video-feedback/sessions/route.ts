@@ -1,11 +1,17 @@
 /**
  * @fileoverview Video Feedback Sessions API Route
- * @description 비디오 피드백 세션 생성 및 조회 API
+ * @description 비디오 피드백 세션 생성 및 조회 API (표준화된 응답 형식)
  * @layer app/api
  */
 
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { z } from 'zod'
+
+import {
+  createSuccessResponse,
+  createValidationErrorResponse,
+  createInternalServerErrorResponse,
+} from '../../../../shared/lib/api-response'
 
 // 비디오 메타데이터 스키마 (임시 정의)
 const VideoMetadataSchema = z.object({
@@ -20,15 +26,8 @@ const VideoMetadataSchema = z.object({
 // Types & Schemas
 // ============================================================
 
-// 호환성을 위한 ID 검증 스키마 (긴급 패치)
-const ProjectIdSchema = z
-  .string()
-  .min(1, 'ID는 필수입니다')
-  .refine(val => {
-    // UUID 형식이거나 일반 문자열 허용
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-    return uuidRegex.test(val) || /^[a-zA-Z0-9\-_]+$/.test(val)
-  }, '유효하지 않은 ID 형식입니다')
+// 단순화된 ID 검증 스키마 (UUID 또는 문자열 허용)
+const ProjectIdSchema = z.string().min(1, 'Project ID는 필수입니다').max(255, 'Project ID는 255자를 초과할 수 없습니다')
 
 const CreateSessionSchema = z.object({
   projectId: ProjectIdSchema,
@@ -47,19 +46,10 @@ const sessionsStore = new Map<string, Record<string, unknown>>()
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-
-    // 입력 데이터 검증
     const validationResult = CreateSessionSchema.safeParse(body)
 
     if (!validationResult.success) {
-      const errors = validationResult.error.errors.map(err => `${err.path.join('.')}: ${err.message}`)
-      return NextResponse.json(
-        {
-          success: false,
-          error: errors.join(', '),
-        },
-        { status: 400 }
-      )
+      return createValidationErrorResponse(validationResult.error)
     }
 
     const validatedData = validationResult.data
@@ -79,7 +69,7 @@ export async function POST(request: NextRequest) {
       reactions: [],
       participants: [
         {
-          id: 'current-user', // 실제로는 인증된 사용자 ID
+          id: 'current-user',
           name: '현재 사용자',
           role: 'owner' as const,
           lastSeenAt: currentTime,
@@ -97,30 +87,12 @@ export async function POST(request: NextRequest) {
       updatedAt: currentTime,
     }
 
-    // 스키마 검증 없이 간단히 저장 (단순 구현을 위해)
-    // 실제 운영에서는 Zod 검증을 사용해야 함
-
     // 저장소에 저장
     sessionsStore.set(sessionId, newSession)
 
-    return NextResponse.json(
-      {
-        success: true,
-        session: newSession,
-        message: '비디오 피드백 세션이 성공적으로 생성되었습니다.',
-      },
-      { status: 201 }
-    )
+    return createSuccessResponse(newSession, '비디오 피드백 세션이 성공적으로 생성되었습니다.', 201)
   } catch (error) {
-    console.error('세션 생성 오류:', error)
-
-    return NextResponse.json(
-      {
-        success: false,
-        error: '세션 생성 중 서버 오류가 발생했습니다.',
-      },
-      { status: 500 }
-    )
+    return createInternalServerErrorResponse('세션 생성 중 오류가 발생했습니다.')
   }
 }
 
@@ -150,8 +122,7 @@ export async function GET(request: NextRequest) {
     const startIndex = (page - 1) * limit
     const paginatedSessions = sessions.slice(startIndex, startIndex + limit)
 
-    return NextResponse.json({
-      success: true,
+    const responseData = {
       sessions: paginatedSessions,
       pagination: {
         page,
@@ -159,17 +130,10 @@ export async function GET(request: NextRequest) {
         total,
         hasMore: startIndex + limit < total,
       },
-      message: '세션 목록이 성공적으로 조회되었습니다.',
-    })
-  } catch (error) {
-    console.error('세션 목록 조회 오류:', error)
+    }
 
-    return NextResponse.json(
-      {
-        success: false,
-        error: '세션 목록 조회 중 서버 오류가 발생했습니다.',
-      },
-      { status: 500 }
-    )
+    return createSuccessResponse(responseData, '세션 목록이 성공적으로 조회되었습니다.')
+  } catch (error) {
+    return createInternalServerErrorResponse('세션 목록 조회 중 오류가 발생했습니다.')
   }
 }

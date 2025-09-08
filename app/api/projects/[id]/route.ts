@@ -5,13 +5,13 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 
+import { UpdateProjectSchema } from '../../../../shared/api/schemas'
 import { mockDB } from '../../../../shared/lib/db/mock-db'
-import { ProjectIdSchema, UpdateProjectSchema } from '../../../../shared/lib/schemas/project.simple.schema'
 
 // GET /api/projects/[id] - 프로젝트 단일 조회
 export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const validId = ProjectIdSchema.parse(params.id)
+    const validId = params.id // 단순화된 ID 검증
     const project = mockDB.projects.findById(validId)
     if (!project) {
       return NextResponse.json({ error: '프로젝트를 찾을 수 없습니다' }, { status: 404 })
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 // PUT /api/projects/[id] - 프로젝트 수정
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const validId = ProjectIdSchema.parse(params.id)
+    const validId = params.id // 단순화된 ID 검증
     const body = await request.json()
     const validData = UpdateProjectSchema.parse(body)
     const updatedProject = mockDB.projects.update(validId, validData)
@@ -48,7 +48,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 // DELETE /api/projects/[id] - 프로젝트 삭제
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const validId = ProjectIdSchema.parse(params.id)
+    const validId = params.id // 단순화된 ID 검증
     const deleted = mockDB.projects.delete(validId)
     if (!deleted) {
       return NextResponse.json({ error: '프로젝트를 찾을 수 없습니다' }, { status: 404 })

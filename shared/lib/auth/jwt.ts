@@ -7,7 +7,7 @@
 
 import jwt from 'jsonwebtoken'
 
-import { User } from '../schemas/auth.schema'
+import { type UserType as User } from '@/shared/api/schemas'
 
 // JWT 설정
 const JWT_SECRET = process.env.JWT_SECRET || 'development-secret-key-change-in-production'

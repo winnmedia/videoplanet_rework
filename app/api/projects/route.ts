@@ -5,8 +5,8 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 
+import { CreateProjectSchema, ProjectListResponseSchema } from '../../../shared/api/schemas'
 import { mockDB } from '../../../shared/lib/db/mock-db'
-import { CreateProjectSchema, ProjectListResponseSchema } from '../../../shared/lib/schemas/project.simple.schema'
 
 // GET /api/projects - 프로젝트 목록 조회
 export async function GET() {

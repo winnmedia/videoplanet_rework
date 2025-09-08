@@ -7,12 +7,12 @@
 
 import bcrypt from 'bcryptjs'
 
-import { User } from '../schemas/auth.schema'
+import { type UserType as User } from '@/shared/api/schemas'
 
 // 인메모리 사용자 데이터
 export let users: Array<User & { password: string }> = [
   {
-    id: '550e8400-e29b-41d4-a716-446655440000',
+    id: 'user-admin',
     email: 'admin@videoplanet.com',
     name: '관리자',
     password: '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj/2b.S8u.Jq', // password123
@@ -22,9 +22,29 @@ export let users: Array<User & { password: string }> = [
     updatedAt: '2024-01-01T00:00:00Z',
   },
   {
-    id: '550e8400-e29b-41d4-a716-446655440001',
+    id: 'user-1',
     email: 'user@videoplanet.com',
     name: '일반사용자',
+    password: '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj/2b.S8u.Jq', // password123
+    role: 'user',
+    isEmailVerified: true,
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+  },
+  {
+    id: 'user-2',
+    email: 'user2@videoplanet.com',
+    name: '사용자2',
+    password: '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj/2b.S8u.Jq', // password123
+    role: 'user',
+    isEmailVerified: true,
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-01T00:00:00Z',
+  },
+  {
+    id: 'user-3',
+    email: 'user3@videoplanet.com',
+    name: '사용자3',
     password: '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj/2b.S8u.Jq', // password123
     role: 'user',
     isEmailVerified: true,
@@ -59,7 +79,7 @@ export async function createUser(userData: {
   role?: string
 }): Promise<User> {
   const newUser: User & { password: string } = {
-    id: crypto.randomUUID(),
+    id: `user-${Date.now()}`, // 단순한 ID 생성
     email: userData.email,
     name: userData.name,
     password: userData.hashedPassword,
@@ -140,7 +160,7 @@ export async function deleteUser(id: string): Promise<boolean> {
 export function resetDatabase(): void {
   users = [
     {
-      id: '550e8400-e29b-41d4-a716-446655440000',
+      id: 'user-admin',
       email: 'admin@videoplanet.com',
       name: '관리자',
       password: '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj/2b.S8u.Jq',
@@ -150,7 +170,7 @@ export function resetDatabase(): void {
       updatedAt: '2024-01-01T00:00:00Z',
     },
     {
-      id: '550e8400-e29b-41d4-a716-446655440001',
+      id: 'user-1',
       email: 'user@videoplanet.com',
       name: '일반사용자',
       password: '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj/2b.S8u.Jq',
@@ -159,7 +179,249 @@ export function resetDatabase(): void {
       createdAt: '2024-01-01T00:00:00Z',
       updatedAt: '2024-01-01T00:00:00Z',
     },
+    {
+      id: 'user-2',
+      email: 'user2@videoplanet.com',
+      name: '사용자2',
+      password: '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJQhN8/LewdBPj/2b.S8u.Jq',
+      role: 'user',
+      isEmailVerified: true,
+      createdAt: '2024-01-01T00:00:00Z',
+      updatedAt: '2024-01-01T00:00:00Z',
+    },
+    {
+      id: 'user-3',
+      email: 'user3@videoplanet.com',
+      name: '사용자3',
+      password: '$2a$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj/2b.S8u.Jq',
+      role: 'user',
+      isEmailVerified: true,
+      createdAt: '2024-01-01T00:00:00Z',
+      updatedAt: '2024-01-01T00:00:00Z',
+    },
   ]
+
+  projects = [
+    {
+      id: 'project-1',
+      name: '브랜드 홍보 영상 제작',
+      description: '신제품 런칭을 위한 브랜드 홍보 영상 제작 프로젝트',
+      status: 'ACTIVE',
+      clientName: '테크 스타트업 A',
+      budget: 5000000,
+      startDate: '2024-01-01T00:00:00Z',
+      endDate: '2024-02-01T00:00:00Z',
+      createdBy: 'user-1',
+      teamMembers: ['user-1', 'user-2'],
+      createdAt: '2024-01-01T00:00:00Z',
+      updatedAt: '2024-01-02T00:00:00Z',
+    },
+    {
+      id: 'project-2',
+      name: '교육 콘텐츠 영상',
+      description: '온라인 교육을 위한 강의 영상 제작',
+      status: 'ACTIVE',
+      clientName: '에듀테크 회사 B',
+      budget: 3000000,
+      startDate: '2024-01-03T00:00:00Z',
+      endDate: '2024-02-15T00:00:00Z',
+      createdBy: 'user-2',
+      teamMembers: ['user-2', 'user-3'],
+      createdAt: '2024-01-03T00:00:00Z',
+      updatedAt: '2024-01-04T00:00:00Z',
+    },
+    {
+      id: 'project-3',
+      name: '이벤트 하이라이트 영상',
+      description: '컨퍼런스 이벤트의 하이라이트 영상 편집',
+      status: 'COMPLETED',
+      clientName: '이벤트 회사 C',
+      budget: 2000000,
+      startDate: '2024-01-05T00:00:00Z',
+      endDate: '2024-01-20T00:00:00Z',
+      createdBy: 'user-1',
+      teamMembers: ['user-1'],
+      createdAt: '2024-01-05T00:00:00Z',
+      updatedAt: '2024-01-10T00:00:00Z',
+    },
+    {
+      id: 'project-4',
+      name: '제품 데모 영상',
+      description: '새로운 앱 기능 소개를 위한 데모 영상',
+      status: 'CANCELLED',
+      clientName: '모바일 앱 회사 D',
+      budget: 1500000,
+      startDate: '2024-01-11T00:00:00Z',
+      endDate: '2024-02-10T00:00:00Z',
+      createdBy: 'user-3',
+      teamMembers: ['user-3', 'user-1'],
+      createdAt: '2024-01-11T00:00:00Z',
+      updatedAt: '2024-01-12T00:00:00Z',
+    },
+    {
+      id: 'project-5',
+      name: '소셜미디어 숏폼 콘텐츠',
+      description: 'TikTok, Instagram용 숏폼 콘텐츠 제작',
+      status: 'ACTIVE',
+      clientName: '패션 브랜드 E',
+      budget: 4000000,
+      startDate: '2024-01-13T00:00:00Z',
+      endDate: '2024-03-01T00:00:00Z',
+      createdBy: 'user-2',
+      teamMembers: ['user-2', 'user-3', 'user-1'],
+      createdAt: '2024-01-13T00:00:00Z',
+      updatedAt: '2024-01-14T00:00:00Z',
+    },
+  ]
+}
+
+/**
+ * 인메모리 프로젝트 데이터
+ */
+export interface MockProject {
+  id: string
+  name: string
+  description?: string
+  status: 'ACTIVE' | 'COMPLETED' | 'CANCELLED'
+  clientName: string
+  budget: number
+  startDate: string
+  endDate: string
+  createdBy: string
+  teamMembers: string[]
+  createdAt: string
+  updatedAt: string
+}
+
+export let projects: MockProject[] = [
+  {
+    id: 'project-1',
+    name: '브랜드 홍보 영상 제작',
+    description: '신제품 런칭을 위한 브랜드 홍보 영상 제작 프로젝트',
+    status: 'ACTIVE',
+    clientName: '테크 스타트업 A',
+    budget: 5000000,
+    startDate: '2024-01-01T00:00:00Z',
+    endDate: '2024-02-01T00:00:00Z',
+    createdBy: 'user-1',
+    teamMembers: ['user-1', 'user-2'],
+    createdAt: '2024-01-01T00:00:00Z',
+    updatedAt: '2024-01-02T00:00:00Z',
+  },
+  {
+    id: 'project-2',
+    name: '교육 콘텐츠 영상',
+    description: '온라인 교육을 위한 강의 영상 제작',
+    status: 'ACTIVE',
+    clientName: '에듀테크 회사 B',
+    budget: 3000000,
+    startDate: '2024-01-03T00:00:00Z',
+    endDate: '2024-02-15T00:00:00Z',
+    createdBy: 'user-2',
+    teamMembers: ['user-2', 'user-3'],
+    createdAt: '2024-01-03T00:00:00Z',
+    updatedAt: '2024-01-04T00:00:00Z',
+  },
+  {
+    id: 'project-3',
+    name: '이벤트 하이라이트 영상',
+    description: '컨퍼런스 이벤트의 하이라이트 영상 편집',
+    status: 'COMPLETED',
+    clientName: '이벤트 회사 C',
+    budget: 2000000,
+    startDate: '2024-01-05T00:00:00Z',
+    endDate: '2024-01-20T00:00:00Z',
+    createdBy: 'user-1',
+    teamMembers: ['user-1'],
+    createdAt: '2024-01-05T00:00:00Z',
+    updatedAt: '2024-01-10T00:00:00Z',
+  },
+  {
+    id: 'project-4',
+    name: '제품 데모 영상',
+    description: '새로운 앱 기능 소개를 위한 데모 영상',
+    status: 'CANCELLED',
+    clientName: '모바일 앱 회사 D',
+    budget: 1500000,
+    startDate: '2024-01-11T00:00:00Z',
+    endDate: '2024-02-10T00:00:00Z',
+    createdBy: 'user-3',
+    teamMembers: ['user-3', 'user-1'],
+    createdAt: '2024-01-11T00:00:00Z',
+    updatedAt: '2024-01-12T00:00:00Z',
+  },
+  {
+    id: 'project-5',
+    name: '소셜미디어 숏폼 콘텐츠',
+    description: 'TikTok, Instagram용 숏폼 콘텐츠 제작',
+    status: 'ACTIVE',
+    clientName: '패션 브랜드 E',
+    budget: 4000000,
+    startDate: '2024-01-13T00:00:00Z',
+    endDate: '2024-03-01T00:00:00Z',
+    createdBy: 'user-2',
+    teamMembers: ['user-2', 'user-3', 'user-1'],
+    createdAt: '2024-01-13T00:00:00Z',
+    updatedAt: '2024-01-14T00:00:00Z',
+  },
+]
+
+/**
+ * 모든 프로젝트 조회
+ */
+export async function getAllProjects(): Promise<MockProject[]> {
+  return projects
+}
+
+/**
+ * ID로 프로젝트 찾기
+ */
+export async function findProjectById(id: string): Promise<MockProject | null> {
+  const project = projects.find(p => p.id === id)
+  return project || null
+}
+
+/**
+ * 새 프로젝트 생성
+ */
+export async function createProject(data: Omit<MockProject, 'id' | 'createdAt' | 'updatedAt'>): Promise<MockProject> {
+  const newProject: MockProject = {
+    id: `project-${Date.now()}`, // 단순한 ID 생성
+    ...data,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  }
+
+  projects.push(newProject)
+  return newProject
+}
+
+/**
+ * 프로젝트 업데이트
+ */
+export async function updateProject(
+  id: string,
+  updates: Partial<Omit<MockProject, 'id' | 'createdAt'>>
+): Promise<MockProject | null> {
+  const projectIndex = projects.findIndex(p => p.id === id)
+  if (projectIndex === -1) return null
+
+  projects[projectIndex] = {
+    ...projects[projectIndex],
+    ...updates,
+    updatedAt: new Date().toISOString(),
+  }
+
+  return projects[projectIndex]
+}
+
+/**
+ * 프로젝트 삭제
+ */
+export async function deleteProject(id: string): Promise<boolean> {
+  const initialLength = projects.length
+  projects = projects.filter(p => p.id !== id)
+  return projects.length < initialLength
 }
 
 /**
@@ -168,11 +430,35 @@ export function resetDatabase(): void {
  */
 export const mockDB = {
   projects: {
-    findAll: () => [],
-    findById: (_id: string) => null,
-    create: (data: Record<string, unknown>) => ({ id: crypto.randomUUID(), ...data }),
-    update: (_id: string, _data: Record<string, unknown>) => null,
-    delete: (_id: string) => false,
+    findAll: () => projects,
+    findById: (id: string) => projects.find(p => p.id === id) || null,
+    create: (data: Record<string, unknown>) => {
+      const newProject = {
+        id: `project-${Date.now()}`,
+        ...data,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      }
+      projects.push(newProject as MockProject)
+      return newProject
+    },
+    update: (id: string, data: Record<string, unknown>) => {
+      const projectIndex = projects.findIndex(p => p.id === id)
+      if (projectIndex === -1) return null
+
+      projects[projectIndex] = {
+        ...projects[projectIndex],
+        ...data,
+        updatedAt: new Date().toISOString(),
+      } as MockProject
+
+      return projects[projectIndex]
+    },
+    delete: (id: string) => {
+      const initialLength = projects.length
+      projects = projects.filter(p => p.id !== id)
+      return projects.length < initialLength
+    },
   },
   users: {
     findAll: getAllUsers,

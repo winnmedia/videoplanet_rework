@@ -28,7 +28,6 @@
       "@/styles/*": ["./styles/*"],
       "@/public/*": ["./public/*"],
       "@/shared/*": ["./shared/*"],
-
       // FSD Layer aliases (@ prefix 버전)
       "@app/*": ["./app/*"],
       "@processes/*": ["./processes/*"],
@@ -36,13 +35,11 @@
       "@features/*": ["./features/*"],
       "@entities/*": ["./entities/*"],
       "@shared/*": ["./shared/*"],
-
       // Layer root imports (@ prefix 버전)
       "@widgets": ["./widgets/index.ts"],
       "@features": ["./features/index.ts"],
       "@entities": ["./entities/index.ts"],
       "@shared": ["./shared/index.ts"],
-
       // Standard FSD aliases (@ prefix 없는 형태 - 표준)
       "app/*": ["./app/*"],
       "processes/*": ["./processes/*"],
@@ -50,7 +47,6 @@
       "features/*": ["./features/*"],
       "entities/*": ["./entities/*"],
       "shared/*": ["./shared/*"],
-
       // Standard FSD root imports
       "widgets": ["./widgets/index.ts"],
       "features": ["./features/index.ts"],
@@ -58,7 +54,7 @@
       "shared": ["./shared/index.ts"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": [
     "node_modules",
     "test/**/*",

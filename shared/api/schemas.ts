@@ -9,7 +9,7 @@ import { z } from 'zod'
 export const BaseApiResponseSchema = z.object({
   success: z.boolean(),
   timestamp: z.string().datetime(),
-  message: z.string().optional()
+  message: z.string().optional(),
 })
 
 // 에러 응답 스키마
@@ -19,7 +19,7 @@ export const ApiErrorSchema = z.object({
   statusCode: z.number(),
   timestamp: z.string().datetime(),
   path: z.string().optional(),
-  details: z.any().optional()
+  details: z.any().optional(),
 })
 
 // 페이지네이션 스키마
@@ -27,7 +27,7 @@ export const PaginationSchema = z.object({
   page: z.number().int().positive().default(1),
   limit: z.number().int().positive().max(100).default(20),
   total: z.number().int().nonnegative(),
-  hasMore: z.boolean()
+  hasMore: z.boolean(),
 })
 
 // 메뉴 관련 스키마
@@ -38,13 +38,13 @@ export const MenuItemSchema = z.object({
   icon: z.string().optional(),
   hasSubMenu: z.boolean().default(false),
   order: z.number().int().nonnegative().optional(),
-  isActive: z.boolean().default(true)
+  isActive: z.boolean().default(true),
 })
 
 export const MenuItemsResponseSchema = BaseApiResponseSchema.extend({
   data: z.object({
-    items: z.array(MenuItemSchema)
-  })
+    items: z.array(MenuItemSchema),
+  }),
 })
 
 // 서브메뉴 관련 스키마
@@ -58,104 +58,100 @@ export const SubMenuItemSchema = z.object({
   badge: z.number().int().nonnegative().optional(),
   lastModified: z.string().datetime(),
   description: z.string().optional(),
-  priority: z.enum(['low', 'medium', 'high']).default('medium').optional()
+  priority: z.enum(['low', 'medium', 'high']).default('medium').optional(),
 })
 
 export const SubMenuRequestSchema = z.object({
   type: z.enum(['projects', 'feedback', 'planning'], {
-    errorMap: () => ({ message: '유효하지 않은 메뉴 타입입니다. projects, feedback, planning 중 하나를 선택해주세요.' })
+    errorMap: () => ({
+      message: '유효하지 않은 메뉴 타입입니다. projects, feedback, planning 중 하나를 선택해주세요.',
+    }),
   }),
   page: z.coerce.number().int().positive().default(1).optional(),
   limit: z.coerce.number().int().positive().max(50).default(10).optional(),
   search: z.string().optional(),
   status: SubMenuItemStatusSchema.optional(),
   sortBy: z.enum(['name', 'lastModified', 'status']).default('lastModified').optional(),
-  sortOrder: z.enum(['asc', 'desc']).default('desc').optional()
+  sortOrder: z.enum(['asc', 'desc']).default('desc').optional(),
 })
 
 export const SubMenuResponseSchema = BaseApiResponseSchema.extend({
   data: z.object({
     items: z.array(SubMenuItemSchema),
-    pagination: PaginationSchema
-  })
+    pagination: PaginationSchema,
+  }),
 })
 
 // 프로젝트 관련 스키마
-export const ProjectStatusSchema = z.enum(['draft', 'planning', 'in-progress', 'review', 'completed', 'cancelled'])
+export const ProjectStatusSchema = z.enum(['ACTIVE', 'COMPLETED', 'CANCELLED'])
 
 export const ProjectSchema = z.object({
-  id: z.string().uuid('유효하지 않은 프로젝트 ID 형식입니다'),
-  name: z.string().min(1, '프로젝트명은 필수입니다').max(200, '프로젝트명은 200자 이하여야 합니다'),
-  description: z.string().optional(),
-  status: ProjectStatusSchema,
+  id: z.string().min(1, 'ID는 필수입니다'),
+  name: z.string().min(1, '프로젝트명은 필수입니다').max(100),
+  description: z.string().max(500).optional(),
+  status: ProjectStatusSchema.default('ACTIVE'),
+  clientName: z.string().min(1, '클라이언트명은 필수입니다').max(100),
+  budget: z.number().min(0, '예산은 0 이상이어야 합니다'),
+  startDate: z.string().datetime(),
+  endDate: z.string().datetime(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
-  startDate: z.string().datetime().optional(),
-  endDate: z.string().datetime().optional(),
-  ownerId: z.string().uuid().optional(),
-  tags: z.array(z.string()).default([]),
-  priority: z.enum(['low', 'medium', 'high']).default('medium'),
-  progress: z.number().min(0).max(100).default(0)
 })
 
-export const ProjectsResponseSchema = BaseApiResponseSchema.extend({
-  data: z.object({
-    items: z.array(ProjectSchema),
-    pagination: PaginationSchema
-  })
+export const ProjectListResponseSchema = z.object({
+  projects: z.array(ProjectSchema),
+  total: z.number().int().min(0),
 })
 
-export const ProjectRequestSchema = z.object({
-  id: z.string().uuid().optional(),
-  page: z.coerce.number().int().positive().default(1).optional(),
-  limit: z.coerce.number().int().positive().max(50).default(10).optional(),
-  search: z.string().optional(),
-  status: ProjectStatusSchema.optional(),
-  ownerId: z.string().uuid().optional(),
-  sortBy: z.enum(['name', 'updatedAt', 'status', 'priority']).default('updatedAt').optional(),
-  sortOrder: z.enum(['asc', 'desc']).default('desc').optional()
+export const CreateProjectSchema = z.object({
+  name: z.string().min(1, '프로젝트명을 입력해주세요').max(100),
+  description: z.string().max(500).optional(),
+  clientName: z.string().min(1, '클라이언트명을 입력해주세요').max(100),
+  budget: z.number().min(0, '예산은 0 이상이어야 합니다'),
+  startDate: z.string().datetime('시작일을 선택해주세요'),
+  endDate: z.string().datetime('종료일을 선택해주세요'),
 })
 
-// 피드백 관련 스키마
-export const FeedbackStatusSchema = z.enum(['open', 'in-review', 'resolved', 'closed'])
-export const FeedbackTypeSchema = z.enum(['bug', 'feature', 'improvement', 'question'])
+export const UpdateProjectSchema = CreateProjectSchema.partial()
+
+// 피드백 관련 스키마 (단순화)
+export const FeedbackStatusSchema = z.enum(['open', 'in_progress', 'resolved', 'closed'])
+export const FeedbackTypeSchema = z.enum(['comment', 'suggestion', 'issue', 'approval'])
+export const FeedbackPrioritySchema = z.enum(['low', 'medium', 'high', 'critical'])
 
 export const FeedbackSchema = z.object({
-  id: z.string().uuid('유효하지 않은 피드백 ID 형식입니다'),
+  id: z.string().min(1, 'ID는 필수입니다'),
   title: z.string().min(1, '피드백 제목은 필수입니다').max(200, '제목은 200자 이하여야 합니다'),
-  content: z.string().min(1, '피드백 내용은 필수입니다'),
-  type: FeedbackTypeSchema,
-  status: FeedbackStatusSchema,
-  projectId: z.string().uuid().optional(),
-  authorId: z.string().uuid(),
-  assigneeId: z.string().uuid().optional(),
+  content: z.string().min(1, '피드백 내용은 필수입니다').max(2000, '피드백은 2000자를 초과할 수 없습니다'),
+  type: FeedbackTypeSchema.default('comment'),
+  status: FeedbackStatusSchema.default('open'),
+  priority: FeedbackPrioritySchema.default('medium'),
+  projectId: z.string().optional(),
+  authorId: z.string().optional(),
+  assigneeId: z.string().optional(),
   createdAt: z.string().datetime(),
   updatedAt: z.string().datetime(),
   resolvedAt: z.string().datetime().optional(),
-  tags: z.array(z.string()).default([]),
-  priority: z.enum(['low', 'medium', 'high', 'urgent']).default('medium'),
-  attachments: z.array(z.string().url()).default([])
+  tags: z.array(z.string().max(50)).max(10).default([]),
 })
 
-export const FeedbacksResponseSchema = BaseApiResponseSchema.extend({
-  data: z.object({
-    items: z.array(FeedbackSchema),
-    pagination: PaginationSchema
-  })
+export const FeedbackListResponseSchema = z.object({
+  feedbacks: z.array(FeedbackSchema),
+  total: z.number().int().min(0),
 })
 
-export const FeedbackRequestSchema = z.object({
-  id: z.string().uuid().optional(),
-  page: z.coerce.number().int().positive().default(1).optional(),
-  limit: z.coerce.number().int().positive().max(50).default(10).optional(),
-  search: z.string().optional(),
-  type: FeedbackTypeSchema.optional(),
+export const CreateFeedbackSchema = z.object({
+  title: z.string().min(1, '피드백 제목을 입력해주세요').max(200),
+  content: z.string().min(1, '피드백 내용을 입력해주세요').max(2000),
+  type: FeedbackTypeSchema.default('comment'),
+  priority: FeedbackPrioritySchema.default('medium'),
+  projectId: z.string().optional(),
+  assigneeId: z.string().optional(),
+  tags: z.array(z.string().max(50)).max(10).optional(),
+})
+
+export const UpdateFeedbackSchema = CreateFeedbackSchema.partial().extend({
   status: FeedbackStatusSchema.optional(),
-  projectId: z.string().uuid().optional(),
-  authorId: z.string().uuid().optional(),
-  assigneeId: z.string().uuid().optional(),
-  sortBy: z.enum(['createdAt', 'updatedAt', 'title', 'status', 'priority']).default('updatedAt').optional(),
-  sortOrder: z.enum(['asc', 'desc']).default('desc').optional()
 })
 
 // 타입 추출
@@ -163,15 +159,19 @@ export type MenuItemType = z.infer<typeof MenuItemSchema>
 export type SubMenuItemType = z.infer<typeof SubMenuItemSchema>
 export type SubMenuRequestType = z.infer<typeof SubMenuRequestSchema>
 export type ProjectType = z.infer<typeof ProjectSchema>
-export type ProjectRequestType = z.infer<typeof ProjectRequestSchema>
+export type CreateProjectType = z.infer<typeof CreateProjectSchema>
+export type UpdateProjectType = z.infer<typeof UpdateProjectSchema>
+export type ProjectListResponseType = z.infer<typeof ProjectListResponseSchema>
 export type FeedbackType = z.infer<typeof FeedbackSchema>
-export type FeedbackRequestType = z.infer<typeof FeedbackRequestSchema>
+export type CreateFeedbackType = z.infer<typeof CreateFeedbackSchema>
+export type UpdateFeedbackType = z.infer<typeof UpdateFeedbackSchema>
+export type FeedbackListResponseType = z.infer<typeof FeedbackListResponseSchema>
 export type ApiErrorType = z.infer<typeof ApiErrorSchema>
 
-// 행동 분석 이벤트 스키마
-export const UserBehaviorEventSchema = z.object({
-  eventId: z.string().uuid(),
-  sessionId: z.string().uuid(),
+// 간단한 이벤트 트래킹 스키마
+export const SimpleEventSchema = z.object({
+  eventId: z.string().min(1),
+  sessionId: z.string().min(1),
   userId: z.string().optional(),
   timestamp: z.string().datetime(),
   category: z.string(),
@@ -179,56 +179,82 @@ export const UserBehaviorEventSchema = z.object({
   label: z.string().optional(),
   value: z.number().optional(),
   page: z.string(),
-  device: z.object({
-    type: z.enum(['desktop', 'mobile', 'tablet']),
-    os: z.string().optional(),
-    browser: z.string().optional()
-  }).optional(),
-  referrer: z.string().optional(),
-  timeOnPage: z.number().optional(),
-  customProperties: z.record(z.any()).optional()
 })
 
-export const NavigationEventSchema = UserBehaviorEventSchema.extend({
-  category: z.literal('navigation'),
-  previousPage: z.string().optional(),
-  navigationType: z.string().optional()
+export type SimpleEventType = z.infer<typeof SimpleEventSchema>
+
+// 인증 관련 스키마 (통합)
+export const LoginRequestSchema = z.object({
+  email: z.string().min(1, '이메일을 입력해주세요.').email('올바른 이메일 형식을 입력해주세요.').max(254),
+  password: z.string().min(1, '비밀번호를 입력해주세요.').min(8, '비밀번호는 최소 8자 이상이어야 합니다.').max(128),
 })
 
-export const InteractionEventSchema = UserBehaviorEventSchema.extend({
-  category: z.literal('interaction'),
-  elementId: z.string().optional(),
-  elementClass: z.string().optional(),
-  elementText: z.string().optional()
+export const SignupRequestSchema = z
+  .object({
+    email: z.string().min(1, '이메일을 입력해주세요.').email('올바른 이메일 형식을 입력해주세요.').max(254),
+    password: z
+      .string()
+      .min(8, '비밀번호는 최소 8자 이상이어야 합니다.')
+      .max(128)
+      .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/, '비밀번호는 대문자, 소문자, 숫자를 포함해야 합니다.'),
+    confirmPassword: z.string().min(1, '비밀번호 확인을 입력해주세요.'),
+    name: z
+      .string()
+      .min(1, '이름을 입력해주세요.')
+      .max(50)
+      .regex(/^[가-힣a-zA-Z\s]+$/, '이름은 한글, 영문만 입력 가능합니다.'),
+  })
+  .refine(data => data.password === data.confirmPassword, {
+    message: '비밀번호가 일치하지 않습니다.',
+    path: ['confirmPassword'],
+  })
+
+export const UserSchema = z.object({
+  id: z.string().min(1, 'ID는 필수입니다'),
+  email: z.string().email('올바른 이메일 형식이 아닙니다.'),
+  name: z.string().min(1, '이름이 필요합니다.'),
+  role: z.enum(['user', 'admin', 'moderator']).default('user'),
+  isEmailVerified: z.boolean().default(false),
+  createdAt: z.string().datetime(),
+  updatedAt: z.string().datetime().optional(),
 })
 
-export type UserBehaviorEvent = z.infer<typeof UserBehaviorEventSchema>
-export type NavigationEvent = z.infer<typeof NavigationEventSchema>
-export type InteractionEvent = z.infer<typeof InteractionEventSchema>
+// 인증 관련 타입 추출
+export type LoginRequestType = z.infer<typeof LoginRequestSchema>
+export type SignupRequestType = z.infer<typeof SignupRequestSchema>
+export type UserType = z.infer<typeof UserSchema>
 
-// 스키마 검증 유틸리티 함수
-export function validateRequest<T>(schema: z.ZodSchema<T>, data: unknown): T {
+// 단순화된 스키마 검증 유틸리티 함수
+export function validateData<T>(
+  schema: z.ZodSchema<T>,
+  data: unknown
+): { success: true; data: T } | { success: false; error: string } {
   try {
-    return schema.parse(data)
+    const result = schema.parse(data)
+    return { success: true, data: result }
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const messages = error.errors.map(err => 
-        `${err.path.join('.')}: ${err.message}`
-      ).join(', ')
-      throw new Error(`입력 데이터 검증 실패: ${messages}`)
+      const messages = error.errors.map(err => err.message).join(', ')
+      return { success: false, error: messages }
     }
-    throw error
+    return { success: false, error: '알 수 없는 검증 오류가 발생했습니다.' }
   }
+}
+
+// 안전한 파싱 유틸리티
+export function safeParseData<T>(schema: z.ZodSchema<T>, data: unknown): T | null {
+  const result = schema.safeParse(data)
+  return result.success ? result.data : null
 }
 
 // URL 쿼리 파라미터를 객체로 변환하는 헬퍼 함수
 export function parseUrlSearchParams(url: string): Record<string, string> {
   const searchParams = new URL(url).searchParams
   const params: Record<string, string> = {}
-  
+
   searchParams.forEach((value, key) => {
     params[key] = value
   })
-  
+
   return params
 }
