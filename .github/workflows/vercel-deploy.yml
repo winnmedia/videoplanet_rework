@@ -35,12 +35,6 @@ concurrency:
   group: vercel-deploy-${{ github.ref }}
   cancel-in-progress: false
 
-# 전역 타임아웃 설정
-jobs-timeout:
-  default: 30 # 기본 30분
-  quality-gates: 20 # 품질 게이트 20분
-  performance-validation: 15 # 성능 테스트 15분
-
 jobs:
   # === BACKEND HEALTH CHECK ===
   backend-health-check:
